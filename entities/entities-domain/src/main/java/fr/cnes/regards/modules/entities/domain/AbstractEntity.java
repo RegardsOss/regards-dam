@@ -70,9 +70,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Base entity feature decorator
- *
  * @param <F> represents the decorated entity feature
- *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
@@ -146,6 +144,14 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_group_entity_id"))
     @Column(name = "name", length = 200)
     protected Set<String> groups = new HashSet<>();
+
+    /**
+     * feature.geometry projection on WGS84 crs
+     */
+    @Valid
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    protected IGeometry wgs84 = IGeometry.unlocated();
 
     /**
      * Raw entity feature with minimum fuss
@@ -227,7 +233,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
      * {@link #removeTags(Collection)}
-     * @return
      */
     public ImmutableSet<String> getTags() {
         return ImmutableSet.copyOf(tags);
@@ -348,6 +353,15 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     public void setGeometry(IGeometry geometry) {
         feature.setGeometry(geometry);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends IGeometry> T getWgs84() {
+        return (T) wgs84;
+    }
+
+    public void setWgs84(IGeometry wgs84) {
+        this.wgs84 = wgs84;
     }
 
     @Override

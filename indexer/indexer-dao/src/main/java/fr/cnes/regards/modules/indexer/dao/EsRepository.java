@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -117,10 +114,11 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -216,8 +214,8 @@ public class EsRepository implements IEsRepository {
         String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
-        String connectionInfoMessage = String.format("Elastic search connection properties : host \"%s\", port \"%d\"",
-                                                     esHost, esPort);
+        String connectionInfoMessage = String
+                .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
         restClient = RestClient.builder(new HttpHost(esHost, esPort)).build();
@@ -282,8 +280,9 @@ public class EsRepository implements IEsRepository {
             for (String type : types) {
                 try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                     String mapping = builder.startObject().startObject(type).startObject("properties")
-                            .startObject("feature.geometry").field("type", "geo_shape").endObject().endObject()
-                            .endObject().endObject().string();
+                            .startObject("feature.geometry").field("type", "geo_shape").endObject().startObject("wgs84")
+                            .field("type", "geo_shape").endObject().
+                                    endObject().endObject().endObject().string();
 
                     HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
                     Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
@@ -319,9 +318,10 @@ public class EsRepository implements IEsRepository {
     public long deleteByQuery(String index, ICriterion criterion) {
         try {
             HttpEntity entity = new NStringEntity("{ \"query\":" + criterion.accept(CRITERION_VISITOR).toString() + "}",
-                    ContentType.APPLICATION_JSON);
-            Response response = restClient.performRequest("POST", "/" + index.toLowerCase() + "/_delete_by_query",
-                                                          Collections.emptyMap(), entity);
+                                                  ContentType.APPLICATION_JSON);
+            Response response = restClient
+                    .performRequest("POST", "/" + index.toLowerCase() + "/_delete_by_query", Collections.emptyMap(),
+                                    entity);
 
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
@@ -382,7 +382,7 @@ public class EsRepository implements IEsRepository {
         checkDocument(doc);
         try {
             IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
-                    .source(gson.toJson(doc), XContentType.JSON));
+                                                          .source(gson.toJson(doc), XContentType.JSON));
             return (response.getResult() == Result.CREATED);
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -412,16 +412,15 @@ public class EsRepository implements IEsRepository {
             int savedDocCount = 0;
             BulkRequest bulkRequest = new BulkRequest();
             for (T doc : documents) {
-                bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId()).source(gson.toJson(doc),
-                                                                                              XContentType.JSON));
+                bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId())
+                                        .source(gson.toJson(doc), XContentType.JSON));
             }
 
             BulkResponse response = client.bulk(bulkRequest);
             for (final BulkItemResponse itemResponse : response.getItems()) {
                 if (itemResponse.isFailed()) {
                     LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                              itemResponse.getId()),
-                                itemResponse.getFailure().getCause());
+                                              itemResponse.getId()), itemResponse.getFailure().getCause());
                 } else {
                     savedDocCount++;
                 }
@@ -474,9 +473,8 @@ public class EsRepository implements IEsRepository {
         try {
             // Only first type is chosen, this case is too complex to permit a multi-type search
             // Add ".keyword" if attribute mapping type is of type text
-            String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], attributeSource)
-                    ? attributeSource + KEYWORD_SUFFIX
-                    : attributeSource;
+            String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0],
+                                             attributeSource) ? attributeSource + KEYWORD_SUFFIX : attributeSource;
             return this.unique(searchKey, pCrit, attribute);
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -574,8 +572,8 @@ public class EsRepository implements IEsRepository {
 
                 // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
                 // (not necessarly)
-                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW)
-                        || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
+                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize()
+                        == MAX_RESULT_WINDOW)) {
                     saveReminder(searchKey, pageRequest, crit, sort, response);
                 }
 
@@ -644,8 +642,8 @@ public class EsRepository implements IEsRepository {
                 // Then check if a closer one exists (advance is done by MAX_RESULT_WINDOW steps so we must take this
                 // into
                 // account)
-                searchPageNumber = (pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW))
-                        / MAX_RESULT_WINDOW;
+                searchPageNumber =
+                        (pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW)) / MAX_RESULT_WINDOW;
                 while (searchPageNumber > 0) {
                     searchReminderPageRequest = new PageRequest(searchPageNumber, MAX_RESULT_WINDOW);
                     reminder = new SearchAfterReminder(crit, searchKey, sort, searchReminderPageRequest);
@@ -690,10 +688,11 @@ public class EsRepository implements IEsRepository {
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 // Create a AbstractReminder and save it into ES for next page
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
-                        new PageRequest(offset / MAX_RESULT_WINDOW, MAX_RESULT_WINDOW).next());
+                                                                       new PageRequest(offset / MAX_RESULT_WINDOW,
+                                                                                       MAX_RESULT_WINDOW).next());
                 reminder.setExpirationDate(expirationDate);
-                reminder.setSearchAfterSortValues(response.getHits().getAt(response.getHits().getHits().length - 1)
-                        .getSortValues());
+                reminder.setSearchAfterSortValues(
+                        response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
 
                 save(REMINDER_IDX, reminder);
                 offset += MAX_RESULT_WINDOW;
@@ -804,9 +803,10 @@ public class EsRepository implements IEsRepository {
             Collection<QueryableAttribute> attributes) {
         try {
             SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
-            attributes.stream().filter(qa -> qa.isTextAttribute() && (qa.getTermsLimit() > 0))
-                    .forEach(a -> builder.aggregation(AggregationBuilders.terms(a.getAttributeName())
-                            .field(a.getAttributeName() + KEYWORD_SUFFIX).size(a.getTermsLimit())));
+            attributes.stream().filter(qa -> qa.isTextAttribute() && (qa.getTermsLimit() > 0)).forEach(a -> builder
+                    .aggregation(
+                            AggregationBuilders.terms(a.getAttributeName()).field(a.getAttributeName() + KEYWORD_SUFFIX)
+                                    .size(a.getTermsLimit())));
             attributes.stream().filter(qa -> !qa.isTextAttribute()).forEach(qa -> builder
                     .aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName())));
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
@@ -854,9 +854,9 @@ public class EsRepository implements IEsRepository {
     private <T, R, S extends Set<R>> S unique(SearchKey<?, T> searchKey, ICriterion crit, String inAttName,
             int maxCount, S set) {
         try {
-            String attName = (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], inAttName))
-                    ? inAttName + ".keyword"
-                    : inAttName;
+            String attName = (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], inAttName)) ?
+                    inAttName + ".keyword" :
+                    inAttName;
             SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
             // Assuming no more than Integer.MAX_SIZE results will be returned
             builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
@@ -970,18 +970,20 @@ public class EsRepository implements IEsRepository {
     private boolean isTextMapping(String inIndex, String type, String attribute) throws IOException {
         String index = inIndex.toLowerCase();
         try {
-            Response response = restClient.performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute,
-                                                          Collections.emptyMap());
+            Response response = restClient
+                    .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
                 // If attribute exists, response should contain this chain of several maps :
                 // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
                 if ((map != null) && !map.isEmpty()) {
                     // In cas attribute is toto.titi.tutu, we will need "tutu" further
-                    String lastPathAtt = (attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
-                            : attribute);
-                    return toMap(toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type))
-                            .get(attribute)).get("mapping")).get(lastPathAtt)).get("type").equals("text");
+                    String lastPathAtt = (attribute.contains(".") ?
+                            attribute.substring(attribute.lastIndexOf('.') + 1) :
+                            attribute);
+                    return toMap(
+                            toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
+                                          .get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
                 }
             }
@@ -1000,9 +1002,10 @@ public class EsRepository implements IEsRepository {
      * @param map response of "mappings" rest request
      * @return true is first type mapping found fro given attribute is of type "text"
      */
-    private static boolean isTextMapping(String index, Map<String, Object> map, String attribute) {
-        String lastPathAttName = attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
-                : attribute;
+    private static boolean isTextMapping(Map<String, Object> map, String attribute) {
+        String lastPathAttName = attribute.contains(".") ?
+                attribute.substring(attribute.lastIndexOf('.') + 1) :
+                attribute;
         try {
             // Mapping map contain only one value, the concerned index mapping BUT in case index is an alias, map key
             // is true index name, not alias one so DON'T retrieve mappinh from its name !!!
@@ -1048,7 +1051,7 @@ public class EsRepository implements IEsRepository {
                 LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
                 for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
                     String attribute = sortEntry.getKey();
-                    if (isTextMapping(index, map, attribute)) {
+                    if (isTextMapping(map, attribute)) {
                         updatedAscSortMap.put(attribute + KEYWORD_SUFFIX, sortEntry.getValue());
                     } else {
                         updatedAscSortMap.put(attribute, sortEntry.getValue());
@@ -1057,7 +1060,10 @@ public class EsRepository implements IEsRepository {
 
                 // Add sort to request
                 updatedAscSortMap.entrySet().forEach(entry -> builder.sort(SortBuilders.fieldSort(entry.getKey())
-                        .order(entry.getValue() ? SortOrder.ASC : SortOrder.DESC).unmappedType("double")));
+                                                                                   .order(entry.getValue() ?
+                                                                                                  SortOrder.ASC :
+                                                                                                  SortOrder.DESC)
+                                                                                   .unmappedType("double")));
                 // "double" because a type is necessary. This has only an impact when seaching on several indices if
                 // property is mapped on one and no on the other(s). Will see this when it happens (if it happens a day)
                 // entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
@@ -1110,16 +1116,17 @@ public class EsRepository implements IEsRepository {
             String attName;
             // Replace percentiles aggregations by range aggregations
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX
-                        : attributeName + DATE_FACET_SUFFIX;
+                attName = (facetType == FacetType.NUMERIC) ?
+                        attributeName + NUMERIC_FACET_SUFFIX :
+                        attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
                 // No percentile values for this property => skip aggregation
                 if (Iterables.all(percentiles, p -> Double.isNaN(p.getValue()))) {
                     continue;
                 }
-                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC)
-                        ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
-                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
+                        FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
+                        FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     // And add max and min aggregations
@@ -1227,8 +1234,8 @@ public class EsRepository implements IEsRepository {
                         // Better not return a facet
                         return;
                     } // (-∞ -> value [
-                      // range is then [min -> value [, because min value is scaled it is necessary to choose a little
-                      // less
+                    // range is then [min -> value [, because min value is scaled it is necessary to choose a little
+                    // less
                     valueRange = Range.closedOpen(EsHelper.scaledDown(min.getValue()), (Double) bucket.getTo());
                 } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                     // range is then [value, max], because max value is scaled it is necessary to choose a little more
@@ -1276,8 +1283,9 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // OffsetDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof OffsetDateTime) ? OffsetDateTimeAdapter.format((OffsetDateTime) pValue)
-                    : pValue;
+            Object value = (pValue instanceof OffsetDateTime) ?
+                    OffsetDateTimeAdapter.format((OffsetDateTime) pValue) :
+                    pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder).from(pPageRequest.getOffset())
@@ -1363,10 +1371,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".size")); // Only count files with a size
+                                        .field("files." + fileType + ".size")); // Only count files with a size
             // file size sum
-            builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                    .field("files." + fileType + ".size"));
+            builder.aggregation(
+                    AggregationBuilders.sum("total_" + fileType + "_files_size").field("files." + fileType + ".size"));
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1379,11 +1387,11 @@ public class EsRepository implements IEsRepository {
         // and "total" aggregations on each asked file types
         for (String fileType : fileTypes) {
             // files count
-            termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".size"));
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.count(fileType + "_files_count").field("files." + fileType + ".size"));
             // file size sum
-            termsAggBuilder.subAggregation(AggregationBuilders.sum(fileType + "_files_size")
-                    .field("files." + fileType + ".size"));
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));
         }
         builder.aggregation(termsAggBuilder);
     }
@@ -1443,7 +1451,8 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
+                                        .field("files." + fileType + ".uri"
+                                                       + KEYWORD_SUFFIX)); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1457,7 +1466,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX));
+                                                   .field("files." + fileType + ".uri" + KEYWORD_SUFFIX));
         }
         builder.aggregation(termsAggBuilder);
     }

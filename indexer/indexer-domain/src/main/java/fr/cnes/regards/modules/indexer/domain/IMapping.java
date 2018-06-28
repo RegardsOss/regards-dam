@@ -21,32 +21,31 @@ package fr.cnes.regards.modules.indexer.domain;
 /**
  * Mapping specific constants
  */
-// CHECKSTYLE:OFF
 public interface IMapping {
 
     /**
      * Mapping name for range lower bound attribute
      */
-    static final String RANGE_LOWER_BOUND = "lowerBound";
+    String RANGE_LOWER_BOUND = "lowerBound";
 
     /**
      * Mapping name for range upper bound attribute
      */
-    static final String RANGE_UPPER_BOUND = "upperBound";
+    String RANGE_UPPER_BOUND = "upperBound";
 
     /**
      * Mapping name for name
      */
-    static final String NAME = "name";
+    String NAME = "name";
 
     /**
      * Mapping value for value
      */
-    static final String VALUE = "value";
+    String VALUE = "value";
 
     /**
-     * Mapping name for geometry attribute
+     * Mapping name for geometry attribute, be careful, internally, only AbstractEntity.wgs84 attribute is used as
+     * a geo_shape mapping attribute
      */
-    static final String GEOMETRY = "feature.geometry";
+    String GEO_SHAPE_ATTRIBUTE = "wgs84";
 }
-// CHECKSTYLE:ON

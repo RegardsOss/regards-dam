@@ -1,10 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -68,7 +67,7 @@ public class GeometrySearchIT {
     @Test
     public void testCircleSearch() throws ModuleException, IOException {
 
-        Double[] b202 = new Double[] { 1.4948514103889465, 43.577530672197476 };
+        double[] b202 = new double[] { 1.4948514103889465, 43.577530672197476 };
         Point p202 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577530672197476));
 
         Point p259 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577614225677394));
@@ -99,11 +98,11 @@ public class GeometrySearchIT {
 
     @Test
     public void testCircleSearchOnLimits() throws ModuleException, IOException {
-        Double[] northPole = new Double[] { 0., 90. };
+        double[] northPole = new double[] { 0., 90. };
         Point northPolePoint = IGeometry.point(IGeometry.position(0., 90.));
-        Double[] nearWestNorthPole = new Double[] { -5., 85. };
+        double[] nearWestNorthPole = new double[] { -5., 85. };
         Point nearWestNorthPolePoint = IGeometry.point(IGeometry.position(-5., 85.));
-        Double[] nearEastNorthPole = new Double[] { 175., 85. };
+        double[] nearEastNorthPole = new double[] { 175., 85. };
         Point nearEastNorthPolePoint = IGeometry.point(IGeometry.position(175., 85.));
 
         final Collection collNorthPole = new Collection(null, TENANT, "North Pole");
@@ -130,7 +129,7 @@ public class GeometrySearchIT {
         Assert.assertTrue(results.contains(collNorthPole));
         Assert.assertTrue(results.contains(collNearWestNorthPole));
 
-        Double[] eastPole = new Double[] { 180., 0. };
+        double[] eastPole = new double[] { 180., 0. };
         Point eastPolePoint = IGeometry.point(IGeometry.position(180., 0.));
         Collection collEastPole = new Collection(null, TENANT, "East Pole");
         collEastPole.setGeometry(eastPolePoint);
@@ -147,7 +146,7 @@ public class GeometrySearchIT {
     @Test
     public void testPolygonSearch() throws ModuleException, IOException {
         Point p202 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577530672197476));
-        final Double[][][] cs = new Double[][][] { { { 1.4946448802947996, 43.57797369862905 },
+        final double[][][] cs = new double[][][] { { { 1.4946448802947996, 43.57797369862905 },
                 { 1.4946502447128296, 43.57727223860706 }, { 1.4948782324790955, 43.57727418172091 },
                 { 1.4948728680610657, 43.57797952790247 }, { 1.4946448802947996, 43.57797369862905 } } };
         // Setting a geometry onto collection
@@ -162,7 +161,7 @@ public class GeometrySearchIT {
         Assert.assertEquals(collectionOnB202, results.get(0));
 
         // Concave with B202 office room on it
-        final Double[][][] concaveCs = new Double[][][] { { { 1.4946475625038147, 43.57797369862905 },
+        final double[][][] concaveCs = new double[][][] { { { 1.4946475625038147, 43.57797369862905 },
                 { 1.4947816729545593, 43.577894031835676 }, { 1.4947521686553955, 43.577721096238555 },
                 { 1.4946582913398743, 43.57727418172091 }, { 1.4948809146881101, 43.57727223860706 },
                 { 1.4948675036430359, 43.57797758481139 }, { 1.4946475625038147, 43.57797369862905 } } };
@@ -171,7 +170,7 @@ public class GeometrySearchIT {
         Assert.assertEquals(1, results.size());
         Assert.assertEquals(collectionOnB202, results.get(0));
 
-        final Double[][][] batA = new Double[][][] {
+        final double[][][] batA = new double[][][] {
                 { { 1.4952269196510315, 43.577484037646634 }, { 1.495237648487091, 43.57706821130483 },
                         { 1.495336890220642, 43.57703323512646 }, { 1.4953315258026123, 43.57688944395752 },
                         { 1.4952349662780762, 43.5767747994011 }, { 1.4954683184623718, 43.5767806287906 },
