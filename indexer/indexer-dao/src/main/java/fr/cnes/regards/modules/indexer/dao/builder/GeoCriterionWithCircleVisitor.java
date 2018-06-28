@@ -28,7 +28,7 @@ import org.springframework.data.util.Pair;
 import com.google.common.base.Preconditions;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
-import fr.cnes.regards.modules.indexer.dao.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;

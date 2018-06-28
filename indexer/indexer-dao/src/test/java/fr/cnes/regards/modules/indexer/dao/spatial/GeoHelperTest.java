@@ -24,6 +24,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.opengis.referencing.operation.TransformException;
 
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+
 /**
  * @author oroussel
  */
@@ -105,5 +108,21 @@ public class GeoHelperTest {
                                   < GeoHelper
                 .getDistanceOnEarth(point_60_60_OnMarsProjOnEarth, point50kmToNorthOnMarsProjOnEarth));
 
+    }
+
+    @Test
+    public void containsGeoCriterionTest() {
+        ICriterion criterion = ICriterion.and(ICriterion.in("toto", "text1", "text2"), ICriterion.eq("count", 25),
+                                              ICriterion.or(ICriterion.ge("altitude", 2552.36), ICriterion
+                                                      .intersectsCircle(new double[] { 45, 45 }, "50m")));
+
+        Assert.assertTrue(GeoHelper.containsCircleCriterion(criterion));
+        Assert.assertFalse(GeoHelper.containsPolygonOrBboxCriterion(criterion));
+
+        criterion = ICriterion.and(ICriterion.in("toto", "text1", "text2"), ICriterion.eq("count", 25), ICriterion
+                .or(ICriterion.ge("altitude", 2552.36), ICriterion.intersectsPolygon(new double[][][] {})));
+
+        Assert.assertTrue(GeoHelper.containsPolygonOrBboxCriterion(criterion));
+        Assert.assertFalse(GeoHelper.containsCircleCriterion(criterion));
     }
 }

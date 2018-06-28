@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  * Search key to be used with all search methods of IndexerService.
@@ -42,6 +43,12 @@ public class SearchKey<S, R> {
     private Map<String, Class<? extends S>> searchTypeMap = null;
 
     private String[] searchTypes;
+
+    /**
+     * Optional contextual Crs to inform that search concerns another CRS than earth (WGS84) one.
+     * default to WGS84
+     */
+    private Crs crs = Crs.WGS_84;
 
     /**
      * Constructor with result class to be searched from search types
@@ -116,4 +123,11 @@ public class SearchKey<S, R> {
         return searchTypeMap;
     }
 
+    public Crs getCrs() {
+        return crs;
+    }
+
+    public void setCrs(Crs crs) {
+        this.crs = crs;
+    }
 }
