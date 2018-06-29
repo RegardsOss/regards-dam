@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
@@ -117,7 +116,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @return updated entity from database
      * @throws ModuleException
      */
-    U create(U pEntity, MultipartFile pFile) throws ModuleException, IOException;
+    U create(U pEntity, MultipartFile pFile) throws ModuleException;
 
     /**
      * Create entity without description file
@@ -126,7 +125,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @return updated entity from database
      * @throws ModuleException
      */
-    default U create(U pEntity) throws ModuleException, IOException {
+    default U create(U pEntity) throws ModuleException {
         return this.create(pEntity, null);
     }
 
@@ -138,7 +137,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException;
+    U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException;
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
@@ -148,7 +147,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException;
+    U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException;
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
@@ -159,34 +158,20 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @throws ModuleException
      */
     default U update(U pEntity) throws ModuleException {
-        try {
-            if (pEntity.getId() != null) {
-                return this.update(pEntity.getId(), pEntity, null);
-            } else {
-                return this.update(pEntity.getIpId(), pEntity, null);
-            }
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
+        if (pEntity.getId() != null) {
+            return this.update(pEntity.getId(), pEntity, null);
+        } else {
+            return this.update(pEntity.getIpId(), pEntity, null);
         }
     }
 
     default U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
-        try {
-            return this.update(pEntityUrn, pEntity, null);
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
-        }
+        return this.update(pEntityUrn, pEntity, null);
+
     }
 
     default U update(Long pEntityId, U pEntity) throws ModuleException {
-        try {
-            return this.update(pEntityId, pEntity, null);
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
-        }
+        return this.update(pEntityId, pEntity, null);
     }
 
     /**
@@ -198,8 +183,8 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * Attach files to given entity
      *
      */
-    U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, String fileUriTemplate)
-            throws ModuleException;
+    AbstractEntity<?> attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
+            String fileUriTemplate) throws ModuleException;
 
     /**
      * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum
@@ -215,6 +200,5 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
     /**
      * Remove file
      */
-    U removeFile(UniformResourceName urn, String checksum) throws ModuleException;
-
+    AbstractEntity<?> removeFile(UniformResourceName urn, String checksum) throws ModuleException;
 }

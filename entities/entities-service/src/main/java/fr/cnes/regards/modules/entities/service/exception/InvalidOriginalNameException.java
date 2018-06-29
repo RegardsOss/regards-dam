@@ -27,12 +27,12 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
  *
  */
 @SuppressWarnings("serial")
-public class InvalidCharsetException extends ModuleException {
+public class InvalidOriginalNameException extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Invalid data file : expected %s charset, not %s";
+    private static final String MESSAGE_FORMAT = "Invalid data file : original name is required";
 
-    public InvalidCharsetException(String expectedCharset, String charset) {
-        super(String.format(MESSAGE_FORMAT, expectedCharset, charset));
+    public InvalidOriginalNameException() {
+        super(String.format(MESSAGE_FORMAT));
     }
 
 }

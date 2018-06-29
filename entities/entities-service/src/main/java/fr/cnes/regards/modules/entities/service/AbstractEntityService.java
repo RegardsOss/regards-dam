@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -100,6 +99,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      */
     protected final IModelService modelService;
 
+    @Autowired
+    private ILocalStorageService localStorageService;
+
     /**
      * Parameterized entity repository
      */
@@ -133,9 +135,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * {@link IRuntimeTenantResolver} instance
      */
     private final IRuntimeTenantResolver runtimeTenantResolver;
-
-    @Autowired
-    protected ILocalStorageService localStorageService;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
@@ -310,7 +309,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U create(U inEntity, MultipartFile file) throws ModuleException, IOException {
+    public U create(U inEntity, MultipartFile file) throws ModuleException {
         U entity = checkCreation(inEntity);
 
         // Set IpId
@@ -441,14 +440,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException {
+    public U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException {
         // checks
         U entityInDb = checkUpdate(pEntityId, pEntity);
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
     @Override
-    public U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException {
+    public U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException {
         U entityInDb = repository.findOneByIpId(pEntityUrn);
         if (entityInDb == null) {
             throw new EntityNotFoundException(pEntity.getIpId().toString());

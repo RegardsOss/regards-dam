@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +58,9 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 @MultitenantTransactional
 public class EntitiesService implements IEntitiesService {
 
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = LoggerFactory.getLogger(EntitiesService.class);
+
     @Autowired
     private IDatasetRepository datasetRepository;
 
@@ -68,9 +73,6 @@ public class EntitiesService implements IEntitiesService {
     @Autowired
     private IPluginService pluginService;
 
-    /**
-     * {@link ICollectionRepository} instance
-     */
     @Autowired
     private ICollectionRepository collectionRepository;
 
@@ -84,15 +86,15 @@ public class EntitiesService implements IEntitiesService {
     }
 
     @Override
-    public AbstractEntity<?> loadWithRelations(UniformResourceName pIpId) {
+    public AbstractEntity<?> loadWithRelations(UniformResourceName ipId) {
         // Particular case on datasets and collections which contains more relations
-        if (pIpId.getEntityType() == EntityType.DATASET) {
-            return datasetRepository.findByIpId(pIpId);
+        if (ipId.getEntityType() == EntityType.DATASET) {
+            return datasetRepository.findByIpId(ipId);
         }
-        if (pIpId.getEntityType() == EntityType.COLLECTION) {
-            return collectionRepository.findByIpId(pIpId);
+        if (ipId.getEntityType() == EntityType.COLLECTION) {
+            return collectionRepository.findByIpId(ipId);
         }
-        return entityRepository.findByIpId(pIpId);
+        return entityRepository.findByIpId(ipId);
     }
 
     @Override

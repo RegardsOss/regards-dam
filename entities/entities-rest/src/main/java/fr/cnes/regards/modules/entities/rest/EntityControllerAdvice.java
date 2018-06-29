@@ -30,6 +30,7 @@ import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
 import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidOriginalNameException;
 
 /**
  * Advice for specific entity exceptions
@@ -47,6 +48,12 @@ public class EntityControllerAdvice {
 
     @ExceptionHandler(InvalidContentTypeException.class)
     public ResponseEntity<ServerErrorResponse> invalidContentTypeException(InvalidContentTypeException exception) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ServerErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidOriginalNameException.class)
+    public ResponseEntity<ServerErrorResponse> invalidOriginalNameException(InvalidOriginalNameException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(exception.getMessage()));
     }

@@ -55,6 +55,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.LocalFile;
 import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidOriginalNameException;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
@@ -123,14 +124,24 @@ public class LocalStorageService implements ILocalStorageService {
                 }
             }
         } catch (URISyntaxException | IOException e) {
-            throw new ModuleException("An error occurred while saving documents files", e);
+            String message = String.format("Error during attaching file");
+            LOGGER.error(message, e);
+            throw new ModuleException(message, e);
         } catch (NoSuchAlgorithmException e) {
-            throw new ModuleException("No such algorithm (used on checksum computation)", e);
+            String message = String.format("No such algorithm (used on checksum computation)");
+            LOGGER.error(message, e);
+            throw new ModuleException(message, e);
         }
         return docFiles;
     }
 
     private void supports(DataType dataType, MultipartFile file) throws ModuleException {
+
+        // Original file must be given
+        if ((file.getOriginalFilename() == null) || file.getOriginalFilename().isEmpty()) {
+            throw new InvalidOriginalNameException();
+        }
+
         switch (dataType) {
             case DESCRIPTION:
                 checkFileSupported(file, StandardCharsets.UTF_8.toString(),
@@ -166,16 +177,18 @@ public class LocalStorageService implements ILocalStorageService {
         String contentType = file.getContentType();
         if (contentType != null) {
             int charsetIdx = contentType.indexOf(";charset");
-            String realContentType = (charsetIdx == -1) ? contentType : contentType.substring(0, charsetIdx);
-            return realContentType;
+            return (charsetIdx == -1) ? contentType.trim() : contentType.substring(0, charsetIdx).trim();
         }
         return null;
     }
 
     private String getCharset(MultipartFile file) {
         String contentType = file.getContentType();
-        int charsetIdx = contentType.indexOf("charset=");
-        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
+        if (contentType != null) {
+            int charsetIdx = contentType.indexOf("charset=");
+            return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).trim().toUpperCase();
+        }
+        return null;
     }
 
     /**
@@ -258,7 +271,10 @@ public class LocalStorageService implements ILocalStorageService {
 
         // Save file
         Path filePath = getDataFilePath(checksum);
-        Files.copy(file.getInputStream(), filePath);
+        // Accept a file to be attached to several entities
+        if (!Files.exists(filePath)) {
+            Files.copy(file.getInputStream(), filePath);
+        }
 
         // Save reference in database
         LocalFile localStorage = LocalFile.build(entity, checksum);
