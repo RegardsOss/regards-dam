@@ -43,6 +43,7 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -138,9 +139,8 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
                                  customizer, "Attachment error", collection.getIpId().toString(), DataType.DESCRIPTION);
     }
 
-    @Test
-    public void attachDocument() throws IOException {
-
+    private void uploadDocument() throws IOException {
+        // Upload document
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         customizer.addExpectation(MockMvcResultMatchers
@@ -152,6 +152,34 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultFileUpload(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENTS_MAPPING, files,
                                  customizer, "Attachment error", collection.getIpId().toString(), DataType.DOCUMENT);
+    }
+
+    @Test
+    public void attachDocument() throws IOException {
+
+        uploadDocument();
+
+        // Download document
+        DataFile dataFile = collection.getFiles().get(DataType.DOCUMENT).stream().findFirst().get();
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        performDefaultGet(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENT_MAPPING, customizer,
+                          "Download error", collection.getIpId().toString(), dataFile.getChecksum());
+    }
+
+    @Test
+    public void removeDocument() throws IOException {
+
+        uploadDocument();
+
+        // Remove document
+        DataFile dataFile = collection.getFiles().get(DataType.DOCUMENT).stream().findFirst().get();
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        performDefaultDelete(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENT_MAPPING, customizer,
+                             "Download error", collection.getIpId().toString(), dataFile.getChecksum());
     }
 
 }

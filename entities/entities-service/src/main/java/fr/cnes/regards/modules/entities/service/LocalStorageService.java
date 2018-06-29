@@ -199,9 +199,9 @@ public class LocalStorageService implements ILocalStorageService {
     public void removeFile(AbstractEntity<?> entity, DataFile dataFile) throws ModuleException {
 
         // Retrieve reference
-        Optional<LocalFile> localStorage = localStorageRepo.findOneByEntityAndFileChecksum(entity,
+        Optional<LocalFile> localFile = localStorageRepo.findOneByEntityAndFileChecksum(entity,
                                                                                            dataFile.getChecksum());
-        if (!localStorage.isPresent()) {
+        if (!localFile.isPresent()) {
             throw new EntityNotFoundException(String.format("Failed to remove the file %s for the document %s",
                                                             dataFile.getName(), entity.getIpId().toString()),
                     LocalFile.class);
@@ -229,7 +229,7 @@ public class LocalStorageService implements ILocalStorageService {
                 LOGGER.info("File %s was not removed on disk since another document uses it", filePath.toString());
             }
             // Remove from database
-            localStorageRepo.delete(localStorage.get().getId());
+            localStorageRepo.delete(localFile.get().getId());
         }
 
     }
