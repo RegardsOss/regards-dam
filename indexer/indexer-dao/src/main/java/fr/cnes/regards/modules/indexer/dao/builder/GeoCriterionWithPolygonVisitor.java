@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,8 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+package fr.cnes.regards.modules.indexer.dao.builder;
+
 /**
- * @author Sylvain Vissiere-Guerinet
- *
+ * Criterion visitor implementation to manage a criterion containing geometric criterions on other CRS (as Mars or Astro
+ * ones). The only geometric criterion found is a PolygonCriterion one.
+ * All polygon criterions must be modified with projected coordinates.
+ * @author oroussel
  */
-package fr.cnes.regards.modules.entities.service.visitor;
+public class GeoCriterionWithPolygonVisitor {
+
+}

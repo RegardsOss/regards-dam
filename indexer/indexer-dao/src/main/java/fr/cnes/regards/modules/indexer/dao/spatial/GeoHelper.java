@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
 import java.util.EnumMap;
+import java.util.function.Predicate;
 
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
@@ -33,6 +34,24 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
+import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.LongMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  * Geo spatial utilities class
@@ -134,7 +153,6 @@ public class GeoHelper {
         return calc.getDestinationPosition().getCoordinate();
     }
 
-
     public static double[] getPointAtDirection(double srcLon, double srcLat, double azimuth, double distance, Crs crs)
             throws TransformException {
         GeodeticCalculator calc = calcMap.get(crs);
@@ -148,5 +166,115 @@ public class GeoHelper {
         DirectPosition srcPos = new DirectPosition2D(fromPoint[0], fromPoint[1]);
         DirectPosition destPos = transform.transform(srcPos, null);
         return destPos.getCoordinate();
+    }
+
+    /**
+     * Does criterion tree contain a CircleCriterion ?
+     */
+    public static boolean containsCircleCriterion(ICriterion criterion) {
+        PredicateCriterionVisitor visitor = new PredicateCriterionVisitor(crit -> crit instanceof CircleCriterion);
+        return criterion.accept(visitor);
+    }
+
+    /**
+     * Does criterion tree contain a PolygonCriterion or a BoundaryBoxCriterion ?
+     */
+    public static boolean containsPolygonOrBboxCriterion(ICriterion criterion) {
+        PredicateCriterionVisitor visitor = new PredicateCriterionVisitor(
+                crit -> crit instanceof PolygonCriterion || crit instanceof BoundaryBoxCriterion);
+        return criterion.accept(visitor);
+    }
+
+    /**
+     * ICriterion visitor applying specified predicate on all ICriterion tree nodes. Not leaf nodes return true if one
+     * of their childs has respond true (Permit to find if tree contains a certain type of ICriterion)
+     */
+    private static class PredicateCriterionVisitor implements ICriterionVisitor<Boolean> {
+
+        private Predicate<ICriterion> predicate;
+
+        public PredicateCriterionVisitor(Predicate<ICriterion> predicate) {
+            this.predicate = predicate;
+        }
+
+        @Override
+        public Boolean visitEmptyCriterion(EmptyCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitAndCriterion(AbstractMultiCriterion criterion) {
+            return criterion.getCriterions().stream().anyMatch(c -> c.accept(this)) || predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitOrCriterion(AbstractMultiCriterion criterion) {
+            return criterion.getCriterions().stream().anyMatch(c -> c.accept(this)) || predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitNotCriterion(NotCriterion criterion) {
+            return criterion.getCriterion().accept(this) || predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitStringMatchCriterion(StringMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitIntMatchCriterion(IntMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitLongMatchCriterion(LongMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitDateMatchCriterion(DateMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public <U extends Comparable<? super U>> Boolean visitRangeCriterion(RangeCriterion<U> criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitDateRangeCriterion(DateRangeCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitPolygonCriterion(PolygonCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitCircleCriterion(CircleCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
+        public Boolean visitFieldExistsCriterion(FieldExistsCriterion criterion) {
+            return predicate.test(criterion);
+        }
     }
 }
