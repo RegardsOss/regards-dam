@@ -5,7 +5,16 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Dataset metadata. This object is only used by Elasticsearch
+ * Dataset metadata. This object is only used by Elasticsearch<br/>
+ *
+ * Register all access rights for data object level :
+ * <ul>
+ * <li>Map keys represent groups with full access on metadata (i.e. AccessLevel set to FULL_ACCESS)</li>
+ * <li>Map value represents the data access rights for the related group : true if and only if DataAccessLevel set to
+ * INHERITED_ACCESS
+ * (CUSTOM_ACCESS not supported at the moment)</li>
+ * </ul>
+ *
  * @author oroussel
  */
 public class DatasetMetadata {

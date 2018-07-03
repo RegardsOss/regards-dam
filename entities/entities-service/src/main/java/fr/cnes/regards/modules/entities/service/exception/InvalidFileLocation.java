@@ -18,23 +18,21 @@
  */
 package fr.cnes.regards.modules.entities.service.exception;
 
-import java.util.Collection;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * Data file invalid content type exception
+ * Data file invalid location exception
  *
  * @author Marc Sordi
  *
  */
 @SuppressWarnings("serial")
-public class InvalidContentTypeException extends ModuleException {
+public class InvalidFileLocation extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Invalid data file : unexpected content type %s (one of %s required)";
+    private static final String MESSAGE_FORMAT = "File %s is not stored locally. Please use correct URI!";
 
-    public InvalidContentTypeException(Collection<String> expectedContentTypes, String contentType) {
-        super(String.format(MESSAGE_FORMAT, contentType, expectedContentTypes.toString()));
+    public InvalidFileLocation(String filename) {
+        super(String.format(MESSAGE_FORMAT, filename));
     }
 
 }

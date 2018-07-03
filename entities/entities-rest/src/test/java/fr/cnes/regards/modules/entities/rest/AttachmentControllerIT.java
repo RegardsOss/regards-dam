@@ -24,16 +24,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.matchers.JsonPathMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -42,6 +48,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.rest.dto.DataFileReference;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -58,7 +65,10 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @MultitenantTransactional
 public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
 
-    public static final Path ATTACHMENT_FOLDER = Paths.get("src", "test", "resources", "attachments");
+    private static final Path ATTACHMENT_FOLDER = Paths.get("src", "test", "resources", "attachments");
+
+    private static final String PDF_CONTENT_TYPE = MediaType.APPLICATION_PDF_VALUE + " ;charset="
+            + StandardCharsets.UTF_8.toString();
 
     @Autowired
     private IModelService modelService;
@@ -92,6 +102,14 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
         return file;
     }
 
+    private MockMultipartFile getMultipartFileRefs(DataFileReference... refs) throws IOException {
+        Assert.assertNotNull(refs);
+        String contentAsString = gson(Arrays.asList(refs));
+        MockMultipartFile file = new MockMultipartFile("refs", "", MediaType.APPLICATION_JSON_VALUE,
+                contentAsString.getBytes());
+        return file;
+    }
+
     @Test
     public void attachDescription() throws IOException {
 
@@ -101,11 +119,80 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
                 .jsonPath("$.content.feature.files." + DataType.DESCRIPTION.toString() + ".length()",
                           Matchers.equalTo(2)));
 
-        String pdfContentType = MediaType.APPLICATION_PDF_VALUE + " ;charset=" + StandardCharsets.UTF_8.toString();
+        List<MockMultipartFile> files = new ArrayList<>();
+        files.add(getMultipartFile("description.pdf", PDF_CONTENT_TYPE));
+        files.add(getMultipartFile("description2.pdf", PDF_CONTENT_TYPE));
+
+        performDefaultFileUpload(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENTS_MAPPING, files,
+                                 customizer, "Attachment error", collection.getIpId().toString(), DataType.DESCRIPTION);
+    }
+
+    @Test
+    public void attachGetAndRemoveDescription() throws IOException {
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers
+                .jsonPath("$.content.feature.files." + DataType.DESCRIPTION.toString() + ".length()",
+                          Matchers.equalTo(1)));
 
         List<MockMultipartFile> files = new ArrayList<>();
-        files.add(getMultipartFile("description.pdf", pdfContentType));
-        files.add(getMultipartFile("description2.pdf", pdfContentType));
+
+        // Create description reference
+        DataFileReference ref = new DataFileReference();
+        ref.setMimeType(MediaType.parseMediaType(PDF_CONTENT_TYPE));
+        ref.setUri("https://public.ccsds.org/pubs/650x0m2.pdf");
+        ref.setFilename("650x0m2.pdf");
+
+        files.add(getMultipartFileRefs(ref));
+
+        ResultActions result = performDefaultFileUpload(AttachmentController.TYPE_MAPPING
+                + AttachmentController.ATTACHMENTS_MAPPING, files, customizer, "Attachment error",
+                                                        collection.getIpId().toString(), DataType.DESCRIPTION);
+
+        String json = payload(result);
+        String checksum = JsonPath.read(json,
+                                        "$.content.feature.files." + DataType.DESCRIPTION.toString() + "[0].checksum");
+        Assert.assertNotNull(checksum);
+
+        // Get it
+        customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        performDefaultGet(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENT_MAPPING, customizer,
+                          "Download error", collection.getIpId().toString(), checksum);
+
+        // Remove it
+        customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+
+        result = performDefaultDelete(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENT_MAPPING,
+                                      customizer, "Remove error", collection.getIpId().toString(), checksum);
+        json = payload(result);
+        Assert.assertThat("Description must be removed",
+                          JsonPathMatchers.hasNoJsonPath("$.content.feature.files." + DataType.DESCRIPTION.toString()));
+
+    }
+
+    @Test
+    public void attachRefAndNormalDescription() throws IOException {
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers
+                .jsonPath("$.content.feature.files." + DataType.DESCRIPTION.toString() + ".length()",
+                          Matchers.equalTo(2)));
+
+        List<MockMultipartFile> files = new ArrayList<>();
+
+        // Create description reference
+        DataFileReference ref = new DataFileReference();
+        ref.setMimeType(MediaType.parseMediaType(PDF_CONTENT_TYPE));
+        ref.setUri("https://public.ccsds.org/pubs/650x0m2.pdf");
+        ref.setFilename("650x0m2.pdf");
+        files.add(getMultipartFileRefs(ref));
+
+        // Create normal description
+        files.add(getMultipartFile("description.pdf", PDF_CONTENT_TYPE));
 
         performDefaultFileUpload(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENTS_MAPPING, files,
                                  customizer, "Attachment error", collection.getIpId().toString(), DataType.DESCRIPTION);
@@ -179,7 +266,7 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         performDefaultDelete(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENT_MAPPING, customizer,
-                             "Download error", collection.getIpId().toString(), dataFile.getChecksum());
+                             "Remove error", collection.getIpId().toString(), dataFile.getChecksum());
     }
 
 }

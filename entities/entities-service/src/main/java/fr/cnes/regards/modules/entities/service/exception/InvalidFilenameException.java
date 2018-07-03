@@ -21,17 +21,17 @@ package fr.cnes.regards.modules.entities.service.exception;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * Data file invalid charset exception
+ * Data file invalid filename exception
  *
  * @author Marc Sordi
  *
  */
 @SuppressWarnings("serial")
-public class InvalidOriginalNameException extends ModuleException {
+public class InvalidFilenameException extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Invalid data file : original name is required";
+    private static final String MESSAGE_FORMAT = "Invalid data file : filename is required";
 
-    public InvalidOriginalNameException() {
+    public InvalidFilenameException() {
         super(String.format(MESSAGE_FORMAT));
     }
 

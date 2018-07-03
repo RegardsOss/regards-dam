@@ -26,10 +26,10 @@ public class DataObjectMetadata {
     private final Multimap<Long, String> modelIds = HashMultimap.create();
 
     /**
-     * @param accessRight true if data access is granted for (group, dataset ip id)
+     * @param dataAccessGranted true if data access is granted for (group, dataset ip id)
      */
-    public void addGroup(String groupName, String datasetIpId, boolean accessRight) {
-        groups.put(groupName, new DatasetAccessRight(datasetIpId, accessRight));
+    public void addGroup(String groupName, String datasetIpId, boolean dataAccessGranted) {
+        groups.put(groupName, new DatasetAccessRight(datasetIpId, dataAccessGranted));
     }
 
     public void removeGroup(String groupName, String datasetIpId) {
@@ -41,12 +41,12 @@ public class DataObjectMetadata {
      * Remove given ipId from all values (groups multimap AND modelIds multimap)
      */
     public void removeDatasetIpId(String datasetIpId) {
-        for (Iterator<DatasetAccessRight> i = groups.values().iterator(); i.hasNext(); ) {
+        for (Iterator<DatasetAccessRight> i = groups.values().iterator(); i.hasNext();) {
             if (i.next().getDataset().equals(datasetIpId)) {
                 i.remove();
             }
         }
-        for (Iterator<String> i = modelIds.values().iterator(); i.hasNext(); ) {
+        for (Iterator<String> i = modelIds.values().iterator(); i.hasNext();) {
             if (i.next().equals(datasetIpId)) {
                 i.remove();
             }
@@ -59,12 +59,13 @@ public class DataObjectMetadata {
     }
 
     /**
-     * Retrieve a map of { group -> data access}. data access is a true boolean if at least one associated dataset grants
+     * Retrieve a map of { group -> data access}. data access is a true boolean if at least one associated dataset
+     * grants
      * data access, false otherwise
      */
     public Map<String, Boolean> getGroupsAccessRightsMap() {
-        return Maps.transformValues(groups.asMap(), rights -> rights.stream()
-                .anyMatch(datasetAccessRight -> datasetAccessRight.isAccessRight()));
+        return Maps.transformValues(groups
+                .asMap(), rights -> rights.stream().anyMatch(datasetAccessRight -> datasetAccessRight.isAccessRight()));
     }
 
     public void addModelId(long modelId, String datasetIpId) {
@@ -83,14 +84,17 @@ public class DataObjectMetadata {
 
         private String dataset;
 
-        private boolean accessRight;
+        /**
+         * <b>Data</b> access right
+         */
+        private boolean dataAccessRight;
 
         public DatasetAccessRight() {
         }
 
         public DatasetAccessRight(String dataset, boolean accessRight) {
             this.dataset = dataset;
-            this.accessRight = accessRight;
+            this.dataAccessRight = accessRight;
         }
 
         public String getDataset() {
@@ -102,11 +106,11 @@ public class DataObjectMetadata {
         }
 
         public boolean isAccessRight() {
-            return accessRight;
+            return dataAccessRight;
         }
 
         public void setAccessRight(boolean accessRight) {
-            this.accessRight = accessRight;
+            this.dataAccessRight = accessRight;
         }
 
         @Override
@@ -114,7 +118,7 @@ public class DataObjectMetadata {
             if (this == o) {
                 return true;
             }
-            if (o == null || getClass() != o.getClass()) {
+            if ((o == null) || (getClass() != o.getClass())) {
                 return false;
             }
             DatasetAccessRight that = (DatasetAccessRight) o;
@@ -128,4 +132,3 @@ public class DataObjectMetadata {
         }
     }
 }
-

@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.entities.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,6 +48,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.rest.dto.DataFileReference;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
@@ -87,7 +91,9 @@ public class AttachmentController {
     @RequestMapping(method = RequestMethod.POST, value = ATTACHMENTS_MAPPING)
     @ResourceAccess(description = "Attach files of a same data type to an entity")
     public ResponseEntity<Resource<AbstractEntity<?>>> attachFiles(@Valid @PathVariable UniformResourceName urn,
-            @PathVariable DataType dataType, @RequestParam("file") MultipartFile[] attachments)
+            @PathVariable DataType dataType,
+            @Valid @RequestPart(name = "refs", required = false) List<DataFileReference> refs,
+            @RequestPart("file") MultipartFile[] attachments)
             throws ModuleException, NoSuchMethodException, SecurityException {
 
         LOGGER.debug("Attaching files of type \"{}\" to entity \"{}\"", dataType, urn.toString());
@@ -99,8 +105,14 @@ public class AttachmentController {
                                                   HttpServletResponse.class),
                         urn, LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE);
 
+        // Manage reference
+        List<DataFile> dataFileRefs = new ArrayList<>();
+        if (refs != null) {
+            refs.forEach(ref -> dataFileRefs.add(ref.toDataFile(dataType)));
+        }
+
         // Attach files to the entity
-        AbstractEntity<?> entity = getEntityService(urn).attachFiles(urn, dataType, attachments,
+        AbstractEntity<?> entity = getEntityService(urn).attachFiles(urn, dataType, attachments, dataFileRefs,
                                                                      controllerLinkBuilder.toUri().toString());
         return ResponseEntity.ok(new Resource<>(entity));
     }
@@ -118,10 +130,10 @@ public class AttachmentController {
         if (origin != null) {
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
         }
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + dataFile.getName());
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + dataFile.getFilename());
         response.setContentType(dataFile.getMimeType().toString());
-        response.setContentLengthLong(dataFile.getSize());
         getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
+        response.setContentLengthLong(dataFile.getFilesize());
         response.getOutputStream().flush();
         response.setStatus(HttpStatus.OK.value());
     }

@@ -30,7 +30,8 @@ import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
 import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
-import fr.cnes.regards.modules.entities.service.exception.InvalidOriginalNameException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFileLocation;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFilenameException;
 
 /**
  * Advice for specific entity exceptions
@@ -52,8 +53,14 @@ public class EntityControllerAdvice {
                 .body(new ServerErrorResponse(exception.getMessage()));
     }
 
-    @ExceptionHandler(InvalidOriginalNameException.class)
-    public ResponseEntity<ServerErrorResponse> invalidOriginalNameException(InvalidOriginalNameException exception) {
+    @ExceptionHandler(InvalidFilenameException.class)
+    public ResponseEntity<ServerErrorResponse> invalidFilenameException(InvalidFilenameException exception) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ServerErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidFileLocation.class)
+    public ResponseEntity<ServerErrorResponse> invalidFileLocation(InvalidFileLocation exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(exception.getMessage()));
     }

@@ -94,50 +94,38 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param pToAssociates URNs of entities to be associated by source entity
+     * @param toAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
      */
-    void associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
+    void associate(Long pEntityId, Set<UniformResourceName> toAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param pToBeDissociated URNs of entities to be dissociated from source entity
+     * @param toBeDissociated URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
      */
-    void dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
+    void dissociate(Long pEntityId, Set<UniformResourceName> toBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity
      *
-     * @param pEntity entity to create
-     * @param pFile description file (or null)
+     * @param entity entity to create
      * @return updated entity from database
      * @throws ModuleException
      */
-    U create(U pEntity, MultipartFile pFile) throws ModuleException;
-
-    /**
-     * Create entity without description file
-     *
-     * @param pEntity entioty to create
-     * @return updated entity from database
-     * @throws ModuleException
-     */
-    default U create(U pEntity) throws ModuleException {
-        return this.create(pEntity, null);
-    }
+    U create(U entity) throws ModuleException;
 
     /**
      * Update entity of id pEntityId according to pEntity
      *
-     * @param pEntityId id of entity to update
-     * @param pEntity "content" of entity to update
+     * @param entityId id of entity to update
+     * @param entity "content" of entity to update
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException;
+    U update(Long entityId, U entity) throws ModuleException;
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
@@ -147,7 +135,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException;
+    U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
@@ -159,19 +147,10 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      */
     default U update(U pEntity) throws ModuleException {
         if (pEntity.getId() != null) {
-            return this.update(pEntity.getId(), pEntity, null);
+            return this.update(pEntity.getId(), pEntity);
         } else {
-            return this.update(pEntity.getIpId(), pEntity, null);
+            return this.update(pEntity.getIpId(), pEntity);
         }
-    }
-
-    default U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
-        return this.update(pEntityUrn, pEntity, null);
-
-    }
-
-    default U update(Long pEntityId, U pEntity) throws ModuleException {
-        return this.update(pEntityId, pEntity, null);
     }
 
     /**
@@ -184,7 +163,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      *
      */
     AbstractEntity<?> attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
-            String fileUriTemplate) throws ModuleException;
+            List<DataFile> refs, String fileUriTemplate) throws ModuleException;
 
     /**
      * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum

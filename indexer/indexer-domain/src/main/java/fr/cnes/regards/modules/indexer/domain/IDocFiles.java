@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.indexer.domain;
 
 import com.google.common.collect.Multimap;
 
+import fr.cnes.regards.framework.oais.urn.DataType;
+
 /**
  * The unique intend of this interface is to avoid calling IEsRepository.computeDataFilesSummary() on data that do not
  * specify an attribute "files" whose type is Multimap&lt;String, DataFile> (or more precisely a multimap with a key of
@@ -28,5 +30,9 @@ import com.google.common.collect.Multimap;
  */
 public interface IDocFiles {
 
-    Multimap<?, DataFile> getFiles();
+    /**
+     * List of related files. Use
+     * {@link DataFile#build(fr.cnes.regards.framework.oais.urn.DataType, String, String, org.springframework.util.MimeType, Boolean)}
+     */
+    Multimap<DataType, DataFile> getFiles();
 }
