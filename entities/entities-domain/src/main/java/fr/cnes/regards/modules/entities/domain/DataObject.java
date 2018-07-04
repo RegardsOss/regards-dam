@@ -101,62 +101,6 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         this.internal = internal;
     }
 
-    // FIXME remove
-    // /**
-    // * Update both containsPhysicalData and canBeExternallyDownloaded properties on DataObject AND downloadable
-    // property
-    // * on all associated files.
-    // * Theses properties are needed by frontend
-    // */
-    // public void updateJsonSpecificProperties() {
-    // containsPhysicalData = containsPhysicalData();
-    // canBeExternallyDownloaded = canBeExternallyDownloaded();
-    // updateDownloadable();
-    // }
-    //
-    // /**
-    // * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
-    // * This concerns only RAW_DATA and all QUICKLOOKS
-    // */
-    // protected boolean containsPhysicalData() {
-    // return Multimaps.filterKeys(getFiles(), k -> {
-    // switch (k) {
-    // case RAWDATA:
-    // case QUICKLOOK_SD:
-    // case QUICKLOOK_MD:
-    // case QUICKLOOK_HD:
-    // return true;
-    // default:
-    // return false;
-    // }
-    // }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
-    // }
-    //
-    // /**
-    // * @return true if at least one associated file (through "files" property) can be externally downloaded
-    // * This concerns only RAW_DATA and all QUICKLOOKS
-    // */
-    // protected boolean canBeExternallyDownloaded() {
-    // return Multimaps.filterKeys(getFiles(), k -> {
-    // switch (k) {
-    // case RAWDATA:
-    // case QUICKLOOK_SD:
-    // case QUICKLOOK_MD:
-    // case QUICKLOOK_HD:
-    // return true;
-    // default:
-    // return false;
-    // }
-    // }).values().stream().filter(DataFile::canBeExternallyDownloaded).findAny().isPresent();
-    // }
-    //
-    // /**
-    // * Update downloadable property on all files
-    // */
-    // public void updateDownloadable() {
-    // Multimaps.filterKeys(getFiles(), k -> k == DataType.RAWDATA).values().forEach(DataFile::isDownloadable);
-    // }
-
     @Override
     public int hashCode() {
         return super.hashCode();
