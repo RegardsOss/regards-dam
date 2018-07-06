@@ -104,6 +104,19 @@
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.hipparchus</groupId>
+			<artifactId>hipparchus-geometry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-referencing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-metadata</artifactId>
+		</dependency>
+
 
 		<!-- Test dependencies -->
 		<dependency>

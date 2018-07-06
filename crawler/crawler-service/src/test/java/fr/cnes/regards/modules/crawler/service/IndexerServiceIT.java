@@ -42,6 +42,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
@@ -152,8 +153,8 @@ public class IndexerServiceIT {
                                                        OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder
-                               .buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder.buildDate("dateAtt",
+                                                  OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
         attributes.add(AttributeBuilder.buildDateInterval("dateInterval",
                                                           OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
                                                           OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
@@ -183,18 +184,20 @@ public class IndexerServiceIT {
 
         attributes.add(AttributeBuilder.buildString("string", "Esope reste et se repose"));
 
-        final ObjectAttribute fragment = AttributeBuilder.buildObject("correspondance", AttributeBuilder
-                .buildStringArray("stringArrayMusset", "Quand je mets à vos pieds un éternel hommage",
-                                  "Voulez-vous qu'un instant je change de visage ?",
-                                  "Vous avez capturé les sentiments d'un coeur",
-                                  "Que pour vous adorer forma le créateur.",
-                                  "Je vous chéris, amour, et ma plume en délire",
-                                  "Couche sur le papier ce que je n'ose dire.",
-                                  "Avec soin de mes vers lisez les premiers mots,",
-                                  "Vous saurez quel remède apporter à mes maux."), AttributeBuilder
-                                                                              .buildStringArray("stringArraySand",
-                                                                                                "Cette indigne faveur que votre esprit réclame",
-                                                                                                "Nuit à mes sentiments et répugne à mon âme"));
+        final ObjectAttribute fragment = AttributeBuilder
+                .buildObject("correspondance",
+                             AttributeBuilder.buildStringArray("stringArrayMusset",
+                                                               "Quand je mets à vos pieds un éternel hommage",
+                                                               "Voulez-vous qu'un instant je change de visage ?",
+                                                               "Vous avez capturé les sentiments d'un coeur",
+                                                               "Que pour vous adorer forma le créateur.",
+                                                               "Je vous chéris, amour, et ma plume en délire",
+                                                               "Couche sur le papier ce que je n'ose dire.",
+                                                               "Avec soin de mes vers lisez les premiers mots,",
+                                                               "Vous saurez quel remède apporter à mes maux."),
+                             AttributeBuilder.buildStringArray("stringArraySand",
+                                                               "Cette indigne faveur que votre esprit réclame",
+                                                               "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
         collection.setProperties(attributes);
@@ -207,7 +210,8 @@ public class IndexerServiceIT {
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         final List<Collection> singleCollColl = searchService
                 .search(new SimpleSearchKey<>(EntityType.COLLECTION.toString(), Collection.class), 10,
-                        ICriterion.eq("properties.int", 42)).getContent();
+                        ICriterion.eq("feature.properties.int", 42))
+                .getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -266,6 +270,7 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
+        // FIXME : this criterion cannot be available
         final ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         // SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
         final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities();

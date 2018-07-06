@@ -67,12 +67,12 @@ public class CollectionServiceTest {
 
     private ICollectionService collectionServiceMocked;
 
-    private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+    private IAbstractEntityRepository<AbstractEntity<?>> entitiesRepositoryMocked;
 
     /**
      * initialize the repo before each test
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void init() {
 
@@ -104,13 +104,13 @@ public class CollectionServiceTest {
         Mockito.when(collectionRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
-        final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
+        List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
         Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection1.getId())).thenReturn(collection1);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
+        Mockito.when(entitiesRepositoryMocked.findOne(collection1.getId())).thenReturn((AbstractEntity) collection1);
+        Mockito.when(entitiesRepositoryMocked.findOne(collection2.getId())).thenReturn((AbstractEntity) collection2);
+        Mockito.when(entitiesRepositoryMocked.findOne(collection3.getId())).thenReturn((AbstractEntity) collection3);
 
         IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
@@ -118,12 +118,12 @@ public class CollectionServiceTest {
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
-        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null,
-                publisherMocked, runtimeTenantResolver, null);
+                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
+                runtimeTenantResolver);
     }
 
     @Test

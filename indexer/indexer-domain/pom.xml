@@ -51,6 +51,14 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>jpa-data-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>oais-regards</artifactId>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>

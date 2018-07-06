@@ -18,18 +18,10 @@
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
 
-import java.util.Map;
+import org.springframework.util.MultiValueMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.convert.converter.Converter;
-
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.opensearch.service.converter.PolygonToArray;
+import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
@@ -39,38 +31,17 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  */
 public class GeometryParser implements IParser {
 
-    /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryParser.class);
-
     @Override
-    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
-
-        String geoParam = parameters.get("g");
-
+    public ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException {
+        String geoParam = parameters.getFirst("g");
         // Check required query parameter
         if (geoParam == null) {
             return null;
         }
-
         try {
-            WKTReader wkt = new WKTReader();
-            Geometry geometry = wkt.read(geoParam);
-
-            if ("Polygon".equals(geometry.getGeometryType())) {
-                Polygon polygon = (Polygon) geometry;
-                Converter<Polygon, Double[][][]> converter = new PolygonToArray();
-                Double[][][] coordinates = converter.convert(polygon);
-                return ICriterion.intersectsPolygon(coordinates);
-            } else {
-                // Only Polygons are handled for now
-                throw new OpenSearchParseException("The passed WKT string does not reference");
-            }
-        } catch (ParseException e) {
-            LOGGER.error("Geometry parsing error", e);
-            throw new OpenSearchParseException(e.getMessage(), e);
+            return GeometryCriterionBuilder.build(geoParam);
+        } catch (InvalidGeometryException e) {
+            throw new OpenSearchParseException(e);
         }
     }
-
 }

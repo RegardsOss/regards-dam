@@ -35,7 +35,7 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
     public void accept(DataObject object) {
         // reset groupsMap and modelIds for this datasetIpId
         object.getMetadata().removeDatasetIpId(datasetIpId);
-        object.getTags().add(datasetIpId);
+        object.addTags(datasetIpId);
         // set current groupsMap and modelIds on metadata for this datasetIpId
         groupsMap.forEach((group, dataGranted) -> object.getMetadata().addGroup(group, datasetIpId, dataGranted));
         object.getMetadata().addModelId(datasetModelId, datasetIpId);

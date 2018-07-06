@@ -20,91 +20,100 @@ package fr.cnes.regards.modules.indexer.domain;
 
 import java.net.URI;
 
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.util.MimeType;
 
+import fr.cnes.regards.framework.oais.urn.DataType;
+
 /**
- * This class manages physical data reference
+ * This class manages data reference. Use {@link #build(DataType, String, String, MimeType, Boolean)} to instanciate it.
+ *
  * @author lmieulet
+ * @author Marc Sordi
  */
 public class DataFile {
 
     /**
-     * File reference
+     * Required data type
      */
+    @NotBlank(message = "Data type is required")
+    protected DataType dataType;
+
+    /**
+     * Required file reference
+     */
+    @NotBlank(message = "URI is required")
     protected String uri;
 
     /**
-     * File checksum
+     * Required {@link MimeType}
+     */
+    @NotNull(message = "MIME type is required")
+    protected MimeType mimeType;
+
+    /**
+     * Required width if image file
+     */
+    protected Integer imageWidth;
+
+    /**
+     * Required height if image file
+     */
+    protected Integer imageHeight;
+
+    /**
+     * Required field to know if the file is online ? (if not, it is NEARLINE)
+     * Boolean is used better than boolean because in case DataObject is external (not managed by rs_storage), this
+     * concept doesn't exist and so online is null
+     */
+    @NotNull(message = "Online flag is required")
+    private Boolean online;
+
+    /**
+     * Optional file checksum
      */
     private String checksum;
 
     /**
-     * Digest algorithm used to compute file checksum
+     * Optional digest algorithm used to compute file checksum
      */
     private String digestAlgorithm;
 
     /**
-     * File size
+     * Optional file size
      */
-    private Long size;
+    private Long filesize;
 
     /**
-     * File name
+     * Required filename
      */
-    private String name;
+    @NotBlank(message = "Filename is required")
+    private String filename;
 
-    /**
-     * Is the file online ? (if not, it is NEARLINE)
-     * Boolean is used better than boolean because in case DataObject is external (not managed by rs_storage), this
-     * concept doesn't exist and so online is null
-     */
-    private Boolean online;
+    public DataType getDataType() {
+        return dataType;
+    }
 
-    /**
-     * {@link MimeType}
-     */
-    private MimeType mimeType;
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
 
-    private Integer imageWidth;
+    public String getUri() {
+        return uri;
+    }
 
-    private Integer imageHeight;
-
-    /**
-     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search through
-     * DataObject updating.
-     */
-    private Boolean downloadable = null;
-
-    public URI getUri() {
+    public URI asUri() {
         return URI.create(uri);
     }
 
-    public void setUri(URI fileRef) {
-        uri = fileRef.toString();
+    public void setUri(URI uri) {
+        this.uri = uri.toString();
     }
 
-    public String getDigestAlgorithm() {
-        return digestAlgorithm;
-    }
-
-    public void setDigestAlgorithm(String digestAlgorithm) {
-        this.digestAlgorithm = digestAlgorithm;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public void setChecksum(String checksum) {
-        this.checksum = checksum;
-    }
-
-    public Long getSize() {
-        return size;
-    }
-
-    public void setSize(Long fileSize) {
-        size = fileSize;
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     public MimeType getMimeType() {
@@ -113,22 +122,6 @@ public class DataFile {
 
     public void setMimeType(MimeType mimeType) {
         this.mimeType = mimeType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Boolean getOnline() {
-        return online;
-    }
-
-    public void setOnline(Boolean online) {
-        this.online = online;
     }
 
     public Integer getImageWidth() {
@@ -147,38 +140,88 @@ public class DataFile {
         this.imageHeight = imageHeight;
     }
 
-    /**
-     * Is this file managed internally by regards (in fact storage) and so can be downloaded (regardless user rights) ?
-     * Its size must be present if yes
-     * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
-     */
-    public boolean isPhysicallyAvailable() {
-        return (online != null) && (size != null) && (size > 0l);
+    public Boolean isOnline() {
+        return online;
     }
 
     /**
-     * Is this file not managed internally by regards can be downloaded ?
-     * @return true is associated file url starts with http or https
+     * Please use {@link #isOnline()}
      */
-    public boolean canBeExternallyDownloaded() {
-        return (online == null) && (uri != null) && (uri.startsWith("http") || uri.startsWith("https"));
+    @Deprecated
+    public Boolean getOnline() {
+        return isOnline();
     }
 
-    /**
-     * A DataFile is downloadable IF it is managed by storage (=> online != null) and is ONLINE
-     * OR external (ie not managed by storage) and uri starts with http
-     */
-    public boolean isDownloadable() {
-        downloadable = ((online != null) && online) || canBeExternallyDownloaded();
-        return downloadable;
+    public void setOnline(Boolean online) {
+        this.online = online;
     }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
+
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
+    }
+
+    public Long getFilesize() {
+        return filesize;
+    }
+
+    public void setFilesize(Long filesize) {
+        this.filesize = filesize;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    // FIXME remove
+    // /**
+    // * Is this file managed internally by regards (in fact storage) and so can be downloaded (regardless user rights)
+    // ?
+    // * Its size must be present if yes
+    // * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
+    // */
+    // public boolean isPhysicallyAvailable() {
+    // return (online != null) && (filesize != null) && (filesize > 0l);
+    // }
+    //
+    // /**
+    // * Is this file not managed internally by regards can be downloaded ?
+    // * @return true is associated file url starts with http or https
+    // */
+    // public boolean canBeExternallyDownloaded() {
+    // return (online == null) && (uri != null) && (uri.startsWith("http") || uri.startsWith("https"));
+    // }
+    //
+    // /**
+    // * A DataFile is downloadable IF it is managed by storage (=> online != null) and is ONLINE
+    // * OR external (ie not managed by storage) and uri starts with http
+    // */
+    // public boolean isDownloadable() {
+    // downloadable = ((online != null) && online) || canBeExternallyDownloaded();
+    // return downloadable;
+    // }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
         }
 
@@ -190,5 +233,30 @@ public class DataFile {
     @Override
     public int hashCode() {
         return uri.hashCode();
+    }
+
+    /**
+     * Base builder with required properties.<br/>
+     * For image, size is required, use {@link #setImageWidth(Integer)} and {@link #setImageHeight(Integer)}.<br/>
+     * Additional file properties can be supplied using :
+     *
+     * <ul>
+     * <li>{@link #setFilesize(Long)}</li>
+     * <li>{@link #setChecksum(String)}</li>
+     * <li>{@link #setDigestAlgorithm(String)}</li>
+     * </ul>
+     */
+    public static DataFile build(DataType dataType, String filename, String uri, MimeType mimeType, Boolean online) {
+        DataFile datafile = new DataFile();
+        datafile.setDataType(dataType);
+        datafile.setFilename(filename);
+        datafile.setUri(uri);
+        datafile.setMimeType(mimeType);
+        datafile.setOnline(online);
+        return datafile;
+    }
+
+    public static DataFile build(DataType dataType, String filename, URI uri, MimeType mimeType, Boolean online) {
+        return DataFile.build(dataType, filename, uri.toString(), mimeType, online);
     }
 }

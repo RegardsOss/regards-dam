@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
+import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 
 /**
  * Search criterion
@@ -33,6 +34,7 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
  */
 @Gsonable
 public interface ICriterion {
+
     /**
      * @return a copy of the criterion
      */
@@ -136,8 +138,8 @@ public interface ICriterion {
         if (values.length == 0) {
             return new NotCriterion(all());
         }
-        return new OrCriterion(IntStream.of(values).mapToObj(val -> new IntMatchCriterion(attName, val))
-                                       .collect(Collectors.toList()));
+        return new OrCriterion(
+                IntStream.of(values).mapToObj(val -> new IntMatchCriterion(attName, val)).collect(Collectors.toList()));
     }
 
     static ICriterion in(String attName, long... values) {
@@ -145,7 +147,7 @@ public interface ICriterion {
             return new NotCriterion(all());
         }
         return new OrCriterion(LongStream.of(values).mapToObj(val -> new LongMatchCriterion(attName, val))
-                                       .collect(Collectors.toList()));
+                .collect(Collectors.toList()));
     }
 
     static ICriterion eq(String attName, double value, double precision) {
@@ -187,7 +189,6 @@ public interface ICriterion {
     static ICriterion eq(String attName, OffsetDateTime date) {
         return new DateMatchCriterion(attName, date);
     }
-
 
     /**
      * Criterion to test if a parameter starts with the provided text or if a String array parameter contains an element
@@ -348,12 +349,10 @@ public interface ICriterion {
      */
     static ICriterion between(String attName, int lower, boolean lowerInclusive, int upper, boolean upperInclusive) {
         RangeCriterion<Integer> crit = new RangeCriterion<>(attName);
-        crit.addValueComparison(
-                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
-                                      lower));
-        crit.addValueComparison(
-                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
-                                      upper));
+        crit.addValueComparison(new ValueComparison<>(
+                lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER, lower));
+        crit.addValueComparison(new ValueComparison<>(
+                upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS, upper));
         return crit;
     }
 
@@ -366,15 +365,12 @@ public interface ICriterion {
      * @param upperInclusive inclusive upper bound or not
      * @return criterion
      */
-    static ICriterion between(String attName, long lower, boolean lowerInclusive, long upper,
-            boolean upperInclusive) {
+    static ICriterion between(String attName, long lower, boolean lowerInclusive, long upper, boolean upperInclusive) {
         RangeCriterion<Long> crit = new RangeCriterion<>(attName);
-        crit.addValueComparison(
-                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
-                                      lower));
-        crit.addValueComparison(
-                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
-                                      upper));
+        crit.addValueComparison(new ValueComparison<>(
+                lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER, lower));
+        crit.addValueComparison(new ValueComparison<>(
+                upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS, upper));
         return crit;
     }
 
@@ -390,12 +386,10 @@ public interface ICriterion {
     static ICriterion between(String attName, OffsetDateTime lower, boolean lowerInclusive, OffsetDateTime upper,
             boolean upperInclusive) {
         DateRangeCriterion crit = new DateRangeCriterion(attName);
-        crit.addValueComparison(
-                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
-                                      lower));
-        crit.addValueComparison(
-                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
-                                      upper));
+        crit.addValueComparison(new ValueComparison<>(
+                lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER, lower));
+        crit.addValueComparison(new ValueComparison<>(
+                upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS, upper));
         return crit;
     }
 
@@ -411,12 +405,10 @@ public interface ICriterion {
     static ICriterion between(String attName, double lower, boolean lowerInclusive, double upper,
             boolean upperInclusive) {
         RangeCriterion<Double> crit = new RangeCriterion<>(attName);
-        crit.addValueComparison(
-                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
-                                      lower));
-        crit.addValueComparison(
-                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
-                                      upper));
+        crit.addValueComparison(new ValueComparison<>(
+                lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER, lower));
+        crit.addValueComparison(new ValueComparison<>(
+                upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS, upper));
         return crit;
     }
 
@@ -461,7 +453,7 @@ public interface ICriterion {
      * @param radius radius eventually with unit (ie "100m" or "5km"), default to meters
      * @return criterion
      */
-    static ICriterion intersectsCircle(Double[] center, String radius) {
+    static ICriterion intersectsCircle(double[] center, String radius) {
         return new CircleCriterion(center, radius);
     }
 
@@ -470,8 +462,25 @@ public interface ICriterion {
      * @param coordinates coordinates of polygon
      * @return criterion
      */
-    static ICriterion intersectsPolygon(Double[][][] coordinates) {
+    static ICriterion intersectsPolygon(double[][][] coordinates) {
         return new PolygonCriterion(coordinates);
+    }
+
+    /**
+     * Criterion to test the intersaction with a boundary box
+     * @param bbox String bbox as "left,bottom,right,top" (or "minX, minY, maxX, maxY" or "minLon, minLat, maxLon,
+     * maxLat"), blanks are accepted
+     * @throws InvalidGeometryException
+     */
+    static ICriterion intersectsBbox(String bbox) throws InvalidGeometryException {
+        return new BoundaryBoxCriterion(bbox);
+    }
+
+    /**
+     * Criterion to test the intersaction with a boundary box
+     */
+    static ICriterion intersectsBbox(double left, double bottom, double right, double top) {
+        return new BoundaryBoxCriterion(left, bottom, right, top);
     }
 
     /**

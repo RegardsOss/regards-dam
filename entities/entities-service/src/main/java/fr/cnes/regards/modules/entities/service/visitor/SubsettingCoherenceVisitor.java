@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
@@ -43,11 +43,12 @@ import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}. <b>The aim is not
@@ -89,6 +90,8 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
      */
     private final IModelAttrAssocService modelAttributeService;
 
+    private final IAttributeFinder attributeFinder;
+
     /**
      * Constructor
      * @param pModel the model
@@ -96,10 +99,11 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
      * @param pModelAttributeService the model attribute service
      */
     public SubsettingCoherenceVisitor(Model pModel, IAttributeModelService pAttributeService,
-            IModelAttrAssocService pModelAttributeService) {
+            IModelAttrAssocService pModelAttributeService, IAttributeFinder attributeFinder) {
         referenceModel = pModel;
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
+        this.attributeFinder = attributeFinder;
     }
 
     @Override
@@ -130,15 +134,15 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchCriterion(StringMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING) || attribute.getType()
-                .equals(AttributeType.STRING_ARRAY));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
+                || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
 
     @Override
     public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING) || attribute.getType()
-                .equals(AttributeType.STRING_ARRAY));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
+                || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
 
     @Override
@@ -194,44 +198,12 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
      * @return extracted {@link AttributeModel} or null
      */
     private AttributeModel extractAttribute(AbstractPropertyCriterion criterion) {
-        // contains properties.attributeFullname if it is not a static property
-        String attributeFullName = criterion.getName();
-        // first, lets check if it is a static property:
-        if (StaticProperties.isStaticProperty(attributeFullName)) {
-            AttributeModel fakeAttribute = StaticProperties.buildStaticAttributeModel(attributeFullName);
-            if (fakeAttribute != null) {
-                return fakeAttribute;
-            } else {
-                LOG.error(String.format(NOT_HANDLED_STATIC_PROPERTY, attributeFullName));
-                return null;
-            }
-        }
-        // remove the "properties."
-        int indexOfPoint = attributeFullName.indexOf('.');
-        attributeFullName = attributeFullName.substring(indexOfPoint + 1);
-        indexOfPoint = attributeFullName.indexOf('.');
-        AttributeModel attribute;
-        if (indexOfPoint == -1) {
-            // represented attribute does not belong to a fragment, so attributeFullName is the attributeName
-            attribute = attributeService.findByNameAndFragmentName(attributeFullName, null);
-        } else {
-            // represented attribute does belong to a fragment, so lets extract the attributeName and fragmentName
-            String attributeName = attributeFullName.substring(indexOfPoint + 1);
-            String fragmentName = attributeFullName.substring(0, indexOfPoint);
-            attribute = attributeService.findByNameAndFragmentName(attributeName, fragmentName);
-        }
-        if (attribute == null) {
-            // attributeName is unknown
-            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXIST, attributeFullName));
+        try {
+            return attributeFinder.findByName(criterion.getName());
+        } catch (OpenSearchUnknownParameter e) {
+            LOG.error("Inconsistent property {} in subsetting clause", criterion.getName());
             return null;
         }
-        ModelAttrAssoc modelAttribute = modelAttributeService.getModelAttrAssoc(referenceModel.getId(), attribute);
-        if (modelAttribute == null) {
-            // attribute is not one of the model
-            LOG.info(String.format(ATTRIBUTE_IS_NOT_COHERENT, attributeFullName, referenceModel.getName()));
-            return null;
-        }
-        return attribute;
     }
 
     @Override
@@ -241,6 +213,11 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     @Override
     public Boolean visitPolygonCriterion(PolygonCriterion criterion) {
+        return true;
+    }
+
+    @Override
+    public Boolean visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
         return true;
     }
 
@@ -258,4 +235,5 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null);
     }
+
 }

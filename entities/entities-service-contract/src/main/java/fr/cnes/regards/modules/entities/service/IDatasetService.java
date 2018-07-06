@@ -23,12 +23,10 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -64,21 +62,6 @@ public interface IDatasetService extends IEntityService<Dataset> {
      */
     Page<AttributeModel> getAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
-
-    /**
-     * Retrieve the description file of the given dataset, represented by its ip id
-     * @param datasetIpId
-     * @return the description file
-     * @throws EntityNotFoundException
-     */
-    DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
-
-    /**
-     * Remove the description file from the given dataset, represented by its ip id
-     * @param datasetIpId
-     * @throws EntityNotFoundException
-     */
-    void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
 
     /**
      * Build a criterion visitor allowing us to check if a criterion is valid or not

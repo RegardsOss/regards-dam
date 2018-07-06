@@ -43,7 +43,6 @@ import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
 import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
 import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.flywaydb.core.Flyway;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,8 +53,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -63,6 +60,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -80,14 +78,12 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
@@ -120,6 +116,7 @@ public class IndexerServiceDataSourceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.crawler.plugins";
 
+    @SuppressWarnings("unused")
     private static final String TABLE_NAME_TEST = "t_validation_1";
 
     private static final String DATA_MODEL_FILE_NAME = "validationDataModel1.xml";
@@ -193,7 +190,7 @@ public class IndexerServiceDataSourceIT {
     private ICrawlerAndIngesterService crawlerService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IDatasetRepository datasetRepos;
@@ -214,12 +211,7 @@ public class IndexerServiceDataSourceIT {
     private IPublisher publisher;
 
     @Autowired
-    private Flyway flyway;
-
-    @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
-
-    private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
 
@@ -232,8 +224,6 @@ public class IndexerServiceDataSourceIT {
     private Dataset dataset2;
 
     private Dataset dataset3;
-
-    private PluginConfiguration dBConnectionConf;
 
     @Before
     public void setUp() throws Exception {
@@ -291,9 +281,8 @@ public class IndexerServiceDataSourceIT {
         List<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(TestDataSourcePlugin.MODEL, dataModel)
                 .addParameter(IDataSourcePlugin.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
-        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE,
-                                                                IDataSourcePlugin.class.getPackage().getName()));
+        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class, Arrays
+                .asList(PLUGIN_CURRENT_PACKAGE, IDataSourcePlugin.class.getPackage().getName()));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")
@@ -327,7 +316,6 @@ public class IndexerServiceDataSourceIT {
         dataset1.setDataSource(dataSourcePluginConf);
         dataset1.setTags(Sets.newHashSet("BULLSHIT"));
         dataset1.setGroups(Sets.newHashSet("group0", "group11"));
-        dataset1.setDescriptionFile(new DescriptionFile("http://description.for/fun"));
         dsService.create(dataset1);
 
         dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
@@ -338,9 +326,7 @@ public class IndexerServiceDataSourceIT {
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
         dataset2.setGroups(Sets.newHashSet("group12", "group11"));
-        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        dsService.create(dataset2, pdf);
+        dsService.create(dataset2);
 
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
         dataset3.setDataModel(dataModel.getName());
@@ -366,8 +352,8 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
 
@@ -379,18 +365,18 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
-        objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
+        objectsPage.getContent().forEach(object -> object.addTags("TOTO"));
         esRepos.saveBulk(tenant, objectsPage.getContent());
 
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
 
@@ -412,6 +398,7 @@ public class IndexerServiceDataSourceIT {
 
         // Search for Dataset but with criterion on everything
         // SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        @SuppressWarnings("rawtypes")
         final JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(EntityType.DATASET);
         dsSearchKey2.setSearchIndex(tenant);
@@ -431,8 +418,9 @@ public class IndexerServiceDataSourceIT {
         RestClient restClient;
         RestHighLevelClient client;
         try {
-            restClient = RestClient.builder(
-                    new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort))
+            restClient = RestClient
+                    .builder(new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress),
+                            esPort))
                     .build();
             client = new RestHighLevelClient(restClient);
 

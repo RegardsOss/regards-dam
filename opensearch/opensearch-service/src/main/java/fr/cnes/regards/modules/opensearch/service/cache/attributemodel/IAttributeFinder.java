@@ -36,4 +36,11 @@ public interface IAttributeFinder {
     * @throws OpenSearchUnknownParameter if parameter name cannot be mapped to an attribute
     */
     AttributeModel findByName(String name) throws OpenSearchUnknownParameter;
+
+    /**
+     * Return the smaller distinct path of the given attribute by removing if possible "feature", "properties" and fragment names.
+     * @param attribute {@link AttributeModel} to find smaller path name.
+     * @return {@link String} smaller path name
+     */
+    public String findName(AttributeModel attribute);
 }

@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dataaccess.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.dto.DatasetWithAccessRight;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -38,6 +39,7 @@ public interface IDatasetWithAccessRightService {
      * @param pageRequest
      * @return {@link DatasetWithAccessRight}
      */
-    Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName, Pageable pageRequest);
+    Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName, Pageable pageRequest)
+            throws ModuleException;
 
 }

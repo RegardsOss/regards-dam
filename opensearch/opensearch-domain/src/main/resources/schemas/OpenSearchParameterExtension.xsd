@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES This file 
+	is part of REGARDS. REGARDS is free software: you can redistribute it and/or 
+	modify it under the terms of the GNU General Public License as published 
+	by the Free Software Foundation, either version 3 of the License, or (at 
+	your option) any later version. REGARDS is distributed in the hope that it 
+	will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+	of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+	Public License for more details. You should have received a copy of the GNU 
+	General Public License along with REGARDS. If not, see <http://www.gnu.org/licenses/>. 
+-->
+<xs:schema
+	xmlns="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"
+    elementFormDefault="qualified">
+
+	<xs:complexType name="OpenSearchParameterOption">
+		<xs:annotation>
+			<xs:documentation>
+				Describes a value/label pair suggested to the
+				client for the parent element.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="value" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string with the value of the option.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="label">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that provides a label for the
+					option.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="OpenSearchParameter">
+		<xs:annotation>
+			<xs:documentation>
+				Describes a name/value pair to be included in the
+				search request.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Option" type="OpenSearchParameterOption"
+				minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="name" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					Contains the name of the parameter.
+					Restrictions:
+					Must be a valid parameter name for format identified by the
+					"enctype" parameter on the containing "Url" element.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="value" use="optional" default="">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that will be processed according
+					to the rules of the OpenSearch URL template syntax.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="minimum" use="optional" default="1">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies the minimum
+					number of times this parameter must be included in the search
+					request.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="maximum" use="optional" default="1">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies the maximum
+					number of times this parameter must be included in the search
+					request.
+					The literal string "*" will be interpreted to mean that the
+					parameter
+					may repeat an arbitrary number of times.
+					Restrictions: The
+					value
+					must be a non-negative integer or the literal string "*".
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="pattern" use="optional" default="">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that specifies a regular
+					expression against which the parameter's value.
+					When present the
+					element should also include a title attribute to
+					inform the client
+					application of the format expected.
+					Restrictions:
+					Must be a valid
+					pattern according to the JavaScript Pattern
+					production.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="title" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string with advisory information for
+					the format and valid values of the parameter, such as would be
+					appropriate for a tooltip.
+					Restrictions: The value must contain 1024
+					or fewer characters of plain text. The value must not contain HTML
+					or other markup.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="minExclusive" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies the minimum
+					value for the element that cannot be reached. Applies only to
+					numeric and date types.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="maxExclusive" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies maximum value
+					for the element that cannot
+					be reached. Applies only to numeric and
+					date types.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="minInclusive" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies minimum value
+					for the element that can be
+					reached. Applies only to numeric and
+					date types.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="maxInclusive" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies maximum value
+					for the element that can be
+					reached. Applies only to numeric and
+					date types.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="step" use="optional">
+			<xs:annotation>
+				<xs:documentation>
+					Contains a string that identifies the granularity
+					of the allowed values
+					between the minimal and maximal range.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string" />
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="Parameter" type="OpenSearchParameter"/> 
+</xs:schema>

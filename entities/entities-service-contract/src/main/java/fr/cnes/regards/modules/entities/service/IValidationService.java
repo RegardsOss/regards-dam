@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * AbstractValidationService and DataObjectService
  * @author oroussel
  */
-public interface IValidationService<U extends AbstractEntity> {
+public interface IValidationService<U extends AbstractEntity<?>> {
 
     void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws EntityInvalidException;
 }

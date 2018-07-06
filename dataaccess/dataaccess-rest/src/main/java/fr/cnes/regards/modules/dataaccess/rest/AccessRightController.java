@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import javax.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import java.util.Optional;
+
+import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -63,6 +63,7 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 @RestController
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class AccessRightController implements IResourceController<AccessRight> {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightController.class);
 
     /**
@@ -103,14 +104,13 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @return page of access rights
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
     public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String accessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId, final Pageable pageable,
-            final PagedResourcesAssembler<AccessRight> assembler) throws EntityNotFoundException {
-        Page<AccessRight> accessRights = accessRightService
-                .retrieveAccessRights(accessGroupName, datasetIpId, pageable);
+            final PagedResourcesAssembler<AccessRight> assembler) throws ModuleException {
+        Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(accessGroupName, datasetIpId,
+                                                                                 pageable);
         return new ResponseEntity<>(toPagedResources(accessRights, assembler), HttpStatus.OK);
     }
 
@@ -118,11 +118,10 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * Retrieve access group and dataset pair access right or nothing
      */
     @RequestMapping(method = RequestMethod.GET, path = ACCESS_RIGHT)
-    @ResponseBody
     @ResourceAccess(description = "Retrieve access right of given access group / dataset if there is one",
             role = DefaultRole.PUBLIC)
     public ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
-            @RequestParam(name = "dataset") UniformResourceName datasetIpId) {
+            @RequestParam(name = "dataset") UniformResourceName datasetIpId) throws ModuleException {
         try {
             Optional<AccessRight> accessRightOpt = accessRightService.retrieveAccessRight(accessGroupName, datasetIpId);
             if (accessRightOpt.isPresent()) {
@@ -139,7 +138,6 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @return created access right
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
     public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
             throws ModuleException {
@@ -152,10 +150,9 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @return retrieved access right
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
-    @ResponseBody
     @ResourceAccess(description = "send the access right of id requested")
     public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
-            throws EntityNotFoundException {
+            throws ModuleException {
         AccessRight requested = accessRightService.retrieveAccessRight(id);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
     }
@@ -165,7 +162,6 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @return updated access right
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
-    @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
             @Valid @RequestBody AccessRight toBe) throws ModuleException {
@@ -174,7 +170,6 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
-    @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
@@ -183,11 +178,10 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
-    @ResponseBody
     @ResourceAccess(description = "check if an user has access to a dataset")
     public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
             @RequestParam(name = "dataset") UniformResourceName datasetIpId,
-            @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
+            @RequestParam(name = "user") String userEMail) throws ModuleException {
         boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
         return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
     }

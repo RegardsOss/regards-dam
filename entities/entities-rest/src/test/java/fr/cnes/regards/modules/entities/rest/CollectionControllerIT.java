@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +36,9 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.google.common.net.HttpHeaders;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -51,7 +46,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -167,9 +161,8 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         parts.add(collection);
         performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
-        //we have tested to create a collection with a pdf description, so lets test with an url
+        // we have tested to create a collection with a pdf description, so lets test with an url
         Collection collectionWithUrl = new Collection(model1, DEFAULT_TENANT, "collectionWithURL");
-        collectionWithUrl.setDescriptionFile(new DescriptionFile("https://descrition.url.test/lol"));
         parts.clear();
         parts.add(new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_UTF8_VALUE,
                 gson(collectionWithUrl).getBytes()));
@@ -186,32 +179,6 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(COLLECTIONS_COLLECTION_ID, expectations, "Failed to fetch a specific collection using its id",
                           collection1.getId());
-    }
-
-    @Ignore
-    @Test
-    public void testCollectionDescriptionFile() throws IOException, ModuleException {
-
-        Collection collection = new Collection(model1, DEFAULT_TENANT, "dataSet21");
-
-        collection.setCreationDate(OffsetDateTime.now());
-        collection.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
-        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        collection = collectionService.create(collection, pdf);
-        expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
-        expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(
-                CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE + "?origin=test",
-                expectations, "Could not fetch collection description file", collection.getIpId());
-
-        expectations.clear();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE,
-                             expectations, "Could not delete collection description file", collection.getIpId());
-
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_210")

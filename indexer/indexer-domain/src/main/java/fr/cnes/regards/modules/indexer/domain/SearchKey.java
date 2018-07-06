@@ -1,9 +1,28 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.domain;
 
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  * Search key to be used with all search methods of IndexerService.
@@ -24,6 +43,12 @@ public class SearchKey<S, R> {
     private Map<String, Class<? extends S>> searchTypeMap = null;
 
     private String[] searchTypes;
+
+    /**
+     * Optional contextual Crs to inform that search concerns another CRS than earth (WGS84) one.
+     * default to WGS84
+     */
+    private Crs crs = Crs.WGS_84;
 
     /**
      * Constructor with result class to be searched from search types
@@ -98,4 +123,11 @@ public class SearchKey<S, R> {
         return searchTypeMap;
     }
 
+    public Crs getCrs() {
+        return crs;
+    }
+
+    public void setCrs(Crs crs) {
+        this.crs = crs;
+    }
 }

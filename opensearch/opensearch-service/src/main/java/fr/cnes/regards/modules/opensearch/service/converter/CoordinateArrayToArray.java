@@ -28,7 +28,7 @@ import com.vividsolutions.jts.geom.Coordinate;
  *
  * @author Xavier-Alexandre Brochard
  */
-public class CoordinateArrayToArray implements Converter<Coordinate[], Double[][]> {
+public class CoordinateArrayToArray implements Converter<Coordinate[], double[][]> {
 
     private static final CoordinateToArray COORDINATE_TO_ARRAY = new CoordinateToArray();
 
@@ -36,8 +36,8 @@ public class CoordinateArrayToArray implements Converter<Coordinate[], Double[][
      * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
      */
     @Override
-    public Double[][] convert(Coordinate[] coordinates) {
-        return Stream.of(coordinates).map(COORDINATE_TO_ARRAY::convert).toArray(Double[][]::new);
+    public double[][] convert(Coordinate[] coordinates) {
+        return Stream.of(coordinates).map(COORDINATE_TO_ARRAY::convert).toArray(double[][]::new);
     }
 
 }

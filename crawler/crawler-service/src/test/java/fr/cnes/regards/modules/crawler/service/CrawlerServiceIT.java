@@ -39,6 +39,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -80,8 +81,10 @@ public class CrawlerServiceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceIT.class);
 
+    @SuppressWarnings("unused")
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
+    @SuppressWarnings("unused")
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
     @Value("${regards.tenant}")
@@ -125,7 +128,7 @@ public class CrawlerServiceIT {
     private IDatasetService dsService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IEsRepository esRepos;
@@ -139,6 +142,7 @@ public class CrawlerServiceIT {
     @Autowired
     private IDeletedEntityRepository deletedEntityRepository;
 
+    @SuppressWarnings("unused")
     private List<AbstractAttributeMapping> modelAttrMapping;
 
     @Before

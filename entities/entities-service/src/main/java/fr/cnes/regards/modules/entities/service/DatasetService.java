@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,12 +51,10 @@ import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -65,6 +64,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
 /**
  * Specific EntityService for Datasets
@@ -87,14 +87,17 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IPluginService pluginService;
 
+    @Autowired
+    private IAttributeFinder finder;
+
     public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
-            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity> entityRepository,
+            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
             IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
             ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
-            IOpenSearchService openSearchService, IPluginService pluginService) {
+            IRuntimeTenantResolver runtimeTenantResolver, IOpenSearchService openSearchService,
+            IPluginService pluginService) {
         super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
-              repository, repository, em, publisher, runtimeTenantResolver, descriptionFileRepository);
+              repository, repository, em, publisher, runtimeTenantResolver);
         this.attributeService = attributeService;
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
@@ -157,7 +160,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
         return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
-                modelAttributeService);
+                modelAttributeService, finder);
     }
 
     @Override
@@ -215,28 +218,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         }
 
         // Add jsonpath to each attribute
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
-    }
-
-    @Override
-    public DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        return ds.getDescriptionFile();
-    }
-
-    @Override
-    public void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        DescriptionFile desc = ds.getDescriptionFile();
-        ds.setDescriptionFile(null);
-        descriptionFileRepository.delete(desc);
     }
 
     /**
@@ -247,7 +230,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
         Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         // Build JSON path
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
     }
 }

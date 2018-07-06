@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
 
-import java.util.Map;
+import org.springframework.util.MultiValueMap;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
@@ -28,10 +28,12 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
  * @author oroussel
  */
 public class FieldExistsParser implements IParser {
+
     private static final String EXISTS_PARAM = "exists";
 
     @Override
-    public ICriterion parse(Map<String, String> parameters) {
-        return parameters.containsKey(EXISTS_PARAM) ? ICriterion.attributeExists(parameters.get(EXISTS_PARAM)) : null;
+    public ICriterion parse(MultiValueMap<String, String> parameters) {
+        return parameters.containsKey(EXISTS_PARAM) ? ICriterion.attributeExists(parameters.getFirst(EXISTS_PARAM))
+                : null;
     }
 }

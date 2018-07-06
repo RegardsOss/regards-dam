@@ -1,3 +1,21 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.util.Iterator;
@@ -24,7 +42,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
  */
 @Component
 public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<AggregationBuilder> {
-
 
     public static final String STRING_FACET_SUFFIX = "_terms";
 
@@ -109,7 +126,7 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         // dates, they are considered as different and so a Range is intended to be created as
         // ["2018-05-04T14:22:31.176Z".."2018-05-04T14:22:31.175Z") which throw an invalid range (up < bottom)
         // To avoid this, scalingFct rounds double value into long then cast it into double
-        return visitRangeFacet(args, v -> (double)Math.round(v));
+        return visitRangeFacet(args, v -> (double) Math.round(v));
     }
 
     private AggregationBuilder visitRangeFacet(Object[] args, UnaryOperator<Double> scalingFct) {
@@ -119,7 +136,7 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         rangeAggBuilder.field(attributeName);
         Double previousValue = null;
         // INFO : ES API range creation use closedOpened ranges ([a , b[)
-        for (Iterator<Percentile> i = percentiles.iterator(); i.hasNext(); ) {
+        for (Iterator<Percentile> i = percentiles.iterator(); i.hasNext();) {
             if (previousValue == null) { // first value
                 previousValue = scalingFct.apply(i.next().getValue());
                 // Armor Elasticsearch bullshits
@@ -168,6 +185,5 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         maxAggBuilder.field(attributeName);
         return maxAggBuilder;
     }
-
 
 }
