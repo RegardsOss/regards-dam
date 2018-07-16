@@ -142,7 +142,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * Get all {@link ModelAttrAssoc}
      *
-     * @param pModelId {@link Model} identifier
+     * @param modelName {@link Model} identifier
      * @return list of linked {@link ModelAttrAssoc}
      * @throws ModuleException if model unknown
      */
@@ -158,7 +158,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * This method is only available for {@link AttributeModel} in <b>default</b> {@link Fragment} (i.e. without name
      * space).
      *
-     * @param pModelId {@link Model} identifier
+     * @param modelName {@link Model} identifier
      * @param pModelAttribute {@link ModelAttrAssoc} to link
      * @return the {@link ModelAttrAssoc} representing the link between the {@link Model} and the {@link AttributeModel}
      * @throws ModuleException if assignation cannot be done
@@ -174,7 +174,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * Retrieve a {@link ModelAttrAssoc} linked to a {@link Model} id
      *
-     * @param pModelId model identifier
+     * @param modelName model name
      * @param pAttributeId attribute id
      * @return linked model attribute
      * @throws ModuleException if attribute cannot be retrieved
@@ -190,7 +190,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * Allow to update calculation properties
      *
-     * @param pModelId model identifier
+     * @param modelName model name
      * @param pAttributeId attribute id
      * @param pModelAttribute attribute
      * @return update model attribute
@@ -211,7 +211,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * This method is only available for {@link AttributeModel} in <b>default</b> {@link Fragment} (i.e. without
      * namespace).
      *
-     * @param pModelId model identifier
+     * @param modelName model name
      * @param pAttributeId attribute id
      * @return nothing
      * @throws ModuleException if attribute cannot be removed
@@ -229,7 +229,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * This method is only available for {@link AttributeModel} in a <b>particular</b> {@link Fragment} (i.e. with name
      * space, not default one).
      *
-     * @param pModelId model identifier
+     * @param modelName model name
      * @param pFragment fragment
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
@@ -248,7 +248,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * This method is only available for {@link AttributeModel} in a <b>particular</b> {@link Fragment} (i.e. with name
      * space, not default one).
      *
-     * @param pModelId model identifier
+     * @param modelName model name
      * @param pFragmentId fragment identifier
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
