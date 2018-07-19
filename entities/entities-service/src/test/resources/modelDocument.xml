@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+    <name>modelDocument</name>
+    <description>Test document model</description>
+    <version>1</version>
+    <type>DOCUMENT</type>
+    <attribute>
+        <label>forTests</label>
+        <name>creation_date</name>
+        <type>DATE_ISO8601</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>TITLE</name>
+        <type>STRING</type>
+    </attribute>
+    <attribute>
+        <label>Authors</label>
+        <name>AUTHORS</name>
+        <type>STRING_ARRAY</type>
+    </attribute>
+</model>

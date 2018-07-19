@@ -28,6 +28,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 
 /**
  * Common requests on entities
@@ -99,4 +100,6 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
     @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('sipId', ?1)",
             nativeQuery = true)
     Set<T> findAllBySipId(String sipId);
+    
+    Set<T> findAllByStateAip(EntityAipState state);
 }

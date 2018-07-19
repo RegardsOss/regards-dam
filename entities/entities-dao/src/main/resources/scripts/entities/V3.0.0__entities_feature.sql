@@ -12,7 +12,7 @@ alter table t_entity drop column score;
 alter table t_entity drop column description_file_id;
 alter table t_entity drop column files;
 
--- TODO
+-- Remove unused table
 drop table t_description_file;
 drop table t_dataset_quotation;
 
@@ -23,5 +23,8 @@ alter table t_local_storage rename column document_id to entity_id;
 alter table t_local_storage add constraint uk_t_local_storage_document_file_checksum unique (entity_id, file_checksum);
 alter table t_local_storage add constraint fk_ls_entity_id foreign key (entity_id) references t_entity;
 
+-- Add AIP state management for entity storage process
+alter table t_entity add column aip_state varchar(32);
+alter table t_entity rename column opensearchsubsettingclause to sub_setting_clause_as_string;
 
 

@@ -18,28 +18,35 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-
-import fr.cnes.regards.modules.entities.domain.feature.DocumentFeature;
-import fr.cnes.regards.modules.models.domain.Model;
-
 /**
- * Document feature decorator
+ * Represents the AIP storage state of an AbstractEntity.
+ * 
+ * @author Christophe Mertz
  *
- * @author Sylvain Vissiere-Guerinet
- * @author Marc Sordi
- * @author Léo Mieulet
  */
-@Entity
-@DiscriminatorValue("DOCUMENT")
-public class Document extends AbstractEntity<DocumentFeature> {
+public enum EntityAipState {
+    /**
+     * AIP must be created
+     */
+    AIP_TO_CREATE,
+    /**
+     * AIP must be updated
+     */
+    AIP_TO_UPDATE,
+    /**
+     * AIP has been stored
+     */
+    AIP_STORE_OK,
+    /**
+     * Data storage has scheduled the AIP storage
+     */
+    AIP_STORE_PENDING,
+    /**
+     * The AIP is in error
+     */
+    AIP_STORE_ERROR;
 
-    public Document() {
-        super(null, null);
-    }
-
-    public Document(Model model, String tenant, String label) {
-        super(model, new DocumentFeature(tenant, label));
+    public String getName() {
+        return this.name();
     }
 }

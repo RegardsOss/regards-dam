@@ -112,7 +112,8 @@ public class LocalStorageService implements ILocalStorageService {
 
                     // Build data file
                     DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
-                                                       MimeType.valueOf(file.getContentType()), Boolean.TRUE);
+                                                       MimeType.valueOf(file.getContentType()), Boolean.TRUE,
+                                                       Boolean.FALSE);
                     dataFile.setFilesize(file.getSize());
                     dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
                     dataFile.setChecksum(checksum);

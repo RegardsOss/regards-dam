@@ -107,7 +107,7 @@ public class DataFileReference {
      * Transform DTO in data file
      */
     public DataFile toDataFile(DataType dataType) {
-        DataFile dataFile = DataFile.build(dataType, filename, uri, mimeType, Boolean.TRUE);
+        DataFile dataFile = DataFile.build(dataType, filename, uri, mimeType, Boolean.TRUE, Boolean.TRUE);
         dataFile.setImageWidth(imageWidth);
         dataFile.setImageHeight(imageHeight);
         return dataFile;
