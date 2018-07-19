@@ -103,33 +103,35 @@ public class LocalStorageService implements ILocalStorageService {
     public Collection<DataFile> attachFiles(AbstractEntity<?> entity, DataType dataType, MultipartFile[] attachments,
             String fileUriTemplate) throws ModuleException {
         Set<DataFile> docFiles = new HashSet<>();
-        try {
-            for (MultipartFile file : attachments) {
-                if ((file != null) && !file.isEmpty()) {
-                    supports(dataType, file.getOriginalFilename(), file.getContentType());
-                    String checksum = ChecksumUtils.computeHexChecksum(file.getInputStream(), DIGEST_ALGORITHM);
-                    URI fileRef = new URI(fileUriTemplate.replace(FILE_CHECKSUM_URL_TEMPLATE, checksum));
+        if (attachments != null) {
+            try {
+                for (MultipartFile file : attachments) {
+                    if ((file != null) && !file.isEmpty()) {
+                        supports(dataType, file.getOriginalFilename(), file.getContentType());
+                        String checksum = ChecksumUtils.computeHexChecksum(file.getInputStream(), DIGEST_ALGORITHM);
+                        URI fileRef = new URI(fileUriTemplate.replace(FILE_CHECKSUM_URL_TEMPLATE, checksum));
 
-                    // Build data file
-                    DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
-                                                       MimeType.valueOf(file.getContentType()), Boolean.TRUE,
-                                                       Boolean.FALSE);
-                    dataFile.setFilesize(file.getSize());
-                    dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
-                    dataFile.setChecksum(checksum);
-                    dataFile.setFilename(file.getOriginalFilename());
-                    store(checksum, file, entity);
-                    docFiles.add(dataFile);
+                        // Build data file
+                        DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
+                                                           MimeType.valueOf(file.getContentType()), Boolean.TRUE,
+                                                           Boolean.FALSE);
+                        dataFile.setFilesize(file.getSize());
+                        dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
+                        dataFile.setChecksum(checksum);
+                        dataFile.setFilename(file.getOriginalFilename());
+                        store(checksum, file, entity);
+                        docFiles.add(dataFile);
+                    }
                 }
+            } catch (URISyntaxException | IOException e) {
+                String message = String.format("Error during attaching file");
+                LOGGER.error(message, e);
+                throw new ModuleException(message, e);
+            } catch (NoSuchAlgorithmException e) {
+                String message = String.format("No such algorithm (used on checksum computation)");
+                LOGGER.error(message, e);
+                throw new ModuleException(message, e);
             }
-        } catch (URISyntaxException | IOException e) {
-            String message = String.format("Error during attaching file");
-            LOGGER.error(message, e);
-            throw new ModuleException(message, e);
-        } catch (NoSuchAlgorithmException e) {
-            String message = String.format("No such algorithm (used on checksum computation)");
-            LOGGER.error(message, e);
-            throw new ModuleException(message, e);
         }
         return docFiles;
     }

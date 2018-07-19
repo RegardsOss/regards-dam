@@ -629,7 +629,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, List<DataFile> refs,
             String fileUriTemplate) throws ModuleException {
 
-        U entity = load(urn);
+        U entity = loadWithRelations(urn);
         // Store files locally
         java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
                                                                                fileUriTemplate);

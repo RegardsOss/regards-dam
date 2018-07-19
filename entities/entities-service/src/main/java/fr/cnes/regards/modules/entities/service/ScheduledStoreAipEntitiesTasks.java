@@ -34,7 +34,7 @@ import fr.cnes.regards.framework.multitenant.ITenantResolver;
 
 /**
  * Scheduled actions to store AIP's entity bu rs-storage
- * 
+ *
  * @author Christophe Mertz
  */
 @Profile("!disable-scheduled-store-aip")
@@ -69,14 +69,17 @@ public class ScheduledStoreAipEntitiesTasks {
             initialDelayString = "${regards.dam.store.aip.entities.initial.delay:60000}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void processStoreAips() {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
             return;
         }
         for (String tenant : tenantResolver.getAllActiveTenants()) {
-            LOGGER.info("Scheduled task : Store AIP entities for tenant {}", tenant);
-            runtimeTenantResolver.forceTenant(tenant);
-            entitiesService.storeAips();
-            runtimeTenantResolver.clearTenant();
+            try {
+                LOGGER.info("Scheduled task : Store AIP entities for tenant {}", tenant);
+                runtimeTenantResolver.forceTenant(tenant);
+                entitiesService.storeAips();
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
         }
     }
 

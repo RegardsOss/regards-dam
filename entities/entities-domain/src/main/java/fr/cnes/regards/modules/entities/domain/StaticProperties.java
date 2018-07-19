@@ -111,39 +111,17 @@ public final class StaticProperties {
                                                                       FEATURE_MODEL, FEATURE_FILES, FEATURE_TAGS,
                                                                       FEATURE_GEOMETRY, FEATURE_PROPERTIES);
 
-    // ##########-AbstractDataEntity-##########
-
-    // DescriptionFile
-    public static final String DESCRIPTION_FILE = "descriptionFile";
-
-    // ##########-AbstractDescEntity-##########
+    // ##########-DataObject-##########
 
     public static final String DATASOURCE_ID = "dataSourceId";
 
-    // ##########-Collection-##########
-
-    // ##########-DataObject-##########
-
     // Long list
     public static final String DATASET_MODEL_IDS = "datasetModelIds";
-
-    // int
-    public static final String SCORE = "score";
 
     // ##########-Dataset-##########
 
     // String
     public static final String DATA_MODEL = "dataModel";
-
-    // String list
-    public static final String QUOTATIONS = "quotations";
-
-    // String
-    public static final String LICENCE = "licence";
-
-    public static final String ENTITY_TYPE = "entityType";
-
-    // ##########-Document-##########
 
     private StaticProperties() {
     }

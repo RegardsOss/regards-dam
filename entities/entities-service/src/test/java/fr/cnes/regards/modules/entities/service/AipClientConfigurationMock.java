@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
@@ -51,7 +52,7 @@ import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 /**
  * This configuration defined a proxy for the {@link IAipClient}.
  * The response to the call of the methods are {@link HttpStatus#OK}.
- * 
+ *
  * @author Christophe Mertz
  *
  */
@@ -89,7 +90,7 @@ class AipClientConfigurationMock {
 
     private class AipClientProxy {
 
-        private IPublisher publisher;
+        private final IPublisher publisher;
 
         private AipClientProxy(IPublisher publisher) {
             super();
@@ -101,13 +102,7 @@ class AipClientConfigurationMock {
             String gsonString = gson.toJson(aips.getFeatures().get(0));
             LOGGER.info("==========>  CREATION ===> " + aips.getFeatures().get(0).getId() + " ============="
                     + gsonString);
-
-            AIP oneAip = new AIP();
-            oneAip.setId(aips.getFeatures().get(0).getId());
-            oneAip.setState(AIPState.STORED);
-            oneAip.setSipId("hello aip");
-            publisher.publish(new AIPEvent(oneAip));
-
+            publishAIP(aips.getFeatures().get(0).getId());
             return new ResponseEntity<>(HttpStatus.CREATED);
         }
 
@@ -116,7 +111,16 @@ class AipClientConfigurationMock {
                 @RequestBody @Valid AIP updated) {
             String gsonString = gson.toJson(updated);
             LOGGER.info("==========>  UPDATE   ===> " + ipId + " =============" + gsonString);
+            publishAIP(updated.getId());
             return new ResponseEntity<>(updated, HttpStatus.OK);
+        }
+
+        private void publishAIP(UniformResourceName urn) {
+            AIP oneAip = new AIP();
+            oneAip.setId(urn);
+            oneAip.setState(AIPState.STORED);
+            oneAip.setSipId("hello aip");
+            publisher.publish(new AIPEvent(oneAip));
         }
 
     }

@@ -21,9 +21,12 @@ package fr.cnes.regards.modules.entities.dao;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -100,6 +103,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
     @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('sipId', ?1)",
             nativeQuery = true)
     Set<T> findAllBySipId(String sipId);
-    
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
     Set<T> findAllByStateAip(EntityAipState state);
 }

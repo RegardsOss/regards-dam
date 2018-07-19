@@ -25,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -56,6 +55,8 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
+import fr.cnes.regards.modules.entities.dao.ILocalFileRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
@@ -84,8 +85,6 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityIT.class);
 
-    private static final int SLEEP_TIME = 20000;
-
     private static final String MODEL_DATASET_FILE_NAME = "modelDataSet.xml";
 
     private static final String MODEL_DATASET_NAME = "modelDataSet";
@@ -102,6 +101,9 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
             + StandardCharsets.UTF_8.toString();
 
     private static final MediaType DESCRIPTION_MEDIA_TYPE = MediaType.parseMediaType(DESCRIPTION_MEDIA_TYPE_VALUE);
+
+    private static final String URL_TEMPLATE = "file:///documents/files/"
+            + LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE;
 
     @Autowired
     private IModelService modelService;
@@ -123,6 +125,9 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private ICollectionRepository colRepository;
+
+    @Autowired
+    private ILocalFileRepository localFileRepository;
 
     @Autowired
     private IPluginConfigurationRepository pluginConfRepository;
@@ -150,8 +155,8 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void createDataset() throws ModuleException, IOException, InterruptedException {
-        Dataset dsFind = dsRepository.findOne(dataset1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(dataset1, EntityAipState.AIP_STORE_OK);
     }
 
     private MockMultipartFile getDescription() throws IOException {
@@ -166,31 +171,25 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
         // Attach a description
         MultipartFile[] attachments = new MultipartFile[] { getDescription() };
-        dsService.attachFiles(dataset1.getIpId(), DataType.DESCRIPTION, attachments, null,
-                              LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE);
+        dsService.attachFiles(dataset1.getIpId(), DataType.DESCRIPTION, attachments, null, URL_TEMPLATE);
 
-        Thread.sleep(SLEEP_TIME);
-
-        Dataset dsFind = dsRepository.findOne(dataset1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(dataset1, EntityAipState.AIP_STORE_OK);
     }
 
     @Test
     public void createDocument() throws ModuleException, IOException, InterruptedException {
 
         // Attach documents
-        String fileLsUriTemplate = "file:///documents/files/" + LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE;
         MockMultipartFile mockMultipartFile = new MockMultipartFile("document1.xml", "document1.xml", "doc/xml",
                 "content of my file".getBytes());
         MockMultipartFile mockMultipartFile2 = new MockMultipartFile("document2.png", "document2.png", "image/png",
                 "some pixels informations".getBytes());
         MultipartFile[] multipartFiles = { mockMultipartFile, mockMultipartFile2 };
-        docService.attachFiles(document1.getIpId(), DataType.DOCUMENT, multipartFiles, null, fileLsUriTemplate);
+        docService.attachFiles(document1.getIpId(), DataType.DOCUMENT, multipartFiles, null, URL_TEMPLATE);
 
-        Thread.sleep(SLEEP_TIME);
-
-        Document docFind = docRepository.findOne(document1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, docFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(document1, EntityAipState.AIP_STORE_OK);
     }
 
     @Test
@@ -198,13 +197,10 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
         // Attach a description
         MultipartFile[] attachments = new MultipartFile[] { getDescription() };
-        colService.attachFiles(collection1.getIpId(), DataType.DESCRIPTION, attachments, null,
-                               LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE);
+        colService.attachFiles(collection1.getIpId(), DataType.DESCRIPTION, attachments, null, URL_TEMPLATE);
 
-        Thread.sleep(SLEEP_TIME);
-
-        Collection colFind = colRepository.findOne(collection1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(collection1, EntityAipState.AIP_STORE_OK);
     }
 
     @Test
@@ -214,39 +210,54 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         DataFile ref = DataFile.build(DataType.DESCRIPTION, "README.md",
                                       "https://github.com/RegardsOss/regards-microservice/blob/master/README.md",
                                       DESCRIPTION_MEDIA_TYPE, true, true);
-        colService.attachFiles(collection1.getIpId(), DataType.DESCRIPTION, null, Arrays.asList(ref),
-                               LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE);
+        colService.attachFiles(collection1.getIpId(), DataType.DESCRIPTION, null, Arrays.asList(ref), URL_TEMPLATE);
 
-        Thread.sleep(SLEEP_TIME);
-
-        Collection colFind = colRepository.findOne(collection1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(collection1, EntityAipState.AIP_STORE_OK);
     }
 
     @Test
     public void createCollectionWithoutDescription() throws ModuleException, IOException, InterruptedException {
-        Collection colFind = colRepository.findOne(collection1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
+        // Wait for asynchronous tasks
+        waitAndCheck(collection1, EntityAipState.AIP_STORE_OK);
     }
 
     @Test
     public void updateDataset() throws ModuleException, IOException, InterruptedException {
 
+        // Update dataset
         AbstractAttribute<?> attr2Delete = dataset1.getProperty("LONG_VALUE");
         dataset1.removeProperty(attr2Delete);
-
-        Set<String> tags = dataset1.getTags();
-        tags.remove(tags.iterator().next());
-        dataset1.setTags(tags);
-
+        dataset1.removeTags(Arrays.asList(dataset1.getTags().iterator().next()));
         dsService.update(dataset1);
 
-        Assert.assertEquals(1, dsRepository.count());
+        // Wait for asynchronous tasks
+        waitAndCheck(dataset1, EntityAipState.AIP_STORE_OK);
+    }
 
-        Thread.sleep(SLEEP_TIME);
-
-        Dataset dsFind = dsRepository.findOne(dataset1.getId());
-        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
+    private void waitAndCheck(AbstractEntity<?> entity, EntityAipState expectedState) throws InterruptedException {
+        int iteration = 0;
+        boolean testOK = false;
+        while ((iteration <= 20) && !testOK) {
+            AbstractEntity<?> loadedEntity;
+            switch (entity.getFeature().getEntityType()) {
+                case COLLECTION:
+                    loadedEntity = colRepository.findOne(entity.getId());
+                    break;
+                case DATASET:
+                    loadedEntity = dsRepository.findOne(entity.getId());
+                    break;
+                case DOCUMENT:
+                    loadedEntity = docRepository.findOne(entity.getId());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported entity type");
+            }
+            testOK = expectedState.equals(loadedEntity.getStateAip());
+            Thread.sleep(1000);
+            iteration++;
+        }
+        Assert.assertTrue(testOK);
     }
 
     /**
@@ -256,17 +267,18 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
      * @throws ModuleException if error occurs
      */
     private Model importModel(final String filename) throws ModuleException {
-        try {
-            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", filename));
-            return modelService.importModel(input);
-        } catch (final IOException e) {
+        try (InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", filename))) {
+            Model model = modelService.importModel(input);
+            Thread.sleep(2000);
+            return model;
+        } catch (final IOException | InterruptedException e) {
             final String errorMessage = "Cannot import " + filename;
             throw new AssertionError(errorMessage);
         }
     }
 
     @Before
-    public void init() throws ModuleException {
+    public void init() throws ModuleException, InterruptedException {
         Project project = new Project();
         project.setHost("http://regardsHost");
 
@@ -274,12 +286,12 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
                 .thenReturn(new ResponseEntity<>(new Resource<>(project), HttpStatus.OK));
 
         cleanUp();
-
         initDataset();
-
         initDocument();
-
         initCollection();
+
+        // Wait for asynchronous tasks
+        Thread.sleep(5000);
     }
 
     @After
@@ -290,6 +302,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     private void cleanUp() {
         tenantResolver.forceTenant(getDefaultTenant());
 
+        localFileRepository.deleteAll();
         dsRepository.deleteAll();
         docRepository.deleteAll();
         colRepository.deleteAll();

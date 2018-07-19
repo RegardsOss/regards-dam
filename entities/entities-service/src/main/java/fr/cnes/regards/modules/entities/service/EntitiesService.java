@@ -212,15 +212,11 @@ public class EntitiesService implements IEntitiesService {
         if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
             return entity;
         }
-
         IStorageService storageService = getStorageService();
-
         if (storageService == null) {
             return entity;
         }
-
         LOGGER.info("Store AIP for entity <{}> ", entity.getIpId());
-
         return storageService.storeAIP(entity);
     }
 
@@ -228,16 +224,12 @@ public class EntitiesService implements IEntitiesService {
         if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
             return entity;
         }
-
         IStorageService storageService = getStorageService();
-
         if (storageService == null) {
             return entity;
         }
-
         LOGGER.info("Update AIP for entity <{}> ", entity.getIpId());
-
-        return getStorageService().updateAIP(entity);
+        return storageService.updateAIP(entity);
     }
 
 }
