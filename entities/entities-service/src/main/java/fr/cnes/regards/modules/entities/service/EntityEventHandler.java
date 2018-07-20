@@ -39,7 +39,7 @@ import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
 /**
  * Handler to update {@link AbstractEntity} state when a {@link AIPEvent} is received from storage.
- * 
+ *
  * @author Christophe Mertz
  */
 @Component
@@ -52,8 +52,8 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
     private IRuntimeTenantResolver runtimeTenantResolver;
 
     /**
-    * {@link ISubscriber} instance
-    */
+     * {@link ISubscriber} instance
+     */
     @Autowired
     private ISubscriber subscriber;
 
@@ -89,7 +89,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
                     runtimeTenantResolver.forceTenant(wrapper.getTenant());
                     UniformResourceName urn = UniformResourceName.fromString(event.getIpId());
 
-                    AbstractEntity entity = getService(urn.getEntityType()).loadWithRelations(urn);
+                    AbstractEntity<?> entity = getService(urn.getEntityType()).loadWithRelations(urn);
 
                     FeignSecurityManager.asSystem();
                     entity.setIpId(urn);
@@ -107,16 +107,17 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
             }
         }
 
+        @SuppressWarnings("rawtypes")
         private IEntityService getService(EntityType type) {
             if (type.equals(EntityType.DATASET)) {
                 return dasService;
             } else if (type.equals(EntityType.DOCUMENT)) {
                 return docService;
-            }
-            if (type.equals(EntityType.COLLECTION)) {
+            } else if (type.equals(EntityType.COLLECTION)) {
                 return colService;
+            } else {
+                throw new IllegalArgumentException("Unsupported entity type");
             }
-            return null;
         }
     }
 

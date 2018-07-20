@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -39,7 +38,6 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -85,8 +83,6 @@ public class DatasetServiceTest {
     private Dataset dataSet1;
 
     private Dataset dataSet2;
-
-    private UniformResourceName dataSet2URN;
 
     private IDatasetRepository dataSetRepositoryMocked;
 
@@ -141,12 +137,8 @@ public class DatasetServiceTest {
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
 
-        dataSet2URN = dataSet2.getIpId();
-        Set<String> dataSet1Tags = dataSet1.getTags();
-        dataSet1Tags.add(dataSet2URN.toString());
-        Set<String> dataSet2Tags = dataSet2.getTags();
-        dataSet2Tags.add(dataSet1.getIpId().toString());
-        dataSet2.setTags(dataSet2Tags);
+        dataSet1.addTags(dataSet2.getIpId().toString());
+        dataSet2.addTags(dataSet1.getIpId().toString());
 
         // create a mock repository
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
