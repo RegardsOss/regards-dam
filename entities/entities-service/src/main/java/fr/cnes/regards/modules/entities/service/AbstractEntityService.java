@@ -644,7 +644,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (refs != null) {
             for (DataFile ref : refs) {
                 // Same logic as for normal file is applied to check format support
-                localStorageService.supports(dataType, ref.getFilename(), ref.getMimeType().toString());
+                ContentTypeValidator.supportsForReference(dataType, ref.getFilename(), ref.getMimeType().toString());
                 // Compute checksum on URI for removal
                 try {
                     ref.setChecksum(ChecksumUtils.computeHexChecksum(ref.getUri(),
