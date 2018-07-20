@@ -133,7 +133,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof IntMatchCriterion);
 
         final IntMatchCriterion crit = (IntMatchCriterion) criterion;
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
@@ -151,7 +151,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof IntMatchCriterion);
 
         final IntMatchCriterion crit = (IntMatchCriterion) criterion;
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
@@ -170,7 +170,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Double> crit = (RangeCriterion<Double>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Double>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
                 .add(new ValueComparison<Double>(ComparisonOperator.GREATER_OR_EQUAL, Math.nextDown(value)));
@@ -191,7 +191,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(val, crit.getValue());
     }
@@ -210,7 +210,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(expectedAfterParse, crit.getValue());
     }
@@ -228,7 +228,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.ENDS_WITH, crit.getType());
         Assert.assertEquals("potter", crit.getValue());
     }
@@ -246,7 +246,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.STARTS_WITH, crit.getType());
         Assert.assertEquals("harry", crit.getValue());
     }
@@ -264,7 +264,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
     }
 
     @Test
@@ -280,7 +280,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(key, crit.getName());
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.CONTAINS, crit.getType());
         Assert.assertEquals("RRY", crit.getValue());
     }
@@ -370,7 +370,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -396,7 +396,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -422,7 +422,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Double> crit = (RangeCriterion<Double>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Double>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Double>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<Double>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -448,7 +448,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Long> crit = (RangeCriterion<Long>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Long>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Long>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<Long>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -473,7 +473,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof DateRangeCriterion);
         final DateRangeCriterion crit = (DateRangeCriterion) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -496,7 +496,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.LESS, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -518,7 +518,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.LESS_OR_EQUAL, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -540,7 +540,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.GREATER, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -562,7 +562,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
                 .add(new ValueComparison<OffsetDateTime>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
@@ -589,7 +589,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof DateMatchCriterion);
         final DateMatchCriterion crit = (DateMatchCriterion) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
     }
 
     @SuppressWarnings("unchecked")
@@ -608,7 +608,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.LESS, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -630,7 +630,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.LESS_OR_EQUAL, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -652,7 +652,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.GREATER, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -674,7 +674,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Integer> crit = (RangeCriterion<Integer>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Integer>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<Integer>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
@@ -692,7 +692,7 @@ public class QueryParserTest {
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
@@ -722,7 +722,7 @@ public class QueryParserTest {
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.CONTAINS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
@@ -740,7 +740,7 @@ public class QueryParserTest {
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof IntMatchCriterion);
         final IntMatchCriterion crit = (IntMatchCriterion) criterion;
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
@@ -760,7 +760,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof RangeCriterion);
         final RangeCriterion<Double> crit = (RangeCriterion<Double>) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<Double>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
                 .add(new ValueComparison<Double>(ComparisonOperator.GREATER_OR_EQUAL, Math.nextDown(value)));
@@ -786,7 +786,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof DateRangeCriterion);
         final DateRangeCriterion crit = (DateRangeCriterion) criterion;
 
-        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(field, getShortCriterionName(crit.getName()));
         final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
@@ -832,6 +832,9 @@ public class QueryParserTest {
                 + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof NotCriterion);
+    }
 
+    private String getShortCriterionName(String criterionName) {
+        return criterionName.substring(StaticProperties.FEATURE_NS.length());
     }
 }

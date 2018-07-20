@@ -61,10 +61,12 @@ public final class StaticProperties {
 
     // ##########-EntityFeature-##########
 
+    public static final String FEATURE = "feature";
+
     /**
      * Feature namespace
      */
-    public static final String FEATURE_NS = "feature.";
+    public static final String FEATURE_NS = FEATURE + ".";
 
     // String
     public static final String FEATURE_ID = "id";

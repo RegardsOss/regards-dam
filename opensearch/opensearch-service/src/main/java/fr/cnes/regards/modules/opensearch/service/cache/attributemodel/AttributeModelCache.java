@@ -55,6 +55,7 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownPar
  * and "delete" events.<br>
  * This way the cache "anticipates" by repopulating immediately instead of waiting for the next user call.
  * @author Xavier-Alexandre Brochard
+ * @author Marc Sordi
  */
 @Service
 @MultitenantTransactional
@@ -87,21 +88,6 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      * TODO explain
      */
     private final Map<String, Map<String, AttributeModel>> propertyMap = new HashMap<>();
-
-    // String
-    public static final String FEATURE_MODEL = "model";
-
-    // List of DataFile
-    public static final String FEATURE_FILES = "files";
-
-    // String list
-    public static final String FEATURE_TAGS = "tags";
-
-    // Geometry
-    public static final String FEATURE_GEOMETRY = "geometry";
-
-    // Wrappped dynamic properties
-    public static final String FEATURE_PROPERTIES = "properties";
 
     /**
      * Creates a new instance of the service with passed services/repos
@@ -147,9 +133,9 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         tenantMap.put(StaticProperties.FEATURE_MODEL, AttributeModelBuilder
                 .build(StaticProperties.FEATURE_MODEL, AttributeType.STRING, null).isStatic().get());
 
-        // Geometry
-        tenantMap.put(StaticProperties.FEATURE_GEOMETRY, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_GEOMETRY, AttributeType.STRING, null).isStatic().get());
+        // // Geometry
+        // tenantMap.put(StaticProperties.FEATURE_GEOMETRY, AttributeModelBuilder
+        // .build(StaticProperties.FEATURE_GEOMETRY, AttributeType.STRING, null).isStatic().get());
 
         // Tags
         tenantMap.put(StaticProperties.FEATURE_TAGS, AttributeModelBuilder
