@@ -93,7 +93,7 @@ public class EsHelper {
      * @return distance in meters
      */
     public static double toMeters(String value) {
-        Pattern p = Pattern.compile("^([\\d]*\\.?[\\d]*\\d(?:e-?\\d+)?)\\s*([iymkc]\\S*)?$");
+        Pattern p = Pattern.compile("^([\\d]*\\.?[\\d]*\\d(?:[eE]-?\\d+)?)\\s*([iymkc]\\S*)?$");
         Matcher m = p.matcher(value.trim());
         if (!m.matches()) {
             throw new IllegalArgumentException("Bad value with unit (" + value + ")");

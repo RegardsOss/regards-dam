@@ -127,7 +127,13 @@ public class SearchKey<S, R> {
         return crs;
     }
 
+    /**
+     * Crs cannot be null so trying to set it to null brings to its default value (WGS84)
+     */
     public void setCrs(Crs crs) {
+        if (crs == null) {
+            this.crs = Crs.WGS_84;
+        }
         this.crs = crs;
     }
 }

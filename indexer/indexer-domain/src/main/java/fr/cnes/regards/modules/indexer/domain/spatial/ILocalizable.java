@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.indexer.dao.builder;
+package fr.cnes.regards.modules.indexer.domain.spatial;
+
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 
 /**
- * Criterion visitor implementation to manage a criterion containing geometric criterions on other CRS (as Mars or Astro
- * ones). The only geometric criterion found is a PolygonCriterion one.
- * All polygon criterions must be modified with projected coordinates.
+ * Identifies that something has a shape (IGeometry) associated
  * @author oroussel
  */
-public class GeoCriterionWithPolygonVisitor {
-
+public interface ILocalizable {
+    <T extends IGeometry> T getGeometry();
 }

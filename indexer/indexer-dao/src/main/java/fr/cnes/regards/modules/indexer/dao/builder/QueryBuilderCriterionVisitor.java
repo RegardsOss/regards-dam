@@ -206,7 +206,6 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
-
         try {
             return QueryBuilders
                     .geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, GeoQueries.computeShapeBuilder(criterion));
@@ -217,10 +216,23 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+        // Manage case when maxX > 180 => 360 - minX (this case can occur for a bbox crossing dateline)
+        if (criterion.getMaxX() > 180) {
+            criterion.setMaxX(criterion.getMaxX() - 360.0);
+        }
+        // Manage case when minLon > MaxLon (ie crossing dateline) (if MaxLon is < 0)
+        if ((criterion.getMaxX() < 0) && (criterion.getMinX() > criterion.getMaxX())) {
+            // Cut BoundaryBoxCriterion into 2 BoundaryBoxCriterion, dateLine west and dateLine east
+            return ICriterion
+                    .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMinY(), 180.0, criterion.getMaxY()),
+                        ICriterion
+                                .intersectsBbox(-180.0, criterion.getMinY(), criterion.getMaxX(), criterion.getMaxY()))
+                    .accept(this);
+        }
         try {
             return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders
-                    .newEnvelope(new Coordinate(criterion.getMaxY(), criterion.getMinX()),
-                                 new Coordinate(criterion.getMinY(), criterion.getMaxX())));
+                    .newEnvelope(new Coordinate(criterion.getMinX(), criterion.getMaxY()),
+                                 new Coordinate(criterion.getMaxX(), criterion.getMinY())));
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
         }

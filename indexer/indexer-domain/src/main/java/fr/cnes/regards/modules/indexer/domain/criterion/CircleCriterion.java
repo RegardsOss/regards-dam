@@ -34,7 +34,7 @@ public class CircleCriterion implements ICriterion {
     /**
      * Radius length. Format : a number eventually followed by unit (m, km, ...). In meter by default
      */
-    private final String radius;
+    private String radius;
 
     public CircleCriterion(double[] coordinates, String radius) {
         this.coordinates = coordinates;
@@ -47,6 +47,10 @@ public class CircleCriterion implements ICriterion {
 
     public String getRadius() {
         return radius;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = Double.toString(radius);
     }
 
     @Override

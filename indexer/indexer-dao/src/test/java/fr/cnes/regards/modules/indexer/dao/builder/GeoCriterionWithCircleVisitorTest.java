@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.springframework.data.util.Pair;
 
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
+import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
@@ -42,7 +43,7 @@ public class GeoCriterionWithCircleVisitorTest {
 
     @Test
     public void onlyCircleCriterionTest() {
-        // Geo cricle visitor on Mars
+        // Geo circle visitor on Mars
         GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(Crs.MARS_49900);
         ICriterion criterion;
         Pair<ICriterion, ICriterion> resultPairCrit;
@@ -80,8 +81,11 @@ public class GeoCriterionWithCircleVisitorTest {
         resultFirstCrit = resultPairCrit.getFirst();
         resultSecondCrit = resultPairCrit.getSecond();
         Assert.assertNotEquals(resultFirstCrit, resultSecondCrit);
+        // Let's find second circle criterion (exterior one)
+        CircleCriterion secondCircleCriterion = (CircleCriterion) ((AndCriterion) resultSecondCrit).getCriterions()
+                .get(1);
         Assert.assertTrue(Double.valueOf(((CircleCriterion) resultFirstCrit).getRadius()) < Double
-                .valueOf(((CircleCriterion) resultSecondCrit).getRadius()));
+                .valueOf(secondCircleCriterion.getRadius()));
     }
 
     @Test
@@ -117,8 +121,17 @@ public class GeoCriterionWithCircleVisitorTest {
         Assert.assertTrue(secondAndCriterion.getCriterions().get(2) instanceof OrCriterion);
         OrCriterion secondOrCriterion = (OrCriterion) secondAndCriterion.getCriterions().get(2);
         Assert.assertTrue(secondOrCriterion.getCriterions().get(0) instanceof RangeCriterion);
-        Assert.assertTrue(secondOrCriterion.getCriterions().get(1) instanceof CircleCriterion);
-        CircleCriterion secondCircleCriterion = (CircleCriterion) secondOrCriterion.getCriterions().get(1);
+        Assert.assertTrue(secondOrCriterion.getCriterions().get(1) instanceof AndCriterion);
+        AndCriterion secondAndCirclesCriterion = (AndCriterion) secondOrCriterion.getCriterions().get(1);
+
+        Assert.assertTrue(secondAndCirclesCriterion.getCriterions().get(0) instanceof NotCriterion);
+        NotCriterion secondNotCircleCriterion = (NotCriterion) secondAndCirclesCriterion.getCriterions().get(0);
+        Assert.assertTrue(secondNotCircleCriterion.getCriterion() instanceof CircleCriterion);
+        Assert.assertEquals(firstCircleCriterion, secondNotCircleCriterion.getCriterion());
+
+        Assert.assertTrue(secondAndCirclesCriterion.getCriterions().get(1) instanceof CircleCriterion);
+
+        CircleCriterion secondCircleCriterion = (CircleCriterion) secondAndCirclesCriterion.getCriterions().get(1);
         System.out.println(Arrays.toString(secondCircleCriterion.getCoordinates()));
         Assert.assertArrayEquals(new double[] { 45.0, 45.15141819898613 }, secondCircleCriterion.getCoordinates(),
                                  0.000001);
