@@ -34,6 +34,11 @@ public interface ILocalStorageService {
             String fileUriTemplate) throws ModuleException;
 
     /**
+     * Check if file format is supported for the data type
+     */
+    void supports(DataType dataType, String filename, String contentType) throws ModuleException;
+
+    /**
      * @param entity the entity which we are editing
      * @param dataFile the file we're removing
      * @throws IOException

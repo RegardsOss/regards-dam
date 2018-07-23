@@ -154,7 +154,7 @@ public class DocumentController implements IResourceController<Document> {
         // Validate dynamic model
         documentService.validate(inDocument, result, false);
 
-        final Document document = documentService.create(inDocument, null);
+        final Document document = documentService.create(inDocument);
         final Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }

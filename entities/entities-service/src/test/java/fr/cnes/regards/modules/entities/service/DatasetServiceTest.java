@@ -243,7 +243,7 @@ public class DatasetServiceTest {
     @Purpose("The dataset identifier is an URN")
     public void createDataset() throws ModuleException, IOException {
         Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
-        final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
+        final Dataset dataSet = dataSetServiceMocked.create(dataSet2);
         Assert.assertEquals(dataSet2, dataSet);
     }
 

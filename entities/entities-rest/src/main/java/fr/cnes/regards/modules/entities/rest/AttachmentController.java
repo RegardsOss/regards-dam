@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.entities.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -46,6 +48,10 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.rest.dto.DataFileReference;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
+import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.service.LocalStorageService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
@@ -74,12 +80,20 @@ public class AttachmentController {
     public static final String ATTACHMENT_MAPPING = "/{checksum}";
 
     @Autowired
-    private IEntityService<AbstractEntity<?>> entityService;
+    private ICollectionService collectionService;
+
+    @Autowired
+    private IDatasetService datasetService;
+
+    @Autowired
+    private IDocumentService documentService;
 
     @RequestMapping(method = RequestMethod.POST, value = ATTACHMENTS_MAPPING)
     @ResourceAccess(description = "Attach files of a same data type to an entity")
     public ResponseEntity<Resource<AbstractEntity<?>>> attachFiles(@Valid @PathVariable UniformResourceName urn,
-            @PathVariable DataType dataType, @RequestPart MultipartFile[] attachments)
+            @PathVariable DataType dataType,
+            @Valid @RequestPart(name = "refs", required = false) List<DataFileReference> refs,
+            @RequestPart("file") MultipartFile[] attachments)
             throws ModuleException, NoSuchMethodException, SecurityException {
 
         LOGGER.debug("Attaching files of type \"{}\" to entity \"{}\"", dataType, urn.toString());
@@ -91,9 +105,15 @@ public class AttachmentController {
                                                   HttpServletResponse.class),
                         urn, LocalStorageService.FILE_CHECKSUM_URL_TEMPLATE);
 
+        // Manage reference
+        List<DataFile> dataFileRefs = new ArrayList<>();
+        if (refs != null) {
+            refs.forEach(ref -> dataFileRefs.add(ref.toDataFile(dataType)));
+        }
+
         // Attach files to the entity
-        AbstractEntity<?> entity = entityService.attachFiles(urn, dataType, attachments,
-                                                             controllerLinkBuilder.toUri().toString());
+        AbstractEntity<?> entity = getEntityService(urn).attachFiles(urn, dataType, attachments, dataFileRefs,
+                                                                     controllerLinkBuilder.toUri().toString());
         return ResponseEntity.ok(new Resource<>(entity));
     }
 
@@ -105,15 +125,15 @@ public class AttachmentController {
         LOGGER.debug("Downloading file with checksum \"{}\" for entity \"{}\"", checksum, urn.toString());
 
         // Retrieve file properties
-        DataFile dataFile = entityService.getFile(urn, checksum);
+        DataFile dataFile = getEntityService(urn).getFile(urn, checksum);
         // Build response
         if (origin != null) {
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
         }
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + dataFile.getName());
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + dataFile.getFilename());
         response.setContentType(dataFile.getMimeType().toString());
-        response.setContentLengthLong(dataFile.getSize());
-        entityService.downloadFile(urn, checksum, response.getOutputStream());
+        getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
+        response.setContentLengthLong(dataFile.getFilesize());
         response.getOutputStream().flush();
         response.setStatus(HttpStatus.OK.value());
     }
@@ -131,7 +151,21 @@ public class AttachmentController {
         LOGGER.debug("Removing file with checksum \"{}\" from entity \"{}\"", checksum, urn.toString());
 
         // Attach files to the entity
-        AbstractEntity<?> entity = entityService.removeFile(urn, checksum);
+        AbstractEntity<?> entity = getEntityService(urn).removeFile(urn, checksum);
         return ResponseEntity.ok(new Resource<>(entity));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends IEntityService<?>> S getEntityService(UniformResourceName urn) {
+        switch (urn.getEntityType()) {
+            case COLLECTION:
+                return (S) collectionService;
+            case DATASET:
+                return (S) datasetService;
+            case DOCUMENT:
+                return (S) documentService;
+            default:
+                throw new IllegalArgumentException("Unsupported entity type " + urn.getEntityType());
+        }
     }
 }

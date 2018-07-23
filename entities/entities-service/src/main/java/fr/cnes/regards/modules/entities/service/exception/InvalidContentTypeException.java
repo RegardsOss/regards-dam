@@ -23,7 +23,7 @@ import java.util.Collection;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * Data file invalid charset exception
+ * Data file invalid content type exception
  *
  * @author Marc Sordi
  *
@@ -31,10 +31,10 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 @SuppressWarnings("serial")
 public class InvalidContentTypeException extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Invalid data file : expected content type is %s, not %s";
+    private static final String MESSAGE_FORMAT = "Invalid data file : unexpected content type %s (one of %s required)";
 
     public InvalidContentTypeException(Collection<String> expectedContentTypes, String contentType) {
-        super(String.format(MESSAGE_FORMAT, expectedContentTypes.toString(), contentType));
+        super(String.format(MESSAGE_FORMAT, contentType, expectedContentTypes.toString()));
     }
 
 }

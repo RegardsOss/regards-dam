@@ -21,18 +21,18 @@ package fr.cnes.regards.modules.entities.service.exception;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * Data file invalid charset exception
+ * Data file invalid location exception
  *
  * @author Marc Sordi
  *
  */
 @SuppressWarnings("serial")
-public class InvalidCharsetException extends ModuleException {
+public class InvalidFileLocation extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Invalid data file : expected %s charset, not %s";
+    private static final String MESSAGE_FORMAT = "File %s is not stored locally. Please use correct URI!";
 
-    public InvalidCharsetException(String expectedCharset, String charset) {
-        super(String.format(MESSAGE_FORMAT, expectedCharset, charset));
+    public InvalidFileLocation(String filename) {
+        super(String.format(MESSAGE_FORMAT, filename));
     }
 
 }

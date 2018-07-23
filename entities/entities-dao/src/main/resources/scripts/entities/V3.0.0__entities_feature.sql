@@ -13,7 +13,8 @@ alter table t_entity drop column description_file_id;
 alter table t_entity drop column files;
 
 -- TODO
--- drop table t_description_file;
+drop table t_description_file;
+drop table t_dataset_quotation;
 
 -- Generalize local storage to all entities
 alter table t_document_file_locally_stored rename to t_local_storage;

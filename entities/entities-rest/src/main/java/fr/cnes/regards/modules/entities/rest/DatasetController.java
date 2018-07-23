@@ -39,9 +39,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -136,14 +134,13 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create and send the dataset")
-    public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") final Dataset dataset,
-            @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestBody Dataset dataset, BindingResult result)
+            throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
         service.validate(dataset, result, false);
 
-        final Dataset created = service.create(dataset, descriptionFile);
+        final Dataset created = service.create(dataset);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
@@ -224,16 +221,14 @@ public class DatasetController implements IResourceController<Dataset> {
      * @return the updated dataset wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.POST, value = DATASET_ID_PATH)
-    @ResourceAccess(description = "Updates a Dataset")
-    public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long datasetId,
-            @Valid @RequestPart("dataset") final Dataset dataset,
-            @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    @ResourceAccess(description = "Update a dataset")
+    public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
+            @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
         service.validate(dataset, result, true);
 
-        final Dataset dataSet = service.update(datasetId, dataset, descriptionFile);
+        final Dataset dataSet = service.update(datasetId, dataset);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -339,8 +334,7 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, element.getId()),
-                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
-                                MethodParamFactory.build(BindingResult.class));
+                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Set.class));
@@ -361,8 +355,9 @@ public class DatasetController implements IResourceController<Dataset> {
         private String query;
 
         /**
-         * Default constructor
+         * Default constructor for (de)serialization
          */
+        @SuppressWarnings("unused")
         private Query() {
         }
 

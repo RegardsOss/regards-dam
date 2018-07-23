@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.EntitySpecifications;
@@ -73,6 +75,7 @@ import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
 import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFileLocation;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
@@ -99,6 +102,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * {@link IModelService} instance
      */
     protected final IModelService modelService;
+
+    @Autowired
+    private ILocalStorageService localStorageService;
 
     /**
      * Parameterized entity repository
@@ -133,9 +139,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * {@link IRuntimeTenantResolver} instance
      */
     private final IRuntimeTenantResolver runtimeTenantResolver;
-
-    @Autowired
-    protected ILocalStorageService localStorageService;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
@@ -310,7 +313,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U create(U inEntity, MultipartFile file) throws ModuleException, IOException {
+    public U create(U inEntity) throws ModuleException {
         U entity = checkCreation(inEntity);
 
         // Set IpId
@@ -441,14 +444,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException {
+    public U update(Long pEntityId, U pEntity) throws ModuleException {
         // checks
         U entityInDb = checkUpdate(pEntityId, pEntity);
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
     @Override
-    public U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException {
+    public U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
         U entityInDb = repository.findOneByIpId(pEntityUrn);
         if (entityInDb == null) {
             throw new EntityNotFoundException(pEntity.getIpId().toString());
@@ -603,7 +606,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
+    public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, List<DataFile> refs,
             String fileUriTemplate) throws ModuleException {
 
         U entity = load(urn);
@@ -616,6 +619,30 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         } else {
             entity.getFiles().putAll(dataType, files);
         }
+
+        // Merge references
+        if (refs != null) {
+            for (DataFile ref : refs) {
+                // Same logic as for normal file is applied to check format support
+                localStorageService.supports(dataType, ref.getFilename(), ref.getMimeType().toString());
+                // Compute checksum on URI for removal
+                try {
+                    ref.setChecksum(ChecksumUtils.computeHexChecksum(ref.getUri(),
+                                                                     LocalStorageService.DIGEST_ALGORITHM));
+                    ref.setDigestAlgorithm(LocalStorageService.DIGEST_ALGORITHM);
+                } catch (NoSuchAlgorithmException | IOException e) {
+                    String message = String.format("Error while computing checksum");
+                    LOGGER.error(message, e);
+                    throw new ModuleException(message, e);
+                }
+                if (entity.getFiles().get(dataType) != null) {
+                    entity.getFiles().get(dataType).add(ref);
+                } else {
+                    entity.getFiles().put(dataType, ref);
+                }
+            }
+        }
+
         return update(entity);
     }
 
@@ -639,7 +666,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException {
-        localStorageService.getFileContent(checksum, output);
+
+        U entity = load(urn);
+        // Retrieve data file
+        DataFile dataFile = getFile(urn, checksum);
+        if (localStorageService.isFileLocallyStored(entity, dataFile)) {
+            localStorageService.getFileContent(checksum, output);
+        } else {
+            throw new InvalidFileLocation(dataFile.getFilename());
+        }
     }
 
     @Override

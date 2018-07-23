@@ -43,7 +43,6 @@ import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
 import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
 import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.flywaydb.core.Flyway;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,8 +53,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -81,7 +78,6 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -215,12 +211,7 @@ public class IndexerServiceDataSourceIT {
     private IPublisher publisher;
 
     @Autowired
-    private Flyway flyway;
-
-    @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
-
-    private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
 
@@ -233,8 +224,6 @@ public class IndexerServiceDataSourceIT {
     private Dataset dataset2;
 
     private Dataset dataset3;
-
-    private PluginConfiguration dBConnectionConf;
 
     @Before
     public void setUp() throws Exception {
@@ -337,9 +326,7 @@ public class IndexerServiceDataSourceIT {
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
         dataset2.setGroups(Sets.newHashSet("group12", "group11"));
-        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        dsService.create(dataset2, pdf);
+        dsService.create(dataset2);
 
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
         dataset3.setDataModel(dataModel.getName());
@@ -382,7 +369,7 @@ public class IndexerServiceDataSourceIT {
                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
-        objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
+        objectsPage.getContent().forEach(object -> object.addTags("TOTO"));
         esRepos.saveBulk(tenant, objectsPage.getContent());
 
         esRepos.refresh(tenant);
@@ -411,6 +398,7 @@ public class IndexerServiceDataSourceIT {
 
         // Search for Dataset but with criterion on everything
         // SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        @SuppressWarnings("rawtypes")
         final JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(EntityType.DATASET);
         dsSearchKey2.setSearchIndex(tenant);

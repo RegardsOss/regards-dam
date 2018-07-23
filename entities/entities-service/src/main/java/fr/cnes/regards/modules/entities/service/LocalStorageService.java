@@ -55,6 +55,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.LocalFile;
 import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFilenameException;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
@@ -67,7 +68,7 @@ public class LocalStorageService implements ILocalStorageService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocalStorageService.class);
 
-    private static final String DIGEST_ALGORITHM = "MD5";
+    public static final String DIGEST_ALGORITHM = "MD5";
 
     /**
      * This constant is used by the controller to create an URL that contains a flag that will be replaced by
@@ -105,49 +106,59 @@ public class LocalStorageService implements ILocalStorageService {
         try {
             for (MultipartFile file : attachments) {
                 if ((file != null) && !file.isEmpty()) {
-                    supports(dataType, file);
+                    supports(dataType, file.getOriginalFilename(), file.getContentType());
                     String checksum = ChecksumUtils.computeHexChecksum(file.getInputStream(), DIGEST_ALGORITHM);
                     URI fileRef = new URI(fileUriTemplate.replace(FILE_CHECKSUM_URL_TEMPLATE, checksum));
 
                     // Build data file
-                    DataFile dataFile = new DataFile();
-                    dataFile.setDataType(dataType);
-                    dataFile.setMimeType(MimeType.valueOf(file.getContentType()));
-                    dataFile.setSize(file.getSize());
+                    DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
+                                                       MimeType.valueOf(file.getContentType()), Boolean.TRUE);
+                    dataFile.setFilesize(file.getSize());
                     dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
                     dataFile.setChecksum(checksum);
-                    dataFile.setName(file.getOriginalFilename());
+                    dataFile.setFilename(file.getOriginalFilename());
                     store(checksum, file, entity);
-                    dataFile.setUri(fileRef);
                     docFiles.add(dataFile);
                 }
             }
         } catch (URISyntaxException | IOException e) {
-            throw new ModuleException("An error occurred while saving documents files", e);
+            String message = String.format("Error during attaching file");
+            LOGGER.error(message, e);
+            throw new ModuleException(message, e);
         } catch (NoSuchAlgorithmException e) {
-            throw new ModuleException("No such algorithm (used on checksum computation)", e);
+            String message = String.format("No such algorithm (used on checksum computation)");
+            LOGGER.error(message, e);
+            throw new ModuleException(message, e);
         }
         return docFiles;
     }
 
-    private void supports(DataType dataType, MultipartFile file) throws ModuleException {
+    @Override
+    public void supports(DataType dataType, String filename, String contentType) throws ModuleException {
+
+        // Original file must be given
+        if ((filename == null) || filename.isEmpty()) {
+            throw new InvalidFilenameException();
+        }
+
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(file, StandardCharsets.UTF_8.toString(),
+                checkFileSupported(contentType, StandardCharsets.UTF_8.toString(),
                                    Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE));
                 break;
             default:
                 // No restriction
                 break;
         }
+
     }
 
-    private void checkFileSupported(MultipartFile file, String expectedCharset, Collection<String> expectedContentTypes)
+    private void checkFileSupported(String contentType, String expectedCharset, Collection<String> expectedContentTypes)
             throws InvalidCharsetException, InvalidContentTypeException {
 
         // Check charset
         if (expectedCharset != null) {
-            String charset = getCharset(file);
+            String charset = getCharset(contentType);
             if (!expectedCharset.equals(charset)) {
                 throw new InvalidCharsetException(expectedCharset, charset);
             }
@@ -155,27 +166,27 @@ public class LocalStorageService implements ILocalStorageService {
 
         // Check content types
         if (expectedContentTypes != null) {
-            String contentType = getContentType(file);
-            if (!expectedContentTypes.contains(contentType)) {
-                throw new InvalidContentTypeException(expectedContentTypes, contentType);
+            String shortContentType = getContentType(contentType);
+            if (!expectedContentTypes.contains(shortContentType)) {
+                throw new InvalidContentTypeException(expectedContentTypes, shortContentType);
             }
         }
     }
 
-    private String getContentType(MultipartFile file) {
-        String contentType = file.getContentType();
+    private String getContentType(String contentType) {
         if (contentType != null) {
             int charsetIdx = contentType.indexOf(";charset");
-            String realContentType = (charsetIdx == -1) ? contentType : contentType.substring(0, charsetIdx);
-            return realContentType;
+            return (charsetIdx == -1) ? contentType.trim() : contentType.substring(0, charsetIdx).trim();
         }
         return null;
     }
 
-    private String getCharset(MultipartFile file) {
-        String contentType = file.getContentType();
-        int charsetIdx = contentType.indexOf("charset=");
-        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
+    private String getCharset(String contentType) {
+        if (contentType != null) {
+            int charsetIdx = contentType.indexOf("charset=");
+            return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).trim().toUpperCase();
+        }
+        return null;
     }
 
     /**
@@ -186,11 +197,10 @@ public class LocalStorageService implements ILocalStorageService {
     public void removeFile(AbstractEntity<?> entity, DataFile dataFile) throws ModuleException {
 
         // Retrieve reference
-        Optional<LocalFile> localStorage = localStorageRepo.findOneByEntityAndFileChecksum(entity,
-                                                                                           dataFile.getChecksum());
-        if (!localStorage.isPresent()) {
+        Optional<LocalFile> localFile = localStorageRepo.findOneByEntityAndFileChecksum(entity, dataFile.getChecksum());
+        if (!localFile.isPresent()) {
             throw new EntityNotFoundException(String.format("Failed to remove the file %s for the document %s",
-                                                            dataFile.getName(), entity.getIpId().toString()),
+                                                            dataFile.getFilename(), entity.getIpId().toString()),
                     LocalFile.class);
         }
 
@@ -216,7 +226,7 @@ public class LocalStorageService implements ILocalStorageService {
                 LOGGER.info("File %s was not removed on disk since another document uses it", filePath.toString());
             }
             // Remove from database
-            localStorageRepo.delete(localStorage.get().getId());
+            localStorageRepo.delete(localFile.get().getId());
         }
 
     }
@@ -258,7 +268,10 @@ public class LocalStorageService implements ILocalStorageService {
 
         // Save file
         Path filePath = getDataFilePath(checksum);
-        Files.copy(file.getInputStream(), filePath);
+        // Accept a file to be attached to several entities
+        if (!Files.exists(filePath)) {
+            Files.copy(file.getInputStream(), filePath);
+        }
 
         // Save reference in database
         LocalFile localStorage = LocalFile.build(entity, checksum);

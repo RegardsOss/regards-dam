@@ -21,12 +21,8 @@ package fr.cnes.regards.modules.entities.domain;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Multimaps;
-
-import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.entities.domain.feature.DataObjectFeature;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -65,26 +61,6 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
      */
     private boolean internal = true;
 
-    /**
-     * This field only exists for Gson serialization (used by frontend)
-     * Indicates if a physical file (ie a RAWDATA or QUICKLOOK) exists with this data object
-     */
-    @SuppressWarnings("unused")
-    private Boolean containsPhysicalData = null;
-
-    /**
-     * This field only exists for Gson serialization (used by frontend)
-     * Indicates if an external allowingDownload file (ie a RAWDATA or QUICKLOOK) exists with this data object
-     */
-    @SuppressWarnings("unused")
-    private Boolean canBeExternallyDownloaded = null;
-
-    /**
-     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
-     * Indicates if user who made the search has the RIGHT to download associated DATA
-     */
-    private Boolean allowingDownload = null;
-
     public DataObject() {
         super(null, null);
     }
@@ -117,74 +93,12 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         this.metadata = metadata;
     }
 
-    public Boolean getAllowingDownload() {
-        return allowingDownload;
-    }
-
-    public void setAllowingDownload(Boolean allowingDownload) {
-        this.allowingDownload = allowingDownload;
-    }
-
     public boolean isInternal() {
         return internal;
     }
 
     public void setInternal(boolean internal) {
         this.internal = internal;
-    }
-
-    /**
-     * Update both containsPhysicalData and canBeExternallyDownloaded properties on DataObject AND downloadable property
-     * on all associated files.
-     * Theses properties are needed by frontend
-     */
-    public void updateJsonSpecificProperties() {
-        containsPhysicalData = containsPhysicalData();
-        canBeExternallyDownloaded = canBeExternallyDownloaded();
-        updateDownloadable();
-    }
-
-    /**
-     * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
-     *         This concerns only RAW_DATA and all QUICKLOOKS
-     */
-    protected boolean containsPhysicalData() {
-        return Multimaps.filterKeys(getFiles(), k -> {
-            switch (k) {
-                case RAWDATA:
-                case QUICKLOOK_SD:
-                case QUICKLOOK_MD:
-                case QUICKLOOK_HD:
-                    return true;
-                default:
-                    return false;
-            }
-        }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
-    }
-
-    /**
-     * @return true if at least one associated file (through "files" property) can be externally downloaded
-     *         This concerns only RAW_DATA and all QUICKLOOKS
-     */
-    protected boolean canBeExternallyDownloaded() {
-        return Multimaps.filterKeys(getFiles(), k -> {
-            switch (k) {
-                case RAWDATA:
-                case QUICKLOOK_SD:
-                case QUICKLOOK_MD:
-                case QUICKLOOK_HD:
-                    return true;
-                default:
-                    return false;
-            }
-        }).values().stream().filter(DataFile::canBeExternallyDownloaded).findAny().isPresent();
-    }
-
-    /**
-     * Update downloadable property on all files
-     */
-    public void updateDownloadable() {
-        Multimaps.filterKeys(getFiles(), k -> k == DataType.RAWDATA).values().forEach(DataFile::isDownloadable);
     }
 
     @Override

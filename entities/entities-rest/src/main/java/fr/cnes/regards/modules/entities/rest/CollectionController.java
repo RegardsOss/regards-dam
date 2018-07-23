@@ -38,10 +38,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -80,11 +77,10 @@ public class CollectionController implements IResourceController<Collection> {
      * @return all {@link Collection}s
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
     @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
     public ResponseEntity<PagedResources<Resource<Collection>>> retrieveCollections(
-            @RequestParam(name = "label", required = false) String label, final Pageable pageable,
-            final PagedResourcesAssembler<Collection> assembler) {
+            @RequestParam(name = "label", required = false) String label, Pageable pageable,
+            PagedResourcesAssembler<Collection> assembler) {
         Page<Collection> collections = collectionService.search(label, pageable);
         final PagedResources<Resource<Collection>> resources = toPagedResources(collections, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
@@ -96,12 +92,11 @@ public class CollectionController implements IResourceController<Collection> {
      * @return {@link Collection} as a {@link Resource}
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}")
-    @ResponseBody
     @ResourceAccess(description = "Retrieve a collection")
-    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") final Long id)
+    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long id)
             throws ModuleException {
-        final Collection collection = collectionService.load(id);
-        final Resource<Collection> resource = toResource(collection);
+        Collection collection = collectionService.load(id);
+        Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -114,18 +109,15 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException if error occurs! @
      */
     @RequestMapping(method = RequestMethod.POST, value = "/{collection_id}")
-    @ResponseBody
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long id,
-            @Valid @RequestPart(name = "collection") Collection inCollection,
-            @RequestPart(name = "file", required = false) MultipartFile descriptionFile, BindingResult result)
-            throws ModuleException, IOException {
+            @Valid @RequestBody Collection inCollection, BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
         collectionService.validate(inCollection, result, true);
 
-        final Collection collection = collectionService.update(id, inCollection, descriptionFile);
-        final Resource<Collection> resource = toResource(collection);
+        Collection collection = collectionService.update(id, inCollection);
+        Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -136,7 +128,6 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
-    @ResponseBody
     @ResourceAccess(description = "delete the collection of collection_id")
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") final Long id) throws ModuleException {
         collectionService.delete(id);
@@ -153,15 +144,14 @@ public class CollectionController implements IResourceController<Collection> {
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
-    public ResponseEntity<Resource<Collection>> createCollection(
-            @Valid @RequestPart(name = "collection") final Collection inCollection,
-            @RequestPart(name = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    public ResponseEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection inCollection,
+
+            BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
         collectionService.validate(inCollection, result, false);
 
-        final Collection collection = collectionService.create(inCollection, descriptionFile);
+        final Collection collection = collectionService.create(inCollection);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }
@@ -174,7 +164,6 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
-    @ResponseBody
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
     public HttpEntity<Void> dissociate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<UniformResourceName> toBeDissociated) throws ModuleException {
@@ -190,7 +179,6 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
-    @ResponseBody
     @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Void> associate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<UniformResourceName> toBeAssociatedWith) throws ModuleException {
@@ -212,7 +200,6 @@ public class CollectionController implements IResourceController<Collection> {
         resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Collection.class),
-                                MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, element.getId()),
