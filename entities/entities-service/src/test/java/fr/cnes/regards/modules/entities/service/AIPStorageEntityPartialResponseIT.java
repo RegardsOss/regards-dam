@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -51,8 +52,11 @@ import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.EntityAipState;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import fr.cnes.regards.modules.project.domain.Project;
@@ -81,6 +85,9 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
     private IModelService modelService;
 
     @Autowired
+    protected IAttributeModelService attributeModelService;
+
+    @Autowired
     private IDatasetService dsService;
 
     @Autowired
@@ -97,6 +104,9 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
 
     @Autowired
     private IProjectsClient projectsClient;
+
+    @Autowired
+    protected MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
     private Model modelDataset;
 
@@ -175,6 +185,10 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
 
     private void initDataset() throws ModuleException {
         modelDataset = importModel(MODEL_DATASET_FILE_NAME);
+
+        // - Refresh attribute factory
+        List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
+        gsonAttributeFactory.refresh(getDefaultTenant(), atts);
 
         dataset1 = new Dataset(modelDataset, getDefaultTenant(), "dataset one label");
         dataset1.setLicence("the licence");
