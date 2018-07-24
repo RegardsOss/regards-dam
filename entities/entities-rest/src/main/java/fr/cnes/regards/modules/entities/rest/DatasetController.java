@@ -65,13 +65,13 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-@RequestMapping(value = DatasetController.DATASET_PATH)
+@RequestMapping(value = DatasetController.TYPE_MAPPING)
 public class DatasetController implements IResourceController<Dataset> {
 
     /**
      * Endpoint for datasets
      */
-    public static final String DATASET_PATH = "/datasets";
+    public static final String TYPE_MAPPING = "/datasets";
 
     /**
      * Endpoint for data attributes

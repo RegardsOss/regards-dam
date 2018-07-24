@@ -194,9 +194,12 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                     tenantMap.put(key, attModel);
                 } else {
                     // Conflictual dynamic property detected
-                    if (tenantMap.get(key).isDynamic()) {
-                        conflictualKeys.add(key);
-                        tenantMap.remove(key);
+                    if (!conflictualKeys.contains(key)) {
+                        // It not yet detected
+                        if (tenantMap.get(key).isDynamic()) {
+                            conflictualKeys.add(key);
+                            tenantMap.remove(key);
+                        }
                     }
                 }
 

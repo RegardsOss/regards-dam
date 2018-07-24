@@ -55,10 +55,16 @@ import fr.cnes.regards.modules.entities.service.ICollectionService;
  * @author lmieulet
  */
 @RestController
-@RequestMapping(path = CollectionController.ROOT_MAPPING)
+@RequestMapping(path = CollectionController.TYPE_MAPPING)
 public class CollectionController implements IResourceController<Collection> {
 
-    public static final String ROOT_MAPPING = "/collections";
+    public static final String TYPE_MAPPING = "/collections";
+
+    public static final String COLLECTION_MAPPING = "/{collection_id}";
+
+    public static final String COLLECTION_ASSOCIATE_MAPPING = COLLECTION_MAPPING + "/associate";
+
+    public static final String COLLECTION_DISSOCIATE_MAPPING = COLLECTION_MAPPING + "/dissociate";
 
     /**
      * Service
@@ -91,7 +97,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @param id {@link Collection} id
      * @return {@link Collection} as a {@link Resource}
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}")
+    @RequestMapping(method = RequestMethod.GET, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "Retrieve a collection")
     public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long id)
             throws ModuleException {
@@ -108,7 +114,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return update {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs! @
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/{collection_id}")
+    @RequestMapping(method = RequestMethod.POST, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long id,
             @Valid @RequestBody Collection inCollection, BindingResult result) throws ModuleException, IOException {
@@ -127,7 +133,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return nothing
      * @throws ModuleException
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
+    @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "delete the collection of collection_id")
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") final Long id) throws ModuleException {
         collectionService.delete(id);
@@ -145,7 +151,6 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public ResponseEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection inCollection,
-
             BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
@@ -163,7 +168,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
+    @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_DISSOCIATE_MAPPING)
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
     public HttpEntity<Void> dissociate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<UniformResourceName> toBeDissociated) throws ModuleException {
@@ -178,7 +183,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
+    @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_ASSOCIATE_MAPPING)
     @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Void> associate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<UniformResourceName> toBeAssociatedWith) throws ModuleException {
