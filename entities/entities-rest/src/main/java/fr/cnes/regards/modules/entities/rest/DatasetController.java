@@ -18,21 +18,19 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.validation.Valid;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -41,22 +39,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.Validity;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -107,11 +101,6 @@ public class DatasetController implements IResourceController<Dataset> {
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
     /**
-     * Controller path for description file of a dataset using its ip id as path variable
-     */
-    public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
-
-    /**
      * Controller path for subsetting clause validation
      */
     public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
@@ -145,14 +134,13 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create and send the dataset")
-    public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") final Dataset dataset,
-            @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestBody Dataset dataset, BindingResult result)
+            throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
         service.validate(dataset, result, false);
 
-        final Dataset created = service.create(dataset, descriptionFile);
+        final Dataset created = service.create(dataset);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
@@ -178,66 +166,27 @@ public class DatasetController implements IResourceController<Dataset> {
      * Retrieve the dataset of passed id
      * @param datasetId the id of the dataset
      * @return the dataset of passed id
-     * @throws EntityNotFoundException Thrown when no dataset with given id could be found
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") final Long datasetId)
-            throws EntityNotFoundException {
-        final Dataset dataset = service.load(datasetId);
-        if (dataset == null) {
-            throw new EntityNotFoundException(datasetId, Dataset.class);
-        }
-        final Resource<Dataset> resource = toResource(dataset);
+            throws ModuleException {
+        Dataset dataset = service.load(datasetId);
+        Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     /**
      * Retrieve dataset from its IP_ID
      * @param datasetIpId ip_id of the dataset
-     * @return dataset laziely loaded
-     * @throws EntityNotFoundException Thrown when no dataset with given ip_id could be found
+     * @return dataset lazily loaded
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IP_ID_PATH)
     @ResourceAccess(description = "Retrieves a dataset", role = DefaultRole.INSTANCE_ADMIN)
     public ResponseEntity<Dataset> retrieveDataset(@PathVariable("dataset_ipId") final String datasetIpId)
-            throws EntityNotFoundException {
+            throws ModuleException {
         final Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
-        if (dataset == null) {
-            throw new EntityNotFoundException(datasetIpId);
-        }
         return new ResponseEntity<>(dataset, HttpStatus.OK);
-    }
-
-    /**
-     * Remove the description file of a dataset, represented by its ip id
-     * @param datasetIpId
-     * @throws EntityNotFoundException
-     */
-    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_IPID_PATH_FILE)
-    @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
-            throws EntityNotFoundException {
-        service.removeDescription(UniformResourceName.fromString(datasetIpId));
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    /**
-     * Retrieves a dataset description - only for rs-catalog because permissions not checked right here
-     */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
-    @ResourceAccess(description = "Retrieves a dataset description file content")
-    public ResponseEntity<InputStreamResource> retrieveDatasetDescription(
-            @PathVariable("dataset_ipId") String datasetIpId) throws EntityNotFoundException, IOException {
-        DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
-        final ByteArrayInputStream inputStream = new ByteArrayInputStream(file.getContent());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentLength(file.getContent().length);
-        headers.setContentType(file.getType());
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + datasetIpId);
-
-        return new ResponseEntity<>(new InputStreamResource(inputStream), headers, HttpStatus.OK);
     }
 
     /**
@@ -247,8 +196,7 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Deletes a dataset")
-    public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") final Long datasetId)
-            throws EntityNotFoundException, AssociatedAccessRightExistsException {
+    public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") final Long datasetId) throws ModuleException {
         try {
             service.delete(datasetId);
         } catch (RuntimeException e) {
@@ -273,16 +221,14 @@ public class DatasetController implements IResourceController<Dataset> {
      * @return the updated dataset wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.POST, value = DATASET_ID_PATH)
-    @ResourceAccess(description = "Updates a Dataset")
-    public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long datasetId,
-            @Valid @RequestPart("dataset") final Dataset dataset,
-            @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    @ResourceAccess(description = "Update a dataset")
+    public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
+            @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
         service.validate(dataset, result, true);
 
-        final Dataset dataSet = service.update(datasetId, dataset, descriptionFile);
+        final Dataset dataSet = service.update(datasetId, dataset);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -388,8 +334,7 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, element.getId()),
-                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
-                                MethodParamFactory.build(BindingResult.class));
+                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Set.class));
@@ -410,8 +355,9 @@ public class DatasetController implements IResourceController<Dataset> {
         private String query;
 
         /**
-         * Default constructor
+         * Default constructor for (de)serialization
          */
+        @SuppressWarnings("unused")
         private Query() {
         }
 

@@ -40,7 +40,7 @@ public interface IEntitiesService {
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    AbstractEntity loadWithRelations(UniformResourceName ipId);
+    AbstractEntity<?> loadWithRelations(UniformResourceName ipId);
 
     /**
      * Load entities by IpId with all their relations
@@ -48,7 +48,7 @@ public interface IEntitiesService {
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
      */
-    List<AbstractEntity> loadAllWithRelations(UniformResourceName... ipIds);
+    List<AbstractEntity<?>> loadAllWithRelations(UniformResourceName... ipIds);
 
     /**
      * Retrieve and instanciate the plugins needed to compute all the computed attributes of an entity. We may not be
@@ -59,4 +59,10 @@ public interface IEntitiesService {
      * @return instanciated plugins so computation can be executed
      */
     <T extends IComputedAttribute<Dataset, ?>> Set<T> getComputationPlugins(Dataset pEntity);
+
+    /**
+     * Search the entities for which the AIP must be stored by rs-storage
+     */
+    void storeAips();
+
 }

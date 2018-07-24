@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -45,7 +43,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      * @return entity
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+    @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Dataset findById(Long pId);
 
@@ -55,8 +53,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      * @return found entities
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
-            "plgConfDataSource.parameters.dynamicsValues", "descriptionFile" })
+    @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
     List<Dataset> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
@@ -65,8 +63,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      * @return found entity
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
-            "plgConfDataSource.parameters.dynamicsValues", "descriptionFile" })
+    @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
     Dataset findByIpId(UniformResourceName pIpId);
 
     /**
@@ -75,22 +73,15 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      * @return datasets complient with the given model
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+    @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelName(String pModelName);
-
-    /**
-     * Find a dataset by its ip id with the description file loaded
-     * @return the dataset with the description file loaded or null if none were found
-     */
-    @Query("from Dataset ds left join fetch ds.descriptionFile where ds.ipId=:ipId")
-    Dataset findOneDescriptionFile(@Param("ipId") UniformResourceName datasetIpId);
 
     /**
      * Find all entities complient with given model ids
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+    @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelIdIn(Set<Long> pModelIds);
 }

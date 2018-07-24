@@ -20,22 +20,22 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.feature.DataObjectFeature;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ *
+ * Data object feature decorator<br/>
  * A DataObject is created by a DataSource when a data source (external database or AIPs by example) is ingested.
  *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
+ * @author Marc Sordi
  */
-public class DataObject extends AbstractDataEntity {
+public class DataObject extends AbstractEntity<DataObjectFeature> {
 
     /**
      * This field permits to identify which datasource provides it
@@ -61,33 +61,12 @@ public class DataObject extends AbstractDataEntity {
      */
     private boolean internal = true;
 
-    /**
-     * This field only exists for Gson serialization (used by frontent)
-     * Indicates if a physical file (ie a RAWDATA or QUICKLOOK) exists with this data object
-     */
-    private Boolean containsPhysicalData = null;
-
-    /**
-     * This field only exists for Gson serialization (used by frontent)
-     * Indicates if an external allowingDownload file (ie a RAWDATA or QUICKLOOK) exists with this data object
-     */
-    private Boolean canBeExternallyDownloaded = null;
-
-    /**
-     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
-     * Indicates if user who made the search has the RIGHT to download associated DATA
-     */
-    private Boolean allowingDownload = null;
-
-    public DataObject(Model model, String tenant, String label) {
-        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                                             UUID.fromString("0-0-0-0-" + (int)(Math.random() * Integer.MAX_VALUE)),
-                                                             1),
-              label);
+    public DataObject() {
+        super(null, null);
     }
 
-    public DataObject() {
-        this(null, null, null);
+    public DataObject(Model model, String tenant, String label) {
+        super(model, new DataObjectFeature(tenant, label));
     }
 
     public String getDataSourceId() {
@@ -114,36 +93,12 @@ public class DataObject extends AbstractDataEntity {
         this.metadata = metadata;
     }
 
-    public Boolean getAllowingDownload() {
-        return allowingDownload;
-    }
-
-    public void setAllowingDownload(Boolean allowingDownload) {
-        this.allowingDownload = allowingDownload;
-    }
-
     public boolean isInternal() {
         return internal;
     }
 
     public void setInternal(boolean internal) {
         this.internal = internal;
-    }
-
-    /**
-     * Update both containsPhysiclaData and canBeExternallyDownloaded properties on DataObject AND downloadable property
-     * on all associated files.
-     * Theses properties are needed by frontend
-     */
-    public void updateJsonSpecificProperties() {
-        containsPhysicalData = super.containsPhysicalData();
-        canBeExternallyDownloaded = super.canBeExternallyDownloaded();
-        super.updateDownloadable();
-    }
-
-    @Override
-    public String getType() {
-        return EntityType.DATA.toString();
     }
 
     @Override

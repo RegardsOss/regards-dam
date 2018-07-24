@@ -18,12 +18,19 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,44 +42,40 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
-import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
-import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.gson.annotations.JsonAdapter;
+import com.google.common.collect.Multimap;
+
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
-import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
-import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
-import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
+import fr.cnes.regards.modules.entities.domain.feature.EntityFeature;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Base class for all entities(on a REGARDS point of view)
+ * Base entity feature decorator
+ * @param <F> represents the decorated entity feature
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
+ * @author Marc Sordi
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
@@ -80,7 +83,15 @@ import fr.cnes.regards.modules.models.domain.Model;
         uniqueConstraints = @UniqueConstraint(name = "uk_entity_ipId", columnNames = { "ipId" }))
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
+public abstract class AbstractEntity<F extends EntityFeature> implements IIndexable, IDocFiles {
+
+    /**
+     * Entity id for SGBD purpose mainly and REST request
+     */
+    @Id
+    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "seq_entity")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
+    private Long id;
 
     /**
      * Information Package ID for REST request
@@ -88,14 +99,23 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column(nullable = false, length = UniformResourceName.MAX_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
-    protected UniformResourceName ipId;
+    private UniformResourceName ipId;
 
     /**
-     * The entity label
+     * time at which the entity was created
      */
-    @NotBlank(message = "The label must not be null and empty")
-    @Column(length = 128, nullable = false)
-    protected String label;
+    @PastOrNow(message = "The creationDate must be in the past or now")
+    @Column(name = "creation_date", nullable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    protected OffsetDateTime creationDate;
+
+    /**
+     * last time the entity was updated
+     */
+    @PastOrNow(message = "The lastUpdate date must be in the past or now")
+    @Column(name = "update_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    protected OffsetDateTime lastUpdate;
 
     /**
      * model that this entity is respecting
@@ -107,35 +127,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Model model;
 
     /**
-     * last time the entity was updated
+     * State determined through different storage steps for the AIP
      */
-    @PastOrNow(message = "The lastUpdate date must be in the past or now")
-    @Column(name = "update_date")
-    @Convert(converter = OffsetDateTimeAttributeConverter.class)
-    protected OffsetDateTime lastUpdate;
-
-    /**
-     * time at which the entity was created
-     */
-    @PastOrNow(message = "The creationDate must be in the past or now")
-    @Column(name = "creation_date", nullable = false)
-    @Convert(converter = OffsetDateTimeAttributeConverter.class)
-    protected OffsetDateTime creationDate;
-
-    /**
-     * entity id for SGBD purpose mainly and REST request
-     */
-    @Id
-    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "seq_entity")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
-    protected Long id;
-
-    /**
-     * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
-     * REST request.
-     */
-    @Column
-    protected String sipId;
+    @GsonIgnore
+    @Column(name = "aip_state", length = 32)
+    @Enumerated(EnumType.STRING)
+    private EntityAipState stateAip;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -145,7 +142,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"),
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_tag_entity_id"))
     @Column(name = "value", length = 200)
-    protected Set<String> tags = new HashSet<>();
+    private Set<String> tags = new HashSet<>();
 
     /**
      * Computed indirect access groups.<br/>
@@ -159,37 +156,48 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Set<String> groups = new HashSet<>();
 
     /**
-     * list of attributes associated to this entity
+     * feature.geometry projection on WGS84 crs
      */
-    @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE,
-            value = "fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute") })
-    @Column(columnDefinition = "jsonb")
     @Valid
-    protected Set<AbstractAttribute<?>> properties = new HashSet<>();
-
-    // To perform quick access to attribute from its name
-    @Transient
-    @GsonIgnore
-    private Map<String, AbstractAttribute<?>> propertyMap = null;
-
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    @JsonAdapter(value = GeometryAdapter.class)
-    protected Geometry<?> geometry;
+    protected IGeometry wgs84 = IGeometry.unlocated();
 
-    protected AbstractEntity(Model model, UniformResourceName ipId, String label) { // NOSONAR
+    /**
+     * Raw entity feature with minimum fuss
+     */
+    @Valid
+    @NotNull(message = "Feature is required")
+    @Column(columnDefinition = "jsonb")
+    @Type(type = "jsonb")
+    protected F feature;
+
+    protected AbstractEntity(Model model, F feature) {
         this.model = model;
-        this.ipId = ipId;
-        this.label = label;
+        this.feature = feature;
+        if (this.feature != null) {
+            this.ipId = feature.getId();
+            this.feature.setModel(model.getName());
+        }
     }
 
-    protected AbstractEntity() { // NOSONAR
-        this(null, null, null);
+    protected AbstractEntity() {
+        this(null, null);
     }
 
     @Override
     public String getDocId() {
-        return ipId.toString();
+        return feature.getId().toString();
+    }
+
+    @Override
+    public String getType() {
+        return feature.getEntityType().toString();
+    }
+
+    @Override
+    public Multimap<DataType, DataFile> getFiles() {
+        return feature.getFiles();
     }
 
     public OffsetDateTime getLastUpdate() {
@@ -208,57 +216,87 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.creationDate = creationDate;
     }
 
-    /**
-     * @return the id
-     */
-    @Override
     public Long getId() {
         return id;
     }
 
-    /**
-     * Set the id
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * @return the ip id
+     * @return feature id
      */
     public UniformResourceName getIpId() {
-        return ipId;
+        return feature.getId();
     }
 
     /**
-     * Set the ip id
+     * Set the feature id
      */
     public void setIpId(UniformResourceName ipId) {
         this.ipId = ipId;
+        // Propagate to feature
+        feature.setId(ipId);
     }
 
-    public Set<String> getTags() {
-        return tags;
+    /**
+     * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
+     * {@link #removeTags(Collection)}
+     */
+    public ImmutableSet<String> getTags() {
+        return ImmutableSet.copyOf(tags);
+    }
+
+    public EntityAipState getStateAip() {
+        return stateAip;
+    }
+
+    public void setStateAip(EntityAipState stateAip) {
+        this.stateAip = stateAip;
     }
 
     public void setTags(Set<String> tags) {
+        Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags = tags;
+        // Propagate to feature
+        feature.setTags(tags);
+    }
+
+    public void addTags(String... tags) {
+        Assert.notEmpty(tags, "Tags must not be null or empty");
+        this.tags.addAll(Arrays.asList(tags));
+        // Propagate to feature
+        feature.addTags(tags);
+    }
+
+    public void removeTags(java.util.Collection<String> tags) {
+        Assert.notEmpty(tags, "Tags must not be null or empty");
+        this.tags.removeAll(tags);
+        // Propagate to feature
+        feature.removeTags(tags);
+    }
+
+    public void clearTags() {
+        this.tags.clear();
+        // Propagate to feature
+        feature.getTags().clear();
     }
 
     /**
-     * Get an immutable copy of properties.
+     * Get an immutable copy of feature properties.
      * If this set should be modified, please use addProperty or removeProperty
      */
-    public ImmutableSet<AbstractAttribute<?>> getProperties() { // NOSONAR
-        return ImmutableSet.copyOf(properties);
+    public ImmutableSet<AbstractAttribute<?>> getProperties() {
+        return ImmutableSet.copyOf(feature.getProperties());
     }
 
     /**
-     * Get a mutable copy of properties.
+     * Get a mutable copy of property paths.
      */
     public Set<String> getMutableCopyOfPropertiesPaths() {
         Set<String> propertiesPaths = new HashSet<>();
-        for (AbstractAttribute<?> prop : properties) {
+        for (AbstractAttribute<?> prop : feature.getProperties()) {
             // Fragment
             if (prop instanceof ObjectAttribute) {
                 String fragmentName = prop.getName();
@@ -272,79 +310,50 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return propertiesPaths;
     }
 
+    /**
+     * Add feature property
+     */
     public void addProperty(AbstractAttribute<?> property) {
-        properties.add(property);
-        // If property key is null, it is not a valid property and so it may not pass validation process
-        if (property.getName() != null) {
-            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
-        }
+        feature.addProperty(property);
     }
 
     public void removeProperty(AbstractAttribute<?> property) {
-        properties.remove(property);
-        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        feature.removeProperty(property);
     }
 
     public AbstractAttribute<?> getProperty(String name) {
-        if (propertyMap == null) {
-            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
-        }
-        if (!name.contains(".")) {
-            return this.propertyMap.get(name);
-        } else {
-            ObjectAttribute fragment = (ObjectAttribute) this.propertyMap.get(name.substring(0, name.indexOf('.')));
-            String propName = name.substring(name.indexOf('.') + 1);
-            if (fragment != null) {
-                Optional<AbstractAttribute<?>> attOpt = fragment.getValue().stream()
-                        .filter(p -> p.getName().equals(propName)).findFirst();
-                return attOpt.isPresent() ? attOpt.get() : null;
-            }
-            return null;
-        }
+        return feature.getProperty(name);
     }
 
     /**
      * Set the properties
      */
     public void setProperties(Set<AbstractAttribute<?>> attributes) {
-        properties = attributes;
-        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        feature.setProperties(attributes);
     }
 
-    /**
-     * @return the model
-     */
     public Model getModel() {
         return model;
     }
 
-    /**
-     * Set the model
-     */
     public void setModel(Model model) {
         this.model = model;
     }
 
-    /**
-     * @return the sip id
-     */
     public String getSipId() {
-        return sipId;
+        return feature.getSipId();
     }
 
-    /**
-     * Set the sip id
-     */
     public void setSipId(String sipId) {
-        this.sipId = sipId;
+        feature.setSipId(sipId);
     }
 
     public String getLabel() {
-        return label;
+        return feature.getLabel();
     }
 
     public void setLabel(String label) {
-        this.label = label;
+        feature.setLabel(label);
     }
 
     public Set<String> getGroups() {
@@ -355,12 +364,22 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.groups = groups;
     }
 
-    public Geometry<?> getGeometry() {
-        return geometry;
+    @SuppressWarnings("unchecked")
+    public <T extends IGeometry> T getGeometry() {
+        return (T) feature.getGeometry();
     }
 
-    public void setGeometry(Geometry<?> geometry) {
-        this.geometry = geometry;
+    public void setGeometry(IGeometry geometry) {
+        feature.setGeometry(geometry);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends IGeometry> T getWgs84() {
+        return (T) wgs84;
+    }
+
+    public void setWgs84(IGeometry wgs84) {
+        this.wgs84 = wgs84;
     }
 
     @Override
@@ -368,7 +387,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = (prime * result) + ((ipId == null) ? 0 : ipId.hashCode());
+        result = (prime * result) + ((getIpId() == null) ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }
@@ -384,12 +403,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         if (getClass() != pObj.getClass()) {
             return false;
         }
-        AbstractEntity other = (AbstractEntity) pObj;
-        if (ipId == null) {
+        AbstractEntity<?> other = (AbstractEntity<?>) pObj;
+        if (getIpId() == null) {
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
+        } else if (!getIpId().equals(other.getIpId())) {
             return false;
         }
         return true;
@@ -398,7 +417,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + ipId + ", sipId=" + sipId + ", label=" + label + ", attributes=" + properties + ", model=" + model
-                + "]";
+                + getIpId() + ", sipId=" + getSipId() + ", label=" + getLabel() + ", attributes=" + getProperties()
+                + ", model=" + model + "]";
+    }
+
+    public F getFeature() {
+        return feature;
     }
 }

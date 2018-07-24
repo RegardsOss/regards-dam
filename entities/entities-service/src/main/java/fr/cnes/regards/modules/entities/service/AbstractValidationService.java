@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 /**
  * @author oroussel
  */
-public abstract class AbstractValidationService<U extends AbstractEntity> implements IValidationService<U> {
+public abstract class AbstractValidationService<U extends AbstractEntity<?>> implements IValidationService<U> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -76,9 +76,9 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
         // If properties isn't empty it means some properties are unexpected by the model
         List<String> unexpectedPropertyErrors = new ArrayList<>();
         if (!toCheckProperties.isEmpty()) {
-            toCheckProperties.forEach(propPath -> inErrors.reject("error.unexpected.attribute.message",
-                                                              String.format("%s isn't expected by the model",
-                                                                            propPath)));
+            toCheckProperties
+                    .forEach(propPath -> inErrors.reject("error.unexpected.attribute.message",
+                                                         String.format("%s isn't expected by the model", propPath)));
         }
 
         if (inErrors.hasErrors() || !unexpectedPropertyErrors.isEmpty()) {
@@ -102,7 +102,7 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
      * @param toCheckProperties properties not already checked
      */
     protected void checkModelAttribute(ModelAttrAssoc modelAttribute, Errors errors, boolean manageAlterable,
-            AbstractEntity entity, Set<String> toCheckProperties) {
+            AbstractEntity<?> entity, Set<String> toCheckProperties) {
 
         // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
         // missing and is added during the crawling process
@@ -135,9 +135,8 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, errors);
                 } else {
-                    String defaultMessage = String
-                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
-                                    attPath);
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), attPath);
                     errors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -148,5 +147,5 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
     }
 
     abstract protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey,
-            boolean manageAlterable, AbstractEntity entity);
+            boolean manageAlterable, AbstractEntity<?> entity);
 }

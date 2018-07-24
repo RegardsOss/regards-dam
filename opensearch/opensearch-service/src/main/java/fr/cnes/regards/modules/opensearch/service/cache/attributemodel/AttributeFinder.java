@@ -57,4 +57,13 @@ public class AttributeFinder implements IAttributeFinder {
         return attributeModelCache.findByName(name);
     }
 
+    @Override
+    public String findName(AttributeModel attribute) {
+        // Activate cache refresh if necessary
+        attributeModelCache.getAttributeModels(runtimeTenantResolver.getTenant());
+
+        // Check queryable static properties
+        return attributeModelCache.findName(attribute);
+    }
+
 }

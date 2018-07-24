@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,7 +29,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -41,11 +39,8 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
-import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -53,7 +48,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 public class EntityServiceTest {
 
-    private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+    private IAbstractEntityRepository<AbstractEntity<?>> entitiesRepositoryMocked;
 
     private Collection collection2;
 
@@ -71,7 +66,7 @@ public class EntityServiceTest {
 
     private Model model2;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void init() {
 
@@ -81,49 +76,42 @@ public class EntityServiceTest {
 
         collection2 = new Collection(model2, "PROJECT", "collection2");
         collection2.setId(2L);
-        collection2.setDescriptionFile(new DescriptionFile("pDescription2"));
         collection3 = new Collection(model2, "PROJECT", "collection3");
         collection3.setId(3L);
-        collection3.setDescriptionFile(new DescriptionFile("pDescription3"));
         collection3.setLabel("pName3");
         collection4 = new Collection(model2, "PROJECT", "collection4");
         collection4.setId(4L);
-        collection4.setDescriptionFile(new DescriptionFile("pDescription4"));
-        Set<String> collection2Tags = collection2.getTags();
-        collection2Tags.add(collection4.getIpId().toString());
-        collection2.setTags(collection2Tags);
+        collection2.addTags(collection4.getIpId().toString());
 
-        data = new DataObject(null, "PROJECT", "object");
+        data = new DataObject(new Model(), "PROJECT", "object");
         data.setId(1L);
         doc = new Document(model2, "PROJECT", "doc");
         doc.setId(2L);
         dataset = new Dataset(model2, "PROJECT", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
-        dataset.setDescriptionFile(new DescriptionFile("datasetDesc"));
         dataset.setLabel("dataset");
         dataset2 = new Dataset(model2, "PROJECT", "dataset2");
         dataset2.setLicence("licence");
-        dataset2.setDescriptionFile(new DescriptionFile("datasetDesc2"));
 
-        IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
-        IModelService pModelService = Mockito.mock(IModelService.class);
+        // IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
+        // IModelService pModelService = Mockito.mock(IModelService.class);
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
-        final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
+        List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection4);
         Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
-        EntityManager emMocked = Mockito.mock(EntityManager.class);
+        // EntityManager emMocked = Mockito.mock(EntityManager.class);
 
-        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
-        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        // IPublisher publisherMocked = Mockito.mock(IPublisher.class);
+        IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);
-        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(dataset);
+        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn((AbstractEntity) data);
+        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn((AbstractEntity) doc);
+        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn((AbstractEntity) dataset);
     }
 
     @Test
@@ -131,12 +119,12 @@ public class EntityServiceTest {
     @Requirement("REGARDS_DSL_SYS_ARC_420")
     @Purpose("A document identifier is an URN")
     public void testAssociateDatasetToAnything() {
-        final List<AbstractEntity> entityList = new ArrayList<>();
+        List<AbstractEntity<?>> entityList = new ArrayList<>();
         entityList.add(collection3);
         entityList.add(dataset2);
         entityList.add(data);
         entityList.add(doc);
-        final Set<UniformResourceName> entityURNList = new HashSet<>();
+        Set<UniformResourceName> entityURNList = new HashSet<>();
         entityURNList.add(collection3.getIpId());
         entityURNList.add(dataset2.getIpId());
         entityURNList.add(data.getIpId());

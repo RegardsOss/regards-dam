@@ -18,12 +18,8 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.Set;
-
-import com.google.common.collect.Sets;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -34,13 +30,10 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public final class StaticProperties {
 
-    // URN
+    // URN (duplicate as ID in feature)
     public static final String IP_ID = "ipId";
 
     // ##########-AbstractEntity-##########
-
-    // String
-    public static final String LABEL = "label";
 
     // Model
     public static final String MODEL_TYPE = "model";
@@ -63,135 +56,76 @@ public final class StaticProperties {
     // Long
     public static final String ID = "id";
 
-    // String
-    public static final String SIP_ID = "sipId";
-
-    // String list
-    public static final String TAGS = "tags";
-
     // String list
     public static final String GROUPS = "groups";
 
-    // Geometry
-    public static final String GEOMETRY = "geometry";
+    // ##########-EntityFeature-##########
 
-    // Wrappped dynamic properties
-    public static final String PROPERTIES = "properties";
+    public static final String FEATURE = "feature";
+
+    /**
+     * Feature namespace
+     */
+    public static final String FEATURE_NS = FEATURE + ".";
+
+    // String
+    public static final String FEATURE_ID = "id";
+
+    public static final String FEATURE_ID_PATH = FEATURE_NS + FEATURE_ID;
+
+    // String
+    public static final String FEATURE_SIP_ID = "sipId";
+
+    public static final String FEATURE_SIP_ID_PATH = FEATURE_NS + FEATURE_SIP_ID;
+
+    // String
+    public static final String FEATURE_LABEL = "label";
+
+    public static final String FEATURE_LABEL_PATH = FEATURE_NS + FEATURE_LABEL;
+
+    // String
+    public static final String FEATURE_MODEL = "model";
+
+    public static final String FEATURE_MODEL_PATH = FEATURE_NS + FEATURE_MODEL;
 
     // List of DataFile
-    public static final String FILES = "files";
+    public static final String FEATURE_FILES = "files";
 
-    // ##########-AbstractDataEntity-##########
+    public static final String FEATURE_FILES_PATH = FEATURE_NS + FEATURE_FILES;
 
-    // DescriptionFile
-    public static final String DESCRIPTION_FILE = "descriptionFile";
+    // String list
+    public static final String FEATURE_TAGS = "tags";
 
-    // ##########-AbstractDescEntity-##########
+    public static final String FEATURE_TAGS_PATH = FEATURE_NS + FEATURE_TAGS;
 
-    public static final String DATASOURCE_ID = "dataSourceId";
+    // Geometry
+    public static final String FEATURE_GEOMETRY = "geometry";
 
-    // ##########-Collection-##########
+    public static final String FEATURE_GEOMETRY_PATH = FEATURE_NS + FEATURE_GEOMETRY;
+
+    // Wrappped dynamic properties
+    public static final String FEATURE_PROPERTIES = "properties";
+
+    public static final String FEATURE_PROPERTIES_PATH = FEATURE_NS + FEATURE_PROPERTIES;
+
+    // List of first level static properties
+    public static final List<String> FEATURES_STATICS = Arrays.asList(FEATURE_ID, FEATURE_SIP_ID, FEATURE_LABEL,
+                                                                      FEATURE_MODEL, FEATURE_FILES, FEATURE_TAGS,
+                                                                      FEATURE_GEOMETRY, FEATURE_PROPERTIES);
 
     // ##########-DataObject-##########
 
+    public static final String DATASOURCE_ID = "dataSourceId";
+
     // Long list
     public static final String DATASET_MODEL_IDS = "datasetModelIds";
-
-    // int
-    public static final String SCORE = "score";
 
     // ##########-Dataset-##########
 
     // String
     public static final String DATA_MODEL = "dataModel";
 
-    // String list
-    public static final String QUOTATIONS = "quotations";
-
-    // String
-    public static final String LICENCE = "licence";
-
-    public static final String ENTITY_TYPE = "entityType";
-
-    // ##########-Document-##########
-
-    // ##########-From GSON factory EntityAdapterFactory-##########
-
-    private static final Set<String> staticPropertiesName = Sets.newHashSet(CREATION_DATE,
-                                                                            DATA_MODEL,
-                                                                            DATASET_MODEL_IDS,
-                                                                            DATASOURCE_ID,
-                                                                            DESCRIPTION_FILE,
-                                                                            ENTITY_TYPE,
-                                                                            FILES,
-                                                                            GEOMETRY,
-                                                                            GROUPS,
-                                                                            ID,
-                                                                            IP_ID,
-                                                                            LABEL,
-                                                                            LAST_UPDATE,
-                                                                            LICENCE,
-                                                                            MODEL_DESCRIPTION,
-                                                                            MODEL_NAME,
-                                                                            MODEL_VERSION,
-                                                                            QUOTATIONS,
-                                                                            SCORE,
-                                                                            SIP_ID,
-                                                                            TAGS);
-
     private StaticProperties() {
-    }
-
-    public static boolean isStaticProperty(String propertyName) {
-        return staticPropertiesName.contains(propertyName);
-    }
-
-    /**
-     * Build a "fake" {@link AttributeModel} corresponding to the given static property.
-     * @param propertyName static property name
-     * @return Built {@link AttributeModel} corresponding to the given static property. null if the attribute was not created
-     */
-    public static AttributeModel buildStaticAttributeModel(String propertyName) {
-        switch (propertyName) {
-            case CREATION_DATE:
-                return AttributeModelBuilder.build(propertyName, AttributeType.DATE_ISO8601, propertyName).get();
-            case DATA_MODEL:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case DATASET_MODEL_IDS:
-                return AttributeModelBuilder.build(propertyName, AttributeType.LONG_ARRAY, propertyName).get();
-            case DATASOURCE_ID:
-                return AttributeModelBuilder.build(propertyName, AttributeType.LONG, propertyName).get();
-            case ENTITY_TYPE:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case GROUPS:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING_ARRAY, propertyName).get();
-            case ID:
-                return AttributeModelBuilder.build(propertyName, AttributeType.LONG, propertyName).get();
-            case IP_ID:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case LABEL:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case LAST_UPDATE:
-                return AttributeModelBuilder.build(propertyName, AttributeType.DATE_ISO8601, propertyName).get();
-            case LICENCE:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case MODEL_DESCRIPTION:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case MODEL_NAME:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case MODEL_VERSION:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case QUOTATIONS:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING_ARRAY, propertyName).get();
-            case SCORE:
-                return AttributeModelBuilder.build(propertyName, AttributeType.INTEGER, propertyName).get();
-            case SIP_ID:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING, propertyName).get();
-            case TAGS:
-                return AttributeModelBuilder.build(propertyName, AttributeType.STRING_ARRAY, propertyName).get();
-            default:
-                return null;
-        }
     }
 
 }

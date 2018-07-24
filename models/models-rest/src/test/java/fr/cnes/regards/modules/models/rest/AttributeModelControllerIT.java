@@ -21,8 +21,11 @@ package fr.cnes.regards.modules.models.rest;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -30,8 +33,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.PayloadDocumentation;
+import org.springframework.restdocs.request.RequestDocumentation;
+import org.springframework.restdocs.snippet.Attributes;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
@@ -39,7 +47,8 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
+import fr.cnes.regards.framework.test.integration.ConstrainedFields;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
@@ -50,11 +59,13 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeProperty;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 
 /**
  * Test module API
@@ -104,6 +115,174 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     private IModelAttrAssocRepository modelAttributeRepository;
 
     private Model modelTest;
+
+    public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(AttributeModel.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        if (!creation) {
+            descriptors.add(constrainedFields.withPath(prefixPath + "id",
+                                                       "id",
+                                                       "Attribute Model identifier",
+                                                       "Must be positive"));
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "Attribute name"));
+        descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "Attribute description")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors
+                .add(constrainedFields.withPath(prefixPath + "defaultValue", "defaultValue", "Attribute default value")
+                             .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "type",
+                                                   "type",
+                                                   "Attribute type",
+                                                   "Available values: " + Arrays.stream(AttributeType.values())
+                                                           .map(type -> type.name())
+                                                           .reduce((first, second) -> first + ", " + second).get()));
+        descriptors.add(constrainedFields.withPath(prefixPath + "unit",
+                                                   "unit",
+                                                   "Attribute unit useful for number based attributes",
+                                                   "Max length: 16 characters").type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "precision",
+                                                   "precision",
+                                                   "Attribute precision useful for double based attributes")
+                                .type(JSON_NUMBER_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "arraySize",
+                                                   "arraySize",
+                                                   "Attribute array size useful for array based attributes")
+                                .type(JSON_NUMBER_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "fragment",
+                                                   "fragment",
+                                                   "Attribute Fragment",
+                                                   "Should respect Fragment structure").type(JSON_OBJECT_TYPE)
+                                .optional());
+        descriptors.addAll(documentFragment(false, prefixPath + "fragment"));
+        descriptors.add(constrainedFields.withPath(prefixPath + "alterable",
+                                                   "alterable",
+                                                   "Whether this attribute can be altered by users",
+                                                   "Defaults to true").type(JSON_BOOLEAN_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "optional",
+                                                   "optional",
+                                                   "Whether this attribute is optional",
+                                                   "defaults to false").type(JSON_BOOLEAN_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "label", "label", "Attribute label"));
+        descriptors.add(constrainedFields
+                                .withPath(prefixPath + "restriction", "restriction", "Attribute applicable restriction")
+                                .type(JSON_OBJECT_TYPE).optional());
+        descriptors.addAll(documentAttributeRestriction(creation, prefixPath + "restriction"));
+        descriptors
+                .add(constrainedFields.withPath(prefixPath + "group", "group", "Attribute group for displaying purpose")
+                             .type(JSON_STRING_TYPE).optional());
+        descriptors
+                .add(constrainedFields.withPath(prefixPath + "properties", "properties", "Custom attribute properties")
+                             .type(JSON_ARRAY_TYPE).optional());
+        descriptors.addAll(documentAttributeProperties(creation, prefixPath + "properties[]"));
+        descriptors.add(constrainedFields.withPath(prefixPath + "dynamic",
+                                                   "dynamic",
+                                                   "Used in search request parsing only",
+                                                   "Defaults to true").type(JSON_BOOLEAN_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "jsonPath",
+                                                   "jsonPath",
+                                                   "Used in search request. Define the JSON path to the related values in entities")
+                                .type(JSON_STRING_TYPE).optional());
+        // ignore links
+        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
+        ignoreFields = new ConstrainedFields(Link.class);
+        descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
+        descriptors.add(ignoreFields.withPath("links[].href", "href", "hateoas links href").optional().ignored());
+        return descriptors;
+    }
+
+    public static List<FieldDescriptor> documentAttributeProperties(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(AttributeProperty.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        // as attribute property list can be empty, we have to set everything as optional
+        if (!creation) {
+            descriptors.add(constrainedFields
+                                    .withPath(prefixPath + "id", prefixPath + "id", "Attribute property identifier")
+                                    .type(JSON_NUMBER_TYPE).optional());
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "key", prefixPath + "key", "Custom key")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "value", prefixPath + "value", "Custom value")
+                                .type(JSON_STRING_TYPE).optional());
+        return descriptors;
+    }
+
+    public static List<FieldDescriptor> documentFragment(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(Fragment.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        //fragment being optional, we have to set all of its attribute as optional
+        if (!creation) {
+            descriptors.add(constrainedFields
+                                    .withPath(prefixPath + "id", "id", "Fragment identifier", "Must be a whole number")
+                                    .type(JSON_NUMBER_TYPE).optional());
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "Fragment Name").type(JSON_STRING_TYPE)
+                                .optional());
+        descriptors.add(constrainedFields
+                                .withPath(prefixPath + "description", "description", "Fragment description", "Optional")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "Fragment Version", "Optional")
+                                .type(JSON_STRING_TYPE).optional());
+        return descriptors;
+    }
+
+    public static List<FieldDescriptor> documentAttributeRestriction(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(AttributeModel.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        // as attribute restriction is not mandatory, we have to set everything as optional
+        if (!creation) {
+            descriptors.add(constrainedFields.withPath(prefixPath + "id", prefixPath + "id", "Restriction identifier")
+                                    .type(JSON_NUMBER_TYPE).optional());
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "type",
+                                                   prefixPath + "type",
+                                                   "Restriction type",
+                                                   "Available values: " + Arrays.stream(RestrictionType.values())
+                                                           .map(restrictionType -> restrictionType.name())
+                                                           .collect(Collectors.joining(", "))).type(JSON_STRING_TYPE)
+                                .optional());
+        //document fields for RangeRestriction
+        descriptors.add(constrainedFields.withPath(prefixPath + "min",
+                                                   prefixPath + "min",
+                                                   "Minimum possible value",
+                                                   "Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
+                                .type(JSON_NUMBER_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "max",
+                                                   prefixPath + "max",
+                                                   "Maximum possible value",
+                                                   "Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
+                                .type(JSON_NUMBER_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "minExcluded",
+                                                   prefixPath + "minExcluded",
+                                                   "Whether the minimum values is to be excluded from the range",
+                                                   "Defaults to false. Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
+                                .type(JSON_BOOLEAN_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "maxExcluded",
+                                                   prefixPath + "maxExcluded",
+                                                   "Whether the maximum values is to be excluded from the range",
+                                                   "Defaults to false. Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
+                                .type(JSON_BOOLEAN_TYPE).optional());
+        //document fields for EnumerationRestriction
+        descriptors.add(constrainedFields.withPath(prefixPath + "acceptableValues",
+                                                   prefixPath + "acceptableValues",
+                                                   "Acceptable values",
+                                                   "Apply to restriction type ENUMERATION").type(JSON_ARRAY_TYPE)
+                                .optional());
+
+        //document fields for PatternRestriction
+        descriptors.add(constrainedFields.withPath(prefixPath + "pattern",
+                                                   prefixPath + "pattern",
+                                                   "Validation pattern",
+                                                   "Apply to restriction type PATTERN").type(JSON_STRING_TYPE)
+                                .optional());
+
+        return descriptors;
+    }
 
     @Before
     public void setUp() throws ModuleException {
@@ -169,15 +348,31 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testGetModelAttrAssoc() {
         final Integer expectedSize = 1;
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$[0].content.model.id",
-                                                        Matchers.equalTo(modelTest.getId().intValue())));
-        expectations.add(MockMvcResultMatchers.jsonPath("$[0].content.attribute.jsonPath",
-                                                        Matchers.equalTo("properties.test.Attribute1")));
-        performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, expectations,
-                          "Cannot get all attributes assoc", modelTest.getName());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$[0].content.model.id",
+                                                                               Matchers.equalTo(modelTest.getId()
+                                                                                                        .intValue())));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$[0].content.attribute.jsonPath",
+                                                                               Matchers.equalTo(
+                                                                                       "properties.test.Attribute1")));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "modelName")
+                                                                                                     .description(
+                                                                                                             "model name")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_STRING_TYPE))));
+
+        performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING,
+                          requestBuilderCustomizer,
+                          "Cannot get all attributes assoc",
+                          modelTest.getName());
 
     }
 
@@ -192,12 +387,13 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         final Integer expectedSize = 3;
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
         // Perform test
-        performDefaultGet(AttributeModelController.TYPE_MAPPING, expectations, "Cannot get all attributes");
+        performDefaultGet(AttributeModelController.TYPE_MAPPING, requestBuilderCustomizer, "Cannot get all attributes");
     }
 
     @Test
@@ -206,31 +402,62 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         // There must be only one attribute associated to models of type DATA
         Integer expectedSize = 1;
-        List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
         // Perform test
         performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
-                          expectations, "Cannot get all attributes", EntityType.DATA.toString());
+                          requestBuilderCustomizer,
+                          "Cannot get all attributes",
+                          EntityType.DATA.toString());
 
         // There must be only two attributes associated to models of type DATASET
         expectedSize = 2;
-        expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
         performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
-                          expectations, "Cannot get all attributes", EntityType.DATASET.toString());
+                          requestBuilderCustomizer,
+                          "Cannot get all attributes",
+                          EntityType.DATASET.toString());
 
         // There must be no attribute associated to collection models
         expectedSize = 0;
-        expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "pModelType")
+                                                                                                     .description(
+                                                                                                             "model type")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_STRING_TYPE),
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                                                                                                     .value("Available values: "
+                                                                                                                                    + Arrays
+                                                                                                                             .stream(EntityType
+                                                                                                                                             .values())
+                                                                                                                             .map(type -> type
+                                                                                                                                     .name())
+                                                                                                                             .collect(
+                                                                                                                                     Collectors
+                                                                                                                                             .joining(
+                                                                                                                                                     ", "))))));
 
         performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
-                          expectations, "Cannot get all attributes", EntityType.COLLECTION.toString());
+                          requestBuilderCustomizer,
+                          "Cannot get all attributes",
+                          EntityType.COLLECTION.toString());
     }
 
     @Test
@@ -325,13 +552,63 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         createAttribute("Age", null, AttributeType.INTEGER, fragment);
 
         final Integer expectedSize = 3;
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
-        performDefaultGet(AttributeModelController.TYPE_MAPPING, expectations,
-                          "Should return result " + expectedSize + " attributes.", RequestParamBuilder.build()
-                                  .param(AttributeModelController.PARAM_FRAGMENT_NAME, fragmentName));
+        requestBuilderCustomizer.customizeRequestParam()
+                .param(AttributeModelController.PARAM_FRAGMENT_NAME, fragmentName);
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
+                                                                                                        .parameterWithName(
+                                                                                                                AttributeModelController.PARAM_FRAGMENT_NAME)
+                                                                                                        .description(
+                                                                                                                "fragment name")
+                                                                                                        .attributes(
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                        .value(JSON_STRING_TYPE))
+                                                                                                        .optional(),
+                                                                                                RequestDocumentation
+                                                                                                        .parameterWithName(
+                                                                                                                "modelIds")
+                                                                                                        .description(
+                                                                                                                "model id")
+                                                                                                        .attributes(
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                        .value(JSON_ARRAY_TYPE),
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                                                                                                        .value("Values must be whole numbers"))
+                                                                                                        .optional(),
+                                                                                                RequestDocumentation
+                                                                                                        .parameterWithName(
+                                                                                                                AttributeModelController.PARAM_TYPE)
+                                                                                                        .description(
+                                                                                                                "attribute type")
+                                                                                                        .attributes(
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                        .value(JSON_STRING_TYPE),
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                                                                                                        .value("Available values: "
+                                                                                                                                       + Arrays
+                                                                                                                                .stream(AttributeType
+                                                                                                                                                .values())
+                                                                                                                                .map(type -> type
+                                                                                                                                        .name())
+                                                                                                                                .collect(
+                                                                                                                                        Collectors
+                                                                                                                                                .joining(
+                                                                                                                                                        ", "))))
+                                                                                                        .optional()));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING,
+                          requestBuilderCustomizer,
+                          "Should return result " + expectedSize + " attributes.");
 
     }
 
@@ -345,17 +622,29 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     private ResultActions createAttribute(AttributeModel pAttributeModel) {
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.name", Matchers.equalTo(pAttributeModel.getName())));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.content.name",
+                                                                               Matchers.equalTo(pAttributeModel
+                                                                                                        .getName())));
         if (pAttributeModel.getDescription() != null) {
-            expectations.add(MockMvcResultMatchers.jsonPath("$.content.description",
-                                                            Matchers.equalTo(pAttributeModel.getDescription())));
+            requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.content.description",
+                                                                                   Matchers.equalTo(pAttributeModel
+                                                                                                            .getDescription())));
         }
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.type",
-                                                        Matchers.equalTo(pAttributeModel.getType().toString())));
-        return performDefaultPost(AttributeModelController.TYPE_MAPPING, pAttributeModel, expectations,
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.content.type",
+                                                                               Matchers.equalTo(pAttributeModel
+                                                                                                        .getType()
+                                                                                                        .toString())));
+
+        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        return performDefaultPost(AttributeModelController.TYPE_MAPPING,
+                                  pAttributeModel,
+                                  requestBuilderCustomizer,
                                   "Consistent attribute should be created.");
     }
 
@@ -405,11 +694,26 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         final Integer id = JsonPath.read(json, JSON_ID);
 
         // Retrieve attribute
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", expectations,
-                          "Cannot retrieve attribute", id);
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "pAttributeId")
+                                                                                                     .description(
+                                                                                                             "attribute id")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_NUMBER_TYPE))));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                          requestBuilderCustomizer,
+                          "Cannot retrieve attribute",
+                          id);
     }
 
     /**
@@ -421,25 +725,29 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         final String[] acceptableValues = new String[] { "ALPHA", "BETA", "GAMMA" };
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
         // Content
         final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction(acceptableValues);
 
-        performDefaultPost(AttributeModelController.TYPE_MAPPING, attModel, expectations,
+        performDefaultPost(AttributeModelController.TYPE_MAPPING,
+                           attModel,
+                           requestBuilderCustomizer,
                            "Cannot add attribute with enum restriction");
 
         // Define conflict expectations
-        final List<ResultMatcher> conflictExpectations = new ArrayList<>();
-        conflictExpectations.add(MockMvcResultMatchers.status().isConflict());
+        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isConflict());
 
         // Same clone model ... replay
         final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction(acceptableValues);
 
-        performDefaultPost(AttributeModelController.TYPE_MAPPING, conflictAttModel, conflictExpectations,
+        performDefaultPost(AttributeModelController.TYPE_MAPPING,
+                           conflictAttModel,
+                           requestBuilderCustomizer,
                            "Conflict not detected");
     }
 
@@ -450,19 +758,45 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void getAllRestrictions() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isBadRequest());
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING, expectations,
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isBadRequest());
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING,
+                          requestBuilderCustomizer,
                           "Restriction must be retrieve by type");
     }
 
     @Test
     public void getRestrictionForString() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING, expectations,
-                          "STRING restriction should exists!",
-                          RequestParamBuilder.build().param("type", AttributeType.STRING.toString()));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+
+        requestBuilderCustomizer.customizeRequestParam().param("type", AttributeType.STRING.toString());
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
+                                                                                                        .parameterWithName(
+                                                                                                                "type")
+                                                                                                        .description(
+                                                                                                                "Attribute type")
+                                                                                                        .attributes(
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                        .value(JSON_STRING_TYPE),
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                                                                                                        .value("Available values: "
+                                                                                                                                       + Arrays
+                                                                                                                                .stream(AttributeType
+                                                                                                                                                .values())
+                                                                                                                                .map(type -> type
+                                                                                                                                        .name())
+                                                                                                                                .collect(
+                                                                                                                                        Collectors
+                                                                                                                                                .joining(
+                                                                                                                                                        ", "))))));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING,
+                          requestBuilderCustomizer,
+                          "STRING restriction should exists!");
     }
 
     /**
@@ -476,11 +810,13 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         final AttributeType type = AttributeType.URL;
         final AttributeModel attMod = AttributeModelBuilder.build(name, type, "ForTests").description("DESC").get();
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        final ResultActions resultActions = performDefaultPost(AttributeModelController.TYPE_MAPPING, attMod,
-                                                               expectations, "Attribute should be created.");
+        final ResultActions resultActions = performDefaultPost(AttributeModelController.TYPE_MAPPING,
+                                                               attMod,
+                                                               requestBuilderCustomizer,
+                                                               "Attribute should be created.");
 
         final String json = payload(resultActions);
         final Integer id = JsonPath.read(json, JSON_ID);
@@ -492,18 +828,37 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         attMod.setDescription(description);
         attMod.setType(AttributeType.BOOLEAN);
 
-        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attMod, expectations,
-                          "Update should be successful.", id);
+        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                          attMod,
+                          requestBuilderCustomizer,
+                          "Update should be successful.",
+                          id);
 
         // Perform a get attribute to retrieved real database content and avoid false negative
 
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(name)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(description)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.type", Matchers.is(type.toString())));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(name)));
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(description)));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.type", Matchers.is(type.toString())));
 
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", expectations,
-                          "Cannot retrieve attribute", id);
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "pAttributeId")
+                                                                                                     .description(
+                                                                                                             "attribute id")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_NUMBER_TYPE))));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                          requestBuilderCustomizer,
+                          "Cannot retrieve attribute",
+                          id);
     }
 
     /**
@@ -515,11 +870,13 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         final AttributeModel attMod = AttributeModelBuilder.build("attModRestr", AttributeType.STRING, "ForTests")
                 .description("desc").withPatternRestriction("pattern");
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        final ResultActions resultActions = performDefaultPost(AttributeModelController.TYPE_MAPPING, attMod,
-                                                               expectations, "Attribute should be created.");
+        final ResultActions resultActions = performDefaultPost(AttributeModelController.TYPE_MAPPING,
+                                                               attMod,
+                                                               requestBuilderCustomizer,
+                                                               "Attribute should be created.");
 
         final String json = payload(resultActions);
         final Integer id = JsonPath.read(json, JSON_ID);
@@ -527,11 +884,14 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         attMod.setId(Long.valueOf(id));
         attMod.setRestriction(null);
 
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
         // expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasProperty("restrictions")));
 
-        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attMod, expectations,
-                          "Restriction should be deleted.", id);
+        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                          attMod,
+                          requestBuilderCustomizer,
+                          "Restriction should be deleted.",
+                          id);
 
     }
 
@@ -554,11 +914,27 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         irr.setMax(100);
         attModel.setRestriction(irr);
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
-                                          expectations, "Update should be successful.", id);
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "pAttributeId")
+                                                                                                     .description(
+                                                                                                             "attribute id")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_NUMBER_TYPE))));
+
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                                          attModel,
+                                          requestBuilderCustomizer,
+                                          "Update should be successful.",
+                                          id);
     }
 
     /**
@@ -580,10 +956,26 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         irr.setMax(100L);
         attModel.setRestriction(irr);
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
-                                          expectations, "Update should be successful.", id);
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "pAttributeId")
+                                                                                                     .description(
+                                                                                                             "attribute id")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_NUMBER_TYPE))));
+
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}",
+                                          attModel,
+                                          requestBuilderCustomizer,
+                                          "Update should be successful.",
+                                          id);
     }
 }

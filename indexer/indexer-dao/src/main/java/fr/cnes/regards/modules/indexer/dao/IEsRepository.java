@@ -1,3 +1,21 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.time.OffsetDateTime;
@@ -10,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +37,7 @@ import fr.cnes.regards.modules.indexer.dao.converter.LinkedHashMapToSort;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
@@ -351,6 +371,17 @@ public interface IEsRepository {
     <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion crit, String attName);
 
     /**
+     * Retrieve stats for each given attribute
+     * @param searchKey the search key
+     * @param crit search criterion
+     * @param attributes non text attributes
+     * @param textAttributes text attributes
+     * @return the stats of each attribute
+     */
+    <T extends IIndexable> Aggregations getAggregations(SearchKey<?, T> searchKey, ICriterion crit,
+            Collection<QueryableAttribute> attributes);
+
+    /**
      * Retrieve unique sorted string attribute values following given request
      * @param searchKey the search key
      * @param crit search criterion
@@ -405,8 +436,8 @@ public interface IEsRepository {
      * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
      */
-    <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+    <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
+            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
 
     /**
      * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
@@ -417,9 +448,8 @@ public interface IEsRepository {
      * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
      */
-    <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes);
-
+    <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
+            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
 
     /**
      * Close Client

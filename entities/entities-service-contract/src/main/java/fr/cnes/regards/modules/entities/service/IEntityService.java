@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -29,8 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
  * Parameterized entity service interface
@@ -39,7 +41,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @author oroussel
  */
 @MultitenantTransactional
-public interface IEntityService<U extends AbstractEntity> extends IValidationService<U> {
+public interface IEntityService<U extends AbstractEntity<?>> extends IValidationService<U> {
 
     /**
      * Load entity by IpId without relations
@@ -47,7 +49,7 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @param ipId business id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U load(UniformResourceName ipId);
+    U load(UniformResourceName ipId) throws ModuleException;
 
     /**
      * Load entity by id without relations
@@ -55,7 +57,7 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @param id Database id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U load(Long id);
+    U load(Long id) throws ModuleException;
 
     /**
      * Load entity by IpId with all its relations
@@ -63,7 +65,7 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U loadWithRelations(UniformResourceName ipId);
+    U loadWithRelations(UniformResourceName ipId) throws ModuleException;
 
     /**
      * Load entities by IpId with all their relations
@@ -71,7 +73,7 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
      */
-    List<U> loadAllWithRelations(UniformResourceName... ipIds);
+    List<U> loadAllWithRelations(UniformResourceName... ipIds) throws ModuleException;
 
     Page<U> findAll(Pageable pageRequest);
 
@@ -92,50 +94,38 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param pToAssociates URNs of entities to be associated by source entity
+     * @param toAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
      */
-    void associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
+    void associate(Long pEntityId, Set<UniformResourceName> toAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param pToBeDissociated URNs of entities to be dissociated from source entity
+     * @param toBeDissociated URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
      */
-    void dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
+    void dissociate(Long pEntityId, Set<UniformResourceName> toBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity
      *
-     * @param pEntity entity to create
-     * @param pFile description file (or null)
+     * @param entity entity to create
      * @return updated entity from database
      * @throws ModuleException
      */
-    U create(U pEntity, MultipartFile pFile) throws ModuleException, IOException;
-
-    /**
-     * Create entity without description file
-     *
-     * @param pEntity entioty to create
-     * @return updated entity from database
-     * @throws ModuleException
-     */
-    default U create(U pEntity) throws ModuleException, IOException {
-        return this.create(pEntity, null);
-    }
+    U create(U entity) throws ModuleException;
 
     /**
      * Update entity of id pEntityId according to pEntity
      *
-     * @param pEntityId id of entity to update
-     * @param pEntity "content" of entity to update
+     * @param entityId id of entity to update
+     * @param entity "content" of entity to update
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException;
+    U update(Long entityId, U entity) throws ModuleException;
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
@@ -145,7 +135,15 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException;
+    U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
+
+    /**
+     * Save an entity.
+     *
+     * @param entity the entity t saved
+     * @return the saved entity
+     */
+    U save(U entity);
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
@@ -156,43 +154,38 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      * @throws ModuleException
      */
     default U update(U pEntity) throws ModuleException {
-        try {
-            if (pEntity.getId() != null) {
-                return this.update(pEntity.getId(), pEntity, null);
-            } else {
-                return this.update(pEntity.getIpId(), pEntity, null);
-            }
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
-        }
-    }
-
-    default U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
-        try {
-            return this.update(pEntityUrn, pEntity, null);
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
-        }
-    }
-
-    default U update(Long pEntityId, U pEntity) throws ModuleException {
-        try {
-            return this.update(pEntityId, pEntity, null);
-        } catch (IOException ioe) { // NOSONAR
-            // Cannot happen
-            return null;
+        if (pEntity.getId() != null) {
+            return this.update(pEntity.getId(), pEntity);
+        } else {
+            return this.update(pEntity.getIpId(), pEntity);
         }
     }
 
     /**
      * Delete entity identified by its id. A deleted entity is "logged" into "deleted_entity" table
-     *
-     * @param pEntityId id of entity to delete
-     * @return the deleted entity
-     * @throws EntityNotFoundException
      */
-    U delete(Long pEntityId) throws EntityNotFoundException;
+    U delete(Long pEntityId) throws ModuleException;
 
+    /**
+     * Attach files to given entity
+     *
+     */
+    AbstractEntity<?> attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
+            List<DataFile> refs, String fileUriTemplate) throws ModuleException;
+
+    /**
+     * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum
+     */
+    DataFile getFile(UniformResourceName urn, String checksum) throws ModuleException;
+
+    /**
+     * Write related file content to output stream.<br/>
+     * {@link OutputStream} has to be flush after this method completes.
+     */
+    void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException;
+
+    /**
+     * Remove file
+     */
+    AbstractEntity<?> removeFile(UniformResourceName urn, String checksum) throws ModuleException;
 }

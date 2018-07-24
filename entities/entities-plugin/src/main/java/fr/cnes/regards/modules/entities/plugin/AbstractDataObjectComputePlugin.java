@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -99,8 +100,11 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
 
     protected void init(String attributeToComputeName, String attributeToComputeFragmentName,
             String parameterAttributeName, String parameterAttributeFragmentName) {
-        attributeToCompute = attModelRepos.findByNameAndFragmentName(attributeToComputeName, (Strings.isNullOrEmpty(
-                attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName));
+        attributeToCompute = attModelRepos
+                .findByNameAndFragmentName(attributeToComputeName,
+                                           (Strings.isNullOrEmpty(attributeToComputeFragmentName)
+                                                   ? Fragment.getDefaultName()
+                                                   : attributeToComputeFragmentName));
         if (attributeToCompute == null) {
             if (!Strings.isNullOrEmpty(attributeToComputeFragmentName)) {
                 throw new IllegalArgumentException(
@@ -111,8 +115,11 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find computed attribute '%s'", attributeToComputeName));
             }
         }
-        parameterAttribute = attModelRepos.findByNameAndFragmentName(parameterAttributeName, (Strings.isNullOrEmpty(
-                parameterAttributeFragmentName) ? Fragment.getDefaultName() : parameterAttributeFragmentName));
+        parameterAttribute = attModelRepos
+                .findByNameAndFragmentName(parameterAttributeName,
+                                           (Strings.isNullOrEmpty(parameterAttributeFragmentName)
+                                                   ? Fragment.getDefaultName()
+                                                   : parameterAttributeFragmentName));
         if (parameterAttribute == null) {
             if (!Strings.isNullOrEmpty(parameterAttributeFragmentName)) {
                 throw new IllegalArgumentException(
@@ -123,7 +130,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
-        parameterAttribute.buildJsonPath(StaticProperties.PROPERTIES);
+        parameterAttribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
 
     }
 
@@ -161,9 +168,10 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         // filter the fragment property then filter the right property on fragment properties
         com.google.common.base.Optional<ObjectAttribute> fragmentOpt = com.google.common.base.Optional
                 .fromNullable((ObjectAttribute) object.getProperty(parameterAttribute.getFragment().getName()));
-        return (fragmentOpt.isPresent() ?
-                Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName())).toJavaUtil():
-                Optional.empty());
+        return (fragmentOpt.isPresent()
+                ? Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName()))
+                        .toJavaUtil()
+                : Optional.empty());
 
     }
 

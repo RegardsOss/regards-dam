@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -71,7 +72,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
-            Pageable pageable) throws EntityNotFoundException {
+            Pageable pageable) throws ModuleException {
         if (accessGroupName != null) {
             return retrieveAccessRightsByAccessGroup(datasetIpId, accessGroupName, pageable);
         }
@@ -79,7 +80,7 @@ public class AccessRightService implements IAccessRightService {
     }
 
     private Page<AccessRight> retrieveAccessRightsByDataset(UniformResourceName datasetIpId, Pageable pageable)
-            throws EntityNotFoundException {
+            throws ModuleException {
         if (datasetIpId != null) {
             Dataset ds = datasetService.load(datasetIpId);
             if (ds == null) {
@@ -93,7 +94,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
-            throws EntityNotFoundException {
+            throws ModuleException {
         Preconditions.checkNotNull(accessGroupName);
         Preconditions.checkNotNull(datasetIpId);
         AccessGroup ag = accessGroupService.retrieveAccessGroup(accessGroupName);
@@ -104,7 +105,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
-            throws EntityNotFoundException {
+            throws ModuleException {
         if (datasetIpId == null) {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
@@ -114,7 +115,7 @@ public class AccessRightService implements IAccessRightService {
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
-            String pAccessGroupName, Pageable pPageable) throws EntityNotFoundException {
+            String pAccessGroupName, Pageable pPageable) throws ModuleException {
         AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
@@ -210,7 +211,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
-            throws EntityNotFoundException {
+            throws ModuleException {
         User user = new User(userEMail);
 
         Dataset ds = datasetService.load(datasetIpId);
@@ -225,8 +226,8 @@ public class AccessRightService implements IAccessRightService {
                 Optional<AccessRight> accessRightOptional = repository
                         .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
                 // Check if the accessRight allows to access to that dataset
-                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS
-                        .equals(accessRightOptional.get().getAccessLevel())) {
+                if (accessRightOptional.isPresent()
+                        && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
                     isAutorised = true;
                     // Stop loop iteration
                     break;

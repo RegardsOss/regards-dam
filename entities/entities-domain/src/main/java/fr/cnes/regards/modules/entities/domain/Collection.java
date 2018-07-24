@@ -20,36 +20,29 @@ package fr.cnes.regards.modules.entities.domain;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import java.util.UUID;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.feature.CollectionFeature;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ * Collection feature decorator
  *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
+ * @author Marc Sordi
  */
 @Entity
 @DiscriminatorValue("COLLECTION")
-public class Collection extends AbstractDescEntity { // NOSONAR
+public class Collection extends AbstractEntity<CollectionFeature> {
 
-    public Collection(final Model pModel, final String pTenant, final String pLabel) {
-        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, pTenant, UUID.randomUUID(), 1),
-              pLabel);
+    public Collection(Model model, String tenant, String label) {
+        super(model, new CollectionFeature(tenant, label));
     }
 
     public Collection() {
         // we use super and not this because at deserialization we need a ipId null at the object creation which is then
         // replaced by the attribute if present or added by creation method
-        super(null, null, null);
-    }
-
-    @Override
-    public String getType() {
-        return EntityType.COLLECTION.toString();
+        super(null, null);
     }
 }

@@ -18,14 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+
+import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,10 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -86,21 +84,17 @@ public class DatasetServiceTest {
 
     private Dataset dataSet2;
 
-    private UniformResourceName dataSet2URN;
-
     private IDatasetRepository dataSetRepositoryMocked;
 
     private DatasetService dataSetServiceMocked;
 
-    private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+    private IAbstractEntityRepository<AbstractEntity<?>> entitiesRepositoryMocked;
 
     private IModelAttrAssocService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
 
     private IModelService modelService;
-
-    private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
     private IPublisher publisherMocked;
 
@@ -111,7 +105,7 @@ public class DatasetServiceTest {
      *
      * @throws ModuleException
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void init() throws ModuleException {
         JWTService jwtService = new JWTService();
@@ -121,7 +115,6 @@ public class DatasetServiceTest {
         pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
-        pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
         emMocked = Mockito.mock(EntityManager.class);
 
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
@@ -144,30 +137,26 @@ public class DatasetServiceTest {
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
 
-        dataSet2URN = dataSet2.getIpId();
-        Set<String> dataSet1Tags = dataSet1.getTags();
-        dataSet1Tags.add(dataSet2URN.toString());
-        Set<String> dataSet2Tags = dataSet2.getTags();
-        dataSet2Tags.add(dataSet1.getIpId().toString());
-        dataSet2.setTags(dataSet2Tags);
+        dataSet1.addTags(dataSet2.getIpId().toString());
+        dataSet2.addTags(dataSet1.getIpId().toString());
 
         // create a mock repository
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
 
-        final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
+        List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(dataSet1);
         Mockito.when(entitiesRepositoryMocked.findByTags(dataSet2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
+        Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn((AbstractEntity) dataSet1);
+        Mockito.when(entitiesRepositoryMocked.findOne(dataSet2.getId())).thenReturn((AbstractEntity) dataSet2);
 
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
-                emMocked, publisherMocked, runtimeTenantResolver, null, Mockito.mock(IOpenSearchService.class),
+                emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(IOpenSearchService.class),
                 Mockito.mock(IPluginService.class));
     }
 
@@ -246,7 +235,7 @@ public class DatasetServiceTest {
     @Purpose("The dataset identifier is an URN")
     public void createDataset() throws ModuleException, IOException {
         Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
-        final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
+        final Dataset dataSet = dataSetServiceMocked.create(dataSet2);
         Assert.assertEquals(dataSet2, dataSet);
     }
 

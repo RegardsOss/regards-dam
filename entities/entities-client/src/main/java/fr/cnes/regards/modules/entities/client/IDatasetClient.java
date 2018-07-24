@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.client;
 
-import java.io.IOException;
 import java.util.Set;
 
 import org.springframework.hateoas.PagedResources;
@@ -31,9 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import feign.Response;
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -110,13 +107,4 @@ public interface IDatasetClient {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long datasetId,
             @RequestBody Set<UniformResourceName> toBeAssociatedWith);
-
-    /**
-     * Returns the dataset description file
-     */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE,
-            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    Response retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
-            throws EntityNotFoundException, IOException;
-
 }

@@ -18,6 +18,10 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -39,9 +43,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -83,9 +84,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
-            message = "Attribute name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE
-                    + " length.")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
@@ -217,6 +217,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setType(AttributeType pType) {
         type = pType;
+    }
+
+    public boolean hasFragment() {
+        return (fragment != null) && !fragment.isDefaultFragment();
     }
 
     public Fragment getFragment() {
@@ -447,14 +451,43 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public String buildJsonPath(String namespace) {
         StringBuilder builder = new StringBuilder(namespace);
-        builder.append(GSONConstants.JSON_PATH_SEPARATOR);
-        if (!fragment.isDefaultFragment()) {
+        if (!namespace.isEmpty()) {
+            builder.append(GSONConstants.JSON_PATH_SEPARATOR);
+        }
+        if (hasFragment()) {
             builder.append(fragment.getName());
             builder.append(GSONConstants.JSON_PATH_SEPARATOR);
         }
         builder.append(name);
         jsonPath = builder.toString();
         return jsonPath;
+    }
+
+    /**
+     * Does the current attribute type is {@link AttributeType#STRING} or {@link AttributeType#STRING_ARRAY} ?
+     * @return {@link boolean}
+     */
+    public boolean isTextAttribute() {
+        switch (this.type) {
+            case STRING:
+            case STRING_ARRAY:
+                return true;
+            case BOOLEAN:
+            case DATE_ARRAY:
+            case DATE_INTERVAL:
+            case DATE_ISO8601:
+            case DOUBLE:
+            case DOUBLE_ARRAY:
+            case DOUBLE_INTERVAL:
+            case INTEGER:
+            case INTEGER_ARRAY:
+            case INTEGER_INTERVAL:
+            case LONG:
+            case LONG_ARRAY:
+            case LONG_INTERVAL:
+            default:
+                return false;
+        }
     }
 
     @Override

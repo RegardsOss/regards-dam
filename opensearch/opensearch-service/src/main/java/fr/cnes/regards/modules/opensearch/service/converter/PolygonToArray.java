@@ -27,7 +27,7 @@ import com.vividsolutions.jts.geom.Polygon;
  *
  * @author Xavier-Alexandre Brochard
  */
-public class PolygonToArray implements Converter<Polygon, Double[][][]> {
+public class PolygonToArray implements Converter<Polygon, double[][][]> {
 
     private static final CoordinateArrayToArray COORDINATE_ARRAY_TO_ARRAY = new CoordinateArrayToArray();
 
@@ -35,18 +35,18 @@ public class PolygonToArray implements Converter<Polygon, Double[][][]> {
      * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
      */
     @Override
-    public Double[][][] convert(Polygon polygon) {
-        Double[][][] result = new Double[polygon.getNumInteriorRing() + 1][][];
+    public double[][][] convert(Polygon polygon) {
+        double[][][] result = new double[polygon.getNumInteriorRing() + 1][][];
 
         // Add the exterior ring
         Coordinate[] exteriorRingCoordinates = polygon.getExteriorRing().getCoordinates();
-        Double[][] exteriorRingCoordinatesAsArray = COORDINATE_ARRAY_TO_ARRAY.convert(exteriorRingCoordinates);
+        double[][] exteriorRingCoordinatesAsArray = COORDINATE_ARRAY_TO_ARRAY.convert(exteriorRingCoordinates);
         result[0] = exteriorRingCoordinatesAsArray;
 
         // Add all interior rings
         for (int i = 0; i < (polygon.getNumInteriorRing()); i++) {
             Coordinate[] coordinates = polygon.getInteriorRingN(i).getCoordinates();
-            Double[][] asArray = COORDINATE_ARRAY_TO_ARRAY.convert(coordinates);
+            double[][] asArray = COORDINATE_ARRAY_TO_ARRAY.convert(coordinates);
             result[i + 1] = asArray;
         }
 

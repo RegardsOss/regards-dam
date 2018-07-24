@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,12 +28,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -44,6 +47,7 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
@@ -95,9 +99,8 @@ public class SearchService implements ISearchService {
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchTypeMap(), String[].class);
         tagSearchKey.setSearchIndex(searchKey.getSearchIndex());
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (
-                Searches.TYPE_MAP.get(UniformResourceName.fromString(tag).getEntityType()) == searchKey
-                        .getResultClass());
+        Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
+                .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
         Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
@@ -123,7 +126,10 @@ public class SearchService implements ISearchService {
 
     @Override
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion criterion, String discriminantProperty, String... fileTypes) {
+            ICriterion criterion, String discriminantProperty, List<DataType> dataTypes) {
+
+        String[] fileTypes = dataTypes.toArray(new String[dataTypes.size()]);
+
         searchKey.setSearchIndex(tenantResolver.getTenant());
         DocFilesSummary summary = new DocFilesSummary();
         // Adjust criterion to search for internal data
@@ -131,8 +137,9 @@ public class SearchService implements ISearchService {
         repository.computeInternalDataFilesSummary(searchKey, internalCrit, discriminantProperty, summary, fileTypes);
         // Adjust criterion to search for external data (=> internal is false and all at least one searched file type
         // has an uri starting with http or https
-        ICriterion filterUriCrit = ICriterion.or(Arrays.stream(fileTypes).map(fileType -> ICriterion
-                .likes("files." + fileType + ".uri", "https?://.*")).collect(Collectors.toList()));
+        ICriterion filterUriCrit = ICriterion.or(Arrays.stream(fileTypes)
+                .map(fileType -> ICriterion.likes("files." + fileType + ".uri", "https?://.*"))
+                .collect(Collectors.toList()));
         ICriterion externalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", false), filterUriCrit);
         repository.computeExternalDataFilesSummary(searchKey, externalCrit, discriminantProperty, summary, fileTypes);
         return summary;
@@ -144,5 +151,12 @@ public class SearchService implements ISearchService {
         searchKey.setSearchIndex(tenantResolver.getTenant());
         SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, criterion, attName, maxCount);
         return values.stream().limit(maxCount).collect(Collectors.toList());
+    }
+
+    @Override
+    public <T extends IIndexable> Aggregations getAggregations(SimpleSearchKey<T> searchKey, ICriterion criterion,
+            Collection<QueryableAttribute> attributes) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
+        return repository.getAggregations(searchKey, criterion, attributes);
     }
 }

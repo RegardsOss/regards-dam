@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.StaticProperties;
 
 /**
  * Class IDataSourcePlugin
@@ -59,10 +58,11 @@ public interface IDataSourcePlugin {
 
     String DOT = ".";
 
-    /**
-     * Prefix for all model properties
-     */
-    String PROPERTY_PREFIX = StaticProperties.PROPERTIES + DOT;
+    // FIXME remove
+    // /**
+    // * Prefix for all model properties
+    // */
+    // String PROPERTY_PREFIX = StaticProperties.PROPERTIES + DOT;
 
     /**
      * Interval mapping convention suffix

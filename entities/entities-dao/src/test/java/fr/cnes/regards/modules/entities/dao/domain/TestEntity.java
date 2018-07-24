@@ -20,8 +20,6 @@ package fr.cnes.regards.modules.entities.dao.domain;
 
 import javax.persistence.Entity;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -30,15 +28,15 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @Entity
-public class TestEntity extends AbstractEntity {
+public class TestEntity extends AbstractEntity<TestEntityFeature> {
 
-    public TestEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
-        super(pModel, pIpId, pLabel);
+    public TestEntity(Model model, String tenant, String label) {
+        super(model, new TestEntityFeature(tenant, label));
     }
 
-    @Override
-    public String getType() {
-        return EntityType.COLLECTION.toString();
+    public TestEntity() {
+        // we use super and not this because at deserialization we need a ipId null at the object creation which is then
+        // replaced by the attribute if present or added by creation method
+        super(null, null);
     }
-
 }

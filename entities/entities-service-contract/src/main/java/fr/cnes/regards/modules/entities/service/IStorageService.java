@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  *
  */
 @PluginInterface(
-        description = "plugins interface which are responsible for storing entities(Collection, Dataset, Document, Data)")
+        description = "Plugin interface which are responsible for storing entities (Collection, Dataset, Document)")
 public interface IStorageService {
 
     /**
@@ -35,24 +35,24 @@ public interface IStorageService {
      *
      * @param <T>
      *            one of {@link AbstractEntity} sub class
-     * @param pToPersist
+     * @param toPersist
      *            {@link AbstractEntity} to be persisted
      * @return persisted {@link AbstractEntity}
      */
-    public <T extends AbstractEntity> T storeAIP(T pToPersist);
+    <T extends AbstractEntity<?>> T storeAIP(T toPersist);
 
     /**
      * Delete the aip associated to the given entity
-     * @param pToDelete
+     * @param toDelete
      */
-    public void deleteAIP(AbstractEntity pToDelete);
+    void deleteAIP(AbstractEntity<?> toDelete);
 
     /**
      * Update the aip associated to the given entity
-     * @param pToUpdate
+     * @param toUpdate
      * @param <T>
      * @return updated aip
      */
-    public <T extends AbstractEntity> T updateAIP(T pToUpdate);
+    <T extends AbstractEntity<?>> T updateAIP(T toUpdate);
 
 }

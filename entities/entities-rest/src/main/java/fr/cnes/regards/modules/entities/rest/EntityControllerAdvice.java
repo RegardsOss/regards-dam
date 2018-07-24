@@ -28,9 +28,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
 import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableType;
+import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFileLocation;
+import fr.cnes.regards.modules.entities.service.exception.InvalidFilenameException;
 
 /**
  * Advice for specific entity exceptions
@@ -40,23 +41,26 @@ import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacc
 @Order(Ordered.LOWEST_PRECEDENCE - 300)
 public class EntityControllerAdvice {
 
-    @ExceptionHandler(EntityDescriptionUnacceptableCharsetException.class)
-    public ResponseEntity<ServerErrorResponse> entityDescriptionUnacceptableCharset(
-            EntityDescriptionUnacceptableCharsetException exception) {
+    @ExceptionHandler(InvalidCharsetException.class)
+    public ResponseEntity<ServerErrorResponse> invalidCharsetException(InvalidCharsetException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(exception.getMessage()));
     }
 
-    @ExceptionHandler(EntityDescriptionUnacceptableType.class)
-    public ResponseEntity<ServerErrorResponse> entityDescriptionUnacceptableType(
-            EntityDescriptionUnacceptableType exception) {
+    @ExceptionHandler(InvalidContentTypeException.class)
+    public ResponseEntity<ServerErrorResponse> invalidContentTypeException(InvalidContentTypeException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(exception.getMessage()));
     }
 
-    @ExceptionHandler(EntityDescriptionTooLargeException.class)
-    public ResponseEntity<ServerErrorResponse> entityDescriptionTooLargeCharset(
-            EntityDescriptionTooLargeException exception) {
+    @ExceptionHandler(InvalidFilenameException.class)
+    public ResponseEntity<ServerErrorResponse> invalidFilenameException(InvalidFilenameException exception) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ServerErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidFileLocation.class)
+    public ResponseEntity<ServerErrorResponse> invalidFileLocation(InvalidFileLocation exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(exception.getMessage()));
     }

@@ -14,12 +14,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -65,14 +66,18 @@ public class GeometrySearchIT {
 
     @Test
     public void testCircleSearch() throws ModuleException, IOException {
-        final Double[] b202 = new Double[] { 1.4948514103889465, 43.577530672197476 };
-        final Double[] b259 = new Double[] { 1.4948514103889465, 43.577614225677394 };
+
+        double[] b202 = new double[] { 1.4948514103889465, 43.577530672197476 };
+        Point p202 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577530672197476));
+
+        Point p259 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577614225677394));
+
         // Setting a geometry onto collection
         final Collection collectionOnB202 = new Collection(null, TENANT, "collection on b202 office room");
-        collectionOnB202.setGeometry(new Geometry.Point(b202));
+        collectionOnB202.setGeometry(p202);
 
         final Collection collectionOnB259 = new Collection(null, TENANT, "collection on b100 office room");
-        collectionOnB259.setGeometry(new Geometry.Point(b259));
+        collectionOnB259.setGeometry(p259);
 
         this.save(collectionOnB202, collectionOnB259);
 
@@ -93,18 +98,21 @@ public class GeometrySearchIT {
 
     @Test
     public void testCircleSearchOnLimits() throws ModuleException, IOException {
-        final Double[] northPole = new Double[] { 0., 90. };
-        final Double[] nearWestNorthPole = new Double[] { -5., 85. };
-        final Double[] nearEastNorthPole = new Double[] { 175., 85. };
+        double[] northPole = new double[] { 0., 90. };
+        Point northPolePoint = IGeometry.point(IGeometry.position(0., 90.));
+        double[] nearWestNorthPole = new double[] { -5., 85. };
+        Point nearWestNorthPolePoint = IGeometry.point(IGeometry.position(-5., 85.));
+        double[] nearEastNorthPole = new double[] { 175., 85. };
+        Point nearEastNorthPolePoint = IGeometry.point(IGeometry.position(175., 85.));
 
         final Collection collNorthPole = new Collection(null, TENANT, "North Pole");
-        collNorthPole.setGeometry(new Geometry.Point(northPole));
+        collNorthPole.setGeometry(northPolePoint);
 
         final Collection collNearWestNorthPole = new Collection(null, TENANT, "West near North Pole");
-        collNearWestNorthPole.setGeometry(new Geometry.Point(nearWestNorthPole));
+        collNearWestNorthPole.setGeometry(nearWestNorthPolePoint);
 
         final Collection collNearEastNorthPole = new Collection(null, TENANT, "East near North Pole");
-        collNearEastNorthPole.setGeometry(new Geometry.Point(nearEastNorthPole));
+        collNearEastNorthPole.setGeometry(nearEastNorthPolePoint);
 
         this.save(collNorthPole, collNearWestNorthPole, collNearEastNorthPole);
 
@@ -121,12 +129,13 @@ public class GeometrySearchIT {
         Assert.assertTrue(results.contains(collNorthPole));
         Assert.assertTrue(results.contains(collNearWestNorthPole));
 
-        final Double[] eastPole = new Double[] { 180., 0. };
-        final Collection collEastPole = new Collection(null, TENANT, "East Pole");
-        collEastPole.setGeometry(new Geometry.Point(eastPole));
-        final Double[] honolulu = new Double[] { 201.005859375 - 360., 21.53484700204879 };
-        final Collection collHonolulu = new Collection(null, TENANT, "Honolulu");
-        collHonolulu.setGeometry(new Geometry.Point(honolulu));
+        double[] eastPole = new double[] { 180., 0. };
+        Point eastPolePoint = IGeometry.point(IGeometry.position(180., 0.));
+        Collection collEastPole = new Collection(null, TENANT, "East Pole");
+        collEastPole.setGeometry(eastPolePoint);
+        Point honoluluPoint = IGeometry.point(IGeometry.position(201.005859375 - 360., 21.53484700204879));
+        Collection collHonolulu = new Collection(null, TENANT, "Honolulu");
+        collHonolulu.setGeometry(honoluluPoint);
 
         this.save(collEastPole, collHonolulu);
 
@@ -136,14 +145,13 @@ public class GeometrySearchIT {
 
     @Test
     public void testPolygonSearch() throws ModuleException, IOException {
-        final Double[] b202 = new Double[] { 1.4948514103889465, 43.577530672197476 };
-        final Double[][][] cs = new Double[][][] {
-                { { 1.4946448802947996, 43.57797369862905 }, { 1.4946502447128296, 43.57727223860706 },
-                        { 1.4948782324790955, 43.57727418172091 }, { 1.4948728680610657, 43.57797952790247 },
-                        { 1.4946448802947996, 43.57797369862905 } } };
+        Point p202 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577530672197476));
+        final double[][][] cs = new double[][][] { { { 1.4946448802947996, 43.57797369862905 },
+                { 1.4946502447128296, 43.57727223860706 }, { 1.4948782324790955, 43.57727418172091 },
+                { 1.4948728680610657, 43.57797952790247 }, { 1.4946448802947996, 43.57797369862905 } } };
         // Setting a geometry onto collection
         final Collection collectionOnB202 = new Collection(null, TENANT, "collection on b202 office room");
-        collectionOnB202.setGeometry(new Geometry.Point(b202));
+        collectionOnB202.setGeometry(p202);
 
         this.save(collectionOnB202);
 
@@ -153,17 +161,16 @@ public class GeometrySearchIT {
         Assert.assertEquals(collectionOnB202, results.get(0));
 
         // Concave with B202 office room on it
-        final Double[][][] concaveCs = new Double[][][] {
-                { { 1.4946475625038147, 43.57797369862905 }, { 1.4947816729545593, 43.577894031835676 },
-                        { 1.4947521686553955, 43.577721096238555 }, { 1.4946582913398743, 43.57727418172091 },
-                        { 1.4948809146881101, 43.57727223860706 }, { 1.4948675036430359, 43.57797758481139 },
-                        { 1.4946475625038147, 43.57797369862905 } } };
+        final double[][][] concaveCs = new double[][][] { { { 1.4946475625038147, 43.57797369862905 },
+                { 1.4947816729545593, 43.577894031835676 }, { 1.4947521686553955, 43.577721096238555 },
+                { 1.4946582913398743, 43.57727418172091 }, { 1.4948809146881101, 43.57727223860706 },
+                { 1.4948675036430359, 43.57797758481139 }, { 1.4946475625038147, 43.57797369862905 } } };
         // on B202
         results = this.search(ICriterion.intersectsPolygon(concaveCs));
         Assert.assertEquals(1, results.size());
         Assert.assertEquals(collectionOnB202, results.get(0));
 
-        final Double[][][] batA = new Double[][][] {
+        final double[][][] batA = new double[][][] {
                 { { 1.4952269196510315, 43.577484037646634 }, { 1.495237648487091, 43.57706821130483 },
                         { 1.495336890220642, 43.57703323512646 }, { 1.4953315258026123, 43.57688944395752 },
                         { 1.4952349662780762, 43.5767747994011 }, { 1.4954683184623718, 43.5767806287906 },
