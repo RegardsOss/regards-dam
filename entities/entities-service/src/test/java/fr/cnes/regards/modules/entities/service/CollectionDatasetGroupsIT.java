@@ -344,7 +344,7 @@ public class CollectionDatasetGroupsIT {
         // tag through DS1->C1->C2), C4 (indirect tag through DS1->C1->C2->C4)
         // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and
         // the logic is respected
-        Dataset dataset1Updated = new Dataset();
+        Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "labelDs1");
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
         dataset1Updated.setDataModel(dataset1.getDataModel());
         dataset1Updated.setCreationDate(dataset1.getCreationDate());
