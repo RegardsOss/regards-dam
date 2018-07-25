@@ -76,11 +76,6 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
 
     /**
-     * {@link IAttributeModelService} instance
-     */
-    private final IAttributeModelService attributeService;
-
-    /**
      * {@link IOpenSearchService} instance
      */
     private final IOpenSearchService openSearchService;
@@ -98,7 +93,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             IPluginService pluginService) {
         super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
               repository, repository, em, publisher, runtimeTenantResolver);
-        this.attributeService = attributeService;
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }
@@ -159,8 +153,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
-        return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
-                modelAttributeService, finder);
+        return new SubsettingCoherenceVisitor(finder);
     }
 
     @Override
