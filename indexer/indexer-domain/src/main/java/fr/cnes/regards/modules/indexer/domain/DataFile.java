@@ -38,7 +38,7 @@ public class DataFile {
     /**
      * Required data type
      */
-    @NotBlank(message = "Data type is required")
+    @NotNull(message = "Data type is required")
     private DataType dataType;
 
     /**
