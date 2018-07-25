@@ -7,6 +7,7 @@ import javax.annotation.PostConstruct;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import fr.cnes.regards.framework.geojson.geometry.MultiPoint;
 import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.geojson.geometry.Unlocated;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -95,6 +97,16 @@ public class GeometryIT {
         crawlerService.setConsumeOnlyMode(true);
     }
 
+    @Before
+    public void init() throws ModuleException {
+        collectionModel = new Model();
+        collectionModel.setName("model_1" + System.currentTimeMillis());
+        collectionModel.setType(EntityType.COLLECTION);
+        collectionModel.setVersion("1");
+        collectionModel.setDescription("Test data object model");
+        modelService.createModel(collectionModel);
+    }
+
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
@@ -111,12 +123,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbPoint() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -148,13 +154,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbMultiPointLineString() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
-
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
@@ -217,12 +216,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbMultiLineStringPolygon() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -296,12 +289,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbMultiPolygon() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -348,24 +335,19 @@ public class GeometryIT {
 
     @Test
     public void testNoGeometry() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
+
         collection = new Collection(collectionModel, TENANT, "collection without geometry");
 
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertNull(collFromDB.getGeometry());
+        Assert.assertTrue(collFromDB.getGeometry() instanceof Unlocated);
 
         // Index creation with geometry mapping
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertNull(collFromEs.getGeometry());
+        Assert.assertTrue(collFromEs.getGeometry() instanceof Unlocated);
     }
 }
