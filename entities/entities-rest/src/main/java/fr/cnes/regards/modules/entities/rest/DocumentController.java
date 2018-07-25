@@ -51,12 +51,13 @@ import fr.cnes.regards.modules.entities.service.IDocumentService;
 
 /**
  * @author lmieulet
+ * @author Marc Sordi
  */
 @RestController
-@RequestMapping(path = DocumentController.ROOT_MAPPING)
+@RequestMapping(path = DocumentController.TYPE_MAPPING)
 public class DocumentController implements IResourceController<Document> {
 
-    public static final String ROOT_MAPPING = "/documents";
+    public static final String TYPE_MAPPING = "/documents";
 
     public static final String DOCUMENT_MAPPING = "/{document_id}";
 
