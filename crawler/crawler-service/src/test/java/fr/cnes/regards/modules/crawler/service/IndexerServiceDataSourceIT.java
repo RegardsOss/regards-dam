@@ -84,6 +84,7 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
@@ -441,11 +442,14 @@ public class IndexerServiceDataSourceIT {
         builder.query(qb).size(0);
         // lets build the aggregations
         // aggregation for the min
-        builder.aggregation(AggregationBuilders.min("min_start_date").field("properties.date"));
+        builder.aggregation(AggregationBuilders.min("min_start_date")
+                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".date"));
         // aggregation for the max
-        builder.aggregation(AggregationBuilders.max("max_stop_date").field("properties.date"));
+        builder.aggregation(AggregationBuilders.max("max_stop_date")
+                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".date"));
         // aggregation for the sum
-        builder.aggregation(AggregationBuilders.sum("sum_values_l1").field("properties.value_l1"));
+        builder.aggregation(AggregationBuilders.sum("sum_values_l1")
+                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".value_l1"));
         SearchRequest request = new SearchRequest(pObjectSearchKey.getSearchIndex().toLowerCase())
                 .types(pObjectSearchKey.getSearchTypes()).source(builder);
 
