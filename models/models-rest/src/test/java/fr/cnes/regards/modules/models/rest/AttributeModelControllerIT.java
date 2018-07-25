@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
@@ -40,9 +41,11 @@ import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
 import org.springframework.restdocs.snippet.Attributes;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -646,6 +649,30 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                                   pAttributeModel,
                                   requestBuilderCustomizer,
                                   "Consistent attribute should be created.");
+    }
+
+    /**
+     * POST a new attribute
+     *
+     * @param attributeModel
+     *            the attribute
+     * @return {@link ResultActions}
+     */
+    private ResultActions createAttributeFailed(AttributeModel attributeModel) {
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
+        return performDefaultPost(AttributeModelController.TYPE_MAPPING, attributeModel, expectations,
+                                  "Consistent attribute should not be created.");
+    }
+
+    @Test
+    public void createAttributeNameError() {
+        final AttributeModel attModel = AttributeModelBuilder.build("select", AttributeType.STRING, "ForTests")
+                .description("attribute with SQL keyword").fragment(null).get();
+        attModel.setRestriction(null);
+        createAttributeFailed(attModel);
     }
 
     /**
