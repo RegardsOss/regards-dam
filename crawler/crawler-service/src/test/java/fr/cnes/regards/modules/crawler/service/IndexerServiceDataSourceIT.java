@@ -444,10 +444,10 @@ public class IndexerServiceDataSourceIT {
         // lets build the aggregations
         // aggregation for the min
         builder.aggregation(AggregationBuilders.min("min_start_date")
-                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".date"));
+                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".vdate"));
         // aggregation for the max
         builder.aggregation(AggregationBuilders.max("max_stop_date")
-                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".date"));
+                .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".vdate"));
         // aggregation for the sum
         builder.aggregation(AggregationBuilders.sum("sum_values_l1")
                 .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".value_l1"));
@@ -459,7 +459,7 @@ public class IndexerServiceDataSourceIT {
         final Map<String, Aggregation> aggregations = response.getAggregations().asMap();
 
         // now lets actually test things
-        Assert.assertEquals(objectsCreationCount, getDatasetProperty(pDataset, "count").getValue());
+        Assert.assertEquals(objectsCreationCount, getDatasetProperty(pDataset, "vcount").getValue());
         Assert.assertEquals((long) ((ParsedSum) aggregations.get("sum_values_l1")).getValue(),
                             getDatasetProperty(pDataset, "values_l1_sum").getValue());
         // lets convert both dates to instant, it is the simpliest way to compare them

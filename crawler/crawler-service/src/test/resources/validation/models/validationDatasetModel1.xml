@@ -17,7 +17,7 @@
         <type>DATE_ISO8601</type>
         <computation>
             <label>MinDateValidationConf</label>
-            <min_compute parameterAttributeName="date"/>
+            <min_compute parameterAttributeName="vdate"/>
         </computation>
     </attribute>
     <attribute>
@@ -27,7 +27,7 @@
         <type>DATE_ISO8601</type>
         <computation>
             <label>MaxDateValidationConf</label>
-            <max_compute parameterAttributeName="date"/>
+            <max_compute parameterAttributeName="vdate"/>
         </computation>
     </attribute>
     <attribute>
@@ -41,7 +41,7 @@
     </attribute>
     <attribute>
         <label>number of data</label>
-        <name>count</name>
+        <name>vcount</name>
         <type>LONG</type>
         <computation>
             <label>CountValidationConf</label>

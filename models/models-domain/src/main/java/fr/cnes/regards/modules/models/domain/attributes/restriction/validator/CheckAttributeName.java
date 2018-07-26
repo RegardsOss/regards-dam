@@ -30,7 +30,7 @@ import javax.validation.Payload;
 
 /**
  *
- * 
+ *
  *
  * @author Christophe Mertz
  *
@@ -44,7 +44,7 @@ public @interface CheckAttributeName {
     /**
      * @return error message key
      */
-    String message() default "{fr.cnes.regards.modules.entities.validator.AttributeName.message}";
+    String message() default "{fr.cnes.regards.modules.entities.validator.attribute.name.message}";
 
     /**
      *

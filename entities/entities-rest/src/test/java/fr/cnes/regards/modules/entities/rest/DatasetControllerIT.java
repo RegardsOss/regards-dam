@@ -172,7 +172,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet2.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
         dataSet2.addProperty(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
         dataSet2.addProperty(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
-        dataSet2.addProperty(AttributeBuilder.buildLong("count", 454L));
+        dataSet2.addProperty(AttributeBuilder.buildLong("vcount", 454L));
 
         // Set test case
         dataSet2.setOpenSearchSubsettingClause("tags:10");

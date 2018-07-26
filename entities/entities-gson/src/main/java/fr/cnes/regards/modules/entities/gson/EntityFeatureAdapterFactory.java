@@ -29,7 +29,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.feature.CollectionFeature;
 import fr.cnes.regards.modules.entities.domain.feature.DataObjectFeature;
@@ -43,14 +43,14 @@ import fr.cnes.regards.modules.entities.domain.feature.EntityFeature;
  * @author Marc Sordi
  *
  */
-@GsonTypeAdapterFactoryBean
+@GsonTypeAdapterFactory
 public class EntityFeatureAdapterFactory extends PolymorphicTypeAdapterFactory<EntityFeature> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityFeatureAdapterFactory.class);
 
     private static final String PROPERTIES_FIELD_NAME = "properties";
 
-    protected EntityFeatureAdapterFactory() {
+    public EntityFeatureAdapterFactory() {
         super(EntityFeature.class, "entityType");
         registerSubtype(CollectionFeature.class, EntityType.COLLECTION);
         registerSubtype(DatasetFeature.class, EntityType.DATASET);
