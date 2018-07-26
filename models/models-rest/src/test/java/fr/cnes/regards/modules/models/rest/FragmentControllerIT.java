@@ -75,8 +75,6 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final String JSON_ID = "$.content.id";
 
-    private static final String FRAGMENT_NAME_PATTERN_XML = "[0-9a-zA-Z_]{3,32}";
-
     /**
      * Fragment repository to populate database for testing
      */
@@ -103,9 +101,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        performDefaultPost(FragmentController.TYPE_MAPPING,
-                           fragment,
-                           requestBuilderCustomizer,
+        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
                            "Empty fragment shouldn't be created.");
     }
 
@@ -120,14 +116,11 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
         requestBuilderCustomizer
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        performDefaultPost(FragmentController.TYPE_MAPPING,
-                           fragment,
-                           requestBuilderCustomizer,
+        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
                            "Fragment cannot be created.");
     }
 
@@ -161,22 +154,13 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "pFragmentId")
-                                                                                                     .description(
-                                                                                                             "Fragment identifier")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value("Number"),
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
-                                                                                                                     .value("Should be a whole number"))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("pFragmentId").description("Fragment identifier")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value("Number"), Attributes
+                                .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Should be a whole number"))));
 
         final ResultActions resultActions = performDefaultGet(FragmentController.TYPE_MAPPING + "/{pFragmentId}/export",
-                                                              requestBuilderCustomizer,
-                                                              "Should return result",
+                                                              requestBuilderCustomizer, "Should return result",
                                                               defaultFragment.getId());
 
         assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
@@ -199,9 +183,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import",
-                                 filePath,
-                                 requestBuilderCustomizer,
+        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, requestBuilderCustomizer,
                                  "Should be able to import a fragment");
 
         // Get fragment from repository
@@ -246,17 +228,19 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
-        String prefixPath = Strings.isNullOrEmpty(prefix)? "": prefix + ".";
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
         ConstrainedFields constrainedFields = new ConstrainedFields(Fragment.class);
         List<FieldDescriptor> descriptors = new ArrayList<>();
         if (!creation) {
-            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "Fragment identifier", "Must be a whole number"));
+            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "Fragment identifier",
+                                                       "Must be a whole number"));
         }
         descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "Fragment Name"));
-        descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "Fragment description", "Optional")
-                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields
+                .withPath(prefixPath + "description", "description", "Fragment description", "Optional")
+                .type(JSON_STRING_TYPE).optional());
         descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "Fragment Version", "Optional")
-                                .type(JSON_STRING_TYPE).optional());
+                .type(JSON_STRING_TYPE).optional());
         // ignore links
         ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
         descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
@@ -271,7 +255,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         fragmentRepository.save(Fragment.buildFragment("Geo", "Geographic information"));
         fragmentRepository.save(Fragment.buildFragment("Contact", "Contact card"));
 
-        final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN, "ForTests")
+        final AttributeModel attModel = AttributeModelBuilder.build("VFIRST", AttributeType.BOOLEAN, "ForTests")
                 .withoutRestriction();
         attributeModelService.addAttribute(attModel, false);
     }

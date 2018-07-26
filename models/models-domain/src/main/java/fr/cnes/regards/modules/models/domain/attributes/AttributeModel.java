@@ -82,7 +82,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute name
      */
-    @CheckAttributeName(message="The attribute name must not be a SQL Keyword")
+    @CheckAttributeName(message = "The attribute name must not be a SQL Keyword")
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
