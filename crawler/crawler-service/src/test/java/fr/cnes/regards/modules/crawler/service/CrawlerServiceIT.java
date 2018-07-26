@@ -58,6 +58,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.domain.feature.EntityFeature;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
@@ -128,7 +129,7 @@ public class CrawlerServiceIT {
     private IDatasetService dsService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<EntityFeature>> entityRepos;
 
     @Autowired
     private IEsRepository esRepos;

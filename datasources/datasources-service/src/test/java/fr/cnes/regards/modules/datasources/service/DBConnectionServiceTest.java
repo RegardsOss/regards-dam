@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.modules.datasources.domain.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 
 /**
@@ -95,9 +96,9 @@ public class DBConnectionServiceTest {
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameters();
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
-                                             parameters));
+                parameters));
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
-                                             parameters, 5));
+                parameters, 5));
     }
 
     @Test
@@ -150,18 +151,19 @@ public class DBConnectionServiceTest {
     }
 
     private List<PluginParameter> initializePluginParameters() {
-        return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER).getParameters();
+        return PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
+                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
+                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
+                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
+                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName)
+                .addParameter(DBConnectionPluginConstants.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER).getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
 
-        return Arrays.asList(PluginParameterType
-                                     .create("model", "model", null, String.class, ParamType.PRIMITIVE, false, false),
+        return Arrays.asList(
+                             PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE,
+                                                        false, false),
                              PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
                                                         ParamType.PLUGIN, false, false));
     }

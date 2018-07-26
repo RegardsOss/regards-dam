@@ -78,6 +78,7 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -281,7 +282,7 @@ public class IndexerServiceDataSourceIT {
     private PluginConfiguration getPostgresDataSource() {
         List<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(TestDataSourcePlugin.MODEL, dataModel)
-                .addParameter(IDataSourcePlugin.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
+                .addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
         return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class, Arrays
                 .asList(PLUGIN_CURRENT_PACKAGE, IDataSourcePlugin.class.getPackage().getName()));
     }
