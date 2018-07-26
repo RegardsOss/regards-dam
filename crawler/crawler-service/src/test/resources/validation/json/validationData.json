@@ -15,8 +15,8 @@
       "geometry": null,
       "properties": {
         "weight": 25,
-        "date": "2017-05-16T15:28:00.000",
-        "description": "First test data",
+        "vdate": "2017-05-16T15:28:00.000",
+        "vdescription": "First test data",
         "value_l1": "42",
         "value_d1": 0.666,
         "fragment1": {
@@ -24,7 +24,7 @@
           "state": "STARTED"
         },
         "DATASET_VALIDATION_TYPE": "DS1",
-        "url": "http://truc:201/machin"
+        "vurl": "http://truc:201/machin"
       },
       "type": "Feature"
     }
