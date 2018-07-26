@@ -19,7 +19,7 @@
     </attribute>
     <attribute>
         <label>forTests</label>
-        <name>SIZE</name>
+        <name>VSIZE</name>
         <description>file size</description>
         <type>INTEGER</type>
     </attribute>

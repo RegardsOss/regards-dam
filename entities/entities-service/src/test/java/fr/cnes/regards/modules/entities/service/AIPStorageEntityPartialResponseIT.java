@@ -197,7 +197,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         dataset1.setGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
                                                   IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
-        dataset1.addProperty(AttributeBuilder.buildInteger("SIZE", 12345));
+        dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));
         dataset1.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusHours(15)));
         dataset1.addProperty(AttributeBuilder.buildDouble("SPEED", 98765.12345));
         dataset1.addProperty(AttributeBuilder.buildBoolean("IS_UPDATE", true));
