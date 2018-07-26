@@ -17,7 +17,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.geojson.GeoJsonType;
-import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.LineString;
 import fr.cnes.regards.framework.geojson.geometry.MultiLineString;
@@ -164,8 +163,9 @@ public class GeometryIT {
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.MULTIPOINT);
         Assert.assertTrue(collFromDB.getGeometry() instanceof MultiPoint);
         multipoint = (MultiPoint) collFromDB.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 multipoint.getCoordinates().toArray());
+
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
@@ -177,8 +177,7 @@ public class GeometryIT {
         Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeoJsonType.LINESTRING);
         Assert.assertTrue(coll2FromDB.getGeometry() instanceof LineString);
         lineString = (LineString) coll2FromDB.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 lineString.getCoordinates().toArray());
+        Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
 
@@ -195,8 +194,9 @@ public class GeometryIT {
         final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTIPOINT);
         multipoint = collFromEs.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 multipoint.getCoordinates().toArray());
+
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
@@ -209,8 +209,7 @@ public class GeometryIT {
         final Collection coll2FromEs = esRepos.get(TENANT, collection2);
         Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeoJsonType.LINESTRING);
         lineString = (LineString) coll2FromEs.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 lineString.getCoordinates().toArray());
+        Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
 
@@ -232,10 +231,10 @@ public class GeometryIT {
         Assert.assertTrue(collFromDB.getGeometry() instanceof MultiLineString);
         geometry = collFromDB.getGeometry();
 
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 geometry.getCoordinates().get(0).toArray());
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(39.12, -70.34), IGeometry.position(38., -70.) },
-                                 geometry.getCoordinates().get(1).toArray());
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, geometry.getCoordinates().get(0).toArray());
+        double[][] ref2 = { { 39.12, -70.34 }, { 38., -70. } };
+        Assert.assertArrayEquals(ref2, geometry.getCoordinates().get(1).toArray());
     }
 
     @Test
