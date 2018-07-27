@@ -56,7 +56,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRange
 import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.validator.CheckAttributeName;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.schema.Property;
@@ -82,7 +81,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute name
      */
-    @CheckAttributeName(message = "The attribute name must not be a SQL Keyword")
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
