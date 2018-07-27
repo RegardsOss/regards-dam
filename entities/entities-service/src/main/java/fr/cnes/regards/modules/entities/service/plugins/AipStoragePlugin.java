@@ -179,8 +179,8 @@ public class AipStoragePlugin implements IStorageService {
      * @throws ModuleException
      */
     private <T extends AbstractEntity<?>> AIPBuilder getBuilder(T entity) throws ModuleException {
-        AIPBuilder builder = new AIPBuilder(entity.getIpId(), entity.getSipId(), entity.getFeature().getEntityType(),
-                DAM_SESSION);
+        AIPBuilder builder = new AIPBuilder(entity.getIpId(), null, entity.getSipId(),
+                entity.getFeature().getEntityType(), DAM_SESSION);
 
         if ((entity.getTags() != null) && (entity.getTags().size() > 0)) {
             builder.addTags(entity.getTags().toArray(new String[entity.getTags().size()]));
@@ -286,7 +286,7 @@ public class AipStoragePlugin implements IStorageService {
             case UNPROCESSABLE_ENTITY:
                 // Some AIP are rejected
                 if (rejectedAips != null) {
-                    rejectedAips.stream().filter(r -> r.getIpId().equals(entity.getIpId().toString())).forEach(r -> {
+                    rejectedAips.stream().filter(r -> r.getAipId().equals(entity.getIpId().toString())).forEach(r -> {
                         LOGGER.error("{} : update entity state to AIP_STORE_ERROR for reason : {}", entity.getIpId(),
                                      r.getRejectionCauses().get(0));
                         entity.setStateAip(EntityAipState.AIP_STORE_ERROR);

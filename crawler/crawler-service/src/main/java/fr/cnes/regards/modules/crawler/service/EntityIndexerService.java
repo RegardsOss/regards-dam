@@ -578,9 +578,9 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (event.getAipState() == AIPState.DELETED) {
                 runtimeTenantResolver.forceTenant(wrapper.getTenant());
                 try {
-                    deleteDataObject(wrapper.getTenant(), event.getIpId());
+                    deleteDataObject(wrapper.getTenant(), event.getAipId());
                 } catch (RsRuntimeException e) {
-                    String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                    String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
 

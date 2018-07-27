@@ -87,7 +87,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
                 AIPEvent event = wrapper.getContent();
                 if (event.getAipState() == AIPState.STORED) {
                     runtimeTenantResolver.forceTenant(wrapper.getTenant());
-                    UniformResourceName urn = UniformResourceName.fromString(event.getIpId());
+                    UniformResourceName urn = UniformResourceName.fromString(event.getAipId());
 
                     AbstractEntity<?> entity = getService(urn.getEntityType()).loadWithRelations(urn);
 
