@@ -31,41 +31,11 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
  * Allows to manage a connection pool to a {@link DataSource}.
+ * 
  * @author Christophe Mertz
- * @since 1.0-SNAPSHOT
  */
 @PluginInterface(description = "Plugin to manage a connection pool to a datasource")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
-
-    /**
-     * User name
-     */
-    String USER_PARAM = "user";
-
-    /**
-     * User password
-     */
-    String PASSWORD_PARAM = "password"; // NOSONAR
-
-    /**
-     * Database host
-     */
-    String DB_HOST_PARAM = "dbHost";
-
-    /**
-     * Database port
-     */
-    String DB_PORT_PARAM = "dbPort";
-
-    /**
-     * Database name
-     */
-    String DB_NAME_PARAM = "dbName";
-
-    /**
-     * Databse driver
-     */
-    String DRIVER_PARAM = "driver";
 
     /**
      * Retrieve a {@link Connection} to a database

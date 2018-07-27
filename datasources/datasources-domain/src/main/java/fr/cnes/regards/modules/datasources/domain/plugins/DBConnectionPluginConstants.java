@@ -16,15 +16,38 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package fr.cnes.regards.modules.datasources.domain.plugins;
 
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+public final class DBConnectionPluginConstants {
 
-/**
- * Aip specialization of data source plugin
- * @author oroussel
- */
-@PluginInterface(description = "Plugin to search in a data source that consumes AIPs")
-public interface IAipDataSourcePlugin extends IDataSourcePlugin {
+    /**
+     * User name
+     */
+    public static final String USER_PARAM = "user";
 
+    /**
+     * User password
+     */
+    public static final String PASSWORD_PARAM = "password"; // NOSONAR
+
+    /**
+     * Database host
+     */
+    public static final String DB_HOST_PARAM = "dbHost";
+
+    /**
+     * Database port
+     */
+    public static final String DB_PORT_PARAM = "dbPort";
+
+    /**
+     * Database name
+     */
+    public static final String DB_NAME_PARAM = "dbName";
+
+    /**
+     * Database driver
+     */
+    public static final String DRIVER_PARAM = "driver";
 }

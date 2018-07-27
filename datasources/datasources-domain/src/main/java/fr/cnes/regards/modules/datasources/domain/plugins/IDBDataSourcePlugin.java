@@ -30,22 +30,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 public interface IDBDataSourcePlugin extends IDataSourcePlugin {
 
     /**
-     * Model mapping parameter name
-     * <B>Beware : false friend parameter name, it corresponds to Json model mapping object</B>
-     */
-    String MODEL_MAPPING_PARAM = "mapping";
-
-    /**
-     * From clause to apply to the SQL request parameter name
-     */
-    String FROM_CLAUSE = "fromClause";
-
-    /**
-     * Connection parameter name
-     */
-    String CONNECTION_PARAM = "connection";
-
-    /**
      * Retrieve DB connection plugin used by the datasource plugin
      * @throws SQLException {@link java.sql.Connection} is not available
      */

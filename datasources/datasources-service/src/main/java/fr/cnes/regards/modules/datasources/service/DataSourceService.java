@@ -34,6 +34,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 
@@ -103,7 +104,7 @@ public class DataSourceService implements IDataSourceService {
      * @return a {{@link PluginParameter}
      */
     private PluginParameter mergeParameter(PluginParameter pluginParam, PluginConfiguration dataSource) {
-        if (pluginParam.getName().equals(IDBDataSourcePlugin.CONNECTION_PARAM)) {
+        if (pluginParam.getName().equals(DataSourcePluginConstants.CONNECTION_PARAM)) {
             mergePluginConfigurationParameter(pluginParam, dataSource);
         } else {
             // BEWARE : DataSource comes from frontend, its value is already gson-normalized SO don't use
@@ -121,7 +122,7 @@ public class DataSourceService implements IDataSourceService {
     private void mergePluginConfigurationParameter(PluginParameter connectionPluginParam,
             PluginConfiguration dataSource) {
         PluginConfiguration dbConf = connectionPluginParam.getPluginConfiguration();
-        PluginConfiguration currentDbConf = dataSource.getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM);
+        PluginConfiguration currentDbConf = dataSource.getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM);
         if ((dbConf == null) || !dbConf.getId().equals(currentDbConf.getId())) {
             connectionPluginParam.setPluginConfiguration(currentDbConf);
         }

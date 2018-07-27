@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,14 +53,13 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.DBConnectionPluginConstants;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test sata source PluginConfiguration controller
@@ -162,7 +163,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(IDBDataSourcePlugin.FROM_CLAUSE))));
+                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -182,8 +183,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_TABLE_NAME, Matchers
-                .equalTo(dataSource.getStripParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM))));
+        expectations.add(MockMvcResultMatchers
+                .jsonPath(JSON_PATH_TABLE_NAME,
+                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.TABLE_PARAM))));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -208,10 +210,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
-                .getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM).getId().toString())));
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(IDBDataSourcePlugin.FROM_CLAUSE))));
+                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
                           "DataSource shouldn't be retrieve.", dataSource.getId());
@@ -241,15 +243,15 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setId(pls.get(0).getId());
 
         // Update the DataSource
-        dataSource.getParameter(IDBDataSourcePlugin.FROM_CLAUSE).setValue("\"from table where table.id>1000\"");
+        dataSource.getParameter(DataSourcePluginConstants.FROM_CLAUSE).setValue("\"from table where table.id>1000\"");
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
-                .getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM).getId().toString())));
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(IDBDataSourcePlugin.FROM_CLAUSE))));
+                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
@@ -272,15 +274,15 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Update the DataSource
         PluginConfiguration otherDbConnection = pluginService
                 .savePluginConfiguration(getPostGreSqlConnectionConfiguration());
-        dataSource.getParameter(IDBDataSourcePlugin.CONNECTION_PARAM).setPluginConfiguration(otherDbConnection);
+        dataSource.getParameter(DataSourcePluginConstants.CONNECTION_PARAM).setPluginConfiguration(otherDbConnection);
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
-                .getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM).getId().toString())));
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(IDBDataSourcePlugin.FROM_CLAUSE))));
+                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
@@ -334,12 +336,12 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration createDataSourceWithFromClause() {
         PluginConfiguration dataSource = new PluginConfiguration();
         dataSource.setParameters(PluginParametersFactory.build()
-                .addParameter(IDBDataSourcePlugin.FROM_CLAUSE, FROM_CLAUSE_TEST)
-                .addParameter(IDBDataSourcePlugin.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME)
-                .addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
-                .addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection)
+                .addParameter(DataSourcePluginConstants.FROM_CLAUSE, FROM_CLAUSE_TEST)
+                .addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME)
+                .addParameter(DataSourcePluginConstants.MODEL_MAPPING_PARAM, modelAttrMapping)
+                .addPluginConfiguration(DataSourcePluginConstants.CONNECTION_PARAM, pluginPostgreDbConnection)
                 .getParameters());
-//        dataSource.setPluginId("dataSourceTest");
+        //        dataSource.setPluginId("dataSourceTest");
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         dataSource.setVersion("alpha");
@@ -358,15 +360,15 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration createDataSourceSingleTable() {
         PluginConfiguration dataSource = new PluginConfiguration();
         PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameter(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST);
-        factory.addParameter(IDBDataSourcePlugin.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME);
-        factory.addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping);
-        factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection);
+        factory.addParameter(DataSourcePluginConstants.TABLE_PARAM, TABLE_NAME_TEST);
+        factory.addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME);
+        factory.addParameter(DataSourcePluginConstants.MODEL_MAPPING_PARAM, modelAttrMapping);
+        factory.addPluginConfiguration(DataSourcePluginConstants.CONNECTION_PARAM, pluginPostgreDbConnection);
         dataSource.setParameters(factory.getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         dataSource.setVersion("alpha");
-        
+
         return dataSource;
     }
 
@@ -404,11 +406,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(MockConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(MockConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                .addParameter(MockConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(MockConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(MockConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
+                .addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
+                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
+                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
+                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
+                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_PACKAGE));
