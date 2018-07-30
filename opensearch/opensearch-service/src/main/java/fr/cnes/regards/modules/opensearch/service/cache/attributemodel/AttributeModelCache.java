@@ -122,8 +122,8 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                 .build(StaticProperties.FEATURE_ID, AttributeType.STRING, null).isStatic().get());
 
         // SIP identifier alias provider identifier
-        tenantMap.put(StaticProperties.FEATURE_SIP_ID, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_SIP_ID, AttributeType.STRING, null).isStatic().get());
+        tenantMap.put(StaticProperties.FEATURE_PROVIDER_ID, AttributeModelBuilder
+                .build(StaticProperties.FEATURE_PROVIDER_ID, AttributeType.STRING, null).isStatic().get());
 
         // Required label for minimal display purpose
         tenantMap.put(StaticProperties.FEATURE_LABEL, AttributeModelBuilder

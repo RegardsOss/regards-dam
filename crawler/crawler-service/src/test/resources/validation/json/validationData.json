@@ -5,7 +5,7 @@
     "tags": [],
     "groups": [],
     "feature": {
-      "sipId": "1",
+      "providerId": "1",
       "entityType": "DATA",
       "label": "l1",
       "model": "model",
@@ -22,7 +22,7 @@
         "fragment1": {
           "activated": "true",
           "state": "STARTED"
-        },
+      },
         "DATASET_VALIDATION_TYPE": "DS1",
         "vurl": "http://truc:201/machin"
       },

@@ -119,7 +119,7 @@ class AipClientConfigurationMock {
             AIP oneAip = new AIP();
             oneAip.setId(urn);
             oneAip.setState(AIPState.STORED);
-            oneAip.setSipId("hello aip");
+            oneAip.setProviderId("hello aip");
             publisher.publish(new AIPEvent(oneAip));
         }
 

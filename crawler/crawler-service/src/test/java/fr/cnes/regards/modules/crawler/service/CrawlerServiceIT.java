@@ -234,34 +234,34 @@ public class CrawlerServiceIT {
 
         dataset1 = new Dataset(modelDataset, tenant, "labelDs1");
         dataset1.setLicence("licence");
-        dataset1.setSipId("SipId1");
+        dataset1.setProviderId("ProviderId1");
         dataset1.setDataSource(dataSourcePluginConf);
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
         dataset2 = new Dataset(modelDataset, tenant, "labelDs2");
         dataset2.setLicence("licence");
-        dataset2.setSipId("SipId2");
+        dataset2.setProviderId("ProviderId2");
         dataset2.setDataSource(dataSourcePluginConf);
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
         dataset3 = new Dataset(modelDataset, tenant, "labelDs3");
         dataset3.setLicence("licence");
-        dataset3.setSipId("SipId3");
+        dataset3.setProviderId("ProviderId3");
         dataset3.setDataSource(dataSourcePluginConf);
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
         // No tags on Datasets, it doesn't matter
 
         coll1 = new Collection(modelColl, tenant, "coll1");
-        coll1.setSipId("SipId4");
+        coll1.setProviderId("ProviderId4");
         // C1 -> (DS1, DS2)
         coll1.setTags(Sets.newHashSet(dataset1.getIpId().toString(), dataset2.getIpId().toString()));
         coll2 = new Collection(modelColl, tenant, "coll2");
-        coll2.setSipId("SipId5");
+        coll2.setProviderId("ProviderId5");
         // C2 -> (C1, DS3)
         coll2.setTags(Sets.newHashSet(coll1.getIpId().toString(), dataset3.getIpId().toString()));
         coll3 = new Collection(modelColl, tenant, "coll3");
-        coll3.setSipId("SipId6");
+        coll3.setProviderId("ProviderId6");
         // C3 -> (DS3)
         coll3.setTags(Sets.newHashSet(dataset3.getIpId().toString()));
     }

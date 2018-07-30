@@ -106,7 +106,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * The mission SipID
      */
-    private final String sipId = "SIPID";
+    private final String providerId = "PROVIDERID";
 
     /**
      * The reference attribute name
@@ -193,9 +193,9 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         Collection collection = new Collection(model1, getDefaultTenant(), COLLECTION_LABEL);
-        collection.setSipId(sipId);
+        collection.setProviderId(providerId);
         collection.setCreationDate(OffsetDateTime.now());
         Set<AbstractAttribute<?>> atts = new HashSet<>();
 
@@ -258,7 +258,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Model model = modelRepository.findByName("TestOptionalNonAlterable");
         // lets first create a collection with the optional non alterable attribute given.
         Collection optionalNonAlterable = new Collection(model, getDefaultTenant(), "optionalNonAlterable");
-        optionalNonAlterable.setSipId(sipId);
+        optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
         Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(AttributeBuilder.buildString(refAtt, "ref"));
@@ -296,7 +296,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         Collection optionalNotGivenNonAlterable = new Collection(model, getDefaultTenant(),
                 "optionalNotGivenNonAlterable");
-        optionalNonAlterable.setSipId(sipId);
+        optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
 
         customizer = getNewRequestBuilderCustomizer();
@@ -345,7 +345,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
@@ -415,7 +415,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 

@@ -229,7 +229,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
         // Generate IpId only if datasource plugin hasn't yet generate it
         page.getContent().stream().filter(obj -> obj.getIpId().isRandomEntityId())
-                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getSipId(), datasourceId)));
+                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getProviderId(), datasourceId)));
         return page;
     }
 
@@ -237,12 +237,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
      * {@link UUID#nameUUIDFromBytes(byte[]).
      * @param tenant the tenant name
-     * @param sipId the original primary key value
+     * @param providerId the original primary key value
      * @return the IpId generated from given parameters
      */
-    private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
+    private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
+                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
 
     @Override

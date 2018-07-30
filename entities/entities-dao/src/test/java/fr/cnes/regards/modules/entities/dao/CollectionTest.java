@@ -55,7 +55,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         model1.setType(EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
         Collection coll = new Collection(model1, "PROJECT", "coll");
-        coll.setSipId("IpID");
+        coll.setProviderId("IpID");
         Collection collection1 = collectionRepository.save(coll);
         Collection collection2 = collectionRepository.findOne(collection1.getId());
         Assert.assertEquals(collection1, collection2);
