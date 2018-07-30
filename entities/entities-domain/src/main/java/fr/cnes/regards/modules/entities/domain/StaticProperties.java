@@ -74,9 +74,9 @@ public final class StaticProperties {
     public static final String FEATURE_ID_PATH = FEATURE_NS + FEATURE_ID;
 
     // String
-    public static final String FEATURE_SIP_ID = "sipId";
+    public static final String FEATURE_PROVIDER_ID = "providerId";
 
-    public static final String FEATURE_SIP_ID_PATH = FEATURE_NS + FEATURE_SIP_ID;
+    public static final String FEATURE_PROVIDER_ID_PATH = FEATURE_NS + FEATURE_PROVIDER_ID;
 
     // String
     public static final String FEATURE_LABEL = "label";
@@ -109,7 +109,7 @@ public final class StaticProperties {
     public static final String FEATURE_PROPERTIES_PATH = FEATURE_NS + FEATURE_PROPERTIES;
 
     // List of first level static properties
-    public static final List<String> FEATURES_STATICS = Arrays.asList(FEATURE_ID, FEATURE_SIP_ID, FEATURE_LABEL,
+    public static final List<String> FEATURES_STATICS = Arrays.asList(FEATURE_ID, FEATURE_PROVIDER_ID, FEATURE_LABEL,
                                                                       FEATURE_MODEL, FEATURE_FILES, FEATURE_TAGS,
                                                                       FEATURE_GEOMETRY, FEATURE_PROPERTIES);
 

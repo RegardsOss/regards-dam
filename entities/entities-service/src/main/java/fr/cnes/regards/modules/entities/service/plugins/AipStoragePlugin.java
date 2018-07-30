@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.entities.service.plugins;
 
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,7 +180,7 @@ public class AipStoragePlugin implements IStorageService {
      * @throws ModuleException
      */
     private <T extends AbstractEntity<?>> AIPBuilder getBuilder(T entity) throws ModuleException {
-        AIPBuilder builder = new AIPBuilder(entity.getIpId(), null, entity.getProviderId(),
+        AIPBuilder builder = new AIPBuilder(entity.getIpId(), Optional.empty(), entity.getProviderId(),
                 entity.getFeature().getEntityType(), DAM_SESSION);
 
         if ((entity.getTags() != null) && (entity.getTags().size() > 0)) {

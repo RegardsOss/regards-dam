@@ -96,9 +96,9 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
     List<T> findByTags(String pTagToSearch);
 
     /**
-     * Find the all the entity with this specified SIP ID!
-     * @param sipId a SIP ID
-     * @return entities corresponding to the SIP ID
+     * Find the all the entity with this specified provider id
+     * @param providerId a provider id
+     * @return entities corresponding to the provider id
      */
     @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('providerId', ?1)",
             nativeQuery = true)

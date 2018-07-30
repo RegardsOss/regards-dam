@@ -165,12 +165,12 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
     @Test
     public void findByProviderid() {
-        String sipId = "SIPID";
+        String providerId = "SIPID";
         Collection entity1 = createEntity(collectionModel, DEFAULT_TENANT, "entity1");
-        entity1.setProviderId(sipId);
+        entity1.setProviderId(providerId);
         entity1 = entityRepository.save(entity1);
 
-        Set<AbstractEntity<?>> entities = entityRepository.findAllByProviderId(sipId);
+        Set<AbstractEntity<?>> entities = entityRepository.findAllByProviderId(providerId);
         Assert.assertEquals(1, entities.size());
 
         entities = entityRepository.findAllByProviderId("fake");

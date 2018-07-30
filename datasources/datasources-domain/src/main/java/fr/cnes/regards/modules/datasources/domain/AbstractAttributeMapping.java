@@ -31,7 +31,7 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the primary key attribute
      */
-    public static final String PRIMARY_KEY = "sipId";
+    public static final String PRIMARY_KEY = "providerId";
 
     /**
      * Constant used for the last update attribute
