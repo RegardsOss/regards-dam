@@ -79,7 +79,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
 
     List<U> findAll();
 
-    Set<U> findAllBySipId(String sipId);
+    Set<U> findAllByProviderId(String sipId);
 
     Page<U> search(String label, Pageable pageRequest);
 

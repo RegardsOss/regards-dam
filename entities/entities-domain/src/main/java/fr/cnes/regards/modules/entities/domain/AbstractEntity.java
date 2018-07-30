@@ -340,12 +340,12 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         this.model = model;
     }
 
-    public String getSipId() {
-        return feature.getSipId();
+    public String getProviderId() {
+        return feature.getProviderId();
     }
 
-    public void setSipId(String sipId) {
-        feature.setSipId(sipId);
+    public void setProviderId(String providerId) {
+        feature.setProviderId(providerId);
     }
 
     public String getLabel() {
@@ -417,7 +417,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + getIpId() + ", sipId=" + getSipId() + ", label=" + getLabel() + ", attributes=" + getProperties()
+                + getIpId() + ", sipId=" + getProviderId() + ", label=" + getLabel() + ", attributes=" + getProperties()
                 + ", model=" + model + "]";
     }
 

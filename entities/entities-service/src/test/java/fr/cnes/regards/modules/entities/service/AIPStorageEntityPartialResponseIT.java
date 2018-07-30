@@ -192,7 +192,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
 
         dataset1 = new Dataset(modelDataset, getDefaultTenant(), "dataset one label");
         dataset1.setLicence("the licence");
-        dataset1.setSipId("SipId1");
+        dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
         dataset1.setGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
                                                   IGeometry.position(15., -72.), IGeometry.position(15., -9.)));

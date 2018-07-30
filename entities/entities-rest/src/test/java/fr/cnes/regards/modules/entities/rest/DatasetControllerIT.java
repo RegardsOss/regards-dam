@@ -117,17 +117,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet1 = new Dataset(model1, "PROJECT", "collection1");
         dataSet1.setCreationDate(OffsetDateTime.now());
         dataSet1.setLicence("licence");
-        dataSet1.setSipId("SipId1");
+        dataSet1.setProviderId("ProviderId1");
         dataSet1.setLabel("label");
         dataSet3 = new Dataset(model1, "PROJECT", "collection3");
         dataSet3.setCreationDate(OffsetDateTime.now());
         dataSet3.setLicence("licence");
-        dataSet3.setSipId("SipId3");
+        dataSet3.setProviderId("ProviderId3");
         dataSet3.setLabel("label");
         dataSet4 = new Dataset(model1, "PROJECT", "collection4");
         dataSet4.setCreationDate(OffsetDateTime.now());
         dataSet4.setLicence("licence");
-        dataSet4.setSipId("SipId4");
+        dataSet4.setProviderId("ProviderId4");
         dataSet4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
         final Set<String> col4Tags = new HashSet<>();
@@ -167,7 +167,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final Dataset dataSet2 = new Dataset(datasetModel, getDefaultTenant(), "Coucou");
         dataSet2.setLicence("licence");
         dataSet2.setCreationDate(OffsetDateTime.now());
-        dataSet2.setSipId("SipId2");
+        dataSet2.setProviderId("ProviderId2");
         dataSet2.setDataModel(dataModel.getName());
         dataSet2.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
         dataSet2.addProperty(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
@@ -207,7 +207,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
-        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -223,7 +223,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
-        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
         dataSetClone.setLabel("label");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));

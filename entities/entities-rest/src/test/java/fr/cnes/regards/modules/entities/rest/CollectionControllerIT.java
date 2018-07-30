@@ -81,15 +81,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         model1 = modelRepository.save(model1);
 
         collection1 = new Collection(model1, "PROJECT", "collection1");
-        collection1.setSipId("SipId1");
+        collection1.setProviderId("ProviderId1");
         collection1.setLabel("label");
         collection1.setCreationDate(OffsetDateTime.now());
         collection3 = new Collection(model1, "PROJECT", "collection3");
-        collection3.setSipId("SipId3");
+        collection3.setProviderId("ProviderId3");
         collection3.setLabel("label");
         collection3.setCreationDate(OffsetDateTime.now());
         collection4 = new Collection(model1, "PROJECT", "collection4");
-        collection4.setSipId("SipId4");
+        collection4.setProviderId("ProviderId4");
         collection4.setLabel("label");
         collection4.setCreationDate(OffsetDateTime.now());
         final Set<String> col1Tags = new HashSet<>();
@@ -144,7 +144,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
         collectionClone.setTags(collection1.getTags());
-        collectionClone.setSipId(collection1.getSipId() + "new");
+        collectionClone.setProviderId(collection1.getProviderId() + "new");
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -160,7 +160,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collectionClone.setIpId(collection1.getIpId());
         collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
-        collectionClone.setSipId(collection1.getSipId() + "new");
+        collectionClone.setProviderId(collection1.getProviderId() + "new");
         collectionClone.setLabel("label");
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));

@@ -179,7 +179,7 @@ public class AipStoragePlugin implements IStorageService {
      * @throws ModuleException
      */
     private <T extends AbstractEntity<?>> AIPBuilder getBuilder(T entity) throws ModuleException {
-        AIPBuilder builder = new AIPBuilder(entity.getIpId(), null, entity.getSipId(),
+        AIPBuilder builder = new AIPBuilder(entity.getIpId(), null, entity.getProviderId(),
                 entity.getFeature().getEntityType(), DAM_SESSION);
 
         if ((entity.getTags() != null) && (entity.getTags().size() > 0)) {

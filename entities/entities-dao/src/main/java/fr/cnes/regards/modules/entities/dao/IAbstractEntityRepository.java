@@ -100,9 +100,9 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      * @param sipId a SIP ID
      * @return entities corresponding to the SIP ID
      */
-    @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('sipId', ?1)",
+    @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('providerId', ?1)",
             nativeQuery = true)
-    Set<T> findAllBySipId(String sipId);
+    Set<T> findAllByProviderId(String providerId);
 
     @Lock(LockModeType.PESSIMISTIC_READ)
     Set<T> findAllByStateAip(EntityAipState state);

@@ -211,8 +211,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public Set<U> findAllBySipId(String sipId) {
-        return repository.findAllBySipId(sipId);
+    public Set<U> findAllByProviderId(String providerId) {
+        return repository.findAllByProviderId(providerId);
     }
 
     @Override

@@ -229,7 +229,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
         // Generate IpId only if datasource plugin hasn't yet generate it
         page.getContent().stream().filter(obj -> obj.getIpId().isRandomEntityId())
-                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getSipId(), datasourceId)));
+                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getProviderId(), datasourceId)));
         return page;
     }
 

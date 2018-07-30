@@ -86,22 +86,22 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         model1 = modelRepository.save(model1);
 
         collection1 = new Collection(model1, "PROJECT", "collection1");
-        collection1.setSipId("SipId1");
+        collection1.setProviderId("ProviderId1");
         collection1.setLabel("label");
         collection1.setCreationDate(OffsetDateTime.now());
 
         collection2 = new Collection(model1, "PROJECT", "collection2");
-        collection2.setSipId("SipId1");
+        collection2.setProviderId("ProviderId1");
         collection2.setLabel("label");
         collection2.setCreationDate(OffsetDateTime.now());
 
         document1 = new Document(model2, "PROJECT", "document1");
-        document1.setSipId("SipId2");
+        document1.setProviderId("ProviderId2");
         document1.setLabel("label");
         document1.setCreationDate(OffsetDateTime.now());
 
         document2 = new Document(model2, "PROJECT", "document2");
-        document2.setSipId("SipId3");
+        document2.setProviderId("ProviderId3");
         document2.setLabel("label");
         document2.setCreationDate(OffsetDateTime.now());
         final Set<String> doc2Tags = new HashSet<>();
@@ -129,7 +129,7 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testPostDocument() {
         final Document document3 = new Document(model1, null, "document3");
-        document3.setSipId("SipId3");
+        document3.setProviderId("ProviderId3");
         document3.setLabel("label");
         document3.setCreationDate(OffsetDateTime.now());
 
@@ -165,7 +165,7 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         documentClone.setIpId(document1.getIpId());
         documentClone.setCreationDate(document1.getCreationDate());
         documentClone.setId(document1.getId());
-        documentClone.setSipId(document1.getSipId() + "new");
+        documentClone.setProviderId(document1.getProviderId() + "new");
 
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
