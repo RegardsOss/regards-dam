@@ -148,13 +148,23 @@ public class EsAggsTest {
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
     }
 
+    private static class Feature {
+
+        private final Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+
+        public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+            return files;
+        }
+
+    }
+
     private static class Data implements IIndexable, IDocFiles {
 
         private String docId;
 
         private Set<String> tags = new HashSet<>();
 
-        private Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+        private final Feature feature = new Feature();
 
         public Data() {
         }
@@ -190,12 +200,7 @@ public class EsAggsTest {
 
         @Override
         public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
-            return files;
-        }
-
-        @SuppressWarnings("unused")
-        public void setFiles(Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
-            this.files = files;
+            return feature.getFiles();
         }
     }
 

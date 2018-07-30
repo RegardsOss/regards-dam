@@ -128,7 +128,10 @@ public class SearchService implements ISearchService {
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion criterion, String discriminantProperty, List<DataType> dataTypes) {
 
-        String[] fileTypes = dataTypes.toArray(new String[dataTypes.size()]);
+        String[] fileTypes = new String[dataTypes.size()];
+        for (int i = 0; i < dataTypes.size(); i++) {
+            fileTypes[i] = dataTypes.get(i).toString();
+        }
 
         searchKey.setSearchIndex(tenantResolver.getTenant());
         DocFilesSummary summary = new DocFilesSummary();

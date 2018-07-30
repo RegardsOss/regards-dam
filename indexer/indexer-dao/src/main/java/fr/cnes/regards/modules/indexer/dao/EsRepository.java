@@ -1363,10 +1363,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".filesize")); // Only count files with a size
+                    .field("feature.files." + fileType + ".filesize")); // Only count files with a size
             // file size sum
             builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                    .field("files." + fileType + ".filesize"));
+                    .field("feature.files." + fileType + ".filesize"));
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1380,10 +1380,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".filesize"));
+                    .field("feature.files." + fileType + ".filesize"));
             // file size sum
             termsAggBuilder.subAggregation(AggregationBuilders.sum(fileType + "_files_size")
-                    .field("files." + fileType + ".filesize"));
+                    .field("feature.files." + fileType + ".filesize"));
         }
         builder.aggregation(termsAggBuilder);
     }
@@ -1443,7 +1443,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
+                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1457,7 +1457,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX));
+                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX));
         }
         builder.aggregation(termsAggBuilder);
     }
