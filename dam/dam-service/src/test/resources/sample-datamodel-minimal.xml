@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>sample</name>
+	<description>Sample model of data</description>
+	<type>DATA</type>
+	<attribute optional="true">
+		<label>forTests</label>
+		<name>att_string</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute alterable="true">
+		<label>forTests</label>
+		<name>att_boolean</name>
+		<type>BOOLEAN</type>
+	</attribute>
+	<fragment>
+		<name>GEO</name>
+		<description>Geographic information</description>
+		<attribute>
+			<label>forTests</label>
+			<name>CRS</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>Earth</value>
+					<value>Mars</value>
+					<value>Venus</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>Contact</name>
+		<description>Contact information</description>
+		<attribute alterable="true" optional="true">
+			<label>forTests</label>
+			<name>Phone</name>
+			<type>STRING</type>
+			<restriction>
+				<pattern>[0-9 ]{10}</pattern>
+			</restriction>
+		</attribute>
+	</fragment>
+</model>

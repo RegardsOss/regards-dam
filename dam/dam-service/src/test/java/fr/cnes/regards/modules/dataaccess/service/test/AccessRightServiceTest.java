@@ -49,7 +49,6 @@ import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -62,20 +61,13 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
-import fr.cnes.regards.modules.entities.dao.ILocalFileRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.CollectionService;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.ILocalStorageService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
-import fr.cnes.regards.modules.models.dao.IFragmentRepository;
-import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
 /**
@@ -121,11 +113,6 @@ public class AccessRightServiceTest {
     static class Conf {
 
         @Bean
-        public IAccessRightRepository accessRightRepository() {
-            return Mockito.mock(IAccessRightRepository.class);
-        }
-
-        @Bean
         public IAccessGroupService accessGroupService() {
             return Mockito.mock(AccessGroupService.class);
         }
@@ -163,46 +150,6 @@ public class AccessRightServiceTest {
         @Bean
         public CollectionService collectionService() {
             return Mockito.mock(CollectionService.class);
-        }
-
-        @Bean
-        public IAttributeModelRepository attributeModelRepository() {
-            return Mockito.mock(IAttributeModelRepository.class);
-        }
-
-        @Bean
-        public IRestrictionRepository restrictionRepository() {
-            return Mockito.mock(IRestrictionRepository.class);
-        }
-
-        @Bean
-        public IFragmentRepository fragmentRepository() {
-            return Mockito.mock(IFragmentRepository.class);
-        }
-
-        @Bean
-        public IAttributePropertyRepository attributePropertyRepository() {
-            return Mockito.mock(IAttributePropertyRepository.class);
-        }
-
-        @Bean
-        public ILocalFileRepository documentLSRepository() {
-            return Mockito.mock(ILocalFileRepository.class);
-        }
-
-        @Bean
-        public IModelService modelService() {
-            return Mockito.mock(IModelService.class);
-        }
-
-        @Bean
-        public IEntitiesService entitiesService() {
-            return Mockito.mock(IEntitiesService.class);
-        }
-
-        @Bean
-        public IPluginService pluginService() {
-            return Mockito.mock(IPluginService.class);
         }
 
         @Bean

@@ -131,7 +131,7 @@ public class DatasetServiceTest {
         dataSet1.setId(1L);
         dataSet2 = new Dataset(model2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
-        setModelInPlace(importModel("sample-model-minimal.xml"));
+        setModelInPlace(importModel("sample-datamodel-minimal.xml"));
         Mockito.when(modelService.getModel(modelOfObjects.getId())).thenReturn(modelOfObjects);
         dataSet2.setDataModel(modelOfObjects.getName());
         dataSet2.setSubsettingClause(getValidClause());
