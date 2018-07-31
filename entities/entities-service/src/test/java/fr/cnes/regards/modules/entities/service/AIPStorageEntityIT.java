@@ -52,6 +52,8 @@ import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationReposit
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
@@ -177,6 +179,9 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         waitAndCheck(dataset1, EntityAipState.AIP_STORE_OK);
     }
 
+    @Requirement("REGARDS_DSL_DAM_DOC_010")
+    @Requirement("REGARDS_DSL_DAM_DOC_210")
+    @Purpose("Document archiving")
     @Test
     public void createDocument() throws ModuleException, IOException, InterruptedException {
 
