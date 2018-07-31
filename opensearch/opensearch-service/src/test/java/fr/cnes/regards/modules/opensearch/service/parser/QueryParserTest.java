@@ -569,7 +569,6 @@ public class QueryParserTest {
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     @Purpose("Tests queries like date:2007-12-03T10:15:30.166Z")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
