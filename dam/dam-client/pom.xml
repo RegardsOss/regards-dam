@@ -60,28 +60,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-domain</artifactId>
-		</dependency>
-		<!-- Tests -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-integration-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-multitenant-regards-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- <dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-rest</artifactId>
-			<scope>test</scope>
-		</dependency> -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-			<scope>test</scope>
+			<artifactId>dam-gson</artifactId>
 		</dependency>
 	</dependencies>
 </project>
