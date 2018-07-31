@@ -23,7 +23,6 @@
 
 	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-service</artifactId>
-	<packaging>jar</packaging>
 	
 	<description>Service layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>

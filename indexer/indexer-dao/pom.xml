@@ -23,7 +23,6 @@
 	<groupId>fr.cnes.regards.modules.indexer</groupId>
 	<artifactId>indexer-dao</artifactId>
 	
-	<name>Indexer DAO</name>
 	<description>DAO layer of the Indexer module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
