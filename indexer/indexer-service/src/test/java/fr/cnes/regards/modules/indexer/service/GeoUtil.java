@@ -59,4 +59,11 @@ public class GeoUtil {
         }
         return IGeometry.polygon(IGeometry.toPolygonCoordinates(positions));
     }
+
+    /**
+     * Retrieve polygon edge and return it as a simple double double array
+     */
+    public static double[][] toArray(Polygon polygon) {
+        return polygon.getCoordinates().get(0).stream().map(p -> new double[] { p.getLongitude(), p.getLatitude() }).toArray(n -> new double[n][]);
+    }
 }

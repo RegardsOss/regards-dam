@@ -60,6 +60,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -130,6 +131,14 @@ public class AstroTest {
     //    }
 
     /**
+     * Transform right ascendance in decimal hours to longitude in degrees
+     */
+    private double toLongitude(double rightAscendance) {
+        double longitude_0_360 = (rightAscendance / 24.) * 360;
+        return EsHelper.highScaled(((longitude_0_360 >= 180.) ? longitude_0_360 - 360.0 : longitude_0_360));
+    }
+
+    /**
      * Shit polygons concerning some constellations : Ursa Minor, Ursa Major, Pisces, Pegasus, Octans, Hydra, Crux,
      * Corvus, Cepheus.
      * It's better to not saving them because Postgis corrected polygons are worst
@@ -158,6 +167,9 @@ public class AstroTest {
                                           Charset.defaultCharset()))) {
                 // Useful variables
                 String curConstellation = null;
+                // North hemisphere constellations (and crossing equator) are described right hand
+                // South ones are described left hand
+                boolean rightHand = true;
                 List<double[]> points = new ArrayList<>();
                 List<double[]> pointsWgs84 = new ArrayList<>();
 
@@ -167,104 +179,81 @@ public class AstroTest {
                     String[] coordName = line.trim().split("\\s+");
                     double latitude = Double.parseDouble(coordName[1]);
                     double ra = Double.parseDouble(coordName[0]);
-                    double longitude_0_360 = (ra / 24.) * 360;
-                    double longitude = (longitude_0_360 >= 180.) ? longitude_0_360 - 360.0 : longitude_0_360;
+                    double longitude = toLongitude(ra);
                     double[] wgs84 = GeoHelper.transform(new double[] { longitude, latitude }, Crs.ASTRO, Crs.WGS_84);
-                    //                if (wgs84[0] < 0) {
-                    //                    wgs84[0] += 360;
-                    //                }
 
                     // Since 2nd line
                     if (curConstellation != null) {
                         // Same constellation as previous one
                         if (curConstellation.equals(coordName[2])) {
-                            double[] newPoint = new double[] { longitude, latitude };
-                            double[] previousPoint = points.get(0);
-                            if (GeoHelper.normalizeNextCoordinate(previousPoint, newPoint)) {
-                                points.set(0, previousPoint);
+                            // if right hand polygon, reverse to make it left hand
+                            if (rightHand) {
+                                points.add(0, new double[] { longitude, latitude });
+                                pointsWgs84.add(0, new double[] { wgs84[0], wgs84[1] });
+                            } else {
+                                points.add(new double[] { longitude, latitude });
+                                pointsWgs84.add(new double[] { wgs84[0], wgs84[1] });
                             }
-                            points.add(0, newPoint);
-
-                            double[] newPointWgs84 = new double[] { wgs84[0], wgs84[1] };
-                            double[] previousPointWgs84 = pointsWgs84.get(0);
-                            if (GeoHelper.normalizeNextCoordinate(previousPointWgs84, newPointWgs84)) {
-                                pointsWgs84.set(0, previousPointWgs84);
-                            }
-                            pointsWgs84.add(0, newPointWgs84);
                         } else { // New constellation on line
-                            // Finalize current constellation
-                            IGeometry polygon = createPolygonFromPoints(pointsWgs84);
-                            IGeometry polygonWgs84 = createPolygonFromPoints(pointsWgs84);
-
                             if (!firstConst) {
                                 bw.write(",");
                             }
                             firstConst = false;
-                            bw.write("{\n" + "      \"type\": \"Feature\",\n" + "      \"properties\": {\n"
-                                             + "        \"label\": \"");
-                            bw.write(constMap.get(curConstellation));
-                            bw.write("\"\n" + "      },\n" + "      \"geometry\": ");
 
-                            DataObject object = createDataObject(polygon, polygonWgs84, constMap.get(curConstellation));
-
-                            bw.write(gson.toJson(object.getWgs84(), Polygon.class));
-                            bw.write("}\n");
-                            try {
-                                repos.save(TENANT, object);
-                            } catch (RuntimeException e) {
-                                System.out.println("Cannot save " + constMap.get(curConstellation));
-                                e.printStackTrace();
-                            }
+                            // Finalize current constellation
+                            saveConstellation(bw, constMap, curConstellation, pointsWgs84);
                             // Reset variables
                             curConstellation = null;
-                            // -----------------------------
                             pointsWgs84.clear();
-                            // -----------------------------
                         }
                     }
 
                     // Init new constellation
                     if (curConstellation == null) {
                         curConstellation = coordName[2];
-
-                        // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
-                        // cross dateline better than 0 line)
-                        if ((longitude > -180) && (longitude <= -90)) {
-                            longitude += 360;
+                        // if south hemisphere constellation => left hand
+                        if (latitude < 0.0) {
+                            rightHand = false;
+                        } else {
+                            rightHand = true;
                         }
                         points.add(new double[] { longitude, latitude });
-                        if ((wgs84[0] > -180) && (wgs84[0] <= -90)) {
-                            wgs84[0] += 360;
-                        }
                         pointsWgs84.add(new double[] { wgs84[0], wgs84[1] });
-                        // -----------------------------
                     }
                     line = reader.readLine();
                 }
+                bw.write(",");
                 // Finalize last constellation
-                IGeometry polygon = createPolygonFromPoints(pointsWgs84);
-                IGeometry polygonWgs84 = createPolygonFromPoints(pointsWgs84);
-
-                bw.write(",\n");
-                bw.write("{\n" + "      \"type\": \"Feature\",\n" + "      \"properties\": {\n"
-                                 + "        \"label\": \"");
-                bw.write(constMap.get(curConstellation));
-                bw.write("\"\n" + "      },\n" + "      \"geometry\": ");
-
-                DataObject object = createDataObject(polygon, polygonWgs84, constMap.get(curConstellation));
-                bw.write(gson.toJson(object.getWgs84(), Polygon.class));
-                bw.write("}\n");
-
-                try {
-                    repos.save(TENANT, object);
-                } catch (RuntimeException e) {
-                    System.out.println("Cannot save " + constMap.get(curConstellation));
-                }
+                saveConstellation(bw, constMap, curConstellation, pointsWgs84);
 
                 repos.unsetSettingsForBulk(TENANT);
                 repos.refresh(TENANT);
             }
             bw.write("  ]\n" + "}");
+        }
+    }
+
+    private void saveConstellation(BufferedWriter bw, Map<String, String> constMap, String curConstellation,
+            List<double[]> pointsWgs84) throws IOException {
+        IGeometry polygon = GeoHelper.normalize(createPolygonFromPoints(pointsWgs84));
+        IGeometry polygonWgs84 = GeoHelper.normalize(createPolygonFromPoints(pointsWgs84));
+
+        bw.write("{\n" + "      \"type\": \"Feature\",\n" + "      \"properties\": {\n"
+                         + "        \"label\": \"");
+        bw.write(constMap.get(curConstellation));
+        bw.write("\"\n" + "      },\n" + "      \"geometry\": ");
+
+        DataObject object = createDataObject(polygon, polygonWgs84, constMap.get(curConstellation));
+
+        bw.write(gson.toJson(object.getWgs84(), Polygon.class));
+        bw.write("}\n");
+        try {
+            repos.save(TENANT, object);
+        } catch (RuntimeException e) {
+            System.out.println("Cannot save " + constMap.get(curConstellation));
+            e.printStackTrace();
+            System.out.println(gson.toJson(object.getGeometry(), Polygon.class));
+            System.out.println(gson.toJson(object.getWgs84(), Polygon.class));
         }
     }
 
@@ -283,9 +272,9 @@ public class AstroTest {
         System.out.println("Saving " + label);
         DataObject object = new DataObject(model, TENANT, label);
         object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
-        object.setGeometry(shape);
+        object.setGeometry(GeoHelper.normalize(shape));
         object.getFeature().setCrs(Crs.ASTRO.toString());
-        object.setWgs84(shapeWgs84);
+        object.setWgs84(GeoHelper.normalize(shapeWgs84));
 
         return object;
     }
@@ -328,19 +317,43 @@ public class AstroTest {
         // + Cassiopea
         circleCrit = ICriterion.intersectsCircle(new double[] { 0.0, 90.0 }, "16");
         page = repos.search(searchKey, 100, circleCrit);
-        Assert.assertEquals(3, page.getTotalElements());
+        Assert.assertEquals(5, page.getTotalElements());
         constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
         Assert.assertTrue(constNames.contains("Camelopardis"));
         Assert.assertTrue(constNames.contains("Draco"));
         Assert.assertTrue(constNames.contains("Cassiopeia"));
+        Assert.assertTrue(constNames.contains("Ursa Minor"));
+        Assert.assertTrue(constNames.contains("Cepheus"));
+    }
 
-        // Into and Only Draco
-        circleCrit = ICriterion.intersectsCircle(new double[] { -112.5, 65.0 }, "5");
-        page = repos.search(searchKey, 100, circleCrit);
-        Assert.assertEquals(1, page.getTotalElements());
-        constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+    @Test
+    public void testPolygonAroundNorthPole() {
+        // Polygon around North Pole, constant latitude 83°
+        Polygon polygon = IGeometry.simplePolygon(-180, 83, -90, 83, 0, 83, 90, 83);
+        // Circle centered on north pole with 7° angle => should return Camelopardis, Draco
+        ICriterion crit = ICriterion.intersectsPolygon(polygon.toArray());
+        SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
+        searchKey.setCrs(Crs.ASTRO);
+        searchKey.setSearchIndex(TENANT);
+        Page<DataObject> page = repos.search(searchKey, 100, crit);
+        Assert.assertEquals(4, page.getTotalElements());
+        List constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Camelopardis"));
         Assert.assertTrue(constNames.contains("Draco"));
+        Assert.assertTrue(constNames.contains("Ursa Minor"));
+        Assert.assertTrue(constNames.contains("Cepheus"));
 
+        // + Cassiopea
+        polygon = IGeometry.simplePolygon(-180, 74, -90, 74, 0, 74, 90, 74);
+        crit = ICriterion.intersectsPolygon(polygon.toArray());
+        page = repos.search(searchKey, 100, crit);
+        Assert.assertEquals(5, page.getTotalElements());
+        constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Camelopardis"));
+        Assert.assertTrue(constNames.contains("Draco"));
+        Assert.assertTrue(constNames.contains("Cassiopeia"));
+        Assert.assertTrue(constNames.contains("Ursa Minor"));
+        Assert.assertTrue(constNames.contains("Cepheus"));
     }
 
     @Test
@@ -412,7 +425,11 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 70°) (into Draco reaching limit with Ursa Minor)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 70.0 }, { -105, 70.0 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                  { -105, 70.0 },
+                  { -120.0, 70.0 },
+                  { -120, 60.0 },
+                  { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         Assert.assertEquals(2, page.getTotalElements());
         constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
@@ -421,7 +438,11 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 69.9 }, { -105, 69.9 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                        { -105, 69.9 },
+                        { -120.0, 69.9 },
+                        { -120, 60.0 },
+                        { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         Assert.assertEquals(1, page.getTotalElements());
         constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
@@ -429,7 +450,11 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 69.99 }, { -105, 69.99 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                        { -105, 69.99 },
+                        { -120.0, 69.99 },
+                        { -120, 60.0 },
+                        { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.1;
@@ -440,7 +465,11 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 69.999 }, { -105, 69.999 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                        { -105, 69.999 },
+                        { -120.0, 69.999 },
+                        { -120, 60.0 },
+                        { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.01;
@@ -452,7 +481,11 @@ public class AstroTest {
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         // Not ok with quadtree and tree_levels 20 (69.99984 is ok)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 69.9999 }, { -105, 69.9999 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                        { -105, 69.9999 },
+                        { -120.0, 69.9999 },
+                        { -120, 60.0 },
+                        { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.001;
@@ -464,7 +497,11 @@ public class AstroTest {
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         // Ok with quadtree and tree_levels 21
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 }, { -120, 60.0 }, { -120.0, 69.99993 }, { -105, 69.99993 }, { -105, 60.0 } } });
+                { { -105, 60.0 },
+                        { -105, 69.99993 },
+                        { -120.0, 69.99993 },
+                        { -120, 60.0 },
+                        { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.0001;
@@ -475,7 +512,6 @@ public class AstroTest {
             System.out.printf("Precision < %f ° (%f m)\n", precision,
                               FastMath.toRadians(precision) * GeoHelper.AUTHALIC_SPHERE_RADIUS);
         }
-
     }
 
 }

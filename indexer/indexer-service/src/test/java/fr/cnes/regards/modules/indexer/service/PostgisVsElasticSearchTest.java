@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -223,16 +224,26 @@ public class PostgisVsElasticSearchTest {
         ArrayList<Integer> esIdsCopy = new ArrayList<>(esIds);
         esIdsCopy.removeAll(postgisIds);
         postgisIds.removeAll(esIds);
-        System.out.println("In Postgis results, not In ES");
-        for (Integer id : postgisIds) {
-            System.out.printf("id: %d, distance computed with postgis: %f, distance computed with Geotools: %f\n", id,
-                              getDistance(id), GeoHelper.getDistance(
-                            repos.search(searchKey, 1, ICriterion.eq("id", id)).getContent().get(0).getGeometry(),
-                            center, Crs.MARS_49900));
+        if (!postgisIds.isEmpty()) {
+            System.out.println("In Postgis results, not In ES");
+            for (Iterator<Integer> i = postgisIds.iterator(); i.hasNext(); ) {
+                Integer id = i.next();
+                double trueDistance = GeoHelper.getDistance(
+                        repos.search(searchKey, 1, ICriterion.eq("id", id)).getContent().get(0).getGeometry(), center,
+                        Crs.MARS_49900);
+                if (trueDistance > 50_000.0) {
+                    System.out
+                            .printf("id: %d, false positive returned by Postgis (%f m) while distance computed with GeoTools is %f m\n",
+                                    id, getDistance(id), trueDistance);
+                    i.remove();
+                }
+            }
         }
         System.out.println("In ES results, not In PG");
-        for (Integer id : esIdsCopy) {
-            System.out.printf("id: %d, distance computed with postgis: %f\n", id, getDistance(id));
+        if (!esIdsCopy.isEmpty()) {
+            for (Integer id : esIdsCopy) {
+                System.out.printf("id: %d, distance computed with postgis: %f\n", id, getDistance(id));
+            }
         }
 
         Assert.assertTrue(
@@ -258,9 +269,8 @@ public class PostgisVsElasticSearchTest {
         SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setCrs(Crs.MARS_49900);
         searchKey.setSearchIndex(TENANT);
-        double[][][] polygon = new double[][][] { {
-                { -146.0, -78.0 }, { -146.0, -77.0 }, { -148.0, -77.0 }, { -148.0, -78.0 }, { -146.0, -78.0 }
-        }};
+        double[][][] polygon = new double[][][] {
+                { { -146.0, -78.0 }, { -146.0, -77.0 }, { -148.0, -77.0 }, { -148.0, -78.0 }, { -146.0, -78.0 } } };
         ICriterion polygonCrit = ICriterion.intersectsPolygon(polygon);
         List<Integer> esIds = new ArrayList<>();
         Page<DataObject> resultPage = repos.search(searchKey, 1000, polygonCrit);

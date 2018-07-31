@@ -19,13 +19,18 @@
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.GeodeticCalculator;
+import org.hipparchus.geometry.partitioning.Region;
+import org.hipparchus.geometry.spherical.twod.S2Point;
+import org.hipparchus.geometry.spherical.twod.SphericalPolygonsSet;
 import org.hipparchus.util.FastMath;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.FactoryException;
@@ -36,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Table;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.geometry.GeometryCollection;
@@ -116,6 +122,15 @@ public class GeoHelper {
             }
         }
     }
+
+    private static final S2Point NORTH_POLE_AS_S2_POINT = new S2Point(toTheta(0.0), toPhi(90.0));
+
+    private static final S2Point SOUTH_POLE_AS_S2_POINT = new S2Point(toTheta(0.0), toPhi(-90.0));
+
+    /**
+     * Max "cheated" longitude. Used when normalizing a polygon which pass through dateline.
+     */
+    private static final double MAX_CHEATED_LONGITUDE = 359.999999999999;
 
     public static double getDistanceOnEarth(double[] lonLat1, double[] lonLat2) {
         return getDistance(lonLat1, lonLat2, Crs.WGS_84);
@@ -237,7 +252,6 @@ public class GeoHelper {
         return criterion.accept(new FinderCriterionVisitor<>(PolygonCriterion.class));
     }
 
-
     /**
      * Does criterion tree contain a PolygonCriterion or a BoundaryBoxCriterion ?
      */
@@ -303,7 +317,7 @@ public class GeoHelper {
                 return 360 - lon;
             }
         } else { // lon < 0
-            return - lon;
+            return -lon;
         }
     }
 
@@ -335,12 +349,11 @@ public class GeoHelper {
                 // Continue to use longitude > 180 numeric
                 next[0] += 360.0;
             } else if (lonN == 0.0) {
-                // Mac Gyver hack when previous longitude is >= 180 and next is 0
+                // Mac Gyver hack when latitude is on both poles and previous longitude is >= 180 and next is 0
                 // 0 makes Elasticsearch thinking polygon go from 180 to 0 through 90
-                // To make it go from 180 to 0 through 270 we stop at 359.9999...
-                // TODO this case is when latitude is -90 or 90. In theory it will be a good idea to test if it is the
-                // case here
-                next[0] = 359.999999;
+                // To make it go from 180 to 0 through 270 we stop at 359.9999...(no tool can be as precise as 12
+                // decimals)
+                next[0] = MAX_CHEATED_LONGITUDE;
             }
         } else { // Previous longitude < 0
             // Next longitude > 180
@@ -360,6 +373,243 @@ public class GeoHelper {
         }
         LOGGER.trace(" -> OUT ({}, {})", previous[0], next[0]);
         return updatePrevious;
+    }
+
+    public static IGeometry normalize(IGeometry geometry) {
+        if (geometry instanceof Polygon) {
+            return normalizePolygon((Polygon) geometry);
+        }
+        return geometry;
+    }
+
+    /**
+     * Normalize polygon without hole
+     */
+    public static Polygon normalizePolygon(Polygon polygon) {
+        // Too complex if polygon contains holes
+        if (polygon.containsHoles()) {
+            return polygon;
+        }
+        double[][][] polygonAsArray = polygon.toArray();
+        double[][] exteriorRing = polygonAsArray[0];
+        // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
+        // cross dateline better than 0 line)
+        if ((exteriorRing[0][0] > -180) && (exteriorRing[0][0] <= -90)) {
+            exteriorRing[0][0] += 360;
+        }
+        // First: manage Dateline: passing from longitude < 180 to longitude > -180 makes most of frameworks
+        // understanding nothing.
+        // BUT they all take into account 180 > longitude > 360 (as well as -180 <= longitude < 0)
+        // So the idea is to search shortest distance between all consecutive points longitudes and depending on if this
+        // shortest distance is going through dateLine or 0-meridian line to choose longitude value (> 180 or > -180)
+        for (int i = 1; i < exteriorRing.length; i++) {
+            normalizeNextCoordinate(exteriorRing[i - 1], exteriorRing[i]);
+        }
+
+        // Second: if polygon is around a pole WITHOUT using it in its exterior ring, a "pass around pole" deviation is
+        // added. The idea is to reach north pole (f. example) with (90, x) than adding (90, x + 90), (90, x + 180),
+        // (90, x + 270), etc.... and finish with (90, x).
+        // Because of the cylindric projection, projected polygon does not reach 90° of latitude (except when it passes
+        // through it). For example, a simple 80° latitude polygon "turning" around north pole is represented as a
+        // simple line. To add the "pole deviation", it is necessary add a "hat" reaching 90° of latitude on top of the
+        // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
+        // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
+        // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
+        // point and left border one, go straigth the north until 90° (with a constant longitude), go "to the west" at
+        // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
+        // reaching median latitude then reach the left border point.
+        if (!passThroughNorthPole(exteriorRing)) {
+            if (!passThroughSouthPole(exteriorRing)) {
+                SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(exteriorRing);
+                // North Pole is inside polygon
+                if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
+                    System.out.println("NORTH POLE");
+                    exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
+                } else if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
+                    // South Pole is inside polygon
+                    System.out.println("SOUTH POLE");
+                    // Work with ecuadorian symetric polygon as if north pole is south pole
+                    exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                }
+                polygonAsArray[0] = exteriorRing;
+            }
+        }
+        // Case of last longitude as 359.999999999 and first 0.0 for example, or -90 and 270, ...
+        if (!exteriorRing[exteriorRing.length - 1].equals(exteriorRing[0])) {
+            exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
+        }
+        return Polygon.fromArray(polygonAsArray);
+    }
+
+    /**
+     * Create a polygon that is ecuadorian symetric to given one
+     */
+    private static double[][] getSymetricPolygon(double[][] exteriorRing) {
+        double[][] symetricPolygon = new double[exteriorRing.length][2];
+        for (int i = 0; i < symetricPolygon.length; i++) {
+            symetricPolygon[i][0] = exteriorRing[i][0];
+            // Inverse latitude
+            symetricPolygon[i][1] = -exteriorRing[i][1];
+        }
+        // Don't forget to let new polygon be a left hand polygon
+        ArrayUtils.reverse(symetricPolygon);
+        return symetricPolygon;
+    }
+
+    /**
+     * Normalize a polygon around North Pole but not passing through it
+     * @param exteriorRing polygon exterior ring
+     * @return modified or replaced exterior ring
+     */
+    private static double[][] normalizePolygonAroundNorthPole(double[][] exteriorRing) {
+        // Search for right border longitude (max longitude) and left border longitude (immediate after max)
+        int idxMaxLon = maxLongitudeIndex(exteriorRing);
+        int idxLeftBorderAfterMaxLon = (idxMaxLon + 1) % exteriorRing.length;
+        // Be careful: if idxMaxLon is exteriorRing.length - 1, index 0 corresponds to same point
+        // if index 0 is max longitude, idxMaxLon should have been 0 so we are here in case that it is the
+        // same point BUT index 0 has the longitude in [-180, 0] whereas index idxMaxLon has the longitude
+        // in [180, 360]: in this case MAX_LONGITUDE is 180 (not 359.99999.... because Elasticsearch doesn't love it and
+        // it isn't a big problem) and MIN_LONGITIUDE is -180
+        boolean sameRightAndLeftBorderPoint = (idxMaxLon == exteriorRing.length - 1);
+
+        double rightBorderLon = exteriorRing[idxMaxLon][0];
+        double leftBorderLon = exteriorRing[idxLeftBorderAfterMaxLon][0];
+        double rightBorderLat = exteriorRing[idxMaxLon][1];
+        double leftBorderLat = exteriorRing[idxLeftBorderAfterMaxLon][1];
+
+        double[] rightCutPoint = new double[2];
+        double[] leftCutPoint = new double[2];
+        // Determine the "cut" point (dateLine or 0-meridian) depending on min and max longitude values
+        if (sameRightAndLeftBorderPoint) { // tricky case see upper
+            rightCutPoint[0] = 180.0;
+            leftCutPoint[0] = -180.0;
+            // Both latitude are equals, it is the same point
+            double medianLatitude = rightBorderLat;
+            rightCutPoint[1] = leftCutPoint[1] = medianLatitude;
+            // Add rightCutPoint, (rightCutPoint longitude, 90°), (leftCutPoint longitude, 90°), leftCutPoint
+            double[][] arrayAroundPole = new double[][] { rightCutPoint, { rightCutPoint[0], 90.0 },
+                    { leftCutPoint[0], 90.0 }, leftCutPoint };
+            exteriorRing = ObjectArrays.concat(ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon),
+                                                                   arrayAroundPole, double[].class),
+                                               Arrays.copyOfRange(exteriorRing, idxMaxLon, exteriorRing.length),
+                                               double[].class);
+            // The last point has a longitude != than first which is not correct, let's use the same
+            exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
+        } else {
+            if (rightBorderLon > 180.0) {
+                // Cut meridian is 0-meridian => max longitude is 359.9999999...
+                rightCutPoint[0] = MAX_CHEATED_LONGITUDE;
+                leftCutPoint[0] = 0.0;
+                // If both latitude are equals, median latitude is same else use Thales theorem
+                double medianLatitude = (rightBorderLat == leftBorderLat) ?
+                        rightBorderLat :
+                        leftBorderLon * (rightBorderLat - leftBorderLat) / (leftBorderLon + MAX_CHEATED_LONGITUDE
+                                - rightBorderLon) + leftBorderLat;
+                rightCutPoint[1] = leftCutPoint[1] = medianLatitude;
+            } else { // Cut meridian is dateline => max longitude is 180
+                rightCutPoint[0] = 180.0;
+                leftCutPoint[0] = -180.0;
+                // If both latitude are equals, median latitude is same else use Thales theorem
+                double medianLatitude = (rightBorderLat == leftBorderLat) ?
+                        rightBorderLat :
+                        (180.0 - leftBorderLon) * (rightBorderLat - leftBorderLat) / ((180.0 - leftBorderLon)
+                                + rightBorderLon + 180.0) + leftBorderLat;
+                rightCutPoint[1] = leftCutPoint[1] = medianLatitude;
+            }
+
+            // Add rightCutPoint, (rightCutPoint longitude, 90°), (leftCutPoint longitude, 90°), leftCutPoint
+            double[][] arrayAroundPole = new double[][] { rightCutPoint, { rightCutPoint[0], 90.0 },
+                    { leftCutPoint[0], 90.0 }, leftCutPoint };
+            exteriorRing = ObjectArrays.concat(ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon + 1),
+                                                                   arrayAroundPole, double[].class),
+                                               Arrays.copyOfRange(exteriorRing, idxMaxLon + 1, exteriorRing.length),
+                                               double[].class);
+        }
+        exteriorRing = removeDuplicateConsecutivePoints(exteriorRing);
+        return exteriorRing;
+    }
+
+    private static double[][] removeDuplicateConsecutivePoints(double[][] points) {
+        List<double[]> pointList = new ArrayList<>();
+        pointList.add(points[0]);
+        for (int i = 1; i < points.length; i++) {
+            if (!Arrays.equals(points[i], points[i - 1])) {
+                pointList.add(points[i]);
+            }
+        }
+        return pointList.toArray(new double[pointList.size()][]);
+    }
+
+    /**
+     * Return longitude between -180.0 and 180.0
+     */
+    private static double normalizeLongitude(double lon) {
+        if (lon < -180) {
+            return lon + 360.0;
+        } else if (lon >= 180.0) {
+            return lon - 360.0;
+        }
+        return lon;
+    }
+
+    private static int maxLatitudeIndex(double[][] lineString) {
+        int idxMaxLat = 0;
+        for (int i = 0; i < lineString.length - 1; i++) {
+            if (lineString[i][1] > lineString[idxMaxLat][1]) {
+                idxMaxLat = i;
+            }
+        }
+        return idxMaxLat;
+    }
+
+    private static int maxLongitudeIndex(double[][] lineString) {
+        int idxMaxLon = 0;
+        for (int i = 0; i < lineString.length; i++) {
+            // Take the "rightest" max (except if it is at index 0 which means it is already the rightest, think as
+            // cycle array
+            if ((lineString[i][0] > lineString[idxMaxLon][0]) || ((lineString[i][0] == lineString[idxMaxLon][0]) && (i
+                    != 0))) {
+                idxMaxLon = i;
+            }
+        }
+        return idxMaxLon;
+    }
+
+    private static boolean passThroughNorthPole(double[][] lineString) {
+        return Arrays.stream(lineString).anyMatch(point -> point[1] == 90.0);
+    }
+
+    private static boolean passThroughSouthPole(double[][] lineString) {
+        return Arrays.stream(lineString).anyMatch(point -> point[1] == -90.0);
+    }
+
+    /**
+     * Theta is longitude from 0 to 2 * PI in radians
+     */
+    private static double toTheta(double lon) {
+        if (lon > 0) {
+            return Math.toRadians(lon);
+        }
+        return Math.toRadians(lon) + 2 * Math.PI;
+    }
+
+    /**
+     * Phi is angle between (earth center, north pole) and point on sphere at given latitude in radians.<br/>
+     * Phi is from 0 to PI
+     */
+    private static double toPhi(double lat) {
+        return Math.toRadians(90.0 - lat);
+    }
+
+    /**
+     * Transform line string (exterior ring from polygon for example) into spheric polygon
+     */
+    private static SphericalPolygonsSet toSphericalPolygonSet(double[][] lineString) {
+        S2Point[] vertices = new S2Point[lineString.length - 1];
+        for (int i = 0; i < lineString.length - 1; i++) {
+            vertices[i] = new S2Point(toTheta(lineString[i][0]), toPhi(lineString[i][1]));
+        }
+        return new SphericalPolygonsSet(1.e-6, vertices);
     }
 
     /**
@@ -619,12 +869,8 @@ public class GeoHelper {
             Position lastPosition = null;
             for (Position position : positions) {
                 if (lastPosition != null) {
-                    System.err.println("--");
-                    boolean found = createIntermediatePositions(lastPosition, position).stream().peek(p -> System.err
-                            .printf("point (%f, %f): %f\n", p.getLongitude(), p.getLatitude(),
-                                    GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)))
-                            .anyMatch(p -> GeoHelper
-                                    .getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)
+                    boolean found = createIntermediatePositions(lastPosition, position).stream().anyMatch(
+                            p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)
                                     < distance);
                     if (found) {
                         return found;
@@ -633,8 +879,6 @@ public class GeoHelper {
                 lastPosition = position;
             }
             return false;
-            //            return geometry.getCoordinates().getExteriorRing().stream().anyMatch(
-            //                    p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs) < distance);
         }
 
         @Override
@@ -690,23 +934,21 @@ public class GeoHelper {
 
         @Override
         public Double visitPolygon(Polygon geometry) {
-            ArrayList<Position> positions = geometry.getCoordinates().getExteriorRing();
+            // Compute distance between given point and all points from polygon as well as 9 intermediate points from
+            // all  polygon segments
+            List<Position> positions = geometry.getCoordinates().getExteriorRing();
             Position lastPosition = null;
             double distance = Double.POSITIVE_INFINITY;
             for (Position position : positions) {
                 if (lastPosition != null) {
-                    System.err.println("--");
-                     distance = FastMath.min(distance, createIntermediatePositions(lastPosition, position).stream().peek(p -> System.err
-                            .printf("point (%f, %f): %f\n", p.getLongitude(), p.getLatitude(),
-                                    GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)))
-                            .mapToDouble(p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)).min().getAsDouble());
+                    distance = FastMath.min(distance, createIntermediatePositions(lastPosition, position).stream()
+                            .mapToDouble(p -> GeoHelper
+                                    .getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)).min()
+                            .getAsDouble());
                 }
                 lastPosition = position;
             }
             return distance;
-            //            return geometry.getCoordinates().getExteriorRing().stream().anyMatch(
-            //                    p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs) < distance);
-
         }
 
         @Override

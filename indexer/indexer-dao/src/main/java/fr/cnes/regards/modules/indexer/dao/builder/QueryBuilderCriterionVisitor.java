@@ -101,7 +101,7 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             case EQUALS:
                 return QueryBuilders.matchPhraseQuery(attName, searchValue);
             case STARTS_WITH:
-                return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue);
+                return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue).maxExpansions(10_000);
             case ENDS_WITH:
                 return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue);
             case CONTAINS:

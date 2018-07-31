@@ -299,19 +299,18 @@ public class EsRepository implements IEsRepository {
             for (String type : types) {
                 try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                     String mapping = builder.startObject().startObject(type).startObject("properties")
-                            .startObject("wgs84")
-                                .field("type", "geo_shape")
+                            .startObject("wgs84").field("type", "geo_shape")
                             // With geohash
-                                .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
-//                                .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
-//                            .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
-//                            .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
-//                            .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
+                            .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
+                            //                                .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
+                            //                            .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
+                            //                            .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
+                            //                            .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
 
                             // With quadtree
-                                .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
-//                                .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
-//                            .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
+                            .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
+                            //                                .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
+                            //                            .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
 
                             .endObject().
                                     endObject().endObject().endObject().string();
@@ -592,8 +591,8 @@ public class EsRepository implements IEsRepository {
                 PolygonCriterion polygonCrit = GeoHelper.findPolygonCriterion(criterion);
                 if (polygonCrit != null) {
                     LOGGER.debug("Searching intersection with polygon {} projected on WGS84...",
-                                Arrays.stream(polygonCrit.getCoordinates()[0]).map(p -> Arrays.toString(p))
-                                        .collect(Collectors.joining(",")));
+                                 Arrays.stream(polygonCrit.getCoordinates()[0]).map(p -> Arrays.toString(p))
+                                         .collect(Collectors.joining(",")));
                 }
             } else if (GeoHelper.containsCircleCriterion(criterion)) {
                 // For Astro, circleCriterion radius is in fact the half-angle of the cone in degrees
@@ -618,8 +617,8 @@ public class EsRepository implements IEsRepository {
                     long start = System.currentTimeMillis();
                     FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
                     LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
-                                GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
-                                System.currentTimeMillis() - start);
+                                 GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
+                                 System.currentTimeMillis() - start);
                     return page;
                 }
                 // Criterion permiting to retrieve shapes betwwen both circles
@@ -651,7 +650,7 @@ public class EsRepository implements IEsRepository {
                             new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
                 }
                 LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
-                            betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
+                             betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
 
                 // THIRD: keep only entities with a shape nearer than specified radius from specified center
                 // Retrieve radius of specified  circle on given Crs
@@ -682,7 +681,8 @@ public class EsRepository implements IEsRepository {
                 }
                 return intoInnerCirclePage;
             }
-        } return search0(searchKey, pageRequest, criterion, facetsMap);
+        }
+        return search0(searchKey, pageRequest, criterion, facetsMap);
     }
 
     /**
@@ -780,7 +780,7 @@ public class EsRepository implements IEsRepository {
                 }
             }
             LOGGER.debug("After Elasticsearch request execution, aggs and searchAfter management : {} ms",
-                        System.currentTimeMillis() - start);
+                         System.currentTimeMillis() - start);
 
             start = System.currentTimeMillis();
             SearchHits hits = response.getHits();
@@ -794,7 +794,7 @@ public class EsRepository implements IEsRepository {
                 }
             }
             LOGGER.debug("After Elasticsearch request execution, gsonification : {} ms",
-                        System.currentTimeMillis() - start);
+                         System.currentTimeMillis() - start);
             return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
             throw new RsRuntimeException(e);
