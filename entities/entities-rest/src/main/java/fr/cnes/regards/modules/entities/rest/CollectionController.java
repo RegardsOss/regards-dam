@@ -114,7 +114,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return update {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs! @
      */
-    @RequestMapping(method = RequestMethod.POST, value = COLLECTION_MAPPING)
+    @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long id,
             @Valid @RequestBody Collection inCollection, BindingResult result) throws ModuleException, IOException {
