@@ -215,7 +215,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | Error | InterruptedException | ExecutionException
+                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
                                     | DataSourceException | ModuleException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
