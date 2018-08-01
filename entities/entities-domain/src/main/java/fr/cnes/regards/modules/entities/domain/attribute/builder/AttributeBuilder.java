@@ -141,7 +141,7 @@ public final class AttributeBuilder {
                 case LONG_INTERVAL:
                     return (T) buildLongInterval(name, (Range<Long>) value);
                 case STRING:
-                    return (T) buildString(name, (String) value);
+                    return (T) buildString(name, value.toString());
                 case STRING_ARRAY:
                     if (value instanceof Collection) {
                         return (T) buildStringCollection(name, (Collection) value);
