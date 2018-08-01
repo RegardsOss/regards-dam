@@ -42,7 +42,6 @@ import org.hipparchus.util.FastMath;
 import org.hipparchus.util.MathUtils;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 
 /**
@@ -246,9 +245,8 @@ public final class GeoQueries {
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
     public static ShapeBuilder computeShapeBuilder(PolygonCriterion criterion) {
-        Polygon polygon = GeoHelper.normalizePolygon(Polygon.fromArray(criterion.getCoordinates()));
         // Only shell can be taken into account (external emprise)
-        double[][] shell = polygon.toArray()[0];
+        double[][] shell = GeoHelper.normalizePolygonAsArray(criterion.getCoordinates())[0];
 
         CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
         for (double[] point : shell) {

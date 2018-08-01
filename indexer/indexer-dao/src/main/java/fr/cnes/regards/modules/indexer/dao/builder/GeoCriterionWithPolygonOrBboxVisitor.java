@@ -141,7 +141,9 @@ public class GeoCriterionWithPolygonOrBboxVisitor implements ICriterionVisitor<I
             double[][] fromBbox = new double[][] { { criterion.getMinX(), criterion.getMinY() },
                     { criterion.getMaxX(), criterion.getMaxY() } };
             double[][] toBbox = GeoHelper.transform(fromBbox, crs, Crs.WGS_84);
-            return ICriterion.intersectsBbox(toBbox[0][0], toBbox[0][1], toBbox[1][0], toBbox[1][1]);
+            // DON'T TOUCH THE F$%CKING LONGITUDES !!! (180 -> -180 which is very annoying for a cap Bbox and
+            // longitudes are not impacted by projection transformations)
+            return ICriterion.intersectsBbox(fromBbox[0][0], toBbox[0][1], fromBbox[1][0], toBbox[1][1]);
         } catch (TransformException e) {
             throw new RsRuntimeException(e);
         }

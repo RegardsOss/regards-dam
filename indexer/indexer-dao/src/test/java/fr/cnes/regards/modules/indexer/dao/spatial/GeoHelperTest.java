@@ -24,13 +24,16 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opengis.referencing.operation.TransformException;
 
 import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -150,8 +153,17 @@ public class GeoHelperTest {
                 + "] ]\n" + "      }" + "  }" + "    ]" + "}";
     }
 
+    private static String displayGeoJson(MultiPolygon multiPolygon) {
+        return "{" + "  \"type\": \"FeatureCollection\"," + "  \"features\": [" + "  {" + "      \"type\": \"Feature\","
+                + "      \"properties\": {" + "      }," + "      \"geometry\": {"
+                + "        \"type\": \"MultiPolygon\",\n" + "        \"coordinates\": [" + "          [\n"
+                + multiPolygon.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
+                .collect(Collectors.joining("], [", "[", "]")) + "] ]\n" + "      }" + "  }" + "    ]" + "}";
+    }
+
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest1() {
@@ -180,7 +192,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 80.00000, //
                                                   toLongitude(13.58333), 77.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], [ 210.0, 66.0 ], "
                                     + "[ 235.00005, 66.0 ], [ 235.00005, 70.0 ], [ 247.99995, 70.0 ], [ 247.99995, 75.0 ], "
@@ -193,6 +205,7 @@ public class GeoHelperTest {
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest11() {
@@ -222,7 +235,7 @@ public class GeoHelperTest {
                                                   toLongitude(23.00000), 86.16666, //
                                                   toLongitude(23.00000), 88.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 120.0, 88.0 ], [ 120.0, 86.5 ], [ 217.5, 86.5 ], [ 217.5, 80.0 ], "
                                     + "[ 203.74995, 80.0 ], [ 203.74995, 77.0 ], [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], "
@@ -235,6 +248,7 @@ public class GeoHelperTest {
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest12() {
@@ -264,19 +278,16 @@ public class GeoHelperTest {
                                                   toLongitude(21.00000), 66.16666, //
                                                   toLongitude(23.00000), 66.16666);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals("POLYGON ( EXTERIOR ( [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ], "
-                                    + "[ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ],"
-                                    + " [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ],"
-                                    + " [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], "
-                                    + "[ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ],"
-                                    + " [ 359.999999999999, 68.0 ], [ 359.999999999999, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 68.0 ],"
-                                    + " [ -15.0, 68.0 ] ) )", polygon.toString());
+        Assert.assertEquals(
+                "POLYGON ( EXTERIOR ( [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 180.0, 68.0 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 68.0 ], [ -15.0, 68.0 ] ) )",
+                polygon.toString());
     }
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest13() {
@@ -307,7 +318,7 @@ public class GeoHelperTest {
                                                   toLongitude(8.00000), 66.50000 //
         );
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], "
                                     + "[ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
@@ -321,6 +332,7 @@ public class GeoHelperTest {
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest2() {
@@ -349,7 +361,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 60.00000, //
                                                   toLongitude(13.58333), 57.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
                                     + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
@@ -364,6 +376,7 @@ public class GeoHelperTest {
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundNorthPoleTest3() {
@@ -392,7 +405,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 60.00000, //
                                                   toLongitude(13.58333), 57.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
                                     + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
@@ -407,10 +420,11 @@ public class GeoHelperTest {
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundSouthPoleTest1() {
-        // Octans polygon: around north pole but passing through south pole (classic description of Octans)
+        // Octans polygon: around south pole but passing through south pole (classic description of Octans)
         Polygon polygon = IGeometry.simplePolygon(toLongitude(0.00000), -90.00000, //
                                                   toLongitude(0.00000), -82.50000, //
                                                   toLongitude(3.50000), -82.50000, //
@@ -426,16 +440,21 @@ public class GeoHelperTest {
                                                   toLongitude(24.00000), -90.00000, //
                                                   toLongitude(12.00000), -90.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
-        System.out.println(displayGeoJson(polygon));
+        polygon = GeoHelper.normalize(polygon);
+        Assert.assertEquals(
+                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
+                        + "        \"coordinates\": [          [\n"
+                        + "[ 0.0, -90.0 ], [ 0.0, -82.5 ], [ 52.5, -82.5 ], [ 52.5, -85.0 ], [ 115.00005, -85.0 ], [ 115.00005, -82.5 ], [ 205.00005, -82.5 ], [ 270.0, -82.5 ], [ 270.0, -75.0 ], [ 319.99995, -75.0 ], [ 349.99995, -75.0 ], [ 359.999999999999, -75.0 ], [ 359.999999999999, -90.0 ], [ 180.0, -90.0 ], [ 0.0, -90.0 ]] ]\n"
+                        + "      }  }    ]}", displayGeoJson(polygon));
     }
 
     /**
      * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationAroundSouthPoleTest2() {
-        // Octans polygon: around north pole but not passing through south pole (Beware: it is necessary to reverse
+        // Octans polygon: around south pole but not passing through south pole (Beware: it is necessary to reverse
         // polygon description to have left hand inside polygon)
         Polygon polygon = IGeometry.simplePolygon(toLongitude(24.00000), -75.00000, //
                                                   toLongitude(23.33333), -75.00000, //
@@ -449,12 +468,17 @@ public class GeoHelperTest {
                                                   toLongitude(3.50000), -82.50000, //
                                                   toLongitude(0.00000), -82.50000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
-        System.out.println(displayGeoJson(polygon));
+        polygon = GeoHelper.normalize(polygon);
+        Assert.assertEquals(
+                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
+                        + "        \"coordinates\": [          [\n"
+                        + "[ 0.0, -75.0 ], [ -10.00005, -75.0 ], [ -40.00005, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -90.0 ], [ 359.999999999999, -90.0 ], [ 359.999999999999, -82.5 ], [ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]] ]\n"
+                        + "      }  }    ]}", displayGeoJson(polygon));
     }
 
     /**
-     * Goot tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * Good tool for testing: http://jsfiddle.net/xbzxfx2L/543/
+     * or geojson.io
      */
     @Test
     public void polygonNormalizationCrossingDatelineTest() {
@@ -469,11 +493,80 @@ public class GeoHelperTest {
                                                   toLongitude(12.58333), -29.50000, toLongitude(12.58333), -33.00000,
                                                   toLongitude(12.25000), -33.00000, toLongitude(12.25000), -35.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
-        System.out.println(displayGeoJson(polygon));
+        polygon = GeoHelper.normalize(polygon);
+        Assert.assertEquals(
+                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
+                        + "        \"coordinates\": [          [\n"
+                        + "[ 165.0, -35.0 ], [ 165.0, -39.75 ], [ 165.0, -56.5 ], [ 168.75, -56.5 ], [ 168.75, -64.0 ], [ 177.49995, -64.0 ], [ 177.49995, -55.0 ], [ 192.49995, -55.0 ], [ 192.49995, -64.0 ], [ 202.5, -64.0 ], [ 217.99995, -64.0 ], [ 217.99995, -55.0 ], [ 212.50005, -55.0 ], [ 212.50005, -42.0 ], [ 223.75005, -42.0 ], [ 223.75005, -29.5 ], [ 188.74995, -29.5 ], [ 188.74995, -33.0 ], [ 183.75, -33.0 ], [ 183.75, -35.0 ], [ 165.0, -35.0 ]] ]\n"
+                        + "      }  }    ]}", displayGeoJson(polygon));
     }
 
     @Test
+    public void polygonAroundBothPolesTest() {
+        Polygon polygon = IGeometry
+                .simplePolygon(20, 0, 20, 80, 100, 80, 170, 80, -170, 80, -100, 80, 10, 80, 10, 0, 5, -80, -100, -80,
+                               -170, -80, 170, -80, 100, -80, 15, -80);
+        System.out.println(displayGeoJson(polygon));
+        polygon = GeoHelper.normalize(polygon);
+        // Acceptable normalization (not perfect but this is a tricky case, it will be enough for now)
+        Assert.assertEquals(
+                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
+                        + "        \"coordinates\": [          [\n"
+                        + "[ 20.0, 0.0 ], [ 20.0, 80.0 ], [ 100.0, 80.0 ], [ 170.0, 80.0 ], [ 190.0, 80.0 ], [ 260.0, 80.0 ], [ 359.999999999999, 80.0 ], [ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 80.0 ], [ 10.0, 80.0 ], [ 10.0, 0.0 ], [ 5.0, -80.0 ], [ -100.0, -80.0 ], [ 0.0, -80.0 ], [ 0.0, -90.0 ], [ 359.999999999999, -90.0 ], [ 359.999999999999, -80.0 ], [ 190.0, -80.0 ], [ 170.0, -80.0 ], [ 100.0, -80.0 ], [ 15.0, -80.0 ], [ 20.0, 0.0 ]] ]\n"
+                        + "      }  }    ]}", displayGeoJson(polygon));
+    }
+
+    @Test
+    public void multiPolygonNormalizationTest() {
+        Polygon octansPolygon = IGeometry.simplePolygon(toLongitude(24.00000), -75.00000, //
+                                                        toLongitude(23.33333), -75.00000, //
+                                                        toLongitude(21.33333), -75.00000, //
+                                                        toLongitude(18.00000), -75.00000, //
+                                                        toLongitude(18.00000), -82.50000, //
+                                                        toLongitude(13.66667), -82.50000, //
+                                                        toLongitude(7.66667), -82.50000, //
+                                                        toLongitude(7.66667), -85.00000, //
+                                                        toLongitude(3.50000), -85.00000, //
+                                                        toLongitude(3.50000), -82.50000, //
+                                                        toLongitude(0.00000), -82.50000);
+        Polygon ursaMinorPolygon = IGeometry.simplePolygon(toLongitude(14.50000), 66.50000, //
+                                                           toLongitude(14.50000), 60.00000, //
+                                                           toLongitude(13.58333), 60.00000, //
+                                                           toLongitude(13.58333), 57.00000, //
+                                                           toLongitude(13.00000), 57.00000, //
+                                                           toLongitude(13.00000), 50.00000, //
+                                                           toLongitude(14.00000), 50.00000, //
+                                                           toLongitude(14.00000), 46.00000, //
+                                                           toLongitude(15.66667), 46.00000, //
+                                                           toLongitude(15.66667), 50.00000, //
+                                                           toLongitude(16.53333), 50.00000, //
+                                                           toLongitude(16.53333), 55.00000, //
+                                                           toLongitude(17.50000), 55.00000, //
+                                                           toLongitude(17.50000), 60.00000, //
+                                                           toLongitude(18.00000), 60.00000, //
+                                                           toLongitude(18.00000), 66.00000, //
+                                                           toLongitude(21.00000), 66.00000, //
+                                                           toLongitude(21.00000), 66.16666, //
+                                                           toLongitude(23.00000), 66.16666, //
+                                                           toLongitude(23.00000), 68.00000, //
+                                                           toLongitude(8.00000), 68.00000, //
+                                                           toLongitude(8.00000), 66.50000);
+        MultiPolygon multiPolygon = IGeometry
+                .multiPolygon(octansPolygon.getCoordinates(), ursaMinorPolygon.getCoordinates());
+        System.out.println(displayGeoJson(multiPolygon));
+        multiPolygon = GeoHelper.normalize(multiPolygon);
+        Assert.assertEquals(
+                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"MultiPolygon\",\n"
+                        + "        \"coordinates\": [          [\n"
+                        + "[[ 0.0, -75.0 ], [ -10.00005, -75.0 ], [ -40.00005, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -90.0 ], [ 359.999999999999, -90.0 ], [ 359.999999999999, -82.5 ], [ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]], [[ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 345.0, 68.0 ], [ 359.999999999999, 68.0 ], [ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ]]] ]\n"
+                        + "      }  }    ]}", displayGeoJson(multiPolygon));
+    }
+
+    /**
+     * Utility method
+     */
+    @Test
+    @Ignore
     public void polygonMoisiTest() throws IOException {
         String constellation =
                 "15.08333 -03.25000 LIB  O\n" + "15.91667 -03.25000 LIB  O\n" + "15.91667 -08.00000 LIB  O\n"
@@ -500,11 +593,15 @@ public class GeoHelperTest {
         }
         Polygon polygon = IGeometry.simplePolygon(lonLats);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalizePolygon(polygon);
+        polygon = GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
     }
 
+    /**
+     * Utility method
+     */
     @Test
+    @Ignore
     public void reverseConsetellationTest() throws IOException {
         String constellation =
                 "15.08333  00.00000 LIB  O\n" + "14.66667  00.00000 LIB  O\n" + "14.66667 -08.00000 LIB  O\n"

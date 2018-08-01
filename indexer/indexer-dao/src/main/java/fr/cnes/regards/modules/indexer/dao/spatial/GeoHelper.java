@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Table;
+import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.geometry.GeometryCollection;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -375,9 +377,23 @@ public class GeoHelper {
         return updatePrevious;
     }
 
-    public static IGeometry normalize(IGeometry geometry) {
+    /**
+     * Normalize geometry.<br>
+     * For polygons:<br/>
+     * - update longitudes in order to ease polygon understanding (for Elasticsearch and other geospatial softwares
+     * or frameworks) especially when dateLine is crossed. This takes into account the ability to use [-180; 180[ or
+     * [0;360[ longitude ranges that are permitted by these softwares or frameworks.<br/>
+     * - manage poles by detecting if they are inside polygon (thanks to Hipparchus framework) and append associated
+     * "false" rectangle to make it fully functional even with a WGS84 projection (which is the norm for
+     * Elasticsearch).<br/>
+     * For multi-polygons:<br/>
+     * - same thing as for polygon.<br/>
+     */
+    public static <T extends IGeometry> T normalize(T geometry) {
         if (geometry instanceof Polygon) {
-            return normalizePolygon((Polygon) geometry);
+            return (T) normalizePolygon((Polygon) geometry);
+        } else if (geometry instanceof MultiPolygon) {
+            return (T) normalizeMultiPolygon((MultiPolygon) geometry);
         }
         return geometry;
     }
@@ -385,12 +401,27 @@ public class GeoHelper {
     /**
      * Normalize polygon without hole
      */
-    public static Polygon normalizePolygon(Polygon polygon) {
+    private static Polygon normalizePolygon(Polygon polygon) {
         // Too complex if polygon contains holes
         if (polygon.containsHoles()) {
             return polygon;
         }
-        double[][][] polygonAsArray = polygon.toArray();
+        return Polygon.fromArray(normalizePolygonAsArray(polygon.toArray()));
+    }
+
+    private static MultiPolygon normalizeMultiPolygon(MultiPolygon multiPolygon) {
+        List<PolygonPositions> poss = multiPolygon.getCoordinates();
+        for (ListIterator<PolygonPositions> li = poss.listIterator(); li.hasNext(); ) {
+            PolygonPositions positions = li.next();
+            // Doesn't manage polygons with holes
+            if (positions.getHoles().isEmpty()) {
+                li.set(PolygonPositions.fromArray(normalizePolygonAsArray(positions.toArray())));
+            }
+        }
+        return multiPolygon;
+    }
+
+    public static double[][][] normalizePolygonAsArray(double[][][] polygonAsArray) {
         double[][] exteriorRing = polygonAsArray[0];
         // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
         // cross dateline better than 0 line)
@@ -418,18 +449,20 @@ public class GeoHelper {
         // point and left border one, go straigth the north until 90° (with a constant longitude), go "to the west" at
         // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
         // reaching median latitude then reach the left border point.
-        if (!passThroughNorthPole(exteriorRing)) {
-            if (!passThroughSouthPole(exteriorRing)) {
+        if (!goesThroughNorthPole(exteriorRing)) {
+            if (!goesThroughSouthPole(exteriorRing)) {
                 SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(exteriorRing);
                 // North Pole is inside polygon
                 if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                    System.out.println("NORTH POLE");
+                    LOGGER.trace("NORTH POLE is inside polygon");
                     exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
-                } else if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                    // South Pole is inside polygon
-                    System.out.println("SOUTH POLE");
+                }
+                // South Pole is inside polygon
+                if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
+                    LOGGER.trace("SOUTH POLE is inside polygon");
                     // Work with ecuadorian symetric polygon as if north pole is south pole
-                    exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                    exteriorRing = getSymetricPolygon(
+                            normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
                 }
                 polygonAsArray[0] = exteriorRing;
             }
@@ -438,7 +471,7 @@ public class GeoHelper {
         if (!exteriorRing[exteriorRing.length - 1].equals(exteriorRing[0])) {
             exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
         }
-        return Polygon.fromArray(polygonAsArray);
+        return polygonAsArray;
     }
 
     /**
@@ -462,8 +495,9 @@ public class GeoHelper {
      * @return modified or replaced exterior ring
      */
     private static double[][] normalizePolygonAroundNorthPole(double[][] exteriorRing) {
-        // Search for right border longitude (max longitude) and left border longitude (immediate after max)
-        int idxMaxLon = maxLongitudeIndex(exteriorRing);
+        // Search for north hemisphere right border longitude (max longitude) and left border longitude (immediate
+        // after max)
+        int idxMaxLon = maxNorthHemisphereLongitudeIndex(exteriorRing);
         int idxLeftBorderAfterMaxLon = (idxMaxLon + 1) % exteriorRing.length;
         // Be careful: if idxMaxLon is exteriorRing.length - 1, index 0 corresponds to same point
         // if index 0 is max longitude, idxMaxLon should have been 0 so we are here in case that it is the
@@ -525,6 +559,8 @@ public class GeoHelper {
                                                Arrays.copyOfRange(exteriorRing, idxMaxLon + 1, exteriorRing.length),
                                                double[].class);
         }
+        // Algorithm hasn't take into account cut points at longitudes -180, 180, 0, ... so just remove consecutive
+        // points if there are some
         exteriorRing = removeDuplicateConsecutivePoints(exteriorRing);
         return exteriorRing;
     }
@@ -540,46 +576,24 @@ public class GeoHelper {
         return pointList.toArray(new double[pointList.size()][]);
     }
 
-    /**
-     * Return longitude between -180.0 and 180.0
-     */
-    private static double normalizeLongitude(double lon) {
-        if (lon < -180) {
-            return lon + 360.0;
-        } else if (lon >= 180.0) {
-            return lon - 360.0;
-        }
-        return lon;
-    }
-
-    private static int maxLatitudeIndex(double[][] lineString) {
-        int idxMaxLat = 0;
-        for (int i = 0; i < lineString.length - 1; i++) {
-            if (lineString[i][1] > lineString[idxMaxLat][1]) {
-                idxMaxLat = i;
-            }
-        }
-        return idxMaxLat;
-    }
-
-    private static int maxLongitudeIndex(double[][] lineString) {
+    private static int maxNorthHemisphereLongitudeIndex(double[][] lineString) {
         int idxMaxLon = 0;
         for (int i = 0; i < lineString.length; i++) {
             // Take the "rightest" max (except if it is at index 0 which means it is already the rightest, think as
             // cycle array
-            if ((lineString[i][0] > lineString[idxMaxLon][0]) || ((lineString[i][0] == lineString[idxMaxLon][0]) && (i
-                    != 0))) {
+            if ((lineString[i][1] > 0.0) && ((lineString[i][0] > lineString[idxMaxLon][0])
+                    || ((lineString[i][0] == lineString[idxMaxLon][0])) && (i != 0))) {
                 idxMaxLon = i;
             }
         }
         return idxMaxLon;
     }
 
-    private static boolean passThroughNorthPole(double[][] lineString) {
+    private static boolean goesThroughNorthPole(double[][] lineString) {
         return Arrays.stream(lineString).anyMatch(point -> point[1] == 90.0);
     }
 
-    private static boolean passThroughSouthPole(double[][] lineString) {
+    private static boolean goesThroughSouthPole(double[][] lineString) {
         return Arrays.stream(lineString).anyMatch(point -> point[1] == -90.0);
     }
 

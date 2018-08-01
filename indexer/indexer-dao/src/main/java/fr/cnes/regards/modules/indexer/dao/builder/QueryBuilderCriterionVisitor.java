@@ -231,8 +231,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         }
         try {
             return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders
-                    .newEnvelope(new Coordinate(criterion.getMinX(), criterion.getMaxY()),
-                                 new Coordinate(criterion.getMaxX(), criterion.getMinY())));
+                    .newEnvelope(new Coordinate(criterion.getMinX(), criterion.getMinY()),
+                                 new Coordinate(criterion.getMaxX(), criterion.getMaxY())));
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
         }

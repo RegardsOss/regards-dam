@@ -357,9 +357,68 @@ public class AstroTest {
     }
 
     @Test
+    public void testBboxAroundNorthPole() {
+        // Bbox around North Pole, constant latitude 83°
+        // Circle centered on north pole with 7° angle => should return Camelopardis, Draco
+        ICriterion crit = ICriterion.intersectsBbox(-180, 83, 180, 90);
+        SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
+        searchKey.setCrs(Crs.ASTRO);
+        searchKey.setSearchIndex(TENANT);
+        Page<DataObject> page = repos.search(searchKey, 100, crit);
+        Assert.assertEquals(4, page.getTotalElements());
+        List constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Camelopardis"));
+        Assert.assertTrue(constNames.contains("Draco"));
+        Assert.assertTrue(constNames.contains("Ursa Minor"));
+        Assert.assertTrue(constNames.contains("Cepheus"));
+
+        // + Cassiopea
+        crit = ICriterion.intersectsBbox(-180, 74, 180, 90);
+        page = repos.search(searchKey, 100, crit);
+        Assert.assertEquals(5, page.getTotalElements());
+        constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Camelopardis"));
+        Assert.assertTrue(constNames.contains("Draco"));
+        Assert.assertTrue(constNames.contains("Cassiopeia"));
+        Assert.assertTrue(constNames.contains("Ursa Minor"));
+        Assert.assertTrue(constNames.contains("Cepheus"));
+    }
+
+    @Test
     public void testCircleAroundSouthPole() {
         // Circle centered on south pole with 7° angle => should return Camelopardis, Draco
         ICriterion circleCrit = ICriterion.intersectsCircle(new double[] { 0.0, -90.0 }, "7");
+        SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
+        searchKey.setCrs(Crs.ASTRO);
+        searchKey.setSearchIndex(TENANT);
+        Page<DataObject> page = repos.search(searchKey, 100, circleCrit);
+        Assert.assertEquals(2, page.getTotalElements());
+        List constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Mensa"));
+        Assert.assertTrue(constNames.contains("Octans"));
+    }
+
+    @Test
+    public void testPolygonAroundSouthPole() {
+        // Polygon around South Pole, constant latitude -83°
+        Polygon polygon = IGeometry.simplePolygon(90, -83, 0, -83, -90, -83, -180, -83);
+        // Circle centered on south pole with 7° angle => should return Camelopardis, Draco
+        ICriterion circleCrit = ICriterion.intersectsPolygon(polygon.toArray());
+        SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
+        searchKey.setCrs(Crs.ASTRO);
+        searchKey.setSearchIndex(TENANT);
+        Page<DataObject> page = repos.search(searchKey, 100, circleCrit);
+        Assert.assertEquals(2, page.getTotalElements());
+        List constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
+        Assert.assertTrue(constNames.contains("Mensa"));
+        Assert.assertTrue(constNames.contains("Octans"));
+    }
+
+    @Test
+    public void testBboxAroundSouthPole() {
+        // Bbox around South Pole, constant latitude -83°
+        // Circle centered on south pole with 7° angle => should return Camelopardis, Draco
+        ICriterion circleCrit = ICriterion.intersectsBbox(-180, -90, 180, -83);
         SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setCrs(Crs.ASTRO);
         searchKey.setSearchIndex(TENANT);
