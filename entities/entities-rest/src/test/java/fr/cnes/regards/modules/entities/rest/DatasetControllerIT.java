@@ -211,7 +211,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSet1, expectations,
+        performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSet1, expectations,
                            "Failed to update a specific dataset using its id", dataSetClone.getId());
 
     }
@@ -228,7 +228,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSetClone,
+        performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSetClone,
                            expectations, "Failed to update a specific dataset using its id", dataSetClone.getId());
     }
 
