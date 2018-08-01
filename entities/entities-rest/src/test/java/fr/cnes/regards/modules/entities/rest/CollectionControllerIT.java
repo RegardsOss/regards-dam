@@ -148,7 +148,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
                            customizer, "Failed to update a specific collection using its id", collection1.getId());
     }
 
@@ -165,7 +165,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
                            customizer, "Failed to update a specific collection using its id", collection1.getId());
 
     }
