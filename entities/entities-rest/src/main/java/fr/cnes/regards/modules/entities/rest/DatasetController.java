@@ -65,13 +65,13 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-@RequestMapping(value = DatasetController.DATASET_PATH)
+@RequestMapping(value = DatasetController.TYPE_MAPPING)
 public class DatasetController implements IResourceController<Dataset> {
 
     /**
      * Endpoint for datasets
      */
-    public static final String DATASET_PATH = "/datasets";
+    public static final String TYPE_MAPPING = "/datasets";
 
     /**
      * Endpoint for data attributes
@@ -220,7 +220,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @param result for validation of entites' properties
      * @return the updated dataset wrapped in an HTTP response
      */
-    @RequestMapping(method = RequestMethod.POST, value = DATASET_ID_PATH)
+    @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Update a dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
             @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {

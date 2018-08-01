@@ -18,14 +18,17 @@
  */
 package fr.cnes.regards.modules.crawler.dao;
 
+import org.junit.Ignore;
+
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractScriptGeneratorTest;
 
 /**
-*
-* @See {@link AbstractScriptGeneratorTest}
-* @author Marc Sordi
-*
-*/
+ *
+ * @See {@link AbstractScriptGeneratorTest}
+ * @author Marc Sordi
+ *
+ */
+@Ignore
 public class ScriptGeneratorTest extends AbstractScriptGeneratorTest {
 
 }

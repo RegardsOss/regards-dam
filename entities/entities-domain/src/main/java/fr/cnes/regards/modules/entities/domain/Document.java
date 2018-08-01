@@ -18,14 +18,10 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.Collection;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.entities.domain.feature.DocumentFeature;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -46,9 +42,4 @@ public class Document extends AbstractEntity<DocumentFeature> {
     public Document(Model model, String tenant, String label) {
         super(model, new DocumentFeature(tenant, label));
     }
-
-    public Collection<DataFile> getDocumentFiles() {
-        return getFiles().get(DataType.DOCUMENT);
-    }
-
 }

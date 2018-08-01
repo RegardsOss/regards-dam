@@ -5,7 +5,7 @@
     "mapping": {
         "model": 1,
         "attributesMapping": [{
-            "name": "sipId",
+            "name": "providerId",
             "type": "",
             "namespace": "",
             "nameDS": "id"

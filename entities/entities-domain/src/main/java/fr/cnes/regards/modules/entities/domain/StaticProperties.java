@@ -61,10 +61,12 @@ public final class StaticProperties {
 
     // ##########-EntityFeature-##########
 
+    public static final String FEATURE = "feature";
+
     /**
      * Feature namespace
      */
-    public static final String FEATURE_NS = "feature.";
+    public static final String FEATURE_NS = FEATURE + ".";
 
     // String
     public static final String FEATURE_ID = "id";
@@ -72,9 +74,9 @@ public final class StaticProperties {
     public static final String FEATURE_ID_PATH = FEATURE_NS + FEATURE_ID;
 
     // String
-    public static final String FEATURE_SIP_ID = "sipId";
+    public static final String FEATURE_PROVIDER_ID = "providerId";
 
-    public static final String FEATURE_SIP_ID_PATH = FEATURE_NS + FEATURE_SIP_ID;
+    public static final String FEATURE_PROVIDER_ID_PATH = FEATURE_NS + FEATURE_PROVIDER_ID;
 
     // String
     public static final String FEATURE_LABEL = "label";
@@ -107,43 +109,21 @@ public final class StaticProperties {
     public static final String FEATURE_PROPERTIES_PATH = FEATURE_NS + FEATURE_PROPERTIES;
 
     // List of first level static properties
-    public static final List<String> FEATURES_STATICS = Arrays.asList(FEATURE_ID, FEATURE_SIP_ID, FEATURE_LABEL,
+    public static final List<String> FEATURES_STATICS = Arrays.asList(FEATURE_ID, FEATURE_PROVIDER_ID, FEATURE_LABEL,
                                                                       FEATURE_MODEL, FEATURE_FILES, FEATURE_TAGS,
                                                                       FEATURE_GEOMETRY, FEATURE_PROPERTIES);
 
-    // ##########-AbstractDataEntity-##########
-
-    // DescriptionFile
-    public static final String DESCRIPTION_FILE = "descriptionFile";
-
-    // ##########-AbstractDescEntity-##########
+    // ##########-DataObject-##########
 
     public static final String DATASOURCE_ID = "dataSourceId";
 
-    // ##########-Collection-##########
-
-    // ##########-DataObject-##########
-
     // Long list
     public static final String DATASET_MODEL_IDS = "datasetModelIds";
-
-    // int
-    public static final String SCORE = "score";
 
     // ##########-Dataset-##########
 
     // String
     public static final String DATA_MODEL = "dataModel";
-
-    // String list
-    public static final String QUOTATIONS = "quotations";
-
-    // String
-    public static final String LICENCE = "licence";
-
-    public static final String ENTITY_TYPE = "entityType";
-
-    // ##########-Document-##########
 
     private StaticProperties() {
     }

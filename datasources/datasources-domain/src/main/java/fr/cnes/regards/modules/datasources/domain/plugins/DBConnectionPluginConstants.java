@@ -16,27 +16,38 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.dao.domain;
 
-import javax.persistence.Entity;
+package fr.cnes.regards.modules.datasources.domain.plugins;
 
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.models.domain.Model;
+public final class DBConnectionPluginConstants {
 
-/**
- * @author Sylvain Vissiere-Guerinet
- *
- */
-@Entity
-public class TestEntity extends AbstractEntity<TestEntityFeature> {
+    /**
+     * User name
+     */
+    public static final String USER_PARAM = "user";
 
-    public TestEntity(Model model, String tenant, String label) {
-        super(model, new TestEntityFeature(tenant, label));
-    }
+    /**
+     * User password
+     */
+    public static final String PASSWORD_PARAM = "password"; // NOSONAR
 
-    public TestEntity() {
-        // we use super and not this because at deserialization we need a ipId null at the object creation which is then
-        // replaced by the attribute if present or added by creation method
-        super(null, null);
-    }
+    /**
+     * Database host
+     */
+    public static final String DB_HOST_PARAM = "dbHost";
+
+    /**
+     * Database port
+     */
+    public static final String DB_PORT_PARAM = "dbPort";
+
+    /**
+     * Database name
+     */
+    public static final String DB_NAME_PARAM = "dbName";
+
+    /**
+     * Database driver
+     */
+    public static final String DRIVER_PARAM = "driver";
 }

@@ -16,8 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+package fr.cnes.regards.modules.entities.domain;
+
 /**
+ * Represents the AIP storage state of an AbstractEntity.
  * 
- * @author Xavier-Alexandre Brochard
+ * @author Christophe Mertz
+ *
  */
-package fr.cnes.regards.modules.entities.rest.dto;
+public enum EntityAipState {
+    /**
+     * AIP must be created
+     */
+    AIP_TO_CREATE,
+    /**
+     * AIP must be updated
+     */
+    AIP_TO_UPDATE,
+    /**
+     * AIP has been stored
+     */
+    AIP_STORE_OK,
+    /**
+     * Data storage has scheduled the AIP storage
+     */
+    AIP_STORE_PENDING,
+    /**
+     * The AIP is in error
+     */
+    AIP_STORE_ERROR;
+
+    public String getName() {
+        return this.name();
+    }
+}

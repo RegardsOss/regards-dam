@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+    <name>modelDataSet</name>
+    <description>Test data object model</description>
+    <version>1</version>
+    <type>DATA</type>
+    <attribute>
+        <label>forTests</label>
+        <name>START_DATE</name>
+        <description>date at which the acquisition of the data has started</description>
+        <type>DATE_ISO8601</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>DATES</name>
+        <description>date at which the acquisition of the data has ended</description>
+        <type>DATE_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>VSIZE</name>
+        <description>file size</description>
+        <type>INTEGER</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>LONG_VALUE</name>
+        <type>LONG</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>ORIGIN</name>
+        <description>name of the original file</description>
+        <type>STRING</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>SIZES</name>
+        <description>id of the dataset</description>
+        <type>INTEGER_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>History</label>
+        <name>HISTORY</name>
+        <type>STRING_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>SPEED</name>
+        <type>DOUBLE</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>RANGE_DATE</name>
+    	<type>DATE_INTERVAL</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>RANGE_INTEGER</name>
+    	<type>INTEGER_INTERVAL</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>IS_UPDATE</name>
+    	<type>BOOLEAN</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>LONG_VALUES</name>
+    	<type>LONG_ARRAY</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>DOUBLE_VALUES</name>
+    	<type>DOUBLE_ARRAY</type>
+    </attribute>
+</model>

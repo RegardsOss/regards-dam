@@ -527,7 +527,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                 dataObject.setGroups(dataObject.getMetadata().getGroups());
                 dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
                 // In case to ingest object has new tags
-                dataObject.removeTags(curObject.getTags());
+                if ((curObject.getTags() != null) && !curObject.getTags().isEmpty()) {
+                    dataObject.removeTags(curObject.getTags());
+                }
             } else { // else it must be created
                 dataObject.setCreationDate(now);
             }
@@ -576,9 +578,9 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (event.getAipState() == AIPState.DELETED) {
                 runtimeTenantResolver.forceTenant(wrapper.getTenant());
                 try {
-                    deleteDataObject(wrapper.getTenant(), event.getIpId());
+                    deleteDataObject(wrapper.getTenant(), event.getAipId());
                 } catch (RsRuntimeException e) {
-                    String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                    String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
 

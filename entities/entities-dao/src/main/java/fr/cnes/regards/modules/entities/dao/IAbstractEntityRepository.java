@@ -21,13 +21,17 @@ package fr.cnes.regards.modules.entities.dao;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 
 /**
  * Common requests on entities
@@ -92,11 +96,14 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
     List<T> findByTags(String pTagToSearch);
 
     /**
-     * Find the all the entity with this specified SIP ID!
-     * @param sipId a SIP ID
-     * @return entities corresponding to the SIP ID
+     * Find the all the entity with this specified provider id
+     * @param providerId a provider id
+     * @return entities corresponding to the provider id
      */
-    @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('sipId', ?1)",
+    @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('providerId', ?1)",
             nativeQuery = true)
-    Set<T> findAllBySipId(String sipId);
+    Set<T> findAllByProviderId(String providerId);
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    Set<T> findAllByStateAip(EntityAipState state);
 }

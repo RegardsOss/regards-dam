@@ -68,6 +68,7 @@ import fr.cnes.regards.modules.entities.service.CollectionService;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.entities.service.ILocalStorageService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
@@ -75,6 +76,7 @@ import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -216,6 +218,16 @@ public class AccessRightServiceTest {
         @Bean
         public CacheManager cacheManager() {
             return new SimpleCacheManager();
+        }
+
+        @Bean
+        public ILocalStorageService localStorageService() {
+            return Mockito.mock(ILocalStorageService.class);
+        }
+
+        @Bean
+        public IAttributeFinder attributeFinder() {
+            return Mockito.mock(IAttributeFinder.class);
         }
     }
 

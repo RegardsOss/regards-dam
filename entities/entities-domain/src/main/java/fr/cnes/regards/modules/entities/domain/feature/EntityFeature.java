@@ -51,9 +51,9 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
 public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribute<?>>, UniformResourceName> {
 
     /**
-     * Submission information package identifier
+     * Submission information package provider identifier
      */
-    protected String sipId;
+    protected String providerId;
 
     @NotNull(message = "Feature type is required")
     protected EntityType entityType;
@@ -118,12 +118,12 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
         propertyMap = Maps.uniqueIndex(this.properties, AbstractAttribute::getName);
     }
 
-    public String getSipId() {
-        return sipId;
+    public String getProviderId() {
+        return providerId;
     }
 
-    public void setSipId(String sipId) {
-        this.sipId = sipId;
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 
     public EntityType getEntityType() {

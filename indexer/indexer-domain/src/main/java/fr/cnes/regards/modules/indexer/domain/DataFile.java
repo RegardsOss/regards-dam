@@ -38,30 +38,36 @@ public class DataFile {
     /**
      * Required data type
      */
-    @NotBlank(message = "Data type is required")
-    protected DataType dataType;
+    @NotNull(message = "Data type is required")
+    private DataType dataType;
+
+    /**
+     * Required flag to indicate a data file is just a reference (whether physical file is managed internally or not)
+     */
+    @NotNull(message = "Reference flag is required")
+    private Boolean reference;
 
     /**
      * Required file reference
      */
     @NotBlank(message = "URI is required")
-    protected String uri;
+    private String uri;
 
     /**
      * Required {@link MimeType}
      */
     @NotNull(message = "MIME type is required")
-    protected MimeType mimeType;
+    private MimeType mimeType;
 
     /**
      * Required width if image file
      */
-    protected Integer imageWidth;
+    private Integer imageWidth;
 
     /**
      * Required height if image file
      */
-    protected Integer imageHeight;
+    private Integer imageHeight;
 
     /**
      * Required field to know if the file is online ? (if not, it is NEARLINE)
@@ -98,6 +104,14 @@ public class DataFile {
 
     public void setDataType(DataType dataType) {
         this.dataType = dataType;
+    }
+
+    public Boolean isReference() {
+        return reference;
+    }
+
+    public void setReference(Boolean reference) {
+        this.reference = reference;
     }
 
     public String getUri() {
@@ -188,34 +202,6 @@ public class DataFile {
         this.filename = filename;
     }
 
-    // FIXME remove
-    // /**
-    // * Is this file managed internally by regards (in fact storage) and so can be downloaded (regardless user rights)
-    // ?
-    // * Its size must be present if yes
-    // * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
-    // */
-    // public boolean isPhysicallyAvailable() {
-    // return (online != null) && (filesize != null) && (filesize > 0l);
-    // }
-    //
-    // /**
-    // * Is this file not managed internally by regards can be downloaded ?
-    // * @return true is associated file url starts with http or https
-    // */
-    // public boolean canBeExternallyDownloaded() {
-    // return (online == null) && (uri != null) && (uri.startsWith("http") || uri.startsWith("https"));
-    // }
-    //
-    // /**
-    // * A DataFile is downloadable IF it is managed by storage (=> online != null) and is ONLINE
-    // * OR external (ie not managed by storage) and uri starts with http
-    // */
-    // public boolean isDownloadable() {
-    // downloadable = ((online != null) && online) || canBeExternallyDownloaded();
-    // return downloadable;
-    // }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -245,18 +231,28 @@ public class DataFile {
      * <li>{@link #setChecksum(String)}</li>
      * <li>{@link #setDigestAlgorithm(String)}</li>
      * </ul>
+     *
+     * @param dataType the file {@link DataType}
+     * @param filename the original filename
+     * @param uri the file uri
+     * @param online true if file can be downloaded
+     * @param reference true if file is not managed by REGARDS storage process
+     *
      */
-    public static DataFile build(DataType dataType, String filename, String uri, MimeType mimeType, Boolean online) {
+    public static DataFile build(DataType dataType, String filename, String uri, MimeType mimeType, Boolean online,
+            Boolean reference) {
         DataFile datafile = new DataFile();
         datafile.setDataType(dataType);
         datafile.setFilename(filename);
         datafile.setUri(uri);
         datafile.setMimeType(mimeType);
         datafile.setOnline(online);
+        datafile.setReference(reference);
         return datafile;
     }
 
-    public static DataFile build(DataType dataType, String filename, URI uri, MimeType mimeType, Boolean online) {
-        return DataFile.build(dataType, filename, uri.toString(), mimeType, online);
+    public static DataFile build(DataType dataType, String filename, URI uri, MimeType mimeType, Boolean online,
+            Boolean external) {
+        return DataFile.build(dataType, filename, uri.toString(), mimeType, online, external);
     }
 }

@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.PropertySource;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
@@ -37,6 +36,7 @@ import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 @Configuration
@@ -83,5 +83,10 @@ public class CrawlerConfiguration {
     @Bean
     public INotificationClient notifClient() {
         return Mockito.mock(INotificationClient.class);
+    }
+
+    @Bean
+    IAttributeFinder attributeFinder() {
+        return Mockito.mock(IAttributeFinder.class);
     }
 }

@@ -27,29 +27,23 @@ import java.util.Set;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
-import fr.cnes.regards.modules.entities.dao.ILocalFileRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -60,32 +54,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 @MultitenantTransactional
 @ContextConfiguration(classes = { ControllerITConfig.class })
 public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
-
-    /**
-     *
-     */
-    private static final String DOCUMENTS = "/documents";
-
-    private static final String DOCUMENTS_DOCUMENT_IS_READY_TO_HANDLE_FILES = DOCUMENTS + "/isReadyToHandleFile";
-
-    /**
-     *
-     */
-    private static final String DOCUMENTS_DOCUMENT_ID = DOCUMENTS + "/{document_id}";
-
-    /**
-     *
-     */
-    private static final String DOCUMENTS_DOCUMENT_ID_ASSOCIATE = DOCUMENTS_DOCUMENT_ID + "/associate";
-
-    private static final String DOCUMENTS_DOCUMENT_ID_DISSOCIATE = DOCUMENTS_DOCUMENT_ID + "/dissociate";
-
-    private static final String DOCUMENTS_DOCUMENT_ID_FILES = DOCUMENTS_DOCUMENT_ID + "/files";
-
-    /**
-     * Logger
-     */
-    private static final Logger LOG = LoggerFactory.getLogger(DocumentControllerIT.class);
 
     private Model model1;
 
@@ -99,8 +67,6 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
 
     private Document document2;
 
-    private Document document3;
-
     @Autowired
     private IDocumentRepository documentRepository;
 
@@ -110,20 +76,9 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
-    @Autowired
-    private GsonBuilder gsonBuilder;
-
-    private List<ResultMatcher> expectations;
-
-    @Autowired
-    private IDocumentService documentService;
-
-    @Autowired
-    private ILocalFileRepository documentLSRepository;
-
     @Before
     public void initRepos() {
-        expectations = new ArrayList<>();
+
         // Bootstrap default values
         model1 = Model.build("documentModelName1", "model desc", EntityType.COLLECTION);
         model2 = Model.build("documentModelName2", "model desc", EntityType.DOCUMENT);
@@ -131,22 +86,22 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         model1 = modelRepository.save(model1);
 
         collection1 = new Collection(model1, "PROJECT", "collection1");
-        collection1.setSipId("SipId1");
+        collection1.setProviderId("ProviderId1");
         collection1.setLabel("label");
         collection1.setCreationDate(OffsetDateTime.now());
 
         collection2 = new Collection(model1, "PROJECT", "collection2");
-        collection2.setSipId("SipId1");
+        collection2.setProviderId("ProviderId1");
         collection2.setLabel("label");
         collection2.setCreationDate(OffsetDateTime.now());
 
         document1 = new Document(model2, "PROJECT", "document1");
-        document1.setSipId("SipId2");
+        document1.setProviderId("ProviderId2");
         document1.setLabel("label");
         document1.setCreationDate(OffsetDateTime.now());
 
         document2 = new Document(model2, "PROJECT", "document2");
-        document2.setSipId("SipId3");
+        document2.setProviderId("ProviderId3");
         document2.setLabel("label");
         document2.setCreationDate(OffsetDateTime.now());
         final Set<String> doc2Tags = new HashSet<>();
@@ -163,9 +118,10 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Shall retrieve all documents")
     @Test
     public void testGetAllDocuments() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DOCUMENTS, expectations, "Failed to fetch document list");
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(DocumentController.TYPE_MAPPING, customizer, "Failed to fetch document list");
     }
 
     @Requirement("REGARDS_DSL_DAM_DOC_010")
@@ -173,31 +129,33 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testPostDocument() {
         final Document document3 = new Document(model1, null, "document3");
-        document3.setSipId("SipId3");
+        document3.setProviderId("ProviderId3");
         document3.setLabel("label");
         document3.setCreationDate(OffsetDateTime.now());
 
-        expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-
-        performDefaultPost(DOCUMENTS, document3, expectations, "Failed to create a new document");
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        customizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        performDefaultPost(DocumentController.TYPE_MAPPING, document3, customizer, "Failed to create a new document");
     }
 
     @Test
     public void testGetDocumentById() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DOCUMENTS_DOCUMENT_ID, expectations, "Failed to fetch a specific document using its id",
-                          document1.getId());
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(DocumentController.TYPE_MAPPING + DocumentController.DOCUMENT_MAPPING, customizer,
+                          "Failed to fetch a specific document using its id", document1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_DOC_110")
     @Purpose("Shall delete the document")
     @Test
     public void testDeleteDocument() {
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(DOCUMENTS_DOCUMENT_ID, expectations, "Failed to delete a specific document using its id",
-                             document1.getId());
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        performDefaultDelete(DocumentController.TYPE_MAPPING + DocumentController.DOCUMENT_MAPPING, customizer,
+                             "Failed to delete a specific document using its id", document1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_DOC_210")
@@ -207,13 +165,14 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         documentClone.setIpId(document1.getIpId());
         documentClone.setCreationDate(document1.getCreationDate());
         documentClone.setId(document1.getId());
-        documentClone.setTags(document1.getTags());
-        documentClone.setSipId(document1.getSipId() + "new");
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        documentClone.setProviderId(document1.getProviderId() + "new");
 
-        performDefaultPut(DOCUMENTS_DOCUMENT_ID, documentClone, expectations,
-                          "Failed to update a specific document using its id", document1.getId());
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+
+        performDefaultPut(DocumentController.TYPE_MAPPING + DocumentController.DOCUMENT_MAPPING, documentClone,
+                          customizer, "Failed to update a specific document using its id", document1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_DOC_230")
@@ -222,9 +181,12 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     public void testDissociateDocuments() {
         final List<UniformResourceName> toDissociate = new ArrayList<>();
         toDissociate.add(collection1.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultPut(DOCUMENTS_DOCUMENT_ID_DISSOCIATE, toDissociate, expectations,
-                          "Failed to dissociate collections from one document using its id", document2.getId());
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        performDefaultPut(DocumentController.TYPE_MAPPING + DocumentController.DOCUMENT_DISSOCIATE_MAPPING,
+                          toDissociate, customizer, "Failed to dissociate collections from one document using its id",
+                          document2.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_DOC_230")
@@ -233,13 +195,11 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     public void testAssociateDocuments() {
         final List<UniformResourceName> toAssociate = new ArrayList<>();
         toAssociate.add(collection2.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultPut(DOCUMENTS_DOCUMENT_ID_ASSOCIATE, toAssociate, expectations,
-                          "Failed to associate collections from one document using its id", document1.getId());
-    }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        performDefaultPut(DocumentController.TYPE_MAPPING + DocumentController.DOCUMENT_ASSOCIATE_MAPPING, toAssociate,
+                          customizer, "Failed to associate collections from one document using its id",
+                          document1.getId());
     }
 }

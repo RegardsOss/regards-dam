@@ -82,81 +82,83 @@ public final class AttributeBuilder {
             return forTypeWithNullValue(attributeType, name);
         }
 
-        switch (attributeType) {
-            case INTEGER:
-                return (T) ((value instanceof Number) ?
-                        buildInteger(name, ((Number) value).intValue()) :
-                        buildInteger(name, new Integer((String) value)));
-            case BOOLEAN:
-                return (T) ((value instanceof Boolean) ?
-                        buildBoolean(name, (Boolean) value) :
-                        buildBoolean(name, Boolean.valueOf((String) value)));
-            case DATE_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildStringCollection(name, (Collection) value);
-                } else if (value instanceof String[]) {
-                    return (T) buildDateArray(name,
-                                              Arrays.stream((String[]) value).map(v -> OffsetDateTimeAdapter.parse(v))
-                                                      .toArray(size -> new OffsetDateTime[size]));
-                } else {
-                    return (T) buildDateArray(name, (OffsetDateTime[]) value);
-                }
-            case DATE_INTERVAL:
-                return (T) buildDateInterval(name, (Range<OffsetDateTime>) value);
-            case DATE_ISO8601:
-                if (value instanceof String) {
-                    return (T) buildDate(name, OffsetDateTimeAdapter.parse((String) value));
-                }
-                return (T) buildDate(name, (OffsetDateTime) value);
-            case DOUBLE:
-                return (T) ((value instanceof Number) ?
-                        buildDouble(name, ((Number) value).doubleValue()) :
-                        buildDouble(name, new Double((String) value)));
-            case DOUBLE_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildDoubleCollection(name, (Collection) value);
-                } else {
-                    return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
-                            .mapToObj(Double::new).toArray(size -> new Double[size]));
-                }
-            case DOUBLE_INTERVAL:
-                return (T) buildDoubleInterval(name, (Range<Double>) value);
-            case INTEGER_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildIntegerCollection(name, (Collection) value);
-                } else {
-                    return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
-                            .mapToObj(Integer::new).toArray(size -> new Integer[size]));
-                }
-            case INTEGER_INTERVAL:
-                return (T) buildIntegerInterval(name, (Range<Integer>) value);
-            case LONG:
-                return (T) ((value instanceof Number) ?
-                        buildLong(name, ((Number) value).longValue()) :
-                        buildLong(name, new Long((String) value)));
-            case LONG_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildLongCollection(name, (Collection) value);
-                } else {
-                    return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
-                            .mapToObj(Long::new).toArray(size -> new Long[size]));
-                }
-            case LONG_INTERVAL:
-                return (T) buildLongInterval(name, (Range<Long>) value);
-            case STRING:
-                return (T) buildString(name, (String) value);
-            case STRING_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildStringCollection(name, (Collection) value);
-                } else {
-                    return (T) buildStringArray(name, (String[]) value);
-                }
-            case URL:
-                return (T) buildUrl(name, (URL) value);
-            default:
-                throw new IllegalArgumentException(
-                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+        try {
+            switch (attributeType) {
+                case INTEGER:
+                    return (T) ((value instanceof Number) ? buildInteger(name, ((Number) value).intValue())
+                            : buildInteger(name, new Integer((String) value)));
+                case BOOLEAN:
+                    return (T) ((value instanceof Boolean) ? buildBoolean(name, (Boolean) value)
+                            : buildBoolean(name, Boolean.valueOf((String) value)));
+                case DATE_ARRAY:
+                    if (value instanceof Collection) {
+                        return (T) buildStringCollection(name, (Collection) value);
+                    } else if (value instanceof String[]) {
+                        return (T) buildDateArray(name, Arrays.stream((String[]) value)
+                                .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(size -> new OffsetDateTime[size]));
+                    } else {
+                        return (T) buildDateArray(name, (OffsetDateTime[]) value);
+                    }
+                case DATE_INTERVAL:
+                    return (T) buildDateInterval(name, (Range<OffsetDateTime>) value);
+                case DATE_ISO8601:
+                    if (value instanceof String) {
+                        return (T) buildDate(name, OffsetDateTimeAdapter.parse((String) value));
+                    }
+                    return (T) buildDate(name, (OffsetDateTime) value);
+                case DOUBLE:
+                    return (T) ((value instanceof Number) ? buildDouble(name, ((Number) value).doubleValue())
+                            : buildDouble(name, new Double((String) value)));
+                case DOUBLE_ARRAY:
+                    if (value instanceof Collection) {
+                        return (T) buildDoubleCollection(name, (Collection) value);
+                    } else {
+                        return (T) buildDoubleArray(name,
+                                                    Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
+                                                            .mapToObj(Double::new).toArray(size -> new Double[size]));
+                    }
+                case DOUBLE_INTERVAL:
+                    return (T) buildDoubleInterval(name, (Range<Double>) value);
+                case INTEGER_ARRAY:
+                    if (value instanceof Collection) {
+                        return (T) buildIntegerCollection(name, (Collection) value);
+                    } else {
+                        return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
+                                .mapToObj(Integer::new).toArray(size -> new Integer[size]));
+                    }
+                case INTEGER_INTERVAL:
+                    return (T) buildIntegerInterval(name, (Range<Integer>) value);
+                case LONG:
+                    return (T) ((value instanceof Number) ? buildLong(name, ((Number) value).longValue())
+                            : buildLong(name, new Long((String) value)));
+                case LONG_ARRAY:
+                    if (value instanceof Collection) {
+                        return (T) buildLongCollection(name, (Collection) value);
+                    } else {
+                        return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
+                                .mapToObj(Long::new).toArray(size -> new Long[size]));
+                    }
+                case LONG_INTERVAL:
+                    return (T) buildLongInterval(name, (Range<Long>) value);
+                case STRING:
+                    return (T) buildString(name, value.toString());
+                case STRING_ARRAY:
+                    if (value instanceof Collection) {
+                        return (T) buildStringCollection(name, (Collection) value);
+                    } else {
+                        return (T) buildStringArray(name, (String[]) value);
+                    }
+                case URL:
+                    return (T) buildUrl(name, (URL) value);
+                default:
+                    throw new IllegalArgumentException(attributeType + " is not a handled value of "
+                            + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+            }
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException(
+                    String.format("Error trying to build attribute %s of type %s with value %s. cause : %s", name,
+                                  attributeType, value.toString(), e.getMessage()),
+                    e);
         }
     }
 

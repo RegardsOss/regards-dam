@@ -138,36 +138,36 @@ public class CollectionDatasetGroupsIT {
 
         dataset1 = new Dataset(modelDataset, "PROJECT", "labelDs1");
         dataset1.setLicence("licence");
-        dataset1.setSipId("SipId1");
+        dataset1.setProviderId("ProviderId1");
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
         dataset2 = new Dataset(modelDataset, "PROJECT", "labelDs2");
         dataset2.setLicence("licence");
-        dataset2.setSipId("SipId2");
+        dataset2.setProviderId("ProviderId2");
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
         dataset3 = new Dataset(modelDataset, "PROJECT", "labelDs3");
         dataset3.setLicence("licence");
-        dataset3.setSipId("SipId3");
+        dataset3.setProviderId("ProviderId3");
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
         // No tags on Datasets, it doesn't matter
 
         coll1 = new Collection(modelColl, "PROJECT", "coll1");
-        coll1.setSipId("SipId4");
+        coll1.setProviderId("ProviderId4");
 
         // DS1 -> C1
         dataset1.setTags(Sets.newHashSet(coll1.getIpId().toString()));
 
         coll2 = new Collection(modelColl, "PROJECT", "coll2");
-        coll2.setSipId("SipId5");
+        coll2.setProviderId("ProviderId5");
         // DS2 -> C1
         dataset2.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         // C1 -> C2
         coll1.addTags(coll2.getIpId().toString());
 
         coll3 = new Collection(modelColl, "PROJECT", "coll3");
-        coll3.setSipId("SipId6");
+        coll3.setProviderId("ProviderId6");
         // DS3 -> (C2, C3)
         dataset3.setTags(Sets.newHashSet(coll2.getIpId().toString(), coll3.getIpId().toString()));
     }
@@ -227,7 +227,7 @@ public class CollectionDatasetGroupsIT {
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setSipId("SipId7");
+        coll4.setProviderId("ProviderId7");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         coll2.addTags(coll4.getIpId().toString());
 
@@ -268,7 +268,7 @@ public class CollectionDatasetGroupsIT {
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setSipId("SipId7");
+        coll4.setProviderId("ProviderId7");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         coll2.addTags(coll4.getIpId().toString());
 
@@ -332,7 +332,7 @@ public class CollectionDatasetGroupsIT {
         // Add C4: C2 -> C4
         // C4 (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setSipId("SipId7");
+        coll4.setProviderId("ProviderId7");
         coll4 = collService.create(coll4);
 
         collService.associate(coll2.getId(), Sets.newHashSet(coll4.getIpId()));
@@ -344,7 +344,7 @@ public class CollectionDatasetGroupsIT {
         // tag through DS1->C1->C2), C4 (indirect tag through DS1->C1->C2->C4)
         // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and
         // the logic is respected
-        Dataset dataset1Updated = new Dataset();
+        Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "labelDs1");
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
         dataset1Updated.setDataModel(dataset1.getDataModel());
         dataset1Updated.setCreationDate(dataset1.getCreationDate());
@@ -359,7 +359,7 @@ public class CollectionDatasetGroupsIT {
         dataset1Updated.setLastUpdate(dataset1.getLastUpdate());
         dataset1Updated.setModel(dataset1.getModel());
         dataset1Updated.setProperties(dataset1.getProperties());
-        dataset1Updated.setSipId(dataset1.getSipId());
+        dataset1Updated.setProviderId(dataset1.getProviderId());
         dataset1Updated.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         dataset1Updated.getGroups().add("G4");
         dataset1 = dataSetService.update(dataset1Updated);

@@ -105,6 +105,13 @@
 					<sources>
 						<source>src/main/resources</source>
 					</sources>
+					<xjcSourceExcludeFilters>
+                    	<filter implementation="org.codehaus.mojo.jaxb2.shared.filters.pattern.PatternFileFilter">
+                        	<patterns>
+                            	<pattern>\.properties</pattern>
+                        	</patterns>
+                    	</filter>
+                	</xjcSourceExcludeFilters>					
 				</configuration>
 			</plugin>
 		</plugins>

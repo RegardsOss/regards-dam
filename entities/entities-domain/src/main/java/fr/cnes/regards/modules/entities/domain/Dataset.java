@@ -81,7 +81,7 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
      * Representation of the above subsetting clause as an OpenSearch string request
      */
     @Type(type = "text")
-    @Column
+    @Column(name = "sub_setting_clause_as_string")
     private String openSearchSubsettingClause;
 
     /**

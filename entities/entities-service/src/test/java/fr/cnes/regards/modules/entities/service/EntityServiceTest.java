@@ -81,11 +81,9 @@ public class EntityServiceTest {
         collection3.setLabel("pName3");
         collection4 = new Collection(model2, "PROJECT", "collection4");
         collection4.setId(4L);
-        Set<String> collection2Tags = collection2.getTags();
-        collection2Tags.add(collection4.getIpId().toString());
-        collection2.setTags(collection2Tags);
+        collection2.addTags(collection4.getIpId().toString());
 
-        data = new DataObject(null, "PROJECT", "object");
+        data = new DataObject(new Model(), "PROJECT", "object");
         data.setId(1L);
         doc = new Document(model2, "PROJECT", "doc");
         doc.setId(2L);

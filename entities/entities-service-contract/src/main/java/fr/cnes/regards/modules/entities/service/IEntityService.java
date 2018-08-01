@@ -79,7 +79,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
 
     List<U> findAll();
 
-    Set<U> findAllBySipId(String sipId);
+    Set<U> findAllByProviderId(String providerId);
 
     Page<U> search(String label, Pageable pageRequest);
 
@@ -136,6 +136,14 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @throws ModuleException
      */
     U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
+
+    /**
+     * Save an entity.
+     *
+     * @param entity the entity t saved
+     * @return the saved entity
+     */
+    U save(U entity);
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id

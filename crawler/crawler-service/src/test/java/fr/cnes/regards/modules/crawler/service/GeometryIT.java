@@ -7,6 +7,7 @@ import javax.annotation.PostConstruct;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.geojson.GeoJsonType;
-import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.LineString;
 import fr.cnes.regards.framework.geojson.geometry.MultiLineString;
@@ -24,6 +24,7 @@ import fr.cnes.regards.framework.geojson.geometry.MultiPoint;
 import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.geojson.geometry.Unlocated;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -95,6 +96,16 @@ public class GeometryIT {
         crawlerService.setConsumeOnlyMode(true);
     }
 
+    @Before
+    public void init() throws ModuleException {
+        collectionModel = new Model();
+        collectionModel.setName("model_1" + System.currentTimeMillis());
+        collectionModel.setType(EntityType.COLLECTION);
+        collectionModel.setVersion("1");
+        collectionModel.setDescription("Test data object model");
+        modelService.createModel(collectionModel);
+    }
+
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
@@ -111,12 +122,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbPoint() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -148,13 +153,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbMultiPointLineString() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
-
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
@@ -165,8 +163,9 @@ public class GeometryIT {
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.MULTIPOINT);
         Assert.assertTrue(collFromDB.getGeometry() instanceof MultiPoint);
         multipoint = (MultiPoint) collFromDB.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 multipoint.getCoordinates().toArray());
+
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
@@ -178,8 +177,7 @@ public class GeometryIT {
         Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeoJsonType.LINESTRING);
         Assert.assertTrue(coll2FromDB.getGeometry() instanceof LineString);
         lineString = (LineString) coll2FromDB.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 lineString.getCoordinates().toArray());
+        Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
 
@@ -196,8 +194,9 @@ public class GeometryIT {
         final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTIPOINT);
         multipoint = collFromEs.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 multipoint.getCoordinates().toArray());
+
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
@@ -210,19 +209,12 @@ public class GeometryIT {
         final Collection coll2FromEs = esRepos.get(TENANT, collection2);
         Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeoJsonType.LINESTRING);
         lineString = (LineString) coll2FromEs.getGeometry();
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 lineString.getCoordinates().toArray());
+        Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
 
     @Test
     public void testOnDbMultiLineStringPolygon() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -239,10 +231,10 @@ public class GeometryIT {
         Assert.assertTrue(collFromDB.getGeometry() instanceof MultiLineString);
         geometry = collFromDB.getGeometry();
 
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.) },
-                                 geometry.getCoordinates().get(0).toArray());
-        Assert.assertArrayEquals(new Position[] { IGeometry.position(39.12, -70.34), IGeometry.position(38., -70.) },
-                                 geometry.getCoordinates().get(1).toArray());
+        double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
+        Assert.assertArrayEquals(ref1, geometry.getCoordinates().get(0).toArray());
+        double[][] ref2 = { { 39.12, -70.34 }, { 38., -70. } };
+        Assert.assertArrayEquals(ref2, geometry.getCoordinates().get(1).toArray());
     }
 
     @Test
@@ -296,12 +288,6 @@ public class GeometryIT {
 
     @Test
     public void testOnDbMultiPolygon() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
@@ -348,24 +334,19 @@ public class GeometryIT {
 
     @Test
     public void testNoGeometry() throws ModuleException, IOException {
-        collectionModel = new Model();
-        collectionModel.setName("model_1" + System.currentTimeMillis());
-        collectionModel.setType(EntityType.COLLECTION);
-        collectionModel.setVersion("1");
-        collectionModel.setDescription("Test data object model");
-        modelService.createModel(collectionModel);
+
         collection = new Collection(collectionModel, TENANT, "collection without geometry");
 
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertNull(collFromDB.getGeometry());
+        Assert.assertTrue(collFromDB.getGeometry() instanceof Unlocated);
 
         // Index creation with geometry mapping
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertNull(collFromEs.getGeometry());
+        Assert.assertTrue(collFromEs.getGeometry() instanceof Unlocated);
     }
 }

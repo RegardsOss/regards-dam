@@ -51,4 +51,5 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
               pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver);
     }
+
 }

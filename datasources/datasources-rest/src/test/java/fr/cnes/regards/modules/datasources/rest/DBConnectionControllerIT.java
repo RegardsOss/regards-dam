@@ -47,8 +47,8 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.datasources.domain.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.datasources.domain.plugins.IConnectionPlugin;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
@@ -288,7 +288,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Ignore // Reactivate to test Oracle DB
     public void updateDBConnection() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.USER_PARAM), "Bob");
+        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM), "Bob");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
 
@@ -348,7 +348,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testConnectionFailed() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.USER_PARAM), "daredevil");
+        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
+                                                "daredevil");
 
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
@@ -389,11 +390,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        dbConnection.setParameters(PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName).getParameters());
+        dbConnection
+                .setParameters(PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
+                        .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
+                        .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
+                        .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
+                        .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;

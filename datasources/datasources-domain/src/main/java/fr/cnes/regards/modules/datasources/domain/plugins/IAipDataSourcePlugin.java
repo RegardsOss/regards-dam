@@ -27,8 +27,4 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 @PluginInterface(description = "Plugin to search in a data source that consumes AIPs")
 public interface IAipDataSourcePlugin extends IDataSourcePlugin {
 
-    String BINDING_MAP = "binding map";
-    
-    String MODEL_ATTR_FILE_SIZE ="attribute file size";
-
 }

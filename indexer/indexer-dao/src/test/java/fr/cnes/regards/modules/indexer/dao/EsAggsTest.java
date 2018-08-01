@@ -139,13 +139,23 @@ public class EsAggsTest {
         repository.computeInternalDataFilesSummary(searchKey, null, "tags", summary, "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
-        // 36 because 24 RAWDATA (each RAWDATA is doubled with same name and "2" at the end) and 12 QUICKLOOKS
-        Assert.assertEquals(36, summary.getFilesCount());
-        Assert.assertEquals(354107379, summary.getFilesSize()); // 3 * 118 Mb
+        // 24 because 12 RAWDATA and 12 QUICKLOOKS
+        Assert.assertEquals(24, summary.getFilesCount());
+        Assert.assertEquals(236071586, summary.getFilesSize()); // 3 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("RIRI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("LOULOU"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
+    }
+
+    private static class Feature {
+
+        private final Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+
+        public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+            return files;
+        }
+
     }
 
     private static class Data implements IIndexable, IDocFiles {
@@ -154,7 +164,7 @@ public class EsAggsTest {
 
         private Set<String> tags = new HashSet<>();
 
-        private Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+        private final Feature feature = new Feature();
 
         public Data() {
         }
@@ -190,12 +200,7 @@ public class EsAggsTest {
 
         @Override
         public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
-            return files;
-        }
-
-        @SuppressWarnings("unused")
-        public void setFiles(Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
-            this.files = files;
+            return feature.getFiles();
         }
     }
 

@@ -87,6 +87,7 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     /**
      * Optional fragment version
      */
+    @Size(max = 16, message = "Fragment version must have a maximal size of 16 characters")
     @Column(length = 16)
     private String version;
 

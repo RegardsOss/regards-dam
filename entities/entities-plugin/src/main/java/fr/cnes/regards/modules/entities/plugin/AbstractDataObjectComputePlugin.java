@@ -130,13 +130,13 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
-        parameterAttribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
+        parameterAttribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES_PATH);
 
     }
 
     /**
      * @param dataset dataset on which the attribute, once computed, will be added. This allows us to know which
-     * DataObject should be used.
+     *            DataObject should be used.
      */
     @Override
     public void compute(Dataset dataset) {
@@ -159,7 +159,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     /**
      * Extract the property of which name and eventually fragment name are given
      */
-    protected Optional<AbstractAttribute<?>> extractProperty(DataObject object) { //NOSONAR
+    protected Optional<AbstractAttribute<?>> extractProperty(DataObject object) { // NOSONAR
         if (parameterAttribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
             return Optional.ofNullable(object.getProperty(parameterAttribute.getName()));

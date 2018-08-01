@@ -70,6 +70,9 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
     private static final String PDF_CONTENT_TYPE = MediaType.APPLICATION_PDF_VALUE + " ;charset="
             + StandardCharsets.UTF_8.toString();
 
+    private static final String HTML_CONTENT_TYPE = MediaType.TEXT_HTML_VALUE + " ;charset="
+            + StandardCharsets.UTF_8.toString();
+
     @Autowired
     private IModelService modelService;
 
@@ -122,6 +125,29 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> files = new ArrayList<>();
         files.add(getMultipartFile("description.pdf", PDF_CONTENT_TYPE));
         files.add(getMultipartFile("description2.pdf", PDF_CONTENT_TYPE));
+
+        performDefaultFileUpload(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENTS_MAPPING, files,
+                                 customizer, "Attachment error", collection.getIpId().toString(), DataType.DESCRIPTION);
+    }
+
+    @Test
+    public void attachUrlDescription() throws IOException {
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers
+                .jsonPath("$.content.feature.files." + DataType.DESCRIPTION.toString() + ".length()",
+                          Matchers.equalTo(1)));
+
+        List<MockMultipartFile> files = new ArrayList<>();
+
+        // Create description reference
+        DataFileReference ref = new DataFileReference();
+        ref.setMimeType(MediaType.parseMediaType(HTML_CONTENT_TYPE));
+        ref.setUri("https://tools.ietf.org/html/rfc7946");
+        ref.setFilename("rfc7946");
+
+        files.add(getMultipartFileRefs(ref));
 
         performDefaultFileUpload(AttachmentController.TYPE_MAPPING + AttachmentController.ATTACHMENTS_MAPPING, files,
                                  customizer, "Attachment error", collection.getIpId().toString(), DataType.DESCRIPTION);

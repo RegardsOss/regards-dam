@@ -55,7 +55,7 @@ public class RestrictionTest extends AbstractModelTest {
      */
     @Test
     public void floatRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.DOUBLE_INTERVAL, "ForTests")
+        final AttributeModel attModel = AttributeModelBuilder.build("VFLOAT", AttributeType.DOUBLE_INTERVAL, "ForTests")
                 .withFloatRangeRestriction(Double.MIN_VALUE, Double.MAX_VALUE, false, false);
         saveAttribute(attModel);
 
@@ -73,7 +73,7 @@ public class RestrictionTest extends AbstractModelTest {
      */
     @Test
     public void integerRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("INTEGER", AttributeType.INTEGER_ARRAY, "ForTests")
+        final AttributeModel attModel = AttributeModelBuilder.build("VINTEGER", AttributeType.INTEGER_ARRAY, "ForTests")
                 .withIntegerRangeRestriction(Integer.MIN_VALUE, Integer.MAX_VALUE, false, true);
         saveAttribute(attModel);
 

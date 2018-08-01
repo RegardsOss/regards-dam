@@ -18,12 +18,19 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -52,6 +59,7 @@ import org.springframework.util.Assert;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -122,6 +130,14 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
     protected Model model;
+
+    /**
+     * State determined through different storage steps for the AIP
+     */
+    @GsonIgnore
+    @Column(name = "aip_state", length = 32)
+    @Enumerated(EnumType.STRING)
+    private EntityAipState stateAip;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -237,6 +253,14 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         return ImmutableSet.copyOf(tags);
     }
 
+    public EntityAipState getStateAip() {
+        return stateAip;
+    }
+
+    public void setStateAip(EntityAipState stateAip) {
+        this.stateAip = stateAip;
+    }
+
     public void setTags(Set<String> tags) {
         Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags = tags;
@@ -251,7 +275,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.addTags(tags);
     }
 
-    public void removeTags(Collection<String> tags) {
+    public void removeTags(java.util.Collection<String> tags) {
         Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags.removeAll(tags);
         // Propagate to feature
@@ -321,12 +345,12 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         this.model = model;
     }
 
-    public String getSipId() {
-        return feature.getSipId();
+    public String getProviderId() {
+        return feature.getProviderId();
     }
 
-    public void setSipId(String sipId) {
-        feature.setSipId(sipId);
+    public void setProviderId(String providerId) {
+        feature.setProviderId(providerId);
     }
 
     public String getLabel() {
@@ -398,8 +422,8 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + getIpId() + ", sipId=" + getSipId() + ", label=" + getLabel() + ", attributes=" + getProperties()
-                + ", model=" + model + "]";
+                + getIpId() + ", providerId=" + getProviderId() + ", label=" + getLabel() + ", attributes="
+                + getProperties() + ", model=" + model + "]";
     }
 
     public F getFeature() {

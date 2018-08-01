@@ -154,7 +154,7 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
                                                             AttributeBuilder.buildInteger(PLANET_NB, 100)));
 
         // Set tags
-        collection.getTags().add("second tag");
+        collection.addTags("second tag");
 
         // Serialize
         String result = gson.toJson(collection);

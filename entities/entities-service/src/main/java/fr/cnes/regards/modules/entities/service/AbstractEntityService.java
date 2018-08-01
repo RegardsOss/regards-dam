@@ -38,6 +38,7 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
@@ -51,6 +52,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -68,6 +70,7 @@ import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -140,6 +143,18 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
+    /**
+     * If true the AIP entities are send to Storage module to be stored
+     */
+    @Value("${regards.dam.post.aip.entities.to.storage:true}")
+    private Boolean postAipEntitiesToStorage;
+
+    /**
+     * The plugin's class name of type {@link IStorageService} used to store AIP entities
+     */
+    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin}")
+    private String postAipEntitiesToStoragePlugin;
+
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
@@ -168,6 +183,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public U load(Long id) throws ModuleException {
+        Assert.notNull(id, "Entity identifier is required");
         U entity = repository.findById(id);
         if (entity == null) {
             throw new EntityNotFoundException(id, this.getClass());
@@ -195,8 +211,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public Set<U> findAllBySipId(String sipId) {
-        return repository.findAllBySipId(sipId);
+    public Set<U> findAllByProviderId(String providerId) {
+        return repository.findAllByProviderId(providerId);
     }
 
     @Override
@@ -212,7 +228,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     /**
      * Check if model is loaded else load it then set it on entity.
-     * @param entity cocnerned entity
+     * @param entity concerned entity
      */
     @Override
     public void checkAndOrSetModel(U entity) throws ModuleException {
@@ -326,9 +342,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         this.manageGroups(entity, updatedIpIds);
+
+        entity.setStateAip(EntityAipState.AIP_TO_CREATE);
+
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
-        entity = getStorageService().storeAIP(entity);
+
         // AMQP event publishing
         publishEvents(EventType.CREATE, updatedIpIds);
         return entity;
@@ -399,18 +418,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         entityRepository.save(entity);
     }
 
-    /**
-     * TODO make it possible to switch configuration dynamically between local and remote Dynamically get the storage
-     * service
-     * @return the storage service @
-     */
-    private IStorageService getStorageService() {
-        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
-        return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
-                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()), new HashMap<>());
-
-    }
-
     private U checkCreation(U pEntity) throws ModuleException {
         checkModelExists(pEntity);
         doCheck(pEntity, null);
@@ -478,7 +485,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+
+        if (entityInDb.getStateAip() == null) {
+            entity.setStateAip(EntityAipState.AIP_TO_CREATE);
+        } else if (!entityInDb.getStateAip().equals(EntityAipState.AIP_TO_CREATE)) {
+            entity.setStateAip(EntityAipState.AIP_TO_UPDATE);
+        }
+
         U updated = repository.save(entity);
+
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {
@@ -504,19 +519,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             // Don't forget to manage groups for current entity too
             this.manageGroups(updated, updatedIpIds);
         }
-        updated = getStorageService().updateAIP(updated);
+
         // AMQP event publishing
         publishEvents(EventType.UPDATE, updatedIpIds);
         return updated;
     }
 
     @Override
+    public U save(U entity) {
+        return repository.save(entity);
+    }
+
+    @Override
     public U delete(Long pEntityId) throws ModuleException {
         Assert.notNull(pEntityId, "Entity identifier is required");
-        final U toDelete = repository.findById(pEntityId);
-        if (toDelete == null) {
-            throw new EntityNotFoundException(pEntityId, this.getClass());
-        }
+        U toDelete = load(pEntityId);
         return delete(toDelete);
     }
 
@@ -562,10 +579,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // Manage all impacted datasets groups from scratch
         datasets.forEach(ds -> this.manageGroups(ds, updatedIpIds));
 
+        deleteAipStorage(toDelete);
+
         deletedEntityRepository.save(createDeletedEntity(toDelete));
-        getStorageService().deleteAIP(toDelete);
+
         // Publish events to AMQP
         publishEvents(EventType.DELETE, updatedIpIds);
+
         return toDelete;
     }
 
@@ -609,7 +629,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, List<DataFile> refs,
             String fileUriTemplate) throws ModuleException {
 
-        U entity = load(urn);
+        U entity = loadWithRelations(urn);
         // Store files locally
         java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
                                                                                fileUriTemplate);
@@ -624,7 +644,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (refs != null) {
             for (DataFile ref : refs) {
                 // Same logic as for normal file is applied to check format support
-                localStorageService.supports(dataType, ref.getFilename(), ref.getMimeType().toString());
+                ContentTypeValidator.supportsForReference(dataType, ref.getFilename(), ref.getMimeType().toString());
                 // Compute checksum on URI for removal
                 try {
                     ref.setChecksum(ChecksumUtils.computeHexChecksum(ref.getUri(),
@@ -689,5 +709,40 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         }
         entity.getFiles().get(dataFile.getDataType()).remove(dataFile);
         return update(entity);
+    }
+
+    /**
+     * @return a {@link Plugin} implementation of {@link IStorageService}
+     */
+    private IStorageService getStorageService() {
+        if (postAipEntitiesToStorage == null) {
+            return null;
+        }
+
+        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        Class<?> ttt;
+        try {
+            ttt = Class.forName(postAipEntitiesToStoragePlugin);
+            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, Arrays.asList(ttt.getPackage().getName()),
+                                                           new HashMap<>());
+        } catch (ClassNotFoundException e) {
+            logger.error(e.getMessage());
+        }
+
+        return null;
+    }
+
+    private void deleteAipStorage(U entity) {
+        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
+            return;
+        }
+
+        IStorageService storageService = getStorageService();
+
+        if (storageService == null) {
+            return;
+        }
+
+        getStorageService().deleteAIP(entity);
     }
 }

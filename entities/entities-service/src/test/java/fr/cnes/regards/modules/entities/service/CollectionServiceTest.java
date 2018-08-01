@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.entities.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -90,12 +89,8 @@ public class CollectionServiceTest {
         collection3.setId(3L);
         collection4 = new Collection(pModel2, "PROJECT", "collection4");
         collection4.setId(4L);
-        collection2URN = collection2.getIpId();
-        Set<String> collection1Tags = collection1.getTags();
-        collection1Tags.add(collection2URN.toString());
-        Set<String> collection2Tags = collection2.getTags();
-        collection2Tags.add(collection1.getIpId().toString());
-        collection2.setTags(collection2Tags);
+        collection1.addTags(collection2.getIpId().toString());
+        collection2.addTags(collection1.getIpId().toString());
 
         // create a mock repository
         collectionRepositoryMocked = Mockito.mock(ICollectionRepository.class);

@@ -23,20 +23,28 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.PayloadDocumentation;
+import org.springframework.restdocs.request.RequestDocumentation;
+import org.springframework.restdocs.snippet.Attributes;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.ConstrainedFields;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
@@ -63,15 +71,15 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     private static final Logger LOGGER = LoggerFactory.getLogger(FragmentControllerIT.class);
 
     /**
+     * JSON path
+     */
+    private static final String JSON_ID = "$.content.id";
+
+    /**
      * Fragment repository to populate database for testing
      */
     @Autowired
     private IFragmentRepository fragmentRepository;
-
-    /**
-     * JSON path
-     */
-    private static final String JSON_ID = "$.content.id";
 
     /**
      * Attribute model service
@@ -90,10 +98,10 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment fragment = new Fragment();
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, expectations,
+        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
                            "Empty fragment shouldn't be created.");
     }
 
@@ -104,23 +112,29 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment fragment = Fragment.buildFragment("GEO", "Geo description");
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, expectations, "Fragment cannot be created.");
+        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
+                           "Fragment cannot be created.");
     }
 
     @Test
     public void getAllFragment() throws ModuleException {
         populateDatabase();
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        final int expectedSize = 3;
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        int expectedSize = 3;
+        requestBuilderCustomizer
+                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
-        performDefaultGet(FragmentController.TYPE_MAPPING, expectations, "Should return all fragments");
+        performDefaultGet(FragmentController.TYPE_MAPPING, requestBuilderCustomizer, "Should return all fragments");
     }
 
     /**
@@ -137,11 +151,16 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         final Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("pFragmentId").description("Fragment identifier")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value("Number"), Attributes
+                                .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Should be a whole number"))));
 
         final ResultActions resultActions = performDefaultGet(FragmentController.TYPE_MAPPING + "/{pFragmentId}/export",
-                                                              expectations, "Should return result",
+                                                              requestBuilderCustomizer, "Should return result",
                                                               defaultFragment.getId());
 
         assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
@@ -161,10 +180,10 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         final Path filePath = Paths.get("src", "test", "resources", "fragment_it.xml");
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, expectations,
+        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, requestBuilderCustomizer,
                                  "Should be able to import a fragment");
 
         // Get fragment from repository
@@ -208,12 +227,35 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         }
     }
 
+    public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(Fragment.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        if (!creation) {
+            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "Fragment identifier",
+                                                       "Must be a whole number"));
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "Fragment Name"));
+        descriptors.add(constrainedFields
+                .withPath(prefixPath + "description", "description", "Fragment description", "Optional")
+                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "Fragment Version", "Optional")
+                .type(JSON_STRING_TYPE).optional());
+        // ignore links
+        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
+        ignoreFields = new ConstrainedFields(Link.class);
+        descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
+        descriptors.add(ignoreFields.withPath("links[].href", "href", "hateoas links href").optional().ignored());
+        return descriptors;
+    }
+
     private void populateDatabase() throws ModuleException {
         fragmentRepository.save(Fragment.buildDefault());
         fragmentRepository.save(Fragment.buildFragment("Geo", "Geographic information"));
         fragmentRepository.save(Fragment.buildFragment("Contact", "Contact card"));
 
-        final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN, "ForTests")
+        final AttributeModel attModel = AttributeModelBuilder.build("VFIRST", AttributeType.BOOLEAN, "ForTests")
                 .withoutRestriction();
         attributeModelService.addAttribute(attModel, false);
     }

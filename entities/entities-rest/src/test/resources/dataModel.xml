@@ -119,12 +119,12 @@
 		<description>Longitude fragment</description>
 		<attribute>
 			<label>forTests</label>
-			<name>MIN</name>
+			<name>VMIN</name>
 			<type>INTEGER</type>
 		</attribute>
 		<attribute>
 			<label>forTests</label>
-			<name>MAX</name>
+			<name>VMAX</name>
 			<type>INTEGER</type>
 		</attribute>
 	</fragment>
@@ -133,12 +133,12 @@
 		<description>Latitude fragment</description>
 		<attribute>
 			<label>forTests</label>
-			<name>MIN</name>
+			<name>VMIN</name>
 			<type>INTEGER</type>
 		</attribute>
 		<attribute>
 			<label>forTests</label>
-			<name>MAX</name>
+			<name>VMAX</name>
 			<type>INTEGER</type>
 		</attribute>
 	</fragment>
@@ -147,12 +147,12 @@
 		<description>Altitude fragment</description>
 		<attribute>
 			<label>forTests</label>
-			<name>MIN</name>
+			<name>VMIN</name>
 			<type>INTEGER</type>
 		</attribute>
 		<attribute>
 			<label>forTests</label>
-			<name>MAX</name>
+			<name>VMAX</name>
 			<type>INTEGER</type>
 		</attribute>
 	</fragment>

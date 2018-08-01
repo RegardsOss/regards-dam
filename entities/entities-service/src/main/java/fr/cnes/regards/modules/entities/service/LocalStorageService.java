@@ -22,12 +22,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -39,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,9 +50,6 @@ import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.modules.entities.dao.ILocalFileRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.LocalFile;
-import fr.cnes.regards.modules.entities.service.exception.InvalidCharsetException;
-import fr.cnes.regards.modules.entities.service.exception.InvalidContentTypeException;
-import fr.cnes.regards.modules.entities.service.exception.InvalidFilenameException;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
@@ -103,90 +97,37 @@ public class LocalStorageService implements ILocalStorageService {
     public Collection<DataFile> attachFiles(AbstractEntity<?> entity, DataType dataType, MultipartFile[] attachments,
             String fileUriTemplate) throws ModuleException {
         Set<DataFile> docFiles = new HashSet<>();
-        try {
-            for (MultipartFile file : attachments) {
-                if ((file != null) && !file.isEmpty()) {
-                    supports(dataType, file.getOriginalFilename(), file.getContentType());
-                    String checksum = ChecksumUtils.computeHexChecksum(file.getInputStream(), DIGEST_ALGORITHM);
-                    URI fileRef = new URI(fileUriTemplate.replace(FILE_CHECKSUM_URL_TEMPLATE, checksum));
+        if (attachments != null) {
+            try {
+                for (MultipartFile file : attachments) {
+                    if ((file != null) && !file.isEmpty()) {
+                        ContentTypeValidator.supports(dataType, file.getOriginalFilename(), file.getContentType());
+                        String checksum = ChecksumUtils.computeHexChecksum(file.getInputStream(), DIGEST_ALGORITHM);
+                        URI fileRef = new URI(fileUriTemplate.replace(FILE_CHECKSUM_URL_TEMPLATE, checksum));
 
-                    // Build data file
-                    DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
-                                                       MimeType.valueOf(file.getContentType()), Boolean.TRUE);
-                    dataFile.setFilesize(file.getSize());
-                    dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
-                    dataFile.setChecksum(checksum);
-                    dataFile.setFilename(file.getOriginalFilename());
-                    store(checksum, file, entity);
-                    docFiles.add(dataFile);
+                        // Build data file
+                        DataFile dataFile = DataFile.build(dataType, file.getOriginalFilename(), fileRef,
+                                                           MimeType.valueOf(file.getContentType()), Boolean.TRUE,
+                                                           Boolean.FALSE);
+                        dataFile.setFilesize(file.getSize());
+                        dataFile.setDigestAlgorithm(DIGEST_ALGORITHM);
+                        dataFile.setChecksum(checksum);
+                        dataFile.setFilename(file.getOriginalFilename());
+                        store(checksum, file, entity);
+                        docFiles.add(dataFile);
+                    }
                 }
+            } catch (URISyntaxException | IOException e) {
+                String message = String.format("Error during attaching file");
+                LOGGER.error(message, e);
+                throw new ModuleException(message, e);
+            } catch (NoSuchAlgorithmException e) {
+                String message = String.format("No such algorithm (used on checksum computation)");
+                LOGGER.error(message, e);
+                throw new ModuleException(message, e);
             }
-        } catch (URISyntaxException | IOException e) {
-            String message = String.format("Error during attaching file");
-            LOGGER.error(message, e);
-            throw new ModuleException(message, e);
-        } catch (NoSuchAlgorithmException e) {
-            String message = String.format("No such algorithm (used on checksum computation)");
-            LOGGER.error(message, e);
-            throw new ModuleException(message, e);
         }
         return docFiles;
-    }
-
-    @Override
-    public void supports(DataType dataType, String filename, String contentType) throws ModuleException {
-
-        // Original file must be given
-        if ((filename == null) || filename.isEmpty()) {
-            throw new InvalidFilenameException();
-        }
-
-        switch (dataType) {
-            case DESCRIPTION:
-                checkFileSupported(contentType, StandardCharsets.UTF_8.toString(),
-                                   Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE));
-                break;
-            default:
-                // No restriction
-                break;
-        }
-
-    }
-
-    private void checkFileSupported(String contentType, String expectedCharset, Collection<String> expectedContentTypes)
-            throws InvalidCharsetException, InvalidContentTypeException {
-
-        // Check charset
-        if (expectedCharset != null) {
-            String charset = getCharset(contentType);
-            if (!expectedCharset.equals(charset)) {
-                throw new InvalidCharsetException(expectedCharset, charset);
-            }
-        }
-
-        // Check content types
-        if (expectedContentTypes != null) {
-            String shortContentType = getContentType(contentType);
-            if (!expectedContentTypes.contains(shortContentType)) {
-                throw new InvalidContentTypeException(expectedContentTypes, shortContentType);
-            }
-        }
-    }
-
-    private String getContentType(String contentType) {
-        if (contentType != null) {
-            int charsetIdx = contentType.indexOf(";charset");
-            return (charsetIdx == -1) ? contentType.trim() : contentType.substring(0, charsetIdx).trim();
-        }
-        return null;
-    }
-
-    private String getCharset(String contentType) {
-        if (contentType != null) {
-            int charsetIdx = contentType.indexOf("charset=");
-            return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).trim().toUpperCase();
-        }
-        return null;
     }
 
     /**

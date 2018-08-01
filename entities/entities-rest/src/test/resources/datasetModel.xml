@@ -25,7 +25,7 @@
 	</attribute>
 	<attribute>
 		<label>forTests</label>
-		<name>count</name>
+		<name>vcount</name>
 		<type>LONG</type>
 	</attribute>
 </model>

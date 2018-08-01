@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -50,13 +49,13 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -84,9 +83,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     private Dataset dataSet4;
 
     private Model modelOfData;
-
-    @Autowired
-    private IDatasetService dsService;
 
     @Autowired
     private IDatasetRepository datasetRepository;
@@ -121,17 +117,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet1 = new Dataset(model1, "PROJECT", "collection1");
         dataSet1.setCreationDate(OffsetDateTime.now());
         dataSet1.setLicence("licence");
-        dataSet1.setSipId("SipId1");
+        dataSet1.setProviderId("ProviderId1");
         dataSet1.setLabel("label");
         dataSet3 = new Dataset(model1, "PROJECT", "collection3");
         dataSet3.setCreationDate(OffsetDateTime.now());
         dataSet3.setLicence("licence");
-        dataSet3.setSipId("SipId3");
+        dataSet3.setProviderId("ProviderId3");
         dataSet3.setLabel("label");
         dataSet4 = new Dataset(model1, "PROJECT", "collection4");
         dataSet4.setCreationDate(OffsetDateTime.now());
         dataSet4.setLicence("licence");
-        dataSet4.setSipId("SipId4");
+        dataSet4.setProviderId("ProviderId4");
         dataSet4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
         final Set<String> col4Tags = new HashSet<>();
@@ -147,9 +143,10 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testGetAllDatasets() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DatasetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(DatasetController.TYPE_MAPPING, customizer, "Failed to fetch dataset list");
     }
 
     @Test
@@ -157,7 +154,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_020")
     @Requirement("REGARDS_DSL_DAM_SET_110")
     @Requirement("REGARDS_DSL_DAM_SET_120")
-    @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
+    @Purpose("Dataset creation")
     public void testPostDataset() throws Exception {
 
         importModel("dataModel.xml");
@@ -167,53 +164,38 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
                 .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
 
-        final Dataset dataSet2 = new Dataset(datasetModel, DEFAULT_TENANT, "Coucou");
+        final Dataset dataSet2 = new Dataset(datasetModel, getDefaultTenant(), "Coucou");
         dataSet2.setLicence("licence");
         dataSet2.setCreationDate(OffsetDateTime.now());
-        dataSet2.setSipId("SipId2");
+        dataSet2.setProviderId("ProviderId2");
         dataSet2.setDataModel(dataModel.getName());
         dataSet2.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
         dataSet2.addProperty(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
         dataSet2.addProperty(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
-        dataSet2.addProperty(AttributeBuilder.buildLong("count", 454L));
+        dataSet2.addProperty(AttributeBuilder.buildLong("vcount", 454L));
 
         // Set test case
         dataSet2.setOpenSearchSubsettingClause("tags:10");
-        expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        final MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
-                "some xml".getBytes());
-        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                gson(dataSet2).getBytes());
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        performDefaultPost(DatasetController.TYPE_MAPPING, dataSet2, customizer, "Failed to create a new dataset");
 
-        final List<MockMultipartFile> fileList = new ArrayList<>(2);
-        fileList.add(dataset);
-        fileList.add(firstFile);
-
-        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
-                                 "Failed to create a new dataset");
-
-        final Dataset dataSet21 = new Dataset(model1, DEFAULT_TENANT, "dataSet21");
+        final Dataset dataSet21 = new Dataset(model1, getDefaultTenant(), "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
 
-        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        final MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                gson(dataSet21).getBytes());
-        fileList.clear();
-        fileList.add(pdf);
-        fileList.add(dataset21);
-        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
-                                 "Failed to create a new dataset");
+        customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        performDefaultPost(DatasetController.TYPE_MAPPING, dataSet21, customizer, "Failed to create a new dataset");
     }
 
     @Test
     public void testGetDatasetById() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, expectations,
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, customizer,
                           "Failed to fetch a specific dataset using its id", dataSet1.getId());
     }
 
@@ -225,18 +207,12 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
-        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                gson(dataSetClone).getBytes());
-        List<MockMultipartFile> parts = new ArrayList<>();
-        parts.add(dataset);
-
-        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, parts,
-                                 expectations, "Failed to update a specific dataset using its id",
-                                 dataSetClone.getId());
+        performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSet1, expectations,
+                           "Failed to update a specific dataset using its id", dataSetClone.getId());
 
     }
 
@@ -247,25 +223,19 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
-        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
         dataSetClone.setLabel("label");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                gson(dataSetClone).getBytes());
-        List<MockMultipartFile> parts = new ArrayList<>();
-        parts.add(dataset);
-
-        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, parts,
-                                 expectations, "Failed to update a specific dataset using its id",
-                                 dataSetClone.getId());
+        performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSetClone,
+                           expectations, "Failed to update a specific dataset using its id", dataSetClone.getId());
     }
 
     @Test
     public void testDeleteDataset() {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, expectations,
+        performDefaultDelete(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, expectations,
                              "Failed to delete a specific dataset using its id", dataSet1.getId());
     }
 
@@ -275,7 +245,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
+        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
@@ -286,12 +256,12 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
+        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
         sj.add("page=1");
         queryParams = sj.toString();
         expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
+        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
     }
 
@@ -301,7 +271,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
+        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
@@ -312,12 +282,12 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
+        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
         sj.add("page=0");
         queryParams = sj.toString();
         expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
+        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
     }
 
@@ -332,7 +302,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
         DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10%20AND%20tags:abc");
-        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
+        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATA_SUB_SETTING_VALIDATION
                 + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could not validate that subsetting clause");
 
@@ -340,7 +310,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
-        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
+        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATA_SUB_SETTING_VALIDATION
                 + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could validate that subsetting clause");
     }
@@ -359,7 +329,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
             final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
-            gsonAttributeFactory.refresh(DEFAULT_TENANT, atts);
+            gsonAttributeFactory.refresh(getDefaultTenant(), atts);
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);

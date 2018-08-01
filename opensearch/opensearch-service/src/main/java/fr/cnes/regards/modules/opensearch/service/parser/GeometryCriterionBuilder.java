@@ -55,14 +55,14 @@ public class GeometryCriterionBuilder {
             WKTReader wkt = new WKTReader();
             Geometry geometry = wkt.read(wktGeometry);
 
-            if (Polygon.class.getName().equals(geometry.getGeometryType())) {
+            if (geometry instanceof Polygon) {
                 Polygon polygon = (Polygon) geometry;
                 Converter<Polygon, double[][][]> converter = new PolygonToArray();
                 double[][][] coordinates = converter.convert(polygon);
                 return ICriterion.intersectsPolygon(coordinates);
             } else {
                 // Only Polygons are handled for now
-                throw new InvalidGeometryException("The passed WKT string does not reference");
+                throw new InvalidGeometryException("The passed WKT string does not reference a polygon");
             }
         } catch (ParseException e) {
             LOGGER.error("Geometry parsing error", e);

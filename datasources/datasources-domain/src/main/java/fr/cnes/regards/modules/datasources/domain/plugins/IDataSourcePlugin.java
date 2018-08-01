@@ -38,53 +38,15 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 public interface IDataSourcePlugin {
 
     /**
-     * Ingestion refresh rate parameter name
+     * The model name
      */
-    String REFRESH_RATE = "refreshRate";
-
-    /**
-     * Ingestion static tags parameter name
-     */
-    String TAGS = "tags";
-
-    /**
-     * Ingestion refresh rate default value in seconds
-     */
-    Integer REFRESH_RATE_DEFAULT_VALUE = 86400;
-
-    String REFRESH_RATE_DEFAULT_VALUE_AS_STRING = "86400";
-
-    String MODEL_NAME_PARAM = "modelName";
-
-    String DOT = ".";
-
-    // FIXME remove
-    // /**
-    // * Prefix for all model properties
-    // */
-    // String PROPERTY_PREFIX = StaticProperties.PROPERTIES + DOT;
-
-    /**
-     * Interval mapping convention suffix
-     */
-    String LOWER_BOUND = "lowerBound";
-
-    String UPPER_BOUND = "upperBound";
-
-    String LOWER_BOUND_SUFFIX = DOT + LOWER_BOUND;
-
-    String UPPER_BOUND_SUFFIX = DOT + UPPER_BOUND;
+    String getModelName();
 
     /**
      * The refresh rate of the data source
      * @return the refresh rate value (in seconds)
      */
     int getRefreshRate();
-
-    /**
-     * The model name
-     */
-    String getModelName();
 
     /**
      * Returns a {@link Page} of new entities meeting the paging restriction provided in the {@code Pageable} object.
