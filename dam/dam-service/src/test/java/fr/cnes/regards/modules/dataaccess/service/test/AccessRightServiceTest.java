@@ -39,9 +39,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import fr.cnes.regards.framework.amqp.IInstancePublisher;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
@@ -49,7 +46,6 @@ import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
@@ -138,11 +134,6 @@ public class AccessRightServiceTest {
         }
 
         @Bean
-        public IRuntimeTenantResolver runtimeTenantResolver() {
-            return Mockito.mock(IRuntimeTenantResolver.class);
-        }
-
-        @Bean
         public IInstancePublisher instancePublisher() {
             return Mockito.mock(IInstancePublisher.class);
         }
@@ -150,11 +141,6 @@ public class AccessRightServiceTest {
         @Bean
         public CollectionService collectionService() {
             return Mockito.mock(CollectionService.class);
-        }
-
-        @Bean
-        public Gson gson() {
-            return new GsonBuilder().create();
         }
 
         @Bean

@@ -81,6 +81,10 @@
 			<groupId>fr.cnes.regards.modules.storage</groupId>
 			<artifactId>storage-client</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>geojson-starter</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

@@ -56,8 +56,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Marc Sordi
  *
  */
-@TestPropertySource(locations = { "classpath:test.properties" },
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
 @MultitenantTransactional
 public class EntityFeatureSerializationTests extends AbstractMultitenantServiceTest {
 
