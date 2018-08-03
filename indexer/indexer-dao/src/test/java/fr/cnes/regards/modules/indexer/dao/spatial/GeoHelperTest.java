@@ -32,7 +32,10 @@ import org.junit.Test;
 import org.opengis.referencing.operation.TransformException;
 
 import com.google.common.collect.Lists;
+import fr.cnes.regards.framework.geojson.coordinates.Positions;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.LineString;
+import fr.cnes.regards.framework.geojson.geometry.MultiLineString;
 import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
@@ -192,7 +195,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 80.00000, //
                                                   toLongitude(13.58333), 77.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], [ 210.0, 66.0 ], "
                                     + "[ 235.00005, 66.0 ], [ 235.00005, 70.0 ], [ 247.99995, 70.0 ], [ 247.99995, 75.0 ], "
@@ -235,7 +238,7 @@ public class GeoHelperTest {
                                                   toLongitude(23.00000), 86.16666, //
                                                   toLongitude(23.00000), 88.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 120.0, 88.0 ], [ 120.0, 86.5 ], [ 217.5, 86.5 ], [ 217.5, 80.0 ], "
                                     + "[ 203.74995, 80.0 ], [ 203.74995, 77.0 ], [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], "
@@ -278,7 +281,7 @@ public class GeoHelperTest {
                                                   toLongitude(21.00000), 66.16666, //
                                                   toLongitude(23.00000), 66.16666);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals(
                 "POLYGON ( EXTERIOR ( [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 180.0, 68.0 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 68.0 ], [ -15.0, 68.0 ] ) )",
@@ -318,7 +321,7 @@ public class GeoHelperTest {
                                                   toLongitude(8.00000), 66.50000 //
         );
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], "
                                     + "[ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
@@ -361,7 +364,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 60.00000, //
                                                   toLongitude(13.58333), 57.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
                                     + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
@@ -405,7 +408,7 @@ public class GeoHelperTest {
                                                   toLongitude(13.58333), 60.00000, //
                                                   toLongitude(13.58333), 57.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
                                     + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
@@ -440,7 +443,7 @@ public class GeoHelperTest {
                                                   toLongitude(24.00000), -90.00000, //
                                                   toLongitude(12.00000), -90.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
                         + "        \"coordinates\": [          [\n"
@@ -468,7 +471,7 @@ public class GeoHelperTest {
                                                   toLongitude(3.50000), -82.50000, //
                                                   toLongitude(0.00000), -82.50000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
                         + "        \"coordinates\": [          [\n"
@@ -493,7 +496,7 @@ public class GeoHelperTest {
                                                   toLongitude(12.58333), -29.50000, toLongitude(12.58333), -33.00000,
                                                   toLongitude(12.25000), -33.00000, toLongitude(12.25000), -35.00000);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
                         + "        \"coordinates\": [          [\n"
@@ -507,7 +510,7 @@ public class GeoHelperTest {
                 .simplePolygon(20, 0, 20, 80, 100, 80, 170, 80, -170, 80, -100, 80, 10, 80, 10, 0, 5, -80, -100, -80,
                                -170, -80, 170, -80, 100, -80, 15, -80);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         // Acceptable normalization (not perfect but this is a tricky case, it will be enough for now)
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
@@ -554,12 +557,92 @@ public class GeoHelperTest {
         MultiPolygon multiPolygon = IGeometry
                 .multiPolygon(octansPolygon.getCoordinates(), ursaMinorPolygon.getCoordinates());
         System.out.println(displayGeoJson(multiPolygon));
-        multiPolygon = GeoHelper.normalize(multiPolygon);
+        multiPolygon = (MultiPolygon) GeoHelper.normalize(multiPolygon);
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"MultiPolygon\",\n"
                         + "        \"coordinates\": [          [\n"
                         + "[[ 0.0, -75.0 ], [ -10.00005, -75.0 ], [ -40.00005, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -90.0 ], [ 359.999999999999, -90.0 ], [ 359.999999999999, -82.5 ], [ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]], [[ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 345.0, 68.0 ], [ 359.999999999999, 68.0 ], [ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ]]] ]\n"
                         + "      }  }    ]}", displayGeoJson(multiPolygon));
+    }
+
+    @Test
+    public void lineStringNormalizationTest() {
+        LineString lineString = IGeometry.lineString(10, 45, 20, 45, 30, 45);
+        Assert.assertEquals(lineString, GeoHelper.normalize(lineString));
+
+        lineString = IGeometry.lineString(350, 45, 20, 45, 30, 45);
+        Assert.assertEquals(IGeometry.lineString(-10, 45, 20, 45, 30, 45), GeoHelper.normalize(lineString));
+
+        lineString = IGeometry.lineString(-10, 45, 20, 45, 30, 45);
+        Assert.assertEquals(lineString, GeoHelper.normalize(lineString));
+
+        lineString = IGeometry.lineString(-170, 45, 20, 45, 30, 55);
+        Assert.assertNotEquals(lineString, GeoHelper.normalize(lineString));
+        Assert.assertTrue(GeoHelper.normalize(lineString) instanceof MultiLineString);
+        MultiLineString multiLineString = (MultiLineString) GeoHelper.normalize(lineString);
+        List<Positions> positionsList = multiLineString.getCoordinates();
+        Assert.assertEquals(2, positionsList.size());
+        Assert.assertEquals(IGeometry.lineString(-170, 45, -180, 45).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(180, 45, 20, 45, 30, 55).getCoordinates(), positionsList.get(1));
+
+        lineString = IGeometry.lineString(30, 55, 20, 45, -170, 45);
+        Assert.assertNotEquals(lineString, GeoHelper.normalize(lineString));
+        Assert.assertTrue(GeoHelper.normalize(lineString) instanceof MultiLineString);
+        multiLineString = (MultiLineString) GeoHelper.normalize(lineString);
+        positionsList = multiLineString.getCoordinates();
+        Assert.assertEquals(2, positionsList.size());
+        Assert.assertEquals(IGeometry.lineString(30, 55, 20, 45, 180, 45).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(-180, 45, -170, 45).getCoordinates(), positionsList.get(1));
+
+        lineString = IGeometry.lineString(90, 45, -90, -45);
+        Assert.assertEquals(lineString, GeoHelper.normalize(lineString));
+
+        lineString = IGeometry.lineString(100, 45, -100, -45);
+        Assert.assertNotEquals(lineString, GeoHelper.normalize(lineString));
+        Assert.assertTrue(GeoHelper.normalize(lineString) instanceof MultiLineString);
+        multiLineString = (MultiLineString) GeoHelper.normalize(lineString);
+        positionsList = multiLineString.getCoordinates();
+        Assert.assertEquals(2, positionsList.size());
+        Assert.assertEquals(IGeometry.lineString(100, 45, 180, 0).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(-180, 0, -100, -45).getCoordinates(), positionsList.get(1));
+
+        lineString = IGeometry.lineString(100, 50, -100, 0);
+        Assert.assertNotEquals(lineString, GeoHelper.normalize(lineString));
+        Assert.assertTrue(GeoHelper.normalize(lineString) instanceof MultiLineString);
+        multiLineString = (MultiLineString) GeoHelper.normalize(lineString);
+        positionsList = multiLineString.getCoordinates();
+        Assert.assertEquals(2, positionsList.size());
+        Assert.assertEquals(IGeometry.lineString(100, 50, 180, 25).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(-180, 25, -100, 0).getCoordinates(), positionsList.get(1));
+
+        lineString = IGeometry.lineString(100, 50, -100, 50, -100, -50, 100, -50);
+        Assert.assertNotEquals(lineString, GeoHelper.normalize(lineString));
+        Assert.assertTrue(GeoHelper.normalize(lineString) instanceof MultiLineString);
+        multiLineString = (MultiLineString) GeoHelper.normalize(lineString);
+        positionsList = multiLineString.getCoordinates();
+        Assert.assertEquals(3, positionsList.size());
+        Assert.assertEquals(IGeometry.lineString(100, 50, 180, 50).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(-180, 50, -100, 50, -100, -50, -180, -50).getCoordinates(),
+                            positionsList.get(1));
+        Assert.assertEquals(IGeometry.lineString(180, -50, 100, -50).getCoordinates(), positionsList.get(2));
+    }
+
+    @Test
+    public void multiLineStringNormalizationTest() {
+        LineString lineString1 = IGeometry.lineString(100, 50, -100, 0);
+        LineString lineString2 = IGeometry.lineString(100, 50, -100, 50, -100, -50, 100, -50);
+        MultiLineString multiLineString = IGeometry
+                .multiLineString(lineString1.getCoordinates(), lineString2.getCoordinates());
+        MultiLineString normalized = (MultiLineString) GeoHelper.normalize(multiLineString);
+        Assert.assertEquals(5, normalized.getCoordinates().size());
+        List<Positions> positionsList = normalized.getCoordinates();
+        Assert.assertEquals(IGeometry.lineString(100, 50, 180, 25).getCoordinates(), positionsList.get(0));
+        Assert.assertEquals(IGeometry.lineString(-180, 25, -100, 0).getCoordinates(), positionsList.get(1));
+        Assert.assertEquals(IGeometry.lineString(100, 50, 180, 50).getCoordinates(), positionsList.get(2));
+        Assert.assertEquals(IGeometry.lineString(-180, 50, -100, 50, -100, -50, -180, -50).getCoordinates(),
+                            positionsList.get(3));
+        Assert.assertEquals(IGeometry.lineString(180, -50, 100, -50).getCoordinates(), positionsList.get(4));
+
     }
 
     /**
@@ -593,7 +676,7 @@ public class GeoHelperTest {
         }
         Polygon polygon = IGeometry.simplePolygon(lonLats);
         System.out.println(displayGeoJson(polygon));
-        polygon = GeoHelper.normalize(polygon);
+        polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
     }
 

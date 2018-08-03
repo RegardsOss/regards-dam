@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.referencing.operation.TransformException;
@@ -66,6 +67,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { SearchConfiguration.class })
+@Ignore
 public class PepsTest {
 
     @Autowired

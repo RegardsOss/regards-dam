@@ -24,6 +24,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.geotools.geometry.DirectPosition2D;
@@ -46,6 +47,8 @@ import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Table;
 import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
+import fr.cnes.regards.framework.geojson.coordinates.Positions;
+import fr.cnes.regards.framework.geojson.geometry.AbstractGeometry;
 import fr.cnes.regards.framework.geojson.geometry.GeometryCollection;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.IGeometryVisitor;
@@ -388,14 +391,100 @@ public class GeoHelper {
      * Elasticsearch).<br/>
      * For multi-polygons:<br/>
      * - same thing as for polygon.<br/>
+     * For line strings:<br/>
+     * - transform lineStrings into MultiLineStrings if they go through date line (check with shortest distance ONLY
+     * using longitude, some cases may not be well managed).<br/>
+     * For multi line strings:<br/>
+     * - apply normalization to all line strings so may add additional line strings if some are transformed into multi
+     * line strings.<br/>
      */
-    public static <T extends IGeometry> T normalize(T geometry) {
+    public static IGeometry normalize(IGeometry geometry) {
         if (geometry instanceof Polygon) {
-            return (T) normalizePolygon((Polygon) geometry);
+            return normalizePolygon((Polygon) geometry);
         } else if (geometry instanceof MultiPolygon) {
-            return (T) normalizeMultiPolygon((MultiPolygon) geometry);
+            return normalizeMultiPolygon((MultiPolygon) geometry);
+        } else if (geometry instanceof LineString) {
+            return normalizeLineString((LineString) geometry);
+        } else if (geometry instanceof MultiLineString) {
+            return normalizeMultiLineString((MultiLineString) geometry);
+        } else if (geometry instanceof GeometryCollection) {
+            ((GeometryCollection) geometry).setGeometries(((GeometryCollection) geometry).getGeometries().stream()
+                                                                  .map(g -> (AbstractGeometry<?>) GeoHelper
+                                                                          .normalize(g)).collect(Collectors.toList()));
         }
         return geometry;
+    }
+
+    private static MultiLineString normalizeMultiLineString(MultiLineString multiLineString) {
+        MultiLineString normMultiLineString = new MultiLineString();
+        for (Positions positions : multiLineString.getCoordinates()) {
+            IGeometry normGeometry = normalizeLineString(IGeometry.lineString(positions));
+            if (normGeometry instanceof LineString) {
+                normMultiLineString.getCoordinates().add(((LineString) normGeometry).getCoordinates());
+            } else if (normGeometry instanceof MultiLineString) {
+                normMultiLineString.getCoordinates().addAll(((MultiLineString) normGeometry).getCoordinates());
+            }
+        }
+        return normMultiLineString;
+    }
+
+    /**
+     * Normalize lineString
+     * @return a LineString or a MultiLineString if it crosses dateLine
+     */
+    private static IGeometry normalizeLineString(LineString lineString) {
+        Positions positions = lineString.getCoordinates();
+        // First, normalize position with a longitude between 180 and 360
+        for (Position p : positions) {
+            if (p.getLongitude() > 180) {
+                p.setLongitude(p.getLongitude() - 360);
+            }
+        }
+        List<Positions> positionsList = new ArrayList<>();
+
+        Positions curPositions = new Positions();
+        curPositions.add(positions.get(0));
+        // For all line straing positions
+        for (int i = 1; i < positions.size(); i++) {
+            Position previous = positions.get(i - 1);
+            Position current = positions.get(i);
+            double prevLon = previous.getLongitude();
+            double curLon = current.getLongitude();
+            // sign changing (going through a 0-longitude point may not be a problem)
+            if (prevLon * curLon < 0) {
+                // check if it goes through date line or 0-meridian
+                if (distToDateline(prevLon) + distToDateline(curLon) < distTo0(prevLon) + distTo0(curLon)) {
+                    // Shortest distance is through date line => cut LineString => MultiLineString
+                    // Compute intersection with date line point latitude
+                    // Using longitudes > 0
+                    double prevLon_360 = (prevLon < 0) ? prevLon + 360 : prevLon;
+                    double curLon_360 = (curLon < 0) ? curLon + 360 : curLon;
+                    double prevLat = previous.getLatitude();
+                    double curLat = current.getLatitude();
+                    double cutLat = (180 - prevLon_360) * (curLat - prevLat) / (curLon_360 - prevLon_360) + prevLat;
+                    // Create last position of current positions (ie current line string)
+                    curPositions.add(new Position((prevLon < 0) ? -180.0 : 180.0, cutLat));
+                    // Add current positions to positions list (=> MultiLineString)
+                    positionsList.add(curPositions);
+                    // Create a new current positions
+                    curPositions = new Positions();
+                    // And create first position of new current Positions (ie new line string)
+                    curPositions.add(new Position((prevLon < 0) ? 180.0 : -180.0, cutLat));
+                }
+                curPositions.add(current);
+            } else { // Just add current position to current positions
+                curPositions.add(current);
+            }
+        }
+        // If positionsList contains at least one positions (ie LineString), this means normalization has transformed
+        // input line string into multi line string
+        if (!positionsList.isEmpty()) {
+            positionsList.add(curPositions);
+            MultiLineString multiLineString = new MultiLineString();
+            multiLineString.setCoordinates(positionsList);
+            return multiLineString;
+        }
+        return IGeometry.lineString(curPositions);
     }
 
     /**

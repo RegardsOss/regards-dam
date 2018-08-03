@@ -27,7 +27,7 @@
         </encoder>
     </appender>
 
-    <logger name="fr.cnes.regards.modules.indexer.dao" level="DEBUG" />
+    <logger name="fr.cnes.regards.modules.indexer.dao" level="TRACE" />
 
     <root level="info">
         <appender-ref ref="STDOUT" />
