@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.SQLException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,10 +33,8 @@ import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opengis.referencing.operation.TransformException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -67,17 +62,12 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { SearchConfiguration.class })
-@Ignore
 public class PepsTest {
 
     @Autowired
     private IEsRepository repos;
 
     private static final String TENANT = "peps";
-
-    private static final int BULK_SIZE = 800;
-
-    private NumberFormat format = DecimalFormat.getInstance();
 
     @Autowired
     private Gson gson;
@@ -88,7 +78,7 @@ public class PepsTest {
     private Model model;
 
     @Before
-    public void setup() throws TransformException, SQLException, IOException {
+    public void setup() {
         System.setProperty("https.proxyHost", "proxy2.si.c-s.fr");
         System.setProperty("https.proxyPort", "3128");
 
@@ -112,20 +102,14 @@ public class PepsTest {
 
     private void createDataFromPeps() throws IOException {
         // Select all data between parallels -80 and -60 from peps on S1
-        List<DataObject> objects = selectFromPeps("-180.0,-80.0,180.0,-60.0", "2018-06-01", "2018-07-01", "S1");
+        List<DataObject> objects = selectFromPeps("-180.0,-80.0,180.0,-60.0", "2018-06-01", "2018-07-01");
         int savedCount = repos.saveBulk(TENANT, objects);
         System.out.printf("Saved %d/%d objects\n", savedCount, objects.size());
 
         // Select all data between parallels 60 and 80 from peps on S1
-        objects = selectFromPeps("-180.0,60.0,180.0,80.0", "2017-12-01", "2018-04-01", "S1");
+        objects = selectFromPeps("-180.0,60.0,180.0,80.0", "2017-12-01", "2018-04-01");
         savedCount = repos.saveBulk(TENANT, objects);
         System.out.printf("Saved %d/%d objects\n", savedCount, objects.size());
-
-        // Select all data between parallels -10 and 10 from peps on S3
-        objects = selectFromPeps("-180.0,-10.0,180.0,10.0", "2018-06-01", "2018-07-01", "S3");
-        savedCount = repos.saveBulk(TENANT, objects);
-        System.out.printf("Saved %d/%d objects\n", savedCount, objects.size());
-
 
         repos.unsetSettingsForBulk(TENANT);
         repos.refresh(TENANT);
@@ -136,21 +120,17 @@ public class PepsTest {
      * @param bbox format : min Longitude,min latitude,max longitude,max latitude
      * @return Data objects created from Peps (geometry and title as label)
      */
-    private List<DataObject> selectFromPeps(String bbox, String startDate, String endDate, String sat) throws IOException {
+    private List<DataObject> selectFromPeps(String bbox, String startDate, String endDate) throws IOException {
         List<DataObject> objects = new ArrayList<>();
         boolean ended = false;
         int totalResults = 0;
         int page = 0;
         while (!ended) {
             page++;
-            URL pepsRequestURL = new URL(String.format(sat.equals("S1") ?
-                    "https://peps.cnes.fr/resto/api/collections/S1/search.json?box=%s"
+            URL pepsRequestURL = new URL(String.format("https://peps.cnes.fr/resto/api/collections/S1/search.json?box=%s"
                             + "&instrument=SAR-C+SAR&lang=fr&maxRecords=500&page=%d&platform=S1A&polarisation=HH"
                             + "&processingLevel=LEVEL1&productType=GRD&q="
-                            + "&startDate=%sT00:00:00&completionDate=%sT00:00:00":
-                    "https://peps.cnes.fr/resto/api/collections/S3/search.json?box=%s&maxRecords=100&page=%d"
-                            + "&startDate=2018-06-01T00:00:00&completionDate=2018-07-01T00:00:00"
-                            + "&lang=fr&q=", bbox, page, startDate, endDate));
+                            + "&startDate=%sT00:00:00&completionDate=%sT00:00:00", bbox, page, startDate, endDate));
             URLConnection ctx = pepsRequestURL.openConnection();
             ctx.setRequestProperty("Accept",
                                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
@@ -188,7 +168,7 @@ public class PepsTest {
         return objects;
     }
 
-    private void test(double left, double bottom, double right, double top, String startDate, String endDate, String sat)
+    private void test(double left, double bottom, double right, double top, String startDate, String endDate)
             throws InvalidGeometryException, IOException {
         SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setSearchIndex(TENANT);
@@ -197,16 +177,15 @@ public class PepsTest {
             double[][] bboxPolygon = new double[][] { { left, bottom }, { right, bottom }, { right, top },
                     { left, top }, { left, bottom } };
             ICriterion bboxCrit = ICriterion.intersectsBbox(left, bottom, right, top);
-            ICriterion crit = ICriterion.and(ICriterion.startsWith("feature.label", sat), bboxCrit);
             // ES execution
             long start = System.currentTimeMillis();
-            List<DataObject> objectsFromEs = repos.search(searchKey, 1000, crit).getContent();
+            List<DataObject> objectsFromEs = repos.search(searchKey, 1000, bboxCrit).getContent();
             long durationEs = System.currentTimeMillis() - start;
 
             // PEPS execution
             start = System.currentTimeMillis();
             List<DataObject> objectsFromPeps = selectFromPeps(
-                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate, sat);
+                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate);
             long durationPeps = System.currentTimeMillis() - start;
 
             checkResults(bboxPolygon, new ArrayList<>(objectsFromEs), objectsFromPeps);
@@ -218,16 +197,15 @@ public class PepsTest {
             double[][] rightBboxPolygon = new double[][] { { -180, bottom }, { 360 - right, bottom },
                     { 360 - right, top }, { -180, top }, { -180, bottom } };
             ICriterion bboxCrit = ICriterion.intersectsBbox(left, bottom, right, top);
-            ICriterion crit = ICriterion.and(ICriterion.startsWith("feature.label", sat), bboxCrit);
             // ES execution
             long start = System.currentTimeMillis();
-            List<DataObject> objectsFromEs = repos.search(searchKey, 1000, crit).getContent();
+            List<DataObject> objectsFromEs = repos.search(searchKey, 1000, bboxCrit).getContent();
             long durationEs = System.currentTimeMillis() - start;
 
             // PEPS execution
             start = System.currentTimeMillis();
             List<DataObject> objectsFromPeps = selectFromPeps(
-                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate, sat);
+                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate);
             long durationPeps = System.currentTimeMillis() - start;
 
             checkResults(leftBboxPolygon, rightBboxPolygon, new ArrayList<>(objectsFromEs), objectsFromPeps);
@@ -239,16 +217,16 @@ public class PepsTest {
     }
 
     private void testNegativeLatitude(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
-        test(left, bottom, right, top, "2018-06-01", "2018-07-01", "S1");
+        test(left, bottom, right, top, "2018-06-01", "2018-07-01");
     }
 
     private void testPositiveLatitude(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
-        test(left, bottom, right, top, "2017-12-01", "2018-04-01", "S1");
+        test(left, bottom, right, top, "2017-12-01", "2018-04-01");
     }
 
-    private void testAroundLatitude0(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
-        test(left, bottom, right, top, "2018-06-01", "2018-07-01", "S3");
-    }
+//    private void testAroundLatitude0(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
+//        test(left, bottom, right, top, "2018-06-01", "2018-07-01", "S3");
+//    }
 
     /**
      * Test on all negative latitude band that has been initially retrieved from PEPS
@@ -301,25 +279,25 @@ public class PepsTest {
     /**
      * Test on all positive latitude band that has been initially retrieved from PEPS
      */
-    @Test
-    public void testInitialAroundLatitude0Bbox() throws InvalidGeometryException, IOException {
-        testAroundLatitude0(-180, -10, 180, 10);
-    }
-
-    @Test
-    public void testInnerAroundLatitude0PositiveLontitudeBbox() throws InvalidGeometryException, IOException {
-        testAroundLatitude0(15, -5, 93, 3);
-    }
-
-    @Test
-    public void testInnerAroundLatitude0OnDatelineLongitude1Bbox() throws InvalidGeometryException, IOException {
-        testAroundLatitude0(160, -2, 200, 0);
-    }
-
-    @Test
-    public void testInnerAroundLatitude0OnDateline2Bbox() throws InvalidGeometryException, IOException {
-        testAroundLatitude0(150, -1, 210, 1);
-    }
+//    @Test
+//    public void testInitialAroundLatitude0Bbox() throws InvalidGeometryException, IOException {
+//        testAroundLatitude0(-180, -10, 180, 10);
+//    }
+//
+//    @Test
+//    public void testInnerAroundLatitude0PositiveLontitudeBbox() throws InvalidGeometryException, IOException {
+//        testAroundLatitude0(15, -5, 93, 3);
+//    }
+//
+//    @Test
+//    public void testInnerAroundLatitude0OnDatelineLongitude1Bbox() throws InvalidGeometryException, IOException {
+//        testAroundLatitude0(160, -2, 200, 0);
+//    }
+//
+//    @Test
+//    public void testInnerAroundLatitude0OnDateline2Bbox() throws InvalidGeometryException, IOException {
+//        testAroundLatitude0(150, -1, 210, 1);
+//    }
 
 
     private void checkResults(double[][] bboxPolygon, List<DataObject> objectsFromEs,
