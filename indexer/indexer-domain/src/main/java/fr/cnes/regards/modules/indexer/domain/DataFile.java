@@ -252,7 +252,7 @@ public class DataFile {
     }
 
     public static DataFile build(DataType dataType, String filename, URI uri, MimeType mimeType, Boolean online,
-            Boolean external) {
-        return DataFile.build(dataType, filename, uri.toString(), mimeType, online, external);
+            Boolean reference) {
+        return DataFile.build(dataType, filename, uri.toString(), mimeType, online, reference);
     }
 }
