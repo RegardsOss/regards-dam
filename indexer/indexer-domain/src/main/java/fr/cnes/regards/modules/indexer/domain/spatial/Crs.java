@@ -30,7 +30,14 @@ public enum Crs {
                    + "    AUTHORITY[\"EPSG\",\"4326\"]]"),
     MARS_49900("GEOGCS[\"Mars 2000\",\n" + "    DATUM[\"D_Mars_2000\",\n"
                        + "        SPHEROID[\"Mars_2000_IAU_IAG\",3396190.0,169.89444722361179]],\n"
-                       + "    PRIMEM[\"Greenwich\",0],\n" + "    UNIT[\"Decimal_Degree\",0.0174532925199433]]");
+                       + "    PRIMEM[\"Greenwich\",0],\n" + "    UNIT[\"Decimal_Degree\",0.0174532925199433]]"),
+    ASTRO("GEOGCS[\"Unspecified datum based upon the GRS 1980 Authalic Sphere\",\n"
+                  + "    DATUM[\"Not_specified_based_on_GRS_1980_Authalic_Sphere\",\n"
+                  + "        SPHEROID[\"GRS 1980 Authalic Sphere\",6371007,0,\n"
+                  + "            AUTHORITY[\"EPSG\",\"7048\"]],\n" + "        AUTHORITY[\"EPSG\",\"6047\"]],\n"
+                  + "    PRIMEM[\"Greenwich\",0,\n" + "        AUTHORITY[\"EPSG\",\"8901\"]],\n"
+                  + "    UNIT[\"degree\",0.01745329251994328,\n" + "        AUTHORITY[\"EPSG\",\"9122\"]],\n"
+                  + "    AUTHORITY[\"EPSG\",\"4047\"]]");
 
     // Associated WKT
     private String wkt;
@@ -42,4 +49,4 @@ public enum Crs {
     public String getWkt() {
         return wkt;
     }
-}
+    }

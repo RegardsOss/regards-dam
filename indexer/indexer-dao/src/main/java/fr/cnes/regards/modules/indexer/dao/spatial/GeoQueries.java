@@ -245,41 +245,9 @@ public final class GeoQueries {
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
     public static ShapeBuilder computeShapeBuilder(PolygonCriterion criterion) {
-        double[][][] coordinates = criterion.getCoordinates();
         // Only shell can be taken into account (external emprise)
-        double[][] shell = coordinates[0];
-        // Use SphericalPolygonsSet to model polygon (first shell coordinates are last too)
-        S2Point[] shellPoints = new S2Point[shell.length - 1];
-        for (int i = 0; i < shellPoints.length; i++) {
-            shellPoints[i] = toPoint(shell[i][0], shell[i][1]);
-        }
+        double[][] shell = GeoHelper.normalizePolygonAsArray(criterion.getCoordinates())[0];
 
-//        MultiPolygonBuilder multiPolygonBuilder = ShapeBuilders.newMultiPolygon();
-//        SphericalPolygonsSet sphericalPolygonsSet = new SphericalPolygonsSet(TOLERANCE, shellPoints);
-//        multiPolygonBuilder.polygon(intersect(sphericalPolygonsSet, NORTH_HEMISPHERE));
-//        multiPolygonBuilder.polygon(intersect(sphericalPolygonsSet, SOUTH_HEMISPHERE));
-//        System.out.println(multiPolygonBuilder.toString());
-
-        //        SphericalPolygonsSet sphericalPolygonsSet = new SphericalPolygonsSet(TOLERANCE, shellPoints);
-        //        if ((sphericalPolygonsSet.checkPoint(NORTH_POLE) == Region.Location.INSIDE) && (
-        //                sphericalPolygonsSet.checkPoint(SOUTH_POLE) == Region.Location.INSIDE)) {
-        //            System.out.println("PBBBBBBBBBB !!!!!");
-        //        } else if ((sphericalPolygonsSet.checkPoint(NORTH_POLE) == Region.Location.INSIDE) || (
-        //                sphericalPolygonsSet.checkPoint(SOUTH_POLE) == Region.Location.INSIDE)) {
-        //            // it's a cap : polygon is around a pole
-        //            // Intersect polygon with the 4 quarters reaching both poles and use it as a multi-polygon shape builder
-        //            List<PolygonBuilder> polygonBuilders = Arrays.stream(QUARTERS)
-        //                    .map(quarter -> intersect(sphericalPolygonsSet, quarter)).filter(Objects::nonNull)
-        //                    .collect(Collectors.toList());
-        //            if (polygonBuilders.size() == 1) {
-        //                return polygonBuilders.get(0);
-        //            } else {
-        //                MultiPolygonBuilder multiPolygonBuilder = ShapeBuilders.newMultiPolygon();
-        //                polygonBuilders.forEach(multiPolygonBuilder::polygon);
-        //                return multiPolygonBuilder;
-        //            }
-        //        }
-        // Third: no particular case polygon
         CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
         for (double[] point : shell) {
             coordBuilder.coordinate(new Coordinate(point[0], point[1]));

@@ -59,6 +59,10 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards-starter</artifactId>
 		</dependency>
 		<dependency>

@@ -50,11 +50,13 @@ import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 
 /**
  * Criterion visitor implementation to manage a criterion containing geometric criterions on other CRS (as Mars or Astro
- * ones). The only geometric criterion found is a circleCriterion one.
- * All circle criterions must lead to two criterion trees :
- * - first one will take all points into an inner circle projection,
+ * ones). The only geometric criterion found is a circleCriterion one.<br/>
+ * All circle criterions must lead to two criterion trees :<br/>
+ * - first one will take all points into an inner circle projection,<br/>
  * - second one will take only points between inner one and outer ones (and resulted points will be tested with
- * Geotools to know if they are taken or not)
+ * Geotools to know if they are taken or not).<br/>
+ * Be careful: in case inner and outer circles are the same (circle center on equator or pole for example), both
+ * resulted criterions tree are the same (first one).<br/>
  * @author oroussel
  */
 public class GeoCriterionWithCircleVisitor implements ICriterionVisitor<Pair<ICriterion, ICriterion>> {
@@ -185,11 +187,25 @@ public class GeoCriterionWithCircleVisitor implements ICriterionVisitor<Pair<ICr
             double distanceNorthermostCenter = GeoHelper.getDistanceOnEarth(centerOnWgs84, northernmostPointOnWgs84);
             // Compute distance from center and southernmost point on WGS84
             double distanceSouthermostCenter = GeoHelper.getDistanceOnEarth(centerOnWgs84, southernmostPointOnWgs84);
-            // Return pair with circle criterion on min distance and circle criterion on max distance
-            String minDistance = Double.toString(FastMath.min(distanceNorthermostCenter, distanceSouthermostCenter));
-            String maxDistance = Double.toString(FastMath.max(distanceNorthermostCenter, distanceSouthermostCenter));
-            return Pair.of(ICriterion.intersectsCircle(centerOnWgs84, minDistance),
-                           ICriterion.intersectsCircle(centerOnWgs84, maxDistance));
+            // Return pair with circle criterion on min distance...
+            double minDistanceAsDouble = FastMath.min(distanceNorthermostCenter, distanceSouthermostCenter);
+            String minDistance = Double.toString(minDistanceAsDouble);
+            ICriterion inMinCircleCrit = ICriterion.intersectsCircle(centerOnWgs84, minDistance);
+            // ...and (not circle on min distance and circle criterion on max distance) => between both circles
+            double maxDistanceAsDouble = FastMath.max(distanceNorthermostCenter, distanceSouthermostCenter);
+            // TO BE INVESTIGATE
+            // Because of error precision between Elasticsearch and Postgis, increase a little maxDistance
+//            maxDistanceAsDouble *= 1.1;
+            String maxDistance = Double.toString(maxDistanceAsDouble);
+            // Be careful : in some cases (center on equator or on a pole), max and min distances are equal.
+            // In this case, we return same CircleCriterion to make both criterion trees equals and so avoiding
+            // executing two requests
+            // Because of maxDistance increase due to error precision, this case should never occur
+            ICriterion betweenBothCirclesCriterion = (minDistance.equals(maxDistance)) ?
+                    inMinCircleCrit :
+                    ICriterion.and(ICriterion.not(inMinCircleCrit),
+                                   ICriterion.intersectsCircle(centerOnWgs84, maxDistance));
+            return Pair.of(inMinCircleCrit, betweenBothCirclesCriterion);
         } catch (TransformException e) {
             throw new RsRuntimeException(e);
         }

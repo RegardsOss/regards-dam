@@ -37,6 +37,8 @@ public class EsHelper {
 
     private static final MathContext mathContext = new MathContext(PRECISION);
 
+    private static final MathContext hightPrecisionMathContext = new MathContext(12);
+
     private static final MathContext mathContextUp = new MathContext(PRECISION, RoundingMode.CEILING);
 
     private static final MathContext mathContextDown = new MathContext(PRECISION, RoundingMode.FLOOR);
@@ -45,7 +47,7 @@ public class EsHelper {
     }
 
     /**
-     * 2 decimal scaled double operation
+     * 2 decimals scaled double operation
      * @param n value to scale
      * @return 2 decimal digits scaled value
      */
@@ -55,6 +57,19 @@ public class EsHelper {
         }
         return BigDecimal.valueOf(n).round(mathContext).doubleValue();
     }
+
+    /**
+     * 12 decimals scaled double operation
+     * @param n value to scale
+     * @return 12 decimal digits scaled value
+     */
+    public static final double highScaled(double n) {
+        if (!Double.isFinite(n)) {
+            return n;
+        }
+        return BigDecimal.valueOf(n).round(hightPrecisionMathContext).doubleValue();
+    }
+
 
     /**
      * 2 decimal scaled and always increments to the next digit if the parameter value is positive
@@ -93,7 +108,7 @@ public class EsHelper {
      * @return distance in meters
      */
     public static double toMeters(String value) {
-        Pattern p = Pattern.compile("^([\\d]*\\.?[\\d]*\\d(?:e-?\\d+)?)\\s*([iymkc]\\S*)?$");
+        Pattern p = Pattern.compile("^([\\d]*\\.?[\\d]*\\d(?:[eE]-?\\d+)?)\\s*([iymkc]\\S*)?$");
         Matcher m = p.matcher(value.trim());
         if (!m.matches()) {
             throw new IllegalArgumentException("Bad value with unit (" + value + ")");

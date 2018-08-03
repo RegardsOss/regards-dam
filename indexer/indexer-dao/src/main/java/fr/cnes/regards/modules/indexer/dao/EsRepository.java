@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -97,6 +98,7 @@ import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.hipparchus.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,28 +108,39 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
-
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
@@ -135,6 +148,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
@@ -220,7 +235,12 @@ public class EsRepository implements IEsRepository {
                                                      esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        restClient = RestClient.builder(new HttpHost(esHost, esPort)).build();
+        restClient = RestClient.builder(new HttpHost(esHost, esPort))
+                //                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(60_000))
+                //                .setMaxRetryTimeoutMillis(60_000).build();
+                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1200_000))
+                .setMaxRetryTimeoutMillis(1200_000).build();
+
         client = new RestHighLevelClient(restClient);
 
         try {
@@ -282,8 +302,21 @@ public class EsRepository implements IEsRepository {
             for (String type : types) {
                 try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                     String mapping = builder.startObject().startObject(type).startObject("properties")
-                            .startObject("feature.geometry").field("type", "geo_shape").endObject().startObject("wgs84")
-                            .field("type", "geo_shape").endObject().endObject().endObject().endObject().string();
+                            .startObject("wgs84").field("type", "geo_shape")
+                            // With geohash
+                            .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
+                            //                                .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
+                            //                            .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
+                            //                            .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
+                            //                            .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
+
+                            // With quadtree
+                            .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
+                            //                                .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
+                            //                            .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
+
+                            .endObject().
+                                    endObject().endObject().endObject().string();
 
                     HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
                     Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
@@ -297,6 +330,50 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean setSettingsForBulk(String index) {
+        try {
+            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+                String mapping = builder.startObject().startObject("index").field("refresh_interval", "-1")
+                        .field("number_of_replicas", "0").
+                                endObject().endObject().string();
+
+                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+                Response response = restClient
+                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public boolean unsetSettingsForBulk(String index) {
+        try {
+            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+                String mapping = builder.startObject().startObject("index").field("refresh_interval", "1s")
+                        .field("number_of_replicas", "1").
+                                endObject().endObject().string();
+
+                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+                Response response = restClient
+                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+
     }
 
     @Override
@@ -507,10 +584,120 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion crit,
             Map<String, FacetType> facetsMap) {
+        ICriterion criterion = (crit == null) ? ICriterion.all() : crit;
+        // Search context is different from Earth search context, check if it's a geo-search
+        if (searchKey.getCrs() != Crs.WGS_84) {
+            // Does criterion tree contain a BoundaryBox or Polygon criterion, if so => make a projection on WGS84
+            if (GeoHelper.containsPolygonOrBboxCriterion(criterion)) {
+                GeoCriterionWithPolygonOrBboxVisitor visitor = new GeoCriterionWithPolygonOrBboxVisitor(
+                        searchKey.getCrs());
+                criterion = criterion.accept(visitor);
+                PolygonCriterion polygonCrit = GeoHelper.findPolygonCriterion(criterion);
+                if (polygonCrit != null) {
+                    LOGGER.debug("Searching intersection with polygon {} projected on WGS84...",
+                                 Arrays.stream(polygonCrit.getCoordinates()[0]).map(p -> Arrays.toString(p))
+                                         .collect(Collectors.joining(",")));
+                }
+            } else if (GeoHelper.containsCircleCriterion(criterion)) {
+                // For Astro, circleCriterion radius is in fact the half-angle of the cone in degrees
+                // We must change it into projected equivalent radius
+                if (searchKey.getCrs() == Crs.ASTRO) {
+                    CircleCriterion initialCircleCriterion = GeoHelper.findCircleCriterion(crit);
+                    // Radius MUST NOT HAVE A UNIT
+                    initialCircleCriterion.setRadius(
+                            FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
+                                    * AUTHALIC_SPHERE_RADIUS);
+                }
+                // If criterion contains a Circle criterion, it is more complicated :
+                // Mars and Earth flattenings are different (and so astro, it's a perfect sphere)
+                // So we obtain a max radius cricle and a min radius circle for earth projected coordinates
+                // Every shapes into min radius circle are guaranted to be ok
+                // Every shapes outo max radius circle are guaranted to not be ok
+                // Other ones must be unitary tested one by one
+                GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(searchKey.getCrs());
+                Pair<ICriterion, ICriterion> critOnWgs84Pair = criterion.accept(visitor);
+                // In case of symetry (=> same radius for inner and outer circles) same criterion is returned into pair
+                if (critOnWgs84Pair.getFirst().equals(critOnWgs84Pair.getSecond())) {
+                    long start = System.currentTimeMillis();
+                    FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
+                    LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
+                                 GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
+                                 System.currentTimeMillis() - start);
+                    return page;
+                }
+                // Criterion permiting to retrieve shapes betwwen both circles
+                ICriterion betweenInnerAndOuterCirclesCriterionOnWgs84 = critOnWgs84Pair.getSecond();
+
+                // FIRST: retrieve all data into inner circle
+                ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
+                long start = System.currentTimeMillis();
+                FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion,
+                                                           facetsMap);
+                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+                if (!intoInnerCirclePage.isLast()) {
+                    throw new RsRuntimeException(
+                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+                }
+                CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
+                LOGGER.debug(
+                        "Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
+                        intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
+                        Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
+                // SECOND: retrieve all data between inner and outer circles
+                start = System.currentTimeMillis();
+                FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
+                                                                       betweenInnerAndOuterCirclesCriterionOnWgs84,
+                                                                       facetsMap);
+                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+                if (!intoInnerCirclePage.isLast()) {
+                    throw new RsRuntimeException(
+                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+                }
+                LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
+                             betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
+
+                // THIRD: keep only entities with a shape nearer than specified radius from specified center
+                // Retrieve radius of specified  circle on given Crs
+                CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
+                double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
+                double[] center = circleCriterionOnCrs.getCoordinates();
+
+                // Test all data one by one
+                List<T> inOuterCircleEntities = new ArrayList<>();
+                for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
+                    if (entity instanceof ILocalizable) {
+                        IGeometry shape = ((ILocalizable) entity).getGeometry();
+                        if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
+                            inOuterCircleEntities.add(entity);
+                        } else {
+                            System.err.println("Remove " + entity);
+                        }
+                    }
+                }
+                // Merge data
+                if (!inOuterCircleEntities.isEmpty()) {
+                    LOGGER.debug("Keep {} points between inner and outer circles", inOuterCircleEntities.size());
+                    List<T> resultList = new ImmutableList.Builder<T>().addAll(intoInnerCirclePage.getContent())
+                            .addAll(inOuterCircleEntities).build();
+                    return new FacetPage<>(resultList, null, intoInnerCirclePage.getPageable(), resultList.size());
+                } else {
+                    LOGGER.debug("Keep no points between inner and outer circles");
+                }
+                return intoInnerCirclePage;
+            }
+        }
+        return search0(searchKey, pageRequest, criterion, facetsMap);
+    }
+
+    /**
+     * Inner search on WGS84 method
+     */
+    private <T extends IIndexable> FacetPage<T> search0(SearchKey<T, T> searchKey, Pageable pageRequest,
+            ICriterion criterion, Map<String, FacetType> facetsMap) {
         String index = searchKey.getSearchIndex();
         try {
             final List<T> results = new ArrayList<>();
-            ICriterion criterion = (crit == null) ? ICriterion.all() : crit;
+
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(criterion.accept(CRITERION_VISITOR));
@@ -540,7 +727,8 @@ public class EsRepository implements IEsRepository {
             if (lastSearchAfterSortValues != null) {
                 builder.searchAfter(lastSearchAfterSortValues).from(0);
                 manageSortRequest(index, builder, sort);
-            } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
+                //            } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
+            } else if (sort != null) {
                 manageSortRequest(index, builder, sort);
             }
 
@@ -548,8 +736,12 @@ public class EsRepository implements IEsRepository {
             boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
             request.source(builder);
             // Launch the request
+            long start = System.currentTimeMillis();
+            LOGGER.trace("ElasticsearchRequest: {}", request.toString());
             SearchResponse response = client.search(request);
+            LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
 
+            start = System.currentTimeMillis();
             Set<IFacet<?>> facetResults = new HashSet<>();
             if (response.getHits().getTotalHits() != 0) {
                 // At least one numeric facet is present, we need to replace all numeric facets by associated range
@@ -569,14 +761,15 @@ public class EsRepository implements IEsRepository {
                     manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
                     // Relaunch the request with replaced facets
                     request.source(builder);
+                    LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
                     response = client.search(request);
                 }
 
                 // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
                 // (not necessarly)
-                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW)
-                        || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
-                    saveReminder(searchKey, pageRequest, crit, sort, response);
+                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize()
+                        == MAX_RESULT_WINDOW)) {
+                    saveReminder(searchKey, pageRequest, criterion, sort, response);
                 }
 
                 if ((facetsMap != null) && (response.getAggregations() != null)) {
@@ -590,7 +783,10 @@ public class EsRepository implements IEsRepository {
                     }
                 }
             }
+            LOGGER.debug("After Elasticsearch request execution, aggs and searchAfter management : {} ms",
+                         System.currentTimeMillis() - start);
 
+            start = System.currentTimeMillis();
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
@@ -601,6 +797,8 @@ public class EsRepository implements IEsRepository {
                     throw new RsRuntimeException(e);
                 }
             }
+            LOGGER.debug("After Elasticsearch request execution, gsonification : {} ms",
+                         System.currentTimeMillis() - start);
             return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
             throw new RsRuntimeException(e);

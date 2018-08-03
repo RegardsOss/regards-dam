@@ -36,8 +36,8 @@ import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.AbstractOnPointsTest;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -46,11 +46,9 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 /**
  * @author oroussel
  */
-public class GeoQueryOnPointsTest {
+public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
 
     private static final String INDEX = "test_geo";
-
-    private static final String TYPE = "geo";
 
     private static Gson gson;
 
@@ -108,7 +106,7 @@ public class GeoQueryOnPointsTest {
                 .intersectsPolygon(simplePolygon(0, 0, 45, 0, 45, 45));
         QueryBuilderCriterionVisitor visitor = new QueryBuilderCriterionVisitor();
         QueryBuilder builder = visitor.visitPolygonCriterion(criterion);
-        Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"geometry\" : {\n" + "      \"shape\" : {\n"
+        Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"wgs84\" : {\n" + "      \"shape\" : {\n"
                                     + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
                                     + "        \"coordinates\" : [\n" + "          [\n" + "            [\n"
                                     + "              0.0,\n" + "              0.0\n" + "            ],\n"
@@ -154,12 +152,12 @@ public class GeoQueryOnPointsTest {
                 .intersectsPolygon(simplePolygon(170, 20, -170, 20, -170, 60, 170, 60));
         QueryBuilderCriterionVisitor visitor = new QueryBuilderCriterionVisitor();
         QueryBuilder builder = visitor.visitPolygonCriterion(criterion);
-        Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"geometry\" : {\n" + "      \"shape\" : {\n"
+        Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"wgs84\" : {\n" + "      \"shape\" : {\n"
                                     + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
                                     + "        \"coordinates\" : [\n" + "          [\n" + "            [\n"
                                     + "              170.0,\n" + "              20.0\n" + "            ],\n"
-                                    + "            [\n" + "              -170.0,\n" + "              20.0\n"
-                                    + "            ],\n" + "            [\n" + "              -170.0,\n"
+                                    + "            [\n" + "              190.0,\n" + "              20.0\n"
+                                    + "            ],\n" + "            [\n" + "              190.0,\n"
                                     + "              60.0\n" + "            ],\n" + "            [\n"
                                     + "              170.0,\n" + "              60.0\n" + "            ],\n"
                                     + "            [\n" + "              170.0,\n" + "              20.0\n"
@@ -353,97 +351,4 @@ public class GeoQueryOnPointsTest {
 
     }
 
-    private static class Item<T> implements IIndexable {
-
-        private String id;
-
-        private Geometry<T> geometry;
-
-        public Item(String id, Geometry<T> geometry) {
-            this.id = id;
-            this.geometry = geometry;
-        }
-
-        @Override
-        public String getDocId() {
-            return id;
-        }
-
-        @Override
-        public String getType() {
-            return TYPE;
-        }
-
-        public Geometry<T> getGeometry() {
-            return geometry;
-        }
-
-        public void setGeometry(Geometry<T> geometry) {
-            this.geometry = geometry;
-        }
-    }
-
-    private static class PointItem extends Item<double[]> {
-
-        public PointItem(String id, double... coordinates) {
-            super(id, new Point(coordinates));
-        }
-    }
-
-    private enum GeometryType {
-        Point
-    }
-
-    private static class Geometry<T> {
-
-        private GeometryType type;
-
-        private T coordinates;
-
-        private String crs;
-
-        public Geometry() {
-
-        }
-
-        public Geometry(GeometryType type, T coordinates) {
-            this.type = type;
-            this.coordinates = coordinates;
-        }
-
-        public GeometryType getType() {
-            return type;
-        }
-
-        public void setType(GeometryType type) {
-            this.type = type;
-        }
-
-        public T getCoordinates() {
-            return coordinates;
-        }
-
-        public void setCoordinates(T coordinates) {
-            this.coordinates = coordinates;
-        }
-
-        public String getCrs() {
-            return crs;
-        }
-
-        public void setCrs(String crs) {
-            this.crs = crs;
-        }
-    }
-
-    private static class Point extends Geometry<double[]> {
-
-        public Point() {
-            super(GeometryType.Point, null);
-        }
-
-        public Point(double... coordinates) {
-            super(GeometryType.Point, coordinates);
-        }
-    }
 }
