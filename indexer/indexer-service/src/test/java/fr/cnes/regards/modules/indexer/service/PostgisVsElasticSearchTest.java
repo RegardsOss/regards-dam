@@ -36,6 +36,7 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.referencing.operation.TransformException;
@@ -64,6 +65,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * @author oroussel
  */
+@Ignore
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { SearchConfiguration.class })
 public class PostgisVsElasticSearchTest {

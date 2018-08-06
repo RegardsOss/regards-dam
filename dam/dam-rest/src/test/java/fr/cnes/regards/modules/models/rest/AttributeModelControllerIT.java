@@ -40,6 +40,7 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
 import org.springframework.restdocs.snippet.Attributes;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -74,6 +75,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionT
  *
  * @author msordi
  */
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=att_model_it" })
 @MultitenantTransactional
 public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
@@ -212,7 +214,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
         ConstrainedFields constrainedFields = new ConstrainedFields(Fragment.class);
         List<FieldDescriptor> descriptors = new ArrayList<>();
-        //fragment being optional, we have to set all of its attribute as optional
+        // fragment being optional, we have to set all of its attribute as optional
         if (!creation) {
             descriptors.add(constrainedFields
                     .withPath(prefixPath + "id", "id", "Fragment identifier", "Must be a whole number")
@@ -242,7 +244,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                           "Available values: " + Arrays.stream(RestrictionType.values())
                                   .map(restrictionType -> restrictionType.name()).collect(Collectors.joining(", ")))
                 .type(JSON_STRING_TYPE).optional());
-        //document fields for RangeRestriction
+        // document fields for RangeRestriction
         descriptors.add(constrainedFields
                 .withPath(prefixPath + "min", prefixPath + "min", "Minimum possible value",
                           "Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
@@ -261,14 +263,14 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                           "Whether the maximum values is to be excluded from the range",
                           "Defaults to false. Apply to restriction type LONG_RANGE & INTEGER_RANGE & DOUBLE_RANGE")
                 .type(JSON_BOOLEAN_TYPE).optional());
-        //document fields for EnumerationRestriction
+        // document fields for EnumerationRestriction
         descriptors.add(
                         constrainedFields
                                 .withPath(prefixPath + "acceptableValues", prefixPath + "acceptableValues",
                                           "Acceptable values", "Apply to restriction type ENUMERATION")
                                 .type(JSON_ARRAY_TYPE).optional());
 
-        //document fields for PatternRestriction
+        // document fields for PatternRestriction
         descriptors
                 .add(constrainedFields.withPath(prefixPath + "pattern", prefixPath + "pattern", "Validation pattern",
                                                 "Apply to restriction type PATTERN")
@@ -417,8 +419,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                                 .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE),
                                             Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
                                                     .value("Available values: " + Arrays.stream(EntityType.values())
-                                                            .map(type -> type.name()).collect(Collectors
-                                                                    .joining(", "))))));
+                                                            .map(type -> type.name())
+                                                            .collect(Collectors.joining(", "))))));
 
         performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
                           requestBuilderCustomizer, "Cannot get all attributes", EntityType.COLLECTION.toString());
@@ -524,21 +526,12 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.customizeRequestParam().param(AttributeModelController.PARAM_FRAGMENT_NAME,
                                                                fragmentName);
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
-                .parameterWithName(AttributeModelController.PARAM_FRAGMENT_NAME).description("fragment name")
-                .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))
-                .optional(), RequestDocumentation.parameterWithName("modelIds").description("model id")
-                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_ARRAY_TYPE),
-                                    Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
-                                            .value("Values must be whole numbers"))
-                        .optional(), RequestDocumentation.parameterWithName(AttributeModelController.PARAM_TYPE)
-                                .description("attribute type")
-                                .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE)
-                                        .value(JSON_STRING_TYPE), Attributes
-                                                .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
-                                                .value("Available values: " + Arrays.stream(AttributeType.values())
-                                                        .map(type -> type.name()).collect(Collectors.joining(", "))))
-                                .optional()));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .requestParameters(RequestDocumentation.parameterWithName(AttributeModelController.PARAM_FRAGMENT_NAME)
+                        .description("fragment name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE)
+                                .value(JSON_STRING_TYPE))
+                        .optional(), RequestDocumentation.parameterWithName("modelIds").description("model id").attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_ARRAY_TYPE), Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Values must be whole numbers")).optional(), RequestDocumentation.parameterWithName(AttributeModelController.PARAM_TYPE).description("attribute type").attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE), Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Available values: " + Arrays.stream(AttributeType.values()).map(type -> type.name()).collect(Collectors.joining(", ")))).optional()));
 
         performDefaultGet(AttributeModelController.TYPE_MAPPING, requestBuilderCustomizer,
                           "Should return result " + expectedSize + " attributes.");
@@ -692,8 +685,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                                 .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE),
                                             Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
                                                     .value("Available values: " + Arrays.stream(AttributeType.values())
-                                                            .map(type -> type.name()).collect(Collectors
-                                                                    .joining(", "))))));
+                                                            .map(type -> type.name())
+                                                            .collect(Collectors.joining(", "))))));
 
         performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING, requestBuilderCustomizer,
                           "STRING restriction should exists!");

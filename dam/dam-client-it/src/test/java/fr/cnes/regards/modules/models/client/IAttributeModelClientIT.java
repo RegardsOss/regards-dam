@@ -23,10 +23,13 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +42,9 @@ import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * Integration tests for {@link IAttributeModelClient}.
@@ -49,6 +54,30 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 @TestPropertySource("classpath:test.properties")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 public class IAttributeModelClientIT extends AbstractRegardsWebIT {
+
+    @Configuration
+    static class Conf {
+
+        @Bean
+        public IAttributeModelClient attributeModelClient() {
+            return Mockito.mock(IAttributeModelClient.class);
+        }
+
+        @Bean
+        public IProjectsClient projectsClient() {
+            return Mockito.mock(IProjectsClient.class);
+        }
+
+        @Bean
+        public IModelAttrAssocClient modelAttrAssocClient() {
+            return Mockito.mock(IModelAttrAssocClient.class);
+        }
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+    }
 
     /**
      * Class logger
