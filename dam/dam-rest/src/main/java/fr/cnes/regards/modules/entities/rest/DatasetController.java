@@ -220,7 +220,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @param result for validation of entites' properties
      * @return the updated dataset wrapped in an HTTP response
      */
-    @RequestMapping(method = RequestMethod.POST, value = DATASET_ID_PATH)
+    @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Update a dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
             @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {

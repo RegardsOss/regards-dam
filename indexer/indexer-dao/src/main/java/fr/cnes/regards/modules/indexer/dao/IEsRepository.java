@@ -83,6 +83,10 @@ public interface IEsRepository {
      */
     boolean setGeometryMapping(String index, String... types);
 
+    boolean setSettingsForBulk(String index);
+
+    boolean unsetSettingsForBulk(String index);
+
     /**
      * Delete specified index
      * @param index index

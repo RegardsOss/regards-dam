@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.Transient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotBlank;
@@ -53,6 +54,7 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
     /**
      * Submission information package provider identifier
      */
+    @NotBlank(message = "Feature provider id is required")
     protected String providerId;
 
     @NotNull(message = "Feature type is required")
@@ -67,6 +69,7 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
     /**
      * Related entity files
      */
+    @Valid
     protected Multimap<DataType, DataFile> files = HashMultimap.create();
 
     /**

@@ -129,6 +129,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
 
     private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
 
+    @Override
     @EventListener
     public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
@@ -137,6 +138,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     /**
      * Receiving a message from crawler
      */
+    @Override
     @EventListener
     @RegardsTransactional
     public void handleMessageEvent(MessageEvent event) {
@@ -213,16 +215,16 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | InterruptedException | ExecutionException | DataSourceException | ModuleException | NoClassDefFoundError e) {
+                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
+                                    | DataSourceException | ModuleException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
                                 e.printStackTrace(new PrintWriter(sw));
-                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
-                                        sw.toString() :
-                                        dsIngestion.getStackTrace() + "\n" + sw.toString();
+                                String stackTrace = (dsIngestion.getStackTrace() == null) ? sw.toString()
+                                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
                                 dsIngestion.setStackTrace(stackTrace);
                             }
                             // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
@@ -257,10 +259,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                                                                                 OffsetDateTime.now()
-                                                                                         .withOffsetSameInstant(
-                                                                                                 ZoneOffset.UTC),
-                                                                                 pluginConf.getLabel())))
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -294,20 +293,21 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
      * Compute next ingestion planned date if needed in its own transaction to prevent making
      * updateAndCleanTenantDatasourceIngestions failing and rollbacking its transaction
      */
+    @Override
     @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
     public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
-                        dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
+                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
+                        : dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(
-                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                          ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress

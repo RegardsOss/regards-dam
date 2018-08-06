@@ -32,7 +32,7 @@ public class BoundaryBoxCriterion implements ICriterion {
 
     private final double minY;
 
-    private final double maxX;
+    private double maxX;
 
     private final double maxY;
 
@@ -62,7 +62,7 @@ public class BoundaryBoxCriterion implements ICriterion {
 
     @Override
     public ICriterion copy() {
-        return new BoundaryBoxCriterion(this.maxY, this.minX, this.minY, this.maxX);
+        return new BoundaryBoxCriterion(this.minX, this.minY, this.maxX, this.maxY);
     }
 
     @Override
@@ -84,6 +84,13 @@ public class BoundaryBoxCriterion implements ICriterion {
 
     public double getMaxX() {
         return maxX;
+    }
+
+    /**
+     * This method can be used by QueryBuilderCriterionVisitor to update a > 180 longitude
+     */
+    public void setMaxX(double maxX) {
+        this.maxX = maxX;
     }
 
     @Override

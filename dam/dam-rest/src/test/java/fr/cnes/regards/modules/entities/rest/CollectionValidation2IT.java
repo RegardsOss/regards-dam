@@ -225,7 +225,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collection,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collection,
                            customizer, "Failed to update a collection", collection.getId());
 
         // lets change the non alterable
@@ -248,7 +248,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
         tenantResolver.forceTenant(getDefaultTenant());
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, newCollection,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, newCollection,
                            customizer, "Failed to update a collection", collection.getId());
     }
 
@@ -289,7 +289,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, optionalAltered,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, optionalAltered,
                            customizer, "Failed to update a collection", optionalNonAlterable.getId());
 
         // now lets try again without giving the value on the creation
@@ -323,7 +323,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        performDefaultPost(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING,
+        performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING,
                            optionalAlteredNotGiven, customizer, "Failed to update a collection",
                            optionalNotGivenNonAlterable.getId());
     }
