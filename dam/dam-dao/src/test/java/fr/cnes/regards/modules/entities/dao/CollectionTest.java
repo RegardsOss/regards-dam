@@ -54,7 +54,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         model1.setName("Model1");
         model1.setType(EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
-        Collection coll = new Collection(model1, "PROJECT", "coll");
+        Collection coll = new Collection(model1, "PROJECT", "coll", "coll");
         coll.setProviderId("IpID");
         Collection collection1 = collectionRepository.save(coll);
         Collection collection2 = collectionRepository.findOne(collection1.getId());
@@ -74,12 +74,12 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         // Create collections
         List<Collection> cols = new ArrayList<>();
         for (int i = 1; i < 4; i++) {
-            Collection coll = new Collection(model1, "PROJECT", colBaseName + i);
+            Collection coll = new Collection(model1, "PROJECT", colBaseName + i, colBaseName + i);
             coll.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
             cols.add(coll);
         }
 
-        Collection coll = new Collection(model1, "PROJECT", "nomatch");
+        Collection coll = new Collection(model1, "PROJECT", "nomatch", "nomatch");
         coll.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         cols.add(coll);
 

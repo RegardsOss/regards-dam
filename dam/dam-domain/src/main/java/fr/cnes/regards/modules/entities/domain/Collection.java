@@ -36,8 +36,8 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorValue("COLLECTION")
 public class Collection extends AbstractEntity<CollectionFeature> {
 
-    public Collection(Model model, String tenant, String label) {
-        super(model, new CollectionFeature(tenant, label));
+    public Collection(Model model, String tenant, String providerId, String label) {
+        super(model, new CollectionFeature(tenant, providerId, label));
     }
 
     public Collection() {

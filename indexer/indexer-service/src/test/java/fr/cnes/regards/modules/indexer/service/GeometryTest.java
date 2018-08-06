@@ -33,6 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -66,7 +67,7 @@ public class GeometryTest {
 
     private Model model;
 
-    private SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
+    private final SimpleSearchKey<DataObject> searchKey = Searches.onSingleEntity(EntityType.DATA);
 
     @Before
     public void setup() throws TransformException, SQLException, IOException {
@@ -86,7 +87,7 @@ public class GeometryTest {
     }
 
     private DataObject createDataObject(String label, IGeometry shape) {
-        DataObject object = new DataObject(model, TENANT, label);
+        DataObject object = new DataObject(model, TENANT, label, label);
         object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
         object.setGeometry(GeoHelper.normalize(shape));
         object.setWgs84(GeoHelper.normalize(shape));
@@ -109,17 +110,17 @@ public class GeometryTest {
         page = repos.search(searchKey, 100, crit);
         Assert.assertEquals(0, page.getTotalElements());
 
-        //        repos.save(TENANT, createDataObject("LS2", IGeometry.lineString(170, 45, -170, 45)));
-        //        repos.refresh(TENANT);
+        // repos.save(TENANT, createDataObject("LS2", IGeometry.lineString(170, 45, -170, 45)));
+        // repos.refresh(TENANT);
         //
-        //        crit = ICriterion.intersectsBbox(171, 40, 175, 60);
-        //        page = repos.search(searchKey, 100, crit);
-        //        Assert.assertEquals(1, page.getTotalElements());
-        //        Assert.assertEquals("LS2", page.getContent().get(0).getLabel());
-        //        Assert.assertTrue("LS2 should have been transformed into MultiLineString",
-        //                          page.getContent().get(0).getGeometry() instanceof MultiLineString);
-        //        Assert.assertTrue("LS2 should have been transformed into MultiLineString",
-        //                          page.getContent().get(0).getWgs84() instanceof MultiLineString);
+        // crit = ICriterion.intersectsBbox(171, 40, 175, 60);
+        // page = repos.search(searchKey, 100, crit);
+        // Assert.assertEquals(1, page.getTotalElements());
+        // Assert.assertEquals("LS2", page.getContent().get(0).getLabel());
+        // Assert.assertTrue("LS2 should have been transformed into MultiLineString",
+        // page.getContent().get(0).getGeometry() instanceof MultiLineString);
+        // Assert.assertTrue("LS2 should have been transformed into MultiLineString",
+        // page.getContent().get(0).getWgs84() instanceof MultiLineString);
 
     }
 }

@@ -82,9 +82,10 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
     @GsonIgnore
     private Map<String, AbstractAttribute<?>> propertyMap = null;
 
-    public EntityFeature(UniformResourceName id, EntityType entityType, String label) {
+    public EntityFeature(UniformResourceName id, String providerId, EntityType entityType, String label) {
         Assert.notNull(entityType, "Entity type is required");
         setId(id);
+        this.providerId = providerId;
         this.entityType = entityType;
         this.label = label;
         this.properties = new HashSet<>();

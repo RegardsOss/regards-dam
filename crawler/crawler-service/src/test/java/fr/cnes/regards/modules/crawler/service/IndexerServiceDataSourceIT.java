@@ -310,7 +310,7 @@ public class IndexerServiceDataSourceIT {
 
         crawlerService.startWork();
         // Create 3 Datasets on all objects
-        dataset1 = new Dataset(datasetModel, tenant, "dataset label 1");
+        dataset1 = new Dataset(datasetModel, tenant, "DS1", "dataset label 1");
         dataset1.setDataModel(dataModel.getName());
         dataset1.setSubsettingClause(ICriterion.all());
         dataset1.setOpenSearchSubsettingClause("");
@@ -320,7 +320,7 @@ public class IndexerServiceDataSourceIT {
         dataset1.setGroups(Sets.newHashSet("group0", "group11"));
         dsService.create(dataset1);
 
-        dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
+        dataset2 = new Dataset(datasetModel, tenant, "DS2", "dataset label 2");
         dataset2.setDataModel(dataModel.getName());
         dataset2.setSubsettingClause(ICriterion.all());
         dataset2.setOpenSearchSubsettingClause("");
@@ -330,7 +330,7 @@ public class IndexerServiceDataSourceIT {
         dataset2.setGroups(Sets.newHashSet("group12", "group11"));
         dsService.create(dataset2);
 
-        dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
+        dataset3 = new Dataset(datasetModel, tenant, "DS3", "dataset label 3");
         dataset3.setDataModel(dataModel.getName());
         dataset3.setSubsettingClause(ICriterion.all());
         dataset3.setOpenSearchSubsettingClause("");

@@ -96,8 +96,8 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
         super(null, null);
     }
 
-    public Dataset(Model model, String tenant, String label) {
-        super(model, new DatasetFeature(tenant, label));
+    public Dataset(Model model, String tenant, String providerId, String label) {
+        super(model, new DatasetFeature(tenant, providerId, label));
     }
 
     /**

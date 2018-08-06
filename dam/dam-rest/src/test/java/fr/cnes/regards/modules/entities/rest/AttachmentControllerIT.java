@@ -89,7 +89,7 @@ public class AttachmentControllerIT extends AbstractRegardsTransactionalIT {
         modelService.createModel(collectionModel);
 
         // Create a collection
-        collection = new Collection(collectionModel, getDefaultTenant(), "Collection label");
+        collection = new Collection(collectionModel, getDefaultTenant(), "COL1", "Collection label");
         collectionService.create(collection);
     }
 

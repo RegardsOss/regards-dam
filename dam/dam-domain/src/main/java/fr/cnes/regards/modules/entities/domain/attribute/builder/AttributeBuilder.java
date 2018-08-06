@@ -223,100 +223,99 @@ public final class AttributeBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public static <U, T extends AbstractAttribute<U>> T forTypeWithNullValue(AttributeType pAttributeType,
-            String pName) {
-        switch (pAttributeType) {
+    public static <U, T extends AbstractAttribute<U>> T forTypeWithNullValue(AttributeType attributeType, String name) {
+        switch (attributeType) {
             case INTEGER:
-                return (T) buildInteger(pName, null);
+                return (T) buildInteger(name, null);
             case BOOLEAN:
-                return (T) buildBoolean(pName, null);
+                return (T) buildBoolean(name, null);
             case DATE_ARRAY:
-                return (T) buildDateArray(pName);
+                return (T) buildDateArray(name);
             case DATE_INTERVAL:
-                return (T) buildDateInterval(pName, null);
+                return (T) buildDateInterval(name, null);
             case DATE_ISO8601:
-                return (T) buildDate(pName, null);
+                return (T) buildDate(name, null);
             case DOUBLE:
-                return (T) buildDouble(pName, null);
+                return (T) buildDouble(name, null);
             case DOUBLE_ARRAY:
-                return (T) buildDoubleArray(pName);
+                return (T) buildDoubleArray(name);
             case DOUBLE_INTERVAL:
-                return (T) buildDoubleInterval(pName, null);
+                return (T) buildDoubleInterval(name, null);
             case INTEGER_ARRAY:
-                return (T) buildIntegerArray(pName);
+                return (T) buildIntegerArray(name);
             case INTEGER_INTERVAL:
-                return (T) buildIntegerInterval(pName, null);
+                return (T) buildIntegerInterval(name, null);
             case LONG:
-                return (T) buildLong(pName, null);
+                return (T) buildLong(name, null);
             case LONG_ARRAY:
-                return (T) buildLongArray(pName);
+                return (T) buildLongArray(name);
             case LONG_INTERVAL:
-                return (T) buildLongInterval(pName, null);
+                return (T) buildLongInterval(name, null);
             case STRING:
-                return (T) buildString(pName, null);
+                return (T) buildString(name, null);
             case STRING_ARRAY:
-                return (T) buildStringArray(pName);
+                return (T) buildStringArray(name);
             case URL:
-                return (T) buildUrl(pName, null);
+                return (T) buildUrl(name, null);
             default:
-                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
+                throw new IllegalArgumentException(attributeType + " is not a handled value of "
                         + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 
-    private static LongIntervalAttribute buildLongInterval(String pName, Range<Long> pValue) {
+    private static LongIntervalAttribute buildLongInterval(String name, Range<Long> value) {
         LongIntervalAttribute att = new LongIntervalAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    private static IntegerIntervalAttribute buildIntegerInterval(String pName, Range<Integer> pValue) {
+    private static IntegerIntervalAttribute buildIntegerInterval(String name, Range<Integer> value) {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    private static DoubleIntervalAttribute buildDoubleInterval(String pName, Range<Double> pValue) {
+    private static DoubleIntervalAttribute buildDoubleInterval(String name, Range<Double> value) {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    private static DateIntervalAttribute buildDateInterval(String pName, Range<OffsetDateTime> pValue) {
+    private static DateIntervalAttribute buildDateInterval(String name, Range<OffsetDateTime> value) {
         DateIntervalAttribute att = new DateIntervalAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static UrlAttribute buildUrl(String pName, URL pValue) {
+    public static UrlAttribute buildUrl(String name, URL value) {
         UrlAttribute att = new UrlAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static BooleanAttribute buildBoolean(String pName, Boolean pValue) {
+    public static BooleanAttribute buildBoolean(String name, Boolean value) {
         BooleanAttribute att = new BooleanAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static DateArrayAttribute buildDateArray(String pName, OffsetDateTime... pOffsetDateTimes) {
+    public static DateArrayAttribute buildDateArray(String name, OffsetDateTime... offsetDateTimes) {
         DateArrayAttribute att = new DateArrayAttribute();
-        att.setName(pName);
-        att.setValue(pOffsetDateTimes);
+        att.setName(name);
+        att.setValue(offsetDateTimes);
         return att;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static DateArrayAttribute buildDateCollection(String pName, Collection offsetDateTimes) {
+    public static DateArrayAttribute buildDateCollection(String name, Collection offsetDateTimes) {
         DateArrayAttribute att = new DateArrayAttribute();
-        att.setName(pName);
+        att.setName(name);
         if (offsetDateTimes instanceof HashSet<?>) {
             att.setValue(((Set<OffsetDateTime>) offsetDateTimes).stream().toArray(OffsetDateTime[]::new));
         } else if (offsetDateTimes instanceof ArrayList<?>) {
@@ -325,18 +324,18 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static DateAttribute buildDate(String pName, OffsetDateTime pOffsetDateTime) {
+    public static DateAttribute buildDate(String name, OffsetDateTime offsetDateTime) {
         DateAttribute att = new DateAttribute();
-        att.setName(pName);
-        att.setValue(pOffsetDateTime);
+        att.setName(name);
+        att.setValue(offsetDateTime);
         return att;
     }
 
-    public static DateIntervalAttribute buildDateInterval(String pName, OffsetDateTime pLowerBoundDate,
-            OffsetDateTime pUpperBoundDate) {
+    public static DateIntervalAttribute buildDateInterval(String name, OffsetDateTime lowerBoundDate,
+            OffsetDateTime upperBoundDate) {
         DateIntervalAttribute att = new DateIntervalAttribute();
-        att.setName(pName);
-        att.setValue(Range.closed(pLowerBoundDate, pUpperBoundDate));
+        att.setName(name);
+        att.setValue(Range.closed(lowerBoundDate, upperBoundDate));
         return att;
     }
 
@@ -348,9 +347,9 @@ public final class AttributeBuilder {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static DoubleArrayAttribute buildDoubleCollection(String pName, Collection values) {
+    public static DoubleArrayAttribute buildDoubleCollection(String name, Collection values) {
         DoubleArrayAttribute att = new DoubleArrayAttribute();
-        att.setName(pName);
+        att.setName(name);
         if (values instanceof HashSet<?>) {
             att.setValue(((Set<Double>) values).stream().toArray(Double[]::new));
         } else if (values instanceof ArrayList<?>) {
@@ -359,32 +358,32 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static DoubleAttribute buildDouble(String pName, Double pValue) {
+    public static DoubleAttribute buildDouble(String name, Double value) {
         DoubleAttribute att = new DoubleAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static DoubleIntervalAttribute buildDoubleInterval(String pName, Double pLowerBoundDouble,
-            Double pUpperBoundDouble) {
+    public static DoubleIntervalAttribute buildDoubleInterval(String name, Double lowerBoundDouble,
+            Double upperBoundDouble) {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
-        att.setName(pName);
-        att.setValue(Range.closed(pLowerBoundDouble, pUpperBoundDouble));
+        att.setName(name);
+        att.setValue(Range.closed(lowerBoundDouble, upperBoundDouble));
         return att;
     }
 
-    public static IntegerArrayAttribute buildIntegerArray(String pName, Integer... pValues) {
+    public static IntegerArrayAttribute buildIntegerArray(String name, Integer... values) {
         IntegerArrayAttribute att = new IntegerArrayAttribute();
-        att.setName(pName);
-        att.setValue(pValues);
+        att.setName(name);
+        att.setValue(values);
         return att;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static IntegerArrayAttribute buildIntegerCollection(String pName, Collection values) {
+    public static IntegerArrayAttribute buildIntegerCollection(String name, Collection values) {
         IntegerArrayAttribute att = new IntegerArrayAttribute();
-        att.setName(pName);
+        att.setName(name);
         if (values instanceof HashSet<?>) {
             att.setValue(((Set<Integer>) values).stream().toArray(Integer[]::new));
         } else if (values instanceof ArrayList<?>) {
@@ -393,32 +392,32 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static AbstractAttribute<?> buildInteger(String pName, Integer pValue) {
+    public static AbstractAttribute<?> buildInteger(String name, Integer value) {
         IntegerAttribute att = new IntegerAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static IntegerIntervalAttribute buildIntegerInterval(String pName, Integer pLowerBoundInteger,
-            Integer pUpperBoundInteger) {
+    public static IntegerIntervalAttribute buildIntegerInterval(String name, Integer lowerBoundInteger,
+            Integer upperBoundInteger) {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
-        att.setName(pName);
-        att.setValue(Range.closed(pLowerBoundInteger, pUpperBoundInteger));
+        att.setName(name);
+        att.setValue(Range.closed(lowerBoundInteger, upperBoundInteger));
         return att;
     }
 
-    public static LongArrayAttribute buildLongArray(String pName, Long... pValues) {
+    public static LongArrayAttribute buildLongArray(String name, Long... values) {
         LongArrayAttribute att = new LongArrayAttribute();
-        att.setName(pName);
-        att.setValue(pValues);
+        att.setName(name);
+        att.setValue(values);
         return att;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static LongArrayAttribute buildLongCollection(String pName, Collection values) {
+    public static LongArrayAttribute buildLongCollection(String name, Collection values) {
         LongArrayAttribute att = new LongArrayAttribute();
-        att.setName(pName);
+        att.setName(name);
         if (values instanceof HashSet<?>) {
             att.setValue(((Set<Long>) values).stream().toArray(Long[]::new));
         } else if (values instanceof ArrayList<?>) {
@@ -427,38 +426,38 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static LongAttribute buildLong(String pName, Long pValue) {
+    public static LongAttribute buildLong(String name, Long value) {
         LongAttribute att = new LongAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 
-    public static LongIntervalAttribute buildLongInterval(String pName, Long pLowerBoundLong, Long pUpperBoundLong) {
+    public static LongIntervalAttribute buildLongInterval(String name, Long lowerBoundLong, Long upperBoundLong) {
         LongIntervalAttribute att = new LongIntervalAttribute();
-        att.setName(pName);
-        att.setValue(Range.closed(pLowerBoundLong, pUpperBoundLong));
+        att.setName(name);
+        att.setValue(Range.closed(lowerBoundLong, upperBoundLong));
         return att;
     }
 
-    public static ObjectAttribute buildObject(String pName, AbstractAttribute<?>... pAttributes) {
+    public static ObjectAttribute buildObject(String name, AbstractAttribute<?>... attributes) {
         ObjectAttribute att = new ObjectAttribute();
-        att.setName(pName);
-        att.setValue(Sets.newHashSet(pAttributes));
+        att.setName(name);
+        att.setValue(Sets.newHashSet(attributes));
         return att;
     }
 
-    public static StringArrayAttribute buildStringArray(String pName, String... pValues) {
+    public static StringArrayAttribute buildStringArray(String name, String... values) {
         StringArrayAttribute att = new StringArrayAttribute();
-        att.setName(pName);
-        att.setValue(pValues);
+        att.setName(name);
+        att.setValue(values);
         return att;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static StringArrayAttribute buildStringCollection(String pName, Collection values) {
+    public static StringArrayAttribute buildStringCollection(String name, Collection values) {
         StringArrayAttribute att = new StringArrayAttribute();
-        att.setName(pName);
+        att.setName(name);
         if (values instanceof HashSet<?>) {
             att.setValue(((Set<String>) values).stream().toArray(String[]::new));
         } else if (values instanceof ArrayList<?>) {
@@ -467,10 +466,10 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static StringAttribute buildString(String pName, String pValue) {
+    public static StringAttribute buildString(String name, String value) {
         StringAttribute att = new StringAttribute();
-        att.setName(pName);
-        att.setValue(pValue);
+        att.setName(name);
+        att.setValue(value);
         return att;
     }
 }

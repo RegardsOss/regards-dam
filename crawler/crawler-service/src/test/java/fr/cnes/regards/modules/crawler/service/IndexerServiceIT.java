@@ -125,7 +125,7 @@ public class IndexerServiceIT {
         model.setType(EntityType.COLLECTION);
 
         // Creating a Collection with all types of attributes
-        final Collection collection = new Collection(model, tenant, "coll1");
+        final Collection collection = new Collection(model, tenant, "COL1", "coll1");
         final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
@@ -254,7 +254,7 @@ public class IndexerServiceIT {
     }
 
     private Collection createCollection(final Model collModel, final int i) {
-        final Collection collection = new Collection(collModel, SEARCH, "coll" + i);
+        final Collection collection = new Collection(collModel, SEARCH, "COL" + i, "coll" + i);
         final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));

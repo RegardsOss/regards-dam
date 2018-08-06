@@ -39,7 +39,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
@@ -55,8 +54,6 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
  *
  */
 @RestController
-@ModuleInfo(name = "dataaccess", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CNES",
-        documentation = "http://test")
 @RequestMapping(AccessGroupController.PATH_ACCESS_GROUPS)
 public class AccessGroupController implements IResourceController<AccessGroup> {
 
@@ -117,7 +114,8 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME)
     @ResourceAccess(description = "delete the access group of name requested")
-    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") final String pAccessGroupName) throws EntityOperationForbiddenException, EntityNotFoundException {
+    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") final String pAccessGroupName)
+            throws EntityOperationForbiddenException, EntityNotFoundException {
         accessGroupService.deleteAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

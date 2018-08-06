@@ -44,6 +44,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.jillesvangurp.geo.GeoGeometry;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -127,7 +128,8 @@ public class PepsTest {
         int page = 0;
         while (!ended) {
             page++;
-            URL pepsRequestURL = new URL(String.format("https://peps.cnes.fr/resto/api/collections/S1/search.json?box=%s"
+            URL pepsRequestURL = new URL(
+                    String.format("https://peps.cnes.fr/resto/api/collections/S1/search.json?box=%s"
                             + "&instrument=SAR-C+SAR&lang=fr&maxRecords=500&page=%d&platform=S1A&polarisation=HH"
                             + "&processingLevel=LEVEL1&productType=GRD&q="
                             + "&startDate=%sT00:00:00&completionDate=%sT00:00:00", bbox, page, startDate, endDate));
@@ -146,7 +148,7 @@ public class PepsTest {
                 totalResults = properties.get("totalResults").getAsInt();
                 int startIndex = properties.get("startIndex").getAsInt();
                 int itemsPerPage = properties.get("itemsPerPage").getAsInt();
-                if (startIndex + itemsPerPage >= totalResults + 1) {
+                if ((startIndex + itemsPerPage) >= (totalResults + 1)) {
                     ended = true;
                 }
                 // Create data objects
@@ -155,10 +157,10 @@ public class PepsTest {
                     JsonObject feature = features.get(i).getAsJsonObject();
                     IGeometry geometry = gson.fromJson(feature.get("geometry"), IGeometry.class);
                     DataObject object = new DataObject(model, TENANT,
-                                                       feature.get("properties").getAsJsonObject().get("title")
-                                                               .getAsString());
-                    object.setIpId(
-                            new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
+                            feature.get("properties").getAsJsonObject().get("title").getAsString(),
+                            feature.get("properties").getAsJsonObject().get("title").getAsString());
+                    object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
+                            UUID.randomUUID(), 1));
                     object.setGeometry(geometry);
                     object.setWgs84(geometry);
                     objects.add(object);
@@ -184,8 +186,9 @@ public class PepsTest {
 
             // PEPS execution
             start = System.currentTimeMillis();
-            List<DataObject> objectsFromPeps = selectFromPeps(
-                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate);
+            List<DataObject> objectsFromPeps = selectFromPeps(String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom,
+                                                                            right, top),
+                                                              startDate, endDate);
             long durationPeps = System.currentTimeMillis() - start;
 
             checkResults(bboxPolygon, new ArrayList<>(objectsFromEs), objectsFromPeps);
@@ -204,8 +207,9 @@ public class PepsTest {
 
             // PEPS execution
             start = System.currentTimeMillis();
-            List<DataObject> objectsFromPeps = selectFromPeps(
-                    String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom, right, top), startDate, endDate);
+            List<DataObject> objectsFromPeps = selectFromPeps(String.format(Locale.ENGLISH, "%f,%f,%f,%f", left, bottom,
+                                                                            right, top),
+                                                              startDate, endDate);
             long durationPeps = System.currentTimeMillis() - start;
 
             checkResults(leftBboxPolygon, rightBboxPolygon, new ArrayList<>(objectsFromEs), objectsFromPeps);
@@ -216,17 +220,20 @@ public class PepsTest {
 
     }
 
-    private void testNegativeLatitude(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
+    private void testNegativeLatitude(double left, double bottom, double right, double top)
+            throws InvalidGeometryException, IOException {
         test(left, bottom, right, top, "2018-06-01", "2018-07-01");
     }
 
-    private void testPositiveLatitude(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
+    private void testPositiveLatitude(double left, double bottom, double right, double top)
+            throws InvalidGeometryException, IOException {
         test(left, bottom, right, top, "2017-12-01", "2018-04-01");
     }
 
-//    private void testAroundLatitude0(double left, double bottom, double right, double top) throws InvalidGeometryException, IOException {
-//        test(left, bottom, right, top, "2018-06-01", "2018-07-01", "S3");
-//    }
+    // private void testAroundLatitude0(double left, double bottom, double right, double top) throws
+    // InvalidGeometryException, IOException {
+    // test(left, bottom, right, top, "2018-06-01", "2018-07-01", "S3");
+    // }
 
     /**
      * Test on all negative latitude band that has been initially retrieved from PEPS
@@ -251,7 +258,6 @@ public class PepsTest {
         testNegativeLatitude(150, -75, 210, -65);
     }
 
-
     /**
      * Test on all positive latitude band that has been initially retrieved from PEPS
      */
@@ -275,44 +281,43 @@ public class PepsTest {
         testPositiveLatitude(150, 65, 210, 75);
     }
 
-
     /**
      * Test on all positive latitude band that has been initially retrieved from PEPS
      */
-//    @Test
-//    public void testInitialAroundLatitude0Bbox() throws InvalidGeometryException, IOException {
-//        testAroundLatitude0(-180, -10, 180, 10);
-//    }
-//
-//    @Test
-//    public void testInnerAroundLatitude0PositiveLontitudeBbox() throws InvalidGeometryException, IOException {
-//        testAroundLatitude0(15, -5, 93, 3);
-//    }
-//
-//    @Test
-//    public void testInnerAroundLatitude0OnDatelineLongitude1Bbox() throws InvalidGeometryException, IOException {
-//        testAroundLatitude0(160, -2, 200, 0);
-//    }
-//
-//    @Test
-//    public void testInnerAroundLatitude0OnDateline2Bbox() throws InvalidGeometryException, IOException {
-//        testAroundLatitude0(150, -1, 210, 1);
-//    }
-
+    // @Test
+    // public void testInitialAroundLatitude0Bbox() throws InvalidGeometryException, IOException {
+    // testAroundLatitude0(-180, -10, 180, 10);
+    // }
+    //
+    // @Test
+    // public void testInnerAroundLatitude0PositiveLontitudeBbox() throws InvalidGeometryException, IOException {
+    // testAroundLatitude0(15, -5, 93, 3);
+    // }
+    //
+    // @Test
+    // public void testInnerAroundLatitude0OnDatelineLongitude1Bbox() throws InvalidGeometryException, IOException {
+    // testAroundLatitude0(160, -2, 200, 0);
+    // }
+    //
+    // @Test
+    // public void testInnerAroundLatitude0OnDateline2Bbox() throws InvalidGeometryException, IOException {
+    // testAroundLatitude0(150, -1, 210, 1);
+    // }
 
     private void checkResults(double[][] bboxPolygon, List<DataObject> objectsFromEs,
             List<DataObject> objectsFromPeps) {
         // most polygons from Peps have an area betwwen 1e10 and 1e11
         // A polygon with an area > 1e12 means there is a problem (polygon crossing dateline)
-        checkResults(o -> GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12 || !GeoGeometry
-                .overlap(GeoUtil.toArray(o.getGeometry()), bboxPolygon), objectsFromEs, objectsFromPeps);
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12)
+                || !GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bboxPolygon), objectsFromEs, objectsFromPeps);
     }
 
     private void checkResults(double[][] bbox1Polygon, double[][] bbox2Polygon, List<DataObject> objectsFromEs,
             List<DataObject> objectsFromPeps) {
-        checkResults(o -> GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12 || (
-                !GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bbox1Polygon) && !GeoGeometry
-                        .overlap(GeoUtil.toArray(o.getGeometry()), bbox2Polygon)), objectsFromEs, objectsFromPeps);
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12)
+                || (!GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bbox1Polygon)
+                        && !GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bbox2Polygon)),
+                     objectsFromEs, objectsFromPeps);
     }
 
     private void checkResults(Predicate<DataObject> intersectPredicate, List<DataObject> objectsFromEs,

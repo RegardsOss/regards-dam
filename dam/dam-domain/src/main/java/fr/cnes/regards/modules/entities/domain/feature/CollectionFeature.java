@@ -34,12 +34,12 @@ public class CollectionFeature extends EntityFeature {
     /**
      * Deserialization constructor
      */
-    public CollectionFeature() {
-        super(null, EntityType.COLLECTION, null);
+    protected CollectionFeature() {
+        super(null, null, EntityType.COLLECTION, null);
     }
 
-    public CollectionFeature(String tenant, String label) {
+    public CollectionFeature(String tenant, String providerId, String label) {
         super(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, tenant, UUID.randomUUID(), 1),
-              EntityType.COLLECTION, label);
+              providerId, EntityType.COLLECTION, label);
     }
 }

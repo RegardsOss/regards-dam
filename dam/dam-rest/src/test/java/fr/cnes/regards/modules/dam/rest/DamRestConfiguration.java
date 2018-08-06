@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,36 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service;
+package fr.cnes.regards.modules.dam.rest;
 
 import org.mockito.Mockito;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
-import fr.cnes.regards.framework.hateoas.IResourceService;
-import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
+/**
+ * Common DAM REST mocks
+ *
+ * @author Marc Sordi
+ *
+ */
 @Configuration
-@EnableAutoConfiguration(exclude = { SecurityVoterAutoConfiguration.class })
-@ComponentScan(basePackages = { "fr.cnes.regards.modules" }) // , "fr.cnes.regards.framework.amqp" })
-public class ServiceConfiguration {
+public class DamRestConfiguration {
 
     @Bean
     public IAttributeModelClient attributeModelClient() {
         return Mockito.mock(IAttributeModelClient.class);
-    }
-
-    @Bean
-    @Primary
-    public IOpenSearchService openSearchService() {
-        return Mockito.mock(IOpenSearchService.class);
     }
 
     @Bean
@@ -59,8 +52,7 @@ public class ServiceConfiguration {
     }
 
     @Bean
-    public IResourceService resourceService() {
-        return Mockito.mock(IResourceService.class);
+    public IProjectUsersClient mockProjectUsersClient() {
+        return Mockito.mock(IProjectUsersClient.class);
     }
-
 }

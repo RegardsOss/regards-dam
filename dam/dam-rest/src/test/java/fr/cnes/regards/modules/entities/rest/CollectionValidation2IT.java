@@ -194,7 +194,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
-        Collection collection = new Collection(model1, getDefaultTenant(), COLLECTION_LABEL);
+        Collection collection = new Collection(model1, getDefaultTenant(), "COL1", COLLECTION_LABEL);
         collection.setProviderId(providerId);
         collection.setCreationDate(OffsetDateTime.now());
         Set<AbstractAttribute<?>> atts = new HashSet<>();
@@ -226,11 +226,11 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collection,
-                           customizer, "Failed to update a collection", collection.getId());
+                          customizer, "Failed to update a collection", collection.getId());
 
         // lets change the non alterable
         atts = new HashSet<>();
-        Collection newCollection = new Collection(model1, getDefaultTenant(), "newone");
+        Collection newCollection = new Collection(model1, getDefaultTenant(), "NEW1", "newone");
         newCollection.setCreationDate(collection.getCreationDate());
         newCollection.setGeometry(collection.getGeometry());
         newCollection.setGroups(collection.getGroups());
@@ -249,7 +249,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, newCollection,
-                           customizer, "Failed to update a collection", collection.getId());
+                          customizer, "Failed to update a collection", collection.getId());
     }
 
     @Test
@@ -257,7 +257,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         importModel("simpleCollectionOptional.xml");
         Model model = modelRepository.findByName("TestOptionalNonAlterable");
         // lets first create a collection with the optional non alterable attribute given.
-        Collection optionalNonAlterable = new Collection(model, getDefaultTenant(), "optionalNonAlterable");
+        Collection optionalNonAlterable = new Collection(model, getDefaultTenant(), "COL1", "optionalNonAlterable");
         optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
         Set<AbstractAttribute<?>> atts = new HashSet<>();
@@ -274,7 +274,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(getDefaultTenant());
         optionalNonAlterable = collectionService.load(optionalNonAlterable.getIpId());
         atts = new HashSet<>();
-        Collection optionalAltered = new Collection(model, getDefaultTenant(), "optionalAltered");
+        Collection optionalAltered = new Collection(model, getDefaultTenant(), "COL2", "optionalAltered");
         optionalAltered.setCreationDate(optionalNonAlterable.getCreationDate());
         optionalAltered.setGeometry(optionalNonAlterable.getGeometry());
         optionalAltered.setGroups(optionalNonAlterable.getGroups());
@@ -290,11 +290,11 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, optionalAltered,
-                           customizer, "Failed to update a collection", optionalNonAlterable.getId());
+                          customizer, "Failed to update a collection", optionalNonAlterable.getId());
 
         // now lets try again without giving the value on the creation
 
-        Collection optionalNotGivenNonAlterable = new Collection(model, getDefaultTenant(),
+        Collection optionalNotGivenNonAlterable = new Collection(model, getDefaultTenant(), "COL3",
                 "optionalNotGivenNonAlterable");
         optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
@@ -308,7 +308,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(getDefaultTenant());
         optionalNotGivenNonAlterable = collectionService.load(optionalNotGivenNonAlterable.getIpId());
         atts = new HashSet<>();
-        Collection optionalAlteredNotGiven = new Collection(model, getDefaultTenant(), "optionalAlteredNotGiven");
+        Collection optionalAlteredNotGiven = new Collection(model, getDefaultTenant(), "COL4",
+                "optionalAlteredNotGiven");
         optionalAlteredNotGiven.setCreationDate(optionalNotGivenNonAlterable.getCreationDate());
         optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getGeometry());
         optionalAlteredNotGiven.setGroups(optionalNotGivenNonAlterable.getGroups());
@@ -324,8 +325,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING,
-                           optionalAlteredNotGiven, customizer, "Failed to update a collection",
-                           optionalNotGivenNonAlterable.getId());
+                          optionalAlteredNotGiven, customizer, "Failed to update a collection",
+                          optionalNotGivenNonAlterable.getId());
     }
 
     /**
@@ -346,7 +347,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
+        final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         // bad values
@@ -382,7 +383,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
+        final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -416,7 +417,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
+        final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));

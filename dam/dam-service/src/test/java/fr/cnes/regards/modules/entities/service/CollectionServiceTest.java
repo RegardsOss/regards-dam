@@ -81,13 +81,13 @@ public class CollectionServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection1 = new Collection(pModel1, "PROJECT", "collection1");
+        collection1 = new Collection(pModel1, "PROJECT", "COL1", "collection1");
         collection1.setId(1L);
-        collection2 = new Collection(pModel2, "PROJECT", "collection2");
+        collection2 = new Collection(pModel2, "PROJECT", "COL2", "collection2");
         collection2.setId(2L);
-        collection3 = new Collection(pModel2, "PROJECT", "collection3");
+        collection3 = new Collection(pModel2, "PROJECT", "COL3", "collection3");
         collection3.setId(3L);
-        collection4 = new Collection(pModel2, "PROJECT", "collection4");
+        collection4 = new Collection(pModel2, "PROJECT", "COL4", "collection4");
         collection4.setId(4L);
         collection1.addTags(collection2.getIpId().toString());
         collection2.addTags(collection1.getIpId().toString());
@@ -138,8 +138,8 @@ public class CollectionServiceTest {
 
         String collName = "collection1";
 
-        Collection coll1 = new Collection(pModel1, "PROJECT", collName);
-        Collection coll2 = new Collection(pModel1, "PROJECT", collName);
+        Collection coll1 = new Collection(pModel1, "PROJECT", collName, collName);
+        Collection coll2 = new Collection(pModel1, "PROJECT", collName, collName);
 
         Assert.assertNotNull(coll1);
         Assert.assertNotNull(coll2);

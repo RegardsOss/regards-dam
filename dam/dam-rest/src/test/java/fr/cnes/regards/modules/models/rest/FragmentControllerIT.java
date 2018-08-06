@@ -37,6 +37,7 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
 import org.springframework.restdocs.snippet.Attributes;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -62,6 +63,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * @author Marc Sordi
  *
  */
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=fragments" })
 @MultitenantTransactional
 public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 

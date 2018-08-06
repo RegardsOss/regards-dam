@@ -85,12 +85,12 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new Dataset(model, "PROJECT", "ds1");
+        ds1 = new Dataset(model, "PROJECT", "ds1", "ds1");
         ds1.setLabel("label");
         ds1.setLicence("licence");
         ds1.setCreationDate(now);
         ds1 = dsRepo.save(ds1);
-        ds2 = new Dataset(model, "PROJECT", "ds2");
+        ds2 = new Dataset(model, "PROJECT", "ds2", "ds2");
         ds2.setLabel("label");
         ds2.setLicence("licence");
         ds2.setCreationDate(now);

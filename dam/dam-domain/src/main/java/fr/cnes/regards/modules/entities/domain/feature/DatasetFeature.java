@@ -39,12 +39,12 @@ public class DatasetFeature extends EntityFeature {
     /**
      * Deserialization constructor
      */
-    public DatasetFeature() {
-        super(null, EntityType.DATASET, null);
+    protected DatasetFeature() {
+        super(null, null, EntityType.DATASET, null);
     }
 
-    public DatasetFeature(String tenant, String label) {
-        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, tenant, UUID.randomUUID(), 1),
+    public DatasetFeature(String tenant, String providerId, String label) {
+        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, tenant, UUID.randomUUID(), 1), providerId,
               EntityType.DATASET, label);
     }
 

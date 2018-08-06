@@ -80,15 +80,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
 
-        collection1 = new Collection(model1, "PROJECT", "collection1");
+        collection1 = new Collection(model1, "PROJECT", "COL1", "collection1");
         collection1.setProviderId("ProviderId1");
         collection1.setLabel("label");
         collection1.setCreationDate(OffsetDateTime.now());
-        collection3 = new Collection(model1, "PROJECT", "collection3");
+        collection3 = new Collection(model1, "PROJECT", "COL3", "collection3");
         collection3.setProviderId("ProviderId3");
         collection3.setLabel("label");
         collection3.setCreationDate(OffsetDateTime.now());
-        collection4 = new Collection(model1, "PROJECT", "collection4");
+        collection4 = new Collection(model1, "PROJECT", "COL4", "collection4");
         collection4.setProviderId("ProviderId4");
         collection4.setLabel("label");
         collection4.setCreationDate(OffsetDateTime.now());
@@ -117,7 +117,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        Collection collection2 = new Collection(model1, null, "collection2");
+        Collection collection2 = new Collection(model1, null, "COL2", "collection2");
         collection2.setCreationDate(OffsetDateTime.now());
         customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection2, customizer,
@@ -139,7 +139,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
     public void testUpdateCollection() {
-        Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
+        Collection collectionClone = new Collection(collection1.getModel(), "", "COL1", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
         collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
@@ -149,14 +149,14 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
-                           customizer, "Failed to update a specific collection using its id", collection1.getId());
+                          customizer, "Failed to update a specific collection using its id", collection1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() {
-        Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
+        Collection collectionClone = new Collection(collection1.getModel(), "", "COL1", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
         collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
@@ -166,7 +166,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collectionClone,
-                           customizer, "Failed to update a specific collection using its id", collection1.getId());
+                          customizer, "Failed to update a specific collection using its id", collection1.getId());
 
     }
 

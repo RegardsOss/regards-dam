@@ -39,7 +39,7 @@ public class Document extends AbstractEntity<DocumentFeature> {
         super(null, null);
     }
 
-    public Document(Model model, String tenant, String label) {
-        super(model, new DocumentFeature(tenant, label));
+    public Document(Model model, String tenant, String providerId, String label) {
+        super(model, new DocumentFeature(tenant, providerId, label));
     }
 }

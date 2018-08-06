@@ -25,17 +25,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -51,12 +48,10 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 
-@TestPropertySource(locations = { "classpath:test.properties" })
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { ServiceConfiguration.class })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=cdgroups",
+        "regards.dam.post.aip.entities.to.storage=false" }, locations = "classpath:es.properties")
 @MultitenantTransactional
-@ActiveProfiles({ "default", "test" })
-public class CollectionDatasetGroupsIT {
+public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(CollectionDatasetGroupsIT.class);
@@ -136,38 +131,32 @@ public class CollectionDatasetGroupsIT {
         modelDataset = Model.build("modelDataset", "model desc", EntityType.DATASET);
         modelDataset = modelRepository.save(modelDataset);
 
-        dataset1 = new Dataset(modelDataset, "PROJECT", "labelDs1");
+        dataset1 = new Dataset(modelDataset, "PROJECT", "ProviderId1", "labelDs1");
         dataset1.setLicence("licence");
-        dataset1.setProviderId("ProviderId1");
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
-        dataset2 = new Dataset(modelDataset, "PROJECT", "labelDs2");
+        dataset2 = new Dataset(modelDataset, "PROJECT", "ProviderId2", "labelDs2");
         dataset2.setLicence("licence");
-        dataset2.setProviderId("ProviderId2");
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
-        dataset3 = new Dataset(modelDataset, "PROJECT", "labelDs3");
+        dataset3 = new Dataset(modelDataset, "PROJECT", "ProviderId3", "labelDs3");
         dataset3.setLicence("licence");
-        dataset3.setProviderId("ProviderId3");
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
         // No tags on Datasets, it doesn't matter
 
-        coll1 = new Collection(modelColl, "PROJECT", "coll1");
-        coll1.setProviderId("ProviderId4");
+        coll1 = new Collection(modelColl, "PROJECT", "ProviderId4", "coll1");
 
         // DS1 -> C1
         dataset1.setTags(Sets.newHashSet(coll1.getIpId().toString()));
 
-        coll2 = new Collection(modelColl, "PROJECT", "coll2");
-        coll2.setProviderId("ProviderId5");
+        coll2 = new Collection(modelColl, "PROJECT", "ProviderId5", "coll2");
         // DS2 -> C1
         dataset2.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         // C1 -> C2
         coll1.addTags(coll2.getIpId().toString());
 
-        coll3 = new Collection(modelColl, "PROJECT", "coll3");
-        coll3.setProviderId("ProviderId6");
+        coll3 = new Collection(modelColl, "PROJECT", "ProviderId6", "coll3");
         // DS3 -> (C2, C3)
         dataset3.setTags(Sets.newHashSet(coll2.getIpId().toString(), coll3.getIpId().toString()));
     }
@@ -226,8 +215,7 @@ public class CollectionDatasetGroupsIT {
         // Add C4: C2 -> C4 -> C1
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
-        coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setProviderId("ProviderId7");
+        coll4 = new Collection(modelColl, "PROJECT", "ProviderId7", "coll4");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         coll2.addTags(coll4.getIpId().toString());
 
@@ -267,8 +255,7 @@ public class CollectionDatasetGroupsIT {
         // Add C4: C2 -> C4 -> C1
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
-        coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setProviderId("ProviderId7");
+        coll4 = new Collection(modelColl, "PROJECT", "ProviderId7", "coll4");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         coll2.addTags(coll4.getIpId().toString());
 
@@ -331,8 +318,7 @@ public class CollectionDatasetGroupsIT {
 
         // Add C4: C2 -> C4
         // C4 (G1, G2, G3)
-        coll4 = new Collection(modelColl, "PROJECT", "coll4");
-        coll4.setProviderId("ProviderId7");
+        coll4 = new Collection(modelColl, "PROJECT", "ProviderId7", "coll4");
         coll4 = collService.create(coll4);
 
         collService.associate(coll2.getId(), Sets.newHashSet(coll4.getIpId()));
@@ -344,7 +330,7 @@ public class CollectionDatasetGroupsIT {
         // tag through DS1->C1->C2), C4 (indirect tag through DS1->C1->C2->C4)
         // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and
         // the logic is respected
-        Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "labelDs1");
+        Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "DS1", "labelDs1");
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
         dataset1Updated.setDataModel(dataset1.getDataModel());
         dataset1Updated.setCreationDate(dataset1.getCreationDate());

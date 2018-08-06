@@ -18,27 +18,25 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
@@ -50,11 +48,10 @@ import fr.cnes.regards.modules.models.service.IModelService;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource(locations = { "classpath:test.properties" })
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { ServiceConfiguration.class })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=entities",
+        "regards.dam.post.aip.entities.to.storage=false" }, locations = "classpath:es.properties")
 @MultitenantTransactional
-public class EntitiesServiceIT {
+public class EntitiesServiceIT extends AbstractMultitenantServiceTest {
 
     private static final String datasetModelFileName = "datasetModel.xml";
 
@@ -63,9 +60,6 @@ public class EntitiesServiceIT {
 
     @Autowired
     private IModelService modelService;
-
-    @Autowired
-    private JWTService jwtService;
 
     @Autowired
     private IPluginConfigurationRepository pluginConfRepos;
@@ -87,13 +81,11 @@ public class EntitiesServiceIT {
         modelRepository.deleteAll();
         pluginConfRepos.deleteAll();
 
-        // first initialize the pluginConfiguration for the attributes
-        jwtService.injectMockToken("PROJECT", "ADMIN");
         // then import the model of dataset
         importModel(datasetModelFileName);
         // instantiate the dataset
         Model datasetModel = modelService.getModelByName("datasetModel");
-        dataset = new Dataset(datasetModel, "PROJECT", "Test pour le fun");
+        dataset = new Dataset(datasetModel, "PROJECT", "DSFUN", "Test pour le fun");
         dataset.setLicence("pLicence");
     }
 

@@ -110,7 +110,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         final Model mission = modelService.getModelByName("MISSION");
 
-        final Collection mission1 = new Collection(mission, null, "SPOT");
+        final Collection mission1 = new Collection(mission, null, "COL1", "SPOT");
 
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().isOk());
@@ -129,7 +129,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         Model model = modelService.getModelByName("MISSION_WITH_LABEL");
 
-        Collection collection = new Collection(model, getDefaultTenant(), "mission");
+        Collection collection = new Collection(model, getDefaultTenant(), "COL1", "mission");
         Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(AttributeBuilder.buildString("LABEL", "uppercaselabel"));
         collection.setProperties(atts);

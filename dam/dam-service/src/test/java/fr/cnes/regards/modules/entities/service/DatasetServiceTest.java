@@ -126,10 +126,10 @@ public class DatasetServiceTest {
         model2 = new Model();
         model2.setId(2L);
 
-        dataSet1 = new Dataset(model1, "PROJECT", "dataSet1");
+        dataSet1 = new Dataset(model1, "PROJECT", "DS1", "dataSet1");
         dataSet1.setLicence("licence");
         dataSet1.setId(1L);
-        dataSet2 = new Dataset(model2, "PROJECT", "dataSet2");
+        dataSet2 = new Dataset(model2, "PROJECT", "DS1", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-datamodel-minimal.xml"));
         Mockito.when(modelService.getModel(modelOfObjects.getId())).thenReturn(modelOfObjects);
@@ -260,8 +260,8 @@ public class DatasetServiceTest {
 
         String dataSetName = "dataSet1";
 
-        Dataset dataSet1 = new Dataset(model1, "PROJECT", dataSetName);
-        Dataset dataSet2 = new Dataset(model1, "PROJECT", dataSetName);
+        Dataset dataSet1 = new Dataset(model1, "PROJECT", dataSetName, dataSetName);
+        Dataset dataSet2 = new Dataset(model1, "PROJECT", dataSetName, dataSetName);
 
         Assert.assertNotNull(dataSet1);
         Assert.assertNotNull(dataSet2);

@@ -74,24 +74,24 @@ public class EntityServiceTest {
         model2 = new Model();
         model2.setId(2L);
 
-        collection2 = new Collection(model2, "PROJECT", "collection2");
+        collection2 = new Collection(model2, "PROJECT", "COL2", "collection2");
         collection2.setId(2L);
-        collection3 = new Collection(model2, "PROJECT", "collection3");
+        collection3 = new Collection(model2, "PROJECT", "COL3", "collection3");
         collection3.setId(3L);
         collection3.setLabel("pName3");
-        collection4 = new Collection(model2, "PROJECT", "collection4");
+        collection4 = new Collection(model2, "PROJECT", "COL4", "collection4");
         collection4.setId(4L);
         collection2.addTags(collection4.getIpId().toString());
 
-        data = new DataObject(new Model(), "PROJECT", "object");
+        data = new DataObject(new Model(), "PROJECT", "OBJ1", "object");
         data.setId(1L);
-        doc = new Document(model2, "PROJECT", "doc");
+        doc = new Document(model2, "PROJECT", "DOC1", "doc");
         doc.setId(2L);
-        dataset = new Dataset(model2, "PROJECT", "dataset");
+        dataset = new Dataset(model2, "PROJECT", "DS1", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
         dataset.setLabel("dataset");
-        dataset2 = new Dataset(model2, "PROJECT", "dataset2");
+        dataset2 = new Dataset(model2, "PROJECT", "DS2", "dataset2");
         dataset2.setLicence("licence");
 
         // IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
@@ -145,8 +145,8 @@ public class EntityServiceTest {
     public void documentUrnUnicity() throws ModuleException, IOException {
         String docName = "un document";
 
-        Document document1 = new Document(model2, "PROJECT", docName);
-        Document document2 = new Document(model2, "PROJECT", docName);
+        Document document1 = new Document(model2, "PROJECT", docName, docName);
+        Document document2 = new Document(model2, "PROJECT", docName, docName);
 
         Assert.assertNotNull(document1);
         Assert.assertNotNull(document2);
@@ -161,8 +161,8 @@ public class EntityServiceTest {
     public void dataUrnUnicity() throws ModuleException, IOException {
         String dataObjectName = "un document";
 
-        DataObject document1 = new DataObject(model2, "PROJECT", dataObjectName);
-        DataObject document2 = new DataObject(model2, "PROJECT", dataObjectName);
+        DataObject document1 = new DataObject(model2, "PROJECT", dataObjectName, dataObjectName);
+        DataObject document2 = new DataObject(model2, "PROJECT", dataObjectName, dataObjectName);
 
         Assert.assertNotNull(document1);
         Assert.assertNotNull(document2);

@@ -61,7 +61,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
     private Model collectionModel;
 
     private Collection createEntity(Model model, String tenant, String label) {
-        Collection entity = new Collection(model, tenant, label);
+        Collection entity = new Collection(model, tenant, label, label);
         entity.setCreationDate(OffsetDateTime.now());
         return entity;
     }

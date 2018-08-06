@@ -65,8 +65,8 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         super(null, null);
     }
 
-    public DataObject(Model model, String tenant, String label) {
-        super(model, new DataObjectFeature(tenant, label));
+    public DataObject(Model model, String tenant, String providerId, String label) {
+        super(model, new DataObjectFeature(tenant, providerId, label));
     }
 
     public String getDataSourceId() {

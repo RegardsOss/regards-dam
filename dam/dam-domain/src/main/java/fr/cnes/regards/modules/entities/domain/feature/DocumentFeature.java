@@ -34,12 +34,12 @@ public class DocumentFeature extends EntityFeature {
     /**
      * Deserialization constructor
      */
-    public DocumentFeature() {
-        super(null, EntityType.DOCUMENT, null);
+    protected DocumentFeature() {
+        super(null, null, EntityType.DOCUMENT, null);
     }
 
-    public DocumentFeature(String tenant, String label) {
+    public DocumentFeature(String tenant, String providerId, String label) {
         super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, tenant, UUID.randomUUID(), 1),
-              EntityType.DOCUMENT, label);
+              providerId, EntityType.DOCUMENT, label);
     }
 }

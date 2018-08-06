@@ -47,11 +47,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
@@ -80,10 +79,14 @@ import fr.cnes.regards.modules.storage.client.IAipClient;
  *
  * @author Christophe Mertz
  */
-@ContextConfiguration(classes = AipClientConfigurationMock.class)
-@TestPropertySource(locations = { "classpath:test-with-storage.properties" })
+@ContextConfiguration(
+        classes = { AbstractMultitenantServiceTest.ScanningConfiguration.class, AipClientConfigurationMock.class })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=storage",
+        "regards.dam.post.aip.entities.to.storage=true", "regards.amqp.enabled=true",
+        "regards.dam.store.aip.entities.delay:1000", "regards.dam.store.aip.entities.initial.delay:1000",
+        "zuul.prefix=/api/v1" }, locations = "classpath:es.properties")
 @ActiveProfiles({ "testAmqp" })
-public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
+public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityIT.class);
 
@@ -151,9 +154,6 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     IAipClient aipClient;
-
-    @Autowired
-    private IRuntimeTenantResolver tenantResolver;
 
     @Test
     public void createDataset() throws ModuleException, IOException, InterruptedException {
@@ -284,6 +284,10 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void init() throws ModuleException, InterruptedException {
+        simulateApplicationReadyEvent();
+
+        runtimeTenantResolver.forceTenant(getDefaultTenant());
+
         Project project = new Project();
         project.setHost("http://regardsHost");
 
@@ -305,8 +309,6 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     }
 
     private void cleanUp() {
-        tenantResolver.forceTenant(getDefaultTenant());
-
         localFileRepository.deleteAll();
         dsRepository.deleteAll();
         docRepository.deleteAll();
@@ -326,7 +328,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     private void initDataset() throws ModuleException {
         modelDataset = importModel(MODEL_DATASET_FILE_NAME);
 
-        dataset1 = new Dataset(modelDataset, getDefaultTenant(), "dataset one label");
+        dataset1 = new Dataset(modelDataset, getDefaultTenant(), "DS1", "dataset one label");
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
@@ -368,7 +370,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     private void initDocument() throws ModuleException {
         modelDocument = importModel(MODEL_DOCUMENT_FILE_NAME);
 
-        document1 = new Document(modelDocument, getDefaultTenant(), "My document label");
+        document1 = new Document(modelDocument, getDefaultTenant(), "DOC", "My document label");
         document1.setTags(Sets.newHashSet("azertyui"));
 
         document1.addProperty(AttributeBuilder.buildDate("creation_date", OffsetDateTime.now().minusHours(452)));
@@ -384,7 +386,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     private void initCollection() throws ModuleException {
         modelCollection = importModel(MODEL_COLLECTION_FILE_NAME);
 
-        collection1 = new Collection(modelCollection, getDefaultTenant(), "My collection label");
+        collection1 = new Collection(modelCollection, getDefaultTenant(), "DOC", "My collection label");
         collection1.setTags(Sets.newHashSet("COLLECTION-ONE", "COLLECTION-02", "COLLECTION-03"));
 
         collection1.addProperty(AttributeBuilder.buildDate("creation_date", OffsetDateTime.now().minusHours(452)));

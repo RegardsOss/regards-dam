@@ -190,7 +190,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         gsonAttributeFactory.refresh(getDefaultTenant(), atts);
 
-        dataset1 = new Dataset(modelDataset, getDefaultTenant(), "dataset one label");
+        dataset1 = new Dataset(modelDataset, getDefaultTenant(), "DS1", "dataset one label");
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));

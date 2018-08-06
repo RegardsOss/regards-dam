@@ -85,22 +85,22 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         model2 = modelRepository.save(model2);
         model1 = modelRepository.save(model1);
 
-        collection1 = new Collection(model1, "PROJECT", "collection1");
+        collection1 = new Collection(model1, "PROJECT", "COL1", "collection1");
         collection1.setProviderId("ProviderId1");
         collection1.setLabel("label");
         collection1.setCreationDate(OffsetDateTime.now());
 
-        collection2 = new Collection(model1, "PROJECT", "collection2");
+        collection2 = new Collection(model1, "PROJECT", "COL2", "collection2");
         collection2.setProviderId("ProviderId1");
         collection2.setLabel("label");
         collection2.setCreationDate(OffsetDateTime.now());
 
-        document1 = new Document(model2, "PROJECT", "document1");
+        document1 = new Document(model2, "PROJECT", "DOC1", "document1");
         document1.setProviderId("ProviderId2");
         document1.setLabel("label");
         document1.setCreationDate(OffsetDateTime.now());
 
-        document2 = new Document(model2, "PROJECT", "document2");
+        document2 = new Document(model2, "PROJECT", "DOC2", "document2");
         document2.setProviderId("ProviderId3");
         document2.setLabel("label");
         document2.setCreationDate(OffsetDateTime.now());
@@ -128,7 +128,7 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Shall create a new document")
     @Test
     public void testPostDocument() {
-        final Document document3 = new Document(model1, null, "document3");
+        final Document document3 = new Document(model1, null, "DOC3", "document3");
         document3.setProviderId("ProviderId3");
         document3.setLabel("label");
         document3.setCreationDate(OffsetDateTime.now());
@@ -161,7 +161,7 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_DOC_210")
     @Test
     public void testUpdateDocument() {
-        final Document documentClone = new Document(document1.getModel(), "", "document1clone");
+        final Document documentClone = new Document(document1.getModel(), "", "DOC1CLONE", "document1clone");
         documentClone.setIpId(document1.getIpId());
         documentClone.setCreationDate(document1.getCreationDate());
         documentClone.setId(document1.getId());

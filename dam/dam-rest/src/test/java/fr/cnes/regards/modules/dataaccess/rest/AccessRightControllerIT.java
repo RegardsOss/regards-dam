@@ -30,9 +30,6 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,12 +58,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -75,37 +68,6 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")
 public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
-
-    @Configuration
-    static class Conf {
-
-        @Bean
-        public IAttributeModelClient attributeModelClient() {
-            return Mockito.mock(IAttributeModelClient.class);
-        }
-
-        @Bean
-        @Primary
-        public IOpenSearchService openSearchService() {
-            return Mockito.mock(IOpenSearchService.class);
-        }
-
-        @Bean
-        public IProjectsClient projectsClient() {
-            return Mockito.mock(IProjectsClient.class);
-        }
-
-        @Bean
-        public IModelAttrAssocClient modelAttrAssocClient() {
-            return Mockito.mock(IModelAttrAssocClient.class);
-        }
-
-        @Bean
-        public IProjectUsersClient mockProjectUsersClient() {
-            return Mockito.mock(IProjectUsersClient.class);
-        }
-
-    }
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessRightControllerIT.class);
 
@@ -165,11 +127,13 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IRuntimeTenantResolver runtimetenantResolver;
 
+    @Autowired
+    private IProjectUsersClient projectUserClientMock;
+
     @Before
     public void init() {
-        runtimetenantResolver.forceTenant(DEFAULT_TENANT);
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
-        IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
         projectUser = new ProjectUser();
@@ -184,11 +148,11 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new Dataset(model, "PROJECT", ds1Name);
+        ds1 = new Dataset(model, "PROJECT", "DS1", ds1Name);
         ds1.setLicence("licence");
         ds1.setCreationDate(now);
         ds1 = dsRepo.save(ds1);
-        ds2 = new Dataset(model, "PROJECT", ds2Name);
+        ds2 = new Dataset(model, "PROJECT", "DS2", ds2Name);
         ds2.setLicence("licence");
         ds2.setCreationDate(now);
         ds2 = dsRepo.save(ds2);

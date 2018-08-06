@@ -34,12 +34,12 @@ public class DataObjectFeature extends EntityFeature {
     /**
      * Deserialization constructor
      */
-    public DataObjectFeature() {
-        super(null, EntityType.DATA, null);
+    protected DataObjectFeature() {
+        super(null, null, EntityType.DATA, null);
     }
 
-    public DataObjectFeature(String tenant, String label) {
-        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1),
+    public DataObjectFeature(String tenant, String providerId, String label) {
+        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1), providerId,
               EntityType.DATA, label);
     }
 

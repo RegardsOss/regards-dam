@@ -23,14 +23,9 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.gson.Gson;
@@ -42,7 +37,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.feature.CollectionFeature;
-import fr.cnes.regards.modules.entities.gson.IAttributeHelper;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -56,7 +50,8 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Marc Sordi
  *
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" },
+        locations = "classpath:es.properties")
 @MultitenantTransactional
 public class EntityFeatureSerializationTests extends AbstractMultitenantServiceTest {
 
@@ -94,17 +89,6 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
 
     protected Model galaxyModel;
 
-    @Configuration
-    @EnableAutoConfiguration
-    @ComponentScan(basePackages = { "fr.cnes.regards.modules" })
-    static class ScanningConfiguration {
-
-        @Bean
-        public IAttributeHelper attributeHelper() {
-            return Mockito.mock(IAttributeHelper.class);
-        }
-    }
-
     @Before
     public void before() throws ModuleException {
 
@@ -120,7 +104,7 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
     @Test
     public void serializeCollectionFeature() {
 
-        CollectionFeature feature = new CollectionFeature(DEFAULT_TENANT, "My first collection");
+        CollectionFeature feature = new CollectionFeature(DEFAULT_TENANT, "FIRST", "My first collection");
 
         // Set dynamic properties
         feature.getProperties().add(AttributeBuilder.buildString(GALAXY, MILKY_WAY));
@@ -143,7 +127,7 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
     @Test
     public void serializeCollection() {
 
-        Collection collection = new Collection(galaxyModel, DEFAULT_TENANT, "My second collection");
+        Collection collection = new Collection(galaxyModel, DEFAULT_TENANT, "SECOND", "My second collection");
 
         // Set dynamic properties
         collection.addProperty(AttributeBuilder.buildString(GALAXY, MILKY_WAY));

@@ -114,17 +114,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
-        dataSet1 = new Dataset(model1, "PROJECT", "collection1");
+        dataSet1 = new Dataset(model1, "PROJECT", "DS1", "collection1");
         dataSet1.setCreationDate(OffsetDateTime.now());
         dataSet1.setLicence("licence");
         dataSet1.setProviderId("ProviderId1");
         dataSet1.setLabel("label");
-        dataSet3 = new Dataset(model1, "PROJECT", "collection3");
+        dataSet3 = new Dataset(model1, "PROJECT", "DS3", "collection3");
         dataSet3.setCreationDate(OffsetDateTime.now());
         dataSet3.setLicence("licence");
         dataSet3.setProviderId("ProviderId3");
         dataSet3.setLabel("label");
-        dataSet4 = new Dataset(model1, "PROJECT", "collection4");
+        dataSet4 = new Dataset(model1, "PROJECT", "DS4", "collection4");
         dataSet4.setCreationDate(OffsetDateTime.now());
         dataSet4.setLicence("licence");
         dataSet4.setProviderId("ProviderId4");
@@ -164,7 +164,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
                 .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
 
-        final Dataset dataSet2 = new Dataset(datasetModel, getDefaultTenant(), "Coucou");
+        final Dataset dataSet2 = new Dataset(datasetModel, getDefaultTenant(), "DS1", "Coucou");
         dataSet2.setLicence("licence");
         dataSet2.setCreationDate(OffsetDateTime.now());
         dataSet2.setProviderId("ProviderId2");
@@ -181,7 +181,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(DatasetController.TYPE_MAPPING, dataSet2, customizer, "Failed to create a new dataset");
 
-        final Dataset dataSet21 = new Dataset(model1, getDefaultTenant(), "dataSet21");
+        final Dataset dataSet21 = new Dataset(model1, getDefaultTenant(), "DS21", "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
 
@@ -201,7 +201,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testUpdateDataset() {
-        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "dataset1clone");
+        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "DS1CLONE", "dataset1clone");
         dataSetClone.setLicence("licence");
         dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
@@ -212,13 +212,13 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSet1, expectations,
-                           "Failed to update a specific dataset using its id", dataSetClone.getId());
+                          "Failed to update a specific dataset using its id", dataSetClone.getId());
 
     }
 
     @Test
     public void testFullUpdate() {
-        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "collection1clone");
+        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "DS1CLONE", "collection1clone");
         dataSetClone.setLicence("licence");
         dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
@@ -229,7 +229,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSetClone,
-                           expectations, "Failed to update a specific dataset using its id", dataSetClone.getId());
+                          expectations, "Failed to update a specific dataset using its id", dataSetClone.getId());
     }
 
     @Test
@@ -245,7 +245,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "dataset for getDataAttribute tests");
+        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "DS1", "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
@@ -271,7 +271,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "dataset for getDataAttribute tests");
+        Dataset ds = new Dataset(datasetModel, getDefaultTenant(), "DS2", "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
