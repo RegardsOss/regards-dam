@@ -18,13 +18,14 @@
  */
 package fr.cnes.regards.modules.dam.domain.models.attributes.restriction.validator;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import javax.validation.Constraint;
+import javax.validation.Payload;
 
 /**
  *
@@ -42,7 +43,7 @@ public @interface CheckIntegerRange {
     /**
      * @return error message key
      */
-    String message() default "{fr.cnes.regards.modules.entities.validator.CheckIntegerRange.message}";
+    String message() default "{fr.cnes.regards.modules.dam.domain.models.attributes.restriction.validator.CheckIntegerRange.message}";
 
     /**
      *

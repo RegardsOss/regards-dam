@@ -52,7 +52,6 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.plugin.entities.CountPlugin;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
 /**
@@ -100,7 +99,7 @@ public class EntitiesService implements IEntitiesService {
 
     @PostConstruct
     public void initPluginPackage() {
-        pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
+        pluginService.addPluginPackage("fr.cnes.regards.modules.dam.plugin.entities");
     }
 
     @Override
