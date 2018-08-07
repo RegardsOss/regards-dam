@@ -64,7 +64,7 @@ public class EntityFeatureAdapterFactory extends PolymorphicTypeAdapterFactory<E
         // Do injection
         JsonElement clone = super.beforeWrite(jsonElement, subType);
 
-        LOGGER.debug("Before write");
+        LOGGER.trace("Before write");
 
         if (!clone.isJsonObject()) {
             throw objectRequiredException(clone);
@@ -86,7 +86,7 @@ public class EntityFeatureAdapterFactory extends PolymorphicTypeAdapterFactory<E
 
     @Override
     protected JsonElement beforeRead(JsonElement jsonElement, String discriminator, Class<?> subType) {
-        LOGGER.debug("Before read");
+        LOGGER.trace("Before read");
 
         if (!jsonElement.isJsonObject()) {
             throw objectRequiredException(jsonElement);
