@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -33,6 +34,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * @author Marc Sordi
  *
  */
+@ConditionalOnMissingClass("fr.cnes.regards.modules.search.service.CatalogAttributeHelper")
 @Service
 public class DamAttributeHelper implements IAttributeHelper {
 
