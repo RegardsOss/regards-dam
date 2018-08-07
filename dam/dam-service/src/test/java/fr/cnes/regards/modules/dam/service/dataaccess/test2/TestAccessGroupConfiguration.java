@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 @Configuration
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.dataaccess.service.test2" })
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.dam.service.dataaccess.test2" })
 public class TestAccessGroupConfiguration {
 
     @Bean

@@ -1,7 +1,7 @@
 {
     "label": "dfqgfg",
     "active": true,
-    "pluginClassName": "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin",
+    "pluginClassName": "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin",
     "user": "adminfgfg",
     "password": "fdgdfgadmin",
     "dbHost": "fdgdfg",

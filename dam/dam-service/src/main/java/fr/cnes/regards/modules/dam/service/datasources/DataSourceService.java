@@ -20,8 +20,9 @@
  */
 package fr.cnes.regards.modules.dam.service.datasources;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 
 /**
@@ -55,7 +55,7 @@ public class DataSourceService implements IDataSourceService {
 
     @PostConstruct
     public void init() {
-        this.service.addPluginPackage("fr.cnes.regards.modules.datasources");
+        this.service.addPluginPackage("fr.cnes.regards.modules.dam.domain.datasources");
     }
 
     @Override
@@ -122,7 +122,8 @@ public class DataSourceService implements IDataSourceService {
     private void mergePluginConfigurationParameter(PluginParameter connectionPluginParam,
             PluginConfiguration dataSource) {
         PluginConfiguration dbConf = connectionPluginParam.getPluginConfiguration();
-        PluginConfiguration currentDbConf = dataSource.getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM);
+        PluginConfiguration currentDbConf = dataSource
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM);
         if ((dbConf == null) || !dbConf.getId().equals(currentDbConf.getId())) {
             connectionPluginParam.setPluginConfiguration(currentDbConf);
         }

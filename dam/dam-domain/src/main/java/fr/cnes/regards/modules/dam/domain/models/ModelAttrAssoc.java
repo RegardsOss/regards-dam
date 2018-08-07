@@ -36,11 +36,11 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.validation.ComputedAttribute;
 import fr.cnes.regards.modules.dam.domain.models.schema.Attribute;
 import fr.cnes.regards.modules.dam.domain.models.schema.Computation;
 import fr.cnes.regards.modules.dam.domain.models.schema.NoParamPluginType;
 import fr.cnes.regards.modules.dam.domain.models.schema.ParamPluginType;
+import fr.cnes.regards.modules.dam.domain.models.validation.ComputedAttribute;
 
 /**
  * Model - attribute association.</br>
@@ -100,8 +100,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     /**
      * Constructor
      */
-    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
-            Boolean pIsCalculated) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         model = pModel;
         pos = pPosition;
@@ -167,10 +166,11 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
             String pluginClassName = computationConf.getPluginClassName();
-            if ("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
+            if ("fr.cnes.regards.modules.dam.plugin.entities.CountPlugin".equals(pluginClassName)) {
                 computation.setCount(new NoParamPluginType());
             } else {
-                // For plugins which are calculated according to a data object property, let's set the parameters and then the type
+                // For plugins which are calculated according to a data object property, let's set the parameters and
+                // then the type
                 ParamPluginType paramPluginType = new ParamPluginType();
                 String parameterAttributeName = computationConf.getParameter("parameterAttributeName").getValue();
                 if (parameterAttributeName.matches("^\"[^\"]*\"$")) {
@@ -178,24 +178,25 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                 }
                 paramPluginType.setParameterAttributeName(parameterAttributeName);
                 PluginParameter paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
-                if(paramAttrFragment != null) {
+                if (paramAttrFragment != null) {
                     String paramAttrFragmentName = paramAttrFragment.getValue();
                     if (paramAttrFragmentName != null) {
                         if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
-                            paramAttrFragmentName = paramAttrFragmentName.substring(1, paramAttrFragmentName.length() - 1);
+                            paramAttrFragmentName = paramAttrFragmentName.substring(1,
+                                                                                    paramAttrFragmentName.length() - 1);
                         }
                         paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
                     }
                 }
                 switch (pluginClassName) {
-                    case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
-                    case "fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin":
+                    case "fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin":
+                    case "fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin":
                         computation.setSumCompute(paramPluginType);
                         break;
-                    case "fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin":
+                    case "fr.cnes.regards.modules.dam.plugin.entities.MaxDateComputePlugin":
                         computation.setMinCompute(paramPluginType);
                         break;
-                    case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
+                    case "fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin":
                         computation.setMaxCompute(paramPluginType);
                         break;
                     default:

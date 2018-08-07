@@ -49,7 +49,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IConnectionPlugin;
-import fr.cnes.regards.modules.dam.rest.datasources.DBConnectionController;
 import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
 
 /**
@@ -66,9 +65,9 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionControllerIT.class);
 
-    private static final String ORACLE_PLUGIN_CONNECTION = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
+    private static final String ORACLE_PLUGIN_CONNECTION = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOracleConnectionPlugin";
 
-    private static final String POSTGRESQL_PLUGIN_CONNECTION = "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin";
+    private static final String POSTGRESQL_PLUGIN_CONNECTION = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin";
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
@@ -143,7 +142,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createDBConnectionBadPluginClassName() {
         final PluginConfiguration dbConn = new PluginConfiguration();
-        dbConn.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultPostgrConnectionPlugin");
+        dbConn.setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgrConnectionPlugin");
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -289,7 +288,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Ignore // Reactivate to test Oracle DB
     public void updateDBConnection() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM), "Bob");
+        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
+                                                "Bob");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
 
@@ -391,12 +391,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        dbConnection
-                .setParameters(PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
-                        .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
-                        .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
-                        .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
-                        .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
+        dbConnection.setParameters(PluginParametersFactory.build()
+                .addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
+                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
+                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
+                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
+                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;

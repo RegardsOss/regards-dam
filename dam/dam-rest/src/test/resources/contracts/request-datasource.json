@@ -1,7 +1,7 @@
 {
 	"label": "Datasource #1",
     "pluginConfigurationConnectionId": "1",
-    "pluginClassName": "fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin",
+    "pluginClassName": "fr.cnes.regards.modules.dam.domain.datasources.plugins.PostgreDataSourceFromSingleTablePlugin",
     "mapping": {
         "model": 1,
         "attributesMapping": [{

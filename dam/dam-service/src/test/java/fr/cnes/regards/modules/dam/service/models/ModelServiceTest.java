@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -52,8 +53,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.ModelService;
 import fr.cnes.regards.modules.dam.service.models.exception.FragmentAttributeException;
 
 /**
@@ -337,9 +336,10 @@ public class ModelServiceTest {
         modAtt = new ModelAttrAssoc(attMod, model);
         PluginConfiguration sumComputeConf = new PluginConfiguration();
         sumComputeConf.setLabel("SumComputeValue");
-        sumComputeConf.setPluginClassName("fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin");
+        sumComputeConf.setPluginClassName("fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin");
         sumComputeConf.setParameters(Lists.newArrayList(new PluginParameter("parameterAttributeName", "\"paramName\""),
-                                                        // No parameter fragment => default value => "" => stripped as """"
+                                                        // No parameter fragment => default value => "" => stripped as
+                                                        // """"
                                                         new PluginParameter("parameterAttributeFragmentName", "\"\"")));
 
         modAtt.setComputationConf(sumComputeConf);

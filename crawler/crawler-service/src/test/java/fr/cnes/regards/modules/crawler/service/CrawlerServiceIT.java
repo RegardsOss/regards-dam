@@ -82,12 +82,6 @@ public class CrawlerServiceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceIT.class);
 
-    @SuppressWarnings("unused")
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    @SuppressWarnings("unused")
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
-
     @Value("${regards.tenant}")
     private String tenant;
 

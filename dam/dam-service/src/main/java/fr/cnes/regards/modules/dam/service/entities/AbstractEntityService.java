@@ -152,7 +152,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     /**
      * The plugin's class name of type {@link IStorageService} used to store AIP entities
      */
-    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin}")
+    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.AipStoragePlugin}")
     private String postAipEntitiesToStoragePlugin;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,

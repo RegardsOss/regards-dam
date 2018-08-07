@@ -42,8 +42,6 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
-import fr.cnes.regards.modules.dam.service.datasources.DBConnectionService;
-import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
 
 /**
  * Unit testing of {@link DBConnectionService}.
@@ -118,7 +116,7 @@ public class DBConnectionServiceTest {
     @Purpose("Test the creation of a connection by setting the connection's parameters including the pool size")
     public void createConnection() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
+        String className = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOracleConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection");
@@ -132,7 +130,7 @@ public class DBConnectionServiceTest {
     @Test(expected = EntityInvalidException.class)
     public void createConnectionUnknownPluginClassName() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
+        String className = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOrcleConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection failed");
@@ -144,7 +142,8 @@ public class DBConnectionServiceTest {
 
     private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
         final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
+        pluginMetaData
+                .setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin");
         pluginMetaData.setPluginId(pluginId);
         pluginMetaData.setAuthor("CS-SI");
         pluginMetaData.setVersion("1.1");

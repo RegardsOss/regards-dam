@@ -68,10 +68,6 @@ public class CrawlerServiceTest {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
-
     private static final String TENANT = "default";
 
     @Autowired

@@ -18,14 +18,15 @@
  */
 package fr.cnes.regards.modules.dam.domain.dataaccess.accessright.validation;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import javax.validation.Constraint;
+import javax.validation.Payload;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -37,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface DataAccessRightValidation {
 
-    static final String CLASS_NAME = "fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation.";
+    static final String CLASS_NAME = "fr.cnes.regards.modules.dam.domain.dataaccess.accessright.validation.DataAccessRightValidation.";
 
     String message() default "{" + CLASS_NAME + "message}";
 

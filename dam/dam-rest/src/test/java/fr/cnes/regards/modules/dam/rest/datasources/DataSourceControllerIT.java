@@ -58,7 +58,6 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginCo
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.rest.datasources.DataSourceController;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 
@@ -75,7 +74,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceControllerIT.class);
 
-    private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+    private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.dam.domain.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
@@ -342,7 +341,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .addParameter(DataSourcePluginConstants.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .addPluginConfiguration(DataSourcePluginConstants.CONNECTION_PARAM, pluginPostgreDbConnection)
                 .getParameters());
-        //        dataSource.setPluginId("dataSourceTest");
+        // dataSource.setPluginId("dataSourceTest");
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         dataSource.setVersion("alpha");

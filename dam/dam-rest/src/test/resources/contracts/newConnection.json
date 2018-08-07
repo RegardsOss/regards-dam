@@ -1,6 +1,6 @@
 {
     "label": "HELLO MARC 2",
-    "pluginClassName": "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin",
+    "pluginClassName": "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin",
     "parameters": [{
         "name": "user",
         "value": "azertyuiop123456789",
