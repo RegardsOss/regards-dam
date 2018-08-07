@@ -1,0 +1,12 @@
+{
+    "label": "dfqgfg",
+    "active": true,
+    "pluginClassName": "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin",
+    "user": "adminfgfg",
+    "password": "fdgdfgadmin",
+    "dbHost": "fdgdfg",
+    "dbPort": "12130",
+    "dbName": "dfgsdfgsdfg",
+    "maxPoolSize": 10,
+    "minPoolSize": 3
+} 

@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.hipparchus.util.FastMath;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.referencing.operation.TransformException;
@@ -50,6 +51,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
@@ -59,7 +61,8 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
@@ -67,11 +70,11 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
-import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author oroussel
  */
+@Ignore
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { SearchConfiguration.class })
 public class AstroTest {
@@ -81,7 +84,7 @@ public class AstroTest {
 
     private static final String TENANT = "astro";
 
-    private NumberFormat format = DecimalFormat.getInstance();
+    private final NumberFormat format = DecimalFormat.getInstance();
 
     @Autowired
     private Gson gson;
@@ -119,16 +122,16 @@ public class AstroTest {
 
     }
 
-    //    private IGeometry getCorrectedPolygon(IGeometry polygon) throws SQLException {
-    //        distancePstmt.setString(1, gson.toJson(polygon));
-    //        try (ResultSet rset = distancePstmt.executeQuery()) {
-    //            if (rset.next()) {
-    //                return gson.fromJson(rset.getString(1), IGeometry.class);
-    //            } else {
-    //                return null;
-    //            }
-    //        }
-    //    }
+    // private IGeometry getCorrectedPolygon(IGeometry polygon) throws SQLException {
+    // distancePstmt.setString(1, gson.toJson(polygon));
+    // try (ResultSet rset = distancePstmt.executeQuery()) {
+    // if (rset.next()) {
+    // return gson.fromJson(rset.getString(1), IGeometry.class);
+    // } else {
+    // return null;
+    // }
+    // }
+    // }
 
     /**
      * Transform right ascendance in decimal hours to longitude in degrees
@@ -150,9 +153,8 @@ public class AstroTest {
 
             Map<String, String> constMap = new HashMap<>();
             // Read "key;name" constellations file
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(ClassLoader.getSystemResourceAsStream("constellations_names.txt"),
-                                          Charset.defaultCharset()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    ClassLoader.getSystemResourceAsStream("constellations_names.txt"), Charset.defaultCharset()))) {
                 String line = reader.readLine();
                 while (line != null) {
                     String[] keyName = line.split(";");
@@ -162,9 +164,8 @@ public class AstroTest {
             }
 
             // Read constellations coordinates file
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(ClassLoader.getSystemResourceAsStream("constellations_polygons.txt"),
-                                          Charset.defaultCharset()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    ClassLoader.getSystemResourceAsStream("constellations_polygons.txt"), Charset.defaultCharset()))) {
                 // Useful variables
                 String curConstellation = null;
                 // North hemisphere constellations (and crossing equator) are described right hand
@@ -238,8 +239,7 @@ public class AstroTest {
         IGeometry polygon = GeoHelper.normalize(createPolygonFromPoints(pointsWgs84));
         IGeometry polygonWgs84 = GeoHelper.normalize(createPolygonFromPoints(pointsWgs84));
 
-        bw.write("{\n" + "      \"type\": \"Feature\",\n" + "      \"properties\": {\n"
-                         + "        \"label\": \"");
+        bw.write("{\n" + "      \"type\": \"Feature\",\n" + "      \"properties\": {\n" + "        \"label\": \"");
         bw.write(constMap.get(curConstellation));
         bw.write("\"\n" + "      },\n" + "      \"geometry\": ");
 
@@ -270,7 +270,7 @@ public class AstroTest {
 
     private DataObject createDataObject(IGeometry shape, IGeometry shapeWgs84, String label) {
         System.out.println("Saving " + label);
-        DataObject object = new DataObject(model, TENANT, label);
+        DataObject object = new DataObject(model, TENANT, label, label);
         object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
         object.setGeometry(GeoHelper.normalize(shape));
         object.getFeature().setCrs(Crs.ASTRO.toString());
@@ -291,7 +291,7 @@ public class AstroTest {
 
         // With 1 degree => Leo and Leo Minor
 
-        //        TESTER AVEC MIZAR
+        // TESTER AVEC MIZAR
 
         // With 90°, a lot
         circleCrit = ICriterion.intersectsCircle(new double[] { 150.0, 35.0 }, "90");
@@ -484,11 +484,7 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 70°) (into Draco reaching limit with Ursa Minor)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                  { -105, 70.0 },
-                  { -120.0, 70.0 },
-                  { -120, 60.0 },
-                  { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 70.0 }, { -120.0, 70.0 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         Assert.assertEquals(2, page.getTotalElements());
         constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
@@ -497,11 +493,7 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                        { -105, 69.9 },
-                        { -120.0, 69.9 },
-                        { -120, 60.0 },
-                        { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 69.9 }, { -120.0, 69.9 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         Assert.assertEquals(1, page.getTotalElements());
         constNames = page.getContent().stream().map(DataObject::getLabel).collect(Collectors.toList());
@@ -509,11 +501,7 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                        { -105, 69.99 },
-                        { -120.0, 69.99 },
-                        { -120, 60.0 },
-                        { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 69.99 }, { -120.0, 69.99 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.1;
@@ -524,11 +512,7 @@ public class AstroTest {
 
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                        { -105, 69.999 },
-                        { -120.0, 69.999 },
-                        { -120, 60.0 },
-                        { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 69.999 }, { -120.0, 69.999 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.01;
@@ -540,11 +524,7 @@ public class AstroTest {
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         // Not ok with quadtree and tree_levels 20 (69.99984 is ok)
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                        { -105, 69.9999 },
-                        { -120.0, 69.9999 },
-                        { -120, 60.0 },
-                        { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 69.9999 }, { -120.0, 69.9999 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.001;
@@ -556,11 +536,7 @@ public class AstroTest {
         // BBox (15h, 60°, 16h, 69°) (into Draco close to Ursa Minor but not reaching it)
         // Ok with quadtree and tree_levels 21
         crit = ICriterion.intersectsPolygon(new double[][][] {
-                { { -105, 60.0 },
-                        { -105, 69.99993 },
-                        { -120.0, 69.99993 },
-                        { -120, 60.0 },
-                        { -105, 60.0 } } });
+                { { -105, 60.0 }, { -105, 69.99993 }, { -120.0, 69.99993 }, { -120, 60.0 }, { -105, 60.0 } } });
         page = repos.search(searchKey, 100, crit);
         if (page.getTotalElements() != 1) {
             double precision = 0.0001;

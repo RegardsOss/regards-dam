@@ -8,8 +8,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.

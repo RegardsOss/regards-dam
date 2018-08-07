@@ -19,7 +19,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.event.AbstractEntityEvent;
+import fr.cnes.regards.modules.dam.domain.entities.event.AbstractEntityEvent;
 
 /**
  * Abstract crawler service.

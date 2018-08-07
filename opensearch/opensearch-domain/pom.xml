@@ -17,7 +17,6 @@
 	<groupId>fr.cnes.regards.modules.opensearch</groupId>
 	<artifactId>opensearch-domain</artifactId>
 
-	<name>OpenSearch Domain</name>
 	<description>Model layer of the OpenSearch module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>

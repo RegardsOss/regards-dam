@@ -21,14 +21,14 @@ import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.Collection;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.Searches;
-import fr.cnes.regards.modules.models.domain.Model;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -87,11 +87,13 @@ public class GeometrySearchIT {
         Point p259 = IGeometry.point(IGeometry.position(1.4948514103889465, 43.577614225677394));
 
         // Setting a geometry onto collection
-        final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "collection on b202 office room");
+        final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "COLB202",
+                "collection on b202 office room");
         collectionOnB202.setGeometry(p202);
         collectionOnB202.setWgs84(p202);
 
-        final Collection collectionOnB259 = new Collection(collectionModel, TENANT, "collection on b100 office room");
+        final Collection collectionOnB259 = new Collection(collectionModel, TENANT, "COLB100",
+                "collection on b100 office room");
         collectionOnB259.setGeometry(p259);
         collectionOnB259.setWgs84(p259);
 
@@ -121,15 +123,17 @@ public class GeometrySearchIT {
         double[] nearEastNorthPole = new double[] { 175., 85. };
         Point nearEastNorthPolePoint = IGeometry.point(IGeometry.position(175., 85.));
 
-        final Collection collNorthPole = new Collection(collectionModel, TENANT, "North Pole");
+        final Collection collNorthPole = new Collection(collectionModel, TENANT, "COLNORTH", "North Pole");
         collNorthPole.setGeometry(northPolePoint);
         collNorthPole.setWgs84(northPolePoint);
 
-        final Collection collNearWestNorthPole = new Collection(collectionModel, TENANT, "West near North Pole");
+        final Collection collNearWestNorthPole = new Collection(collectionModel, TENANT, "COLWEST",
+                "West near North Pole");
         collNearWestNorthPole.setGeometry(nearWestNorthPolePoint);
         collNearWestNorthPole.setWgs84(nearWestNorthPolePoint);
 
-        final Collection collNearEastNorthPole = new Collection(collectionModel, TENANT, "East near North Pole");
+        final Collection collNearEastNorthPole = new Collection(collectionModel, TENANT, "COLEAST",
+                "East near North Pole");
         collNearEastNorthPole.setGeometry(nearEastNorthPolePoint);
         collNearEastNorthPole.setWgs84(nearEastNorthPolePoint);
 
@@ -150,12 +154,12 @@ public class GeometrySearchIT {
 
         double[] eastPole = new double[] { 180., 0. };
         Point eastPolePoint = IGeometry.point(IGeometry.position(180., 0.));
-        Collection collEastPole = new Collection(collectionModel, TENANT, "East Pole");
+        Collection collEastPole = new Collection(collectionModel, TENANT, "COLEAST", "East Pole");
         collEastPole.setGeometry(eastPolePoint);
         collEastPole.setWgs84(eastPolePoint);
 
         Point honoluluPoint = IGeometry.point(IGeometry.position(201.005859375 - 360., 21.53484700204879));
-        Collection collHonolulu = new Collection(collectionModel, TENANT, "Honolulu");
+        Collection collHonolulu = new Collection(collectionModel, TENANT, "HONO", "Honolulu");
         collHonolulu.setGeometry(honoluluPoint);
         collHonolulu.setWgs84(honoluluPoint);
 
@@ -172,7 +176,8 @@ public class GeometrySearchIT {
                 { 1.4946502447128296, 43.57727223860706 }, { 1.4948782324790955, 43.57727418172091 },
                 { 1.4948728680610657, 43.57797952790247 }, { 1.4946448802947996, 43.57797369862905 } } };
         // Setting a geometry onto collection
-        final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "collection on b202 office room");
+        final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "COLB202",
+                "collection on b202 office room");
         collectionOnB202.setGeometry(p202);
         collectionOnB202.setWgs84(p202);
 

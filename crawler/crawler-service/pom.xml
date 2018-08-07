@@ -23,7 +23,6 @@
 
 	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-service</artifactId>
-	<packaging>jar</packaging>
 	
 	<description>Service layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
@@ -67,24 +66,8 @@
 			<artifactId>multitenant-regards-starter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-service</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-dao</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
-			<artifactId>dataaccess-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
-			<artifactId>dataaccess-service</artifactId>
+			<groupId>fr.cnes.regards.modules.dam</groupId>
+			<artifactId>dam-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>

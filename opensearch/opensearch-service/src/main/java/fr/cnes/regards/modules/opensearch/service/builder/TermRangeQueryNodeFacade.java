@@ -24,7 +24,7 @@ import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
 
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 
 /**
  * Facade class wrapping a {@link TermRangeQueryNode} for simplifiying access to usefull parameters.

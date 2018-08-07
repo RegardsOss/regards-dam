@@ -41,13 +41,13 @@ import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.entities.domain.StaticProperties;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
-import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelCreated;
+import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
@@ -160,70 +160,60 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      */
     private List<AttributeModel> doGetAttributeModels(String tenant) {
 
-        try {
-            // Enable system call as follow (thread safe action)
-            FeignSecurityManager.asSystem();
-            // Force tenant
-            // FIXME remove this unnecessary action / test will be impacted
-            runtimeTenantResolver.forceTenant(tenant);
+        // Enable system call as follow (thread safe action)
+        FeignSecurityManager.asSystem();
 
-            // Retrieve the list of attribute models
-            ResponseEntity<List<Resource<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
-            List<AttributeModel> attModels = new ArrayList<>();
-            if (response != null) {
-                attModels = HateoasUtils.unwrapCollection(response.getBody());
-            }
-
-            // Build or rebuild the map
-            Map<String, AttributeModel> tenantMap = new HashMap<>();
-            // Add static properties
-            initStaticProperties(tenantMap);
-            // Reference tenant map (override current if any)
-            propertyMap.put(tenant, tenantMap);
-
-            // Conflictual dynamic keys to be removed
-            List<String> conflictualKeys = new ArrayList<>();
-
-            // Build intelligent map preventing conflicts
-            for (AttributeModel attModel : attModels) {
-
-                // - Add mapping between short property name and attribute if no conflict detected
-                String key = attModel.getName();
-                if (!tenantMap.containsKey(key) && !conflictualKeys.contains(key)) {
-                    // Bind short property name to attribute
-                    tenantMap.put(key, attModel);
-                } else {
-                    // Conflictual dynamic property detected
-                    if (!conflictualKeys.contains(key)) {
-                        // It not yet detected
-                        if (tenantMap.get(key).isDynamic()) {
-                            conflictualKeys.add(key);
-                            tenantMap.remove(key);
-                        }
-                    }
-                }
-
-                // - Add mapping between fragment qualified property and attribute
-                if (attModel.hasFragment()) {
-                    String fragment = attModel.getFragment().getName();
-                    // Prevent conflicts with static properties
-                    if (!StaticProperties.FEATURES_STATICS.contains(fragment)) {
-                        // Bind fragment qualified property name to attribute
-                        tenantMap.put(attModel.buildJsonPath(""), attModel);
-                    }
-                }
-
-                // - Add mapping between fully qualified property and attribute
-                tenantMap.put(attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES), attModel);
-            }
-
-            return attModels;
-        } finally {
-            // Disable system call if necessary after client request(s)
-            FeignSecurityManager.reset();
-            runtimeTenantResolver.clearTenant();
+        // Retrieve the list of attribute models
+        ResponseEntity<List<Resource<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
+        List<AttributeModel> attModels = new ArrayList<>();
+        if (response != null) {
+            attModels = HateoasUtils.unwrapCollection(response.getBody());
         }
 
+        // Build or rebuild the map
+        Map<String, AttributeModel> tenantMap = new HashMap<>();
+        // Add static properties
+        initStaticProperties(tenantMap);
+        // Reference tenant map (override current if any)
+        propertyMap.put(tenant, tenantMap);
+
+        // Conflictual dynamic keys to be removed
+        List<String> conflictualKeys = new ArrayList<>();
+
+        // Build intelligent map preventing conflicts
+        for (AttributeModel attModel : attModels) {
+
+            // - Add mapping between short property name and attribute if no conflict detected
+            String key = attModel.getName();
+            if (!tenantMap.containsKey(key) && !conflictualKeys.contains(key)) {
+                // Bind short property name to attribute
+                tenantMap.put(key, attModel);
+            } else {
+                // Conflictual dynamic property detected
+                if (!conflictualKeys.contains(key)) {
+                    // It not yet detected
+                    if (tenantMap.get(key).isDynamic()) {
+                        conflictualKeys.add(key);
+                        tenantMap.remove(key);
+                    }
+                }
+            }
+
+            // - Add mapping between fragment qualified property and attribute
+            if (attModel.hasFragment()) {
+                String fragment = attModel.getFragment().getName();
+                // Prevent conflicts with static properties
+                if (!StaticProperties.FEATURES_STATICS.contains(fragment)) {
+                    // Bind fragment qualified property name to attribute
+                    tenantMap.put(attModel.buildJsonPath(""), attModel);
+                }
+            }
+
+            // - Add mapping between fully qualified property and attribute
+            tenantMap.put(attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES), attModel);
+        }
+
+        return attModels;
     }
 
     @Override

@@ -23,9 +23,7 @@
 
 	<groupId>fr.cnes.regards.modules.indexer</groupId>
 	<artifactId>indexer-service</artifactId>
-	<packaging>jar</packaging>
 	
-	<name>Indexer Service</name>
 	<description>Service layer of the Indexer module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
@@ -64,8 +62,8 @@
 			<artifactId>indexer-dao</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-domain</artifactId>
+			<groupId>fr.cnes.regards.modules.dam</groupId>
+			<artifactId>dam-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>

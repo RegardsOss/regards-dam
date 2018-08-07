@@ -31,7 +31,7 @@
 <!-- 	<logger name="org.springframework" level="INFO" />
 	<logger name="org.hibernate" level="INFO" />
  -->
-	<logger name="fr.cnes.regards.modules.datasources" level="debug" />
+	<logger name="fr.cnes.regards.modules.dam" level="debug" />
 	<logger name="fr.cnes.regards.modules.crawler.service" level="INFO"/>
 
 	<root level="error">

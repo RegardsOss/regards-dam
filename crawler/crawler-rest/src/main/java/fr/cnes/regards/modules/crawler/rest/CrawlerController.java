@@ -33,7 +33,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
@@ -43,8 +42,6 @@ import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
  * @author Sébastien Binda
  */
 @RestController
-@ModuleInfo(name = "crawler", version = "2.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
 @RequestMapping(CrawlerController.TYPE_MAPPING)
 public class CrawlerController implements IResourceController<DatasourceIngestion> {
 
@@ -87,8 +84,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     @Override
     public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
         Resource<DatasourceIngestion> resource = resourceService.toResource(element);
-        resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion",
-                                LinkRels.DELETE, MethodParamFactory.build(Long.class, element.getId()));
+        resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, element.getId()));
         return resource;
     }
 

@@ -42,7 +42,8 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.entities.domain.StaticProperties;
+import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ComparisonOperator;
@@ -56,7 +57,6 @@ import fr.cnes.regards.modules.indexer.domain.criterion.OrCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
@@ -569,7 +569,6 @@ public class QueryParserTest {
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     @Purpose("Tests queries like date:2007-12-03T10:15:30.166Z")
     @Requirement("REGARDS_DSL_DAM_ARC_810")

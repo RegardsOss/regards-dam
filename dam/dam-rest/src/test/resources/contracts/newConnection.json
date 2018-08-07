@@ -1,0 +1,40 @@
+{
+    "label": "HELLO MARC 2",
+    "pluginClassName": "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin",
+    "parameters": [{
+        "name": "user",
+        "value": "azertyuiop123456789",
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "password",
+        "value": "azertyuiop123456789",
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "dbHost",
+        "value": "rs_postgres",
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "dbPort",
+        "value": "5432",
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "dbName",
+        "value": "rs_ext_validation_db",
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "minPoolSize",
+        "value": 3,
+        "dynamic": false,
+        "dynamicsValues": []
+    }, {
+        "name": "maxPoolSize",
+        "value": 10,
+        "dynamic": false,
+        "dynamicsValues": []
+    }]
+}

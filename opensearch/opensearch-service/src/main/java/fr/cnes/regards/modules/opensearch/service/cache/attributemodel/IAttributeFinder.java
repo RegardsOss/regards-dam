@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service.cache.attributemodel;
 
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**

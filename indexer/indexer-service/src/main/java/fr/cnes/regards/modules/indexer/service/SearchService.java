@@ -37,9 +37,9 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -67,7 +67,7 @@ public class SearchService implements ISearchService {
         Class<? extends IIndexable> clazz;
         switch (urn.getEntityType()) {
             case COLLECTION:
-                clazz = fr.cnes.regards.modules.entities.domain.Collection.class;
+                clazz = fr.cnes.regards.modules.dam.domain.entities.Collection.class;
                 break;
             case DATA:
                 clazz = DataObject.class;

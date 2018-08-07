@@ -29,14 +29,14 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.Collection;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelService;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -124,7 +124,7 @@ public class GeometryIT {
     public void testOnDbPoint() throws ModuleException, IOException {
 
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL", "collection with geometry");
         collection.setGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
         collService.create(collection);
 
@@ -139,7 +139,7 @@ public class GeometryIT {
     @Test
     public void testOnEsPoint() throws ModuleException, IOException {
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL", "collection with geometry");
         collection.setGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
 
         esRepos.save(TENANT, collection);
@@ -154,7 +154,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiPointLineString() throws ModuleException, IOException {
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
         collection.setGeometry(multipoint);
         collService.create(collection);
@@ -167,7 +167,7 @@ public class GeometryIT {
         double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
         Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
-        collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
+        collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
                 .toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)));
         collection2.setGeometry(lineString);
@@ -184,7 +184,7 @@ public class GeometryIT {
     @Test
     public void testOnEsMultiPointLineString() throws ModuleException, IOException {
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
         collection.setGeometry(multipoint);
 
@@ -198,7 +198,7 @@ public class GeometryIT {
         double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
         Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
 
-        collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
+        collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         LineString lineString = IGeometry.lineString(IGeometry
                 .toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)));
         collection2.setGeometry(lineString);
@@ -217,7 +217,7 @@ public class GeometryIT {
     public void testOnDbMultiLineStringPolygon() throws ModuleException, IOException {
 
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiLineString geometry = IGeometry
                 .multiLineString(IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34),
                                                                    IGeometry.position(42., -72.)),
@@ -240,7 +240,7 @@ public class GeometryIT {
     @Test
     public void testOnEsMultiLineStringPolygon() throws ModuleException, IOException {
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         collection.setGeometry(IGeometry
                 .multiLineString(IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34),
                                                                    IGeometry.position(42., -72.)),
@@ -252,7 +252,7 @@ public class GeometryIT {
         final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTILINESTRING);
 
-        collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
+        collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         // Polygon with hole defined using http://geojson.io
         Polygon polygon = IGeometry
                 .polygon(IGeometry.toPolygonCoordinates(IGeometry
@@ -290,7 +290,7 @@ public class GeometryIT {
     public void testOnDbMultiPolygon() throws ModuleException, IOException {
 
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPolygon mp = IGeometry.multiPolygon(IGeometry.toPolygonCoordinates(IGeometry
                 .toLinearRingCoordinates(IGeometry.position(102.0, 2.0), IGeometry.position(103.0, 2.0),
                                          IGeometry.position(103.0, 3.0), IGeometry.position(102.0, 3.0),
@@ -312,7 +312,7 @@ public class GeometryIT {
     @Test
     public void testOnEsMultiPolygon() throws ModuleException, IOException {
         // Setting a geometry onto collection
-        collection = new Collection(collectionModel, TENANT, "collection with geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPolygon mp = IGeometry.multiPolygon(IGeometry.toPolygonCoordinates(IGeometry
                 .toLinearRingCoordinates(IGeometry.position(102.0, 2.0), IGeometry.position(103.0, 2.0),
                                          IGeometry.position(103.0, 3.0), IGeometry.position(102.0, 3.0),
@@ -335,7 +335,7 @@ public class GeometryIT {
     @Test
     public void testNoGeometry() throws ModuleException, IOException {
 
-        collection = new Collection(collectionModel, TENANT, "collection without geometry");
+        collection = new Collection(collectionModel, TENANT, "COL1", "collection without geometry");
 
         collService.create(collection);
 
