@@ -15,8 +15,8 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
-import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
+import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 
 /**
  * Crawler service for Dataset. <b>This service need @EnableSchedule at Configuration</b>

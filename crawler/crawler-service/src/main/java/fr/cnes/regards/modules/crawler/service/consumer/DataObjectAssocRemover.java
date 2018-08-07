@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
  * Consumer removing association between dataset and data object

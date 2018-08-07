@@ -84,7 +84,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<packageName>fr.cnes.regards.modules.models.schema</packageName>
+					<packageName>fr.cnes.regards.modules.dam.domain.models.schema</packageName>
 					<sources>
 						<source>src/main/resources</source>
 					</sources>
