@@ -18,17 +18,14 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.springframework.http.MediaType;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidContentTypeException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidFilenameException;
+import java.util.Arrays;
+import java.util.Collection;
+import org.springframework.http.MediaType;
 
 /**
  * Utility class to validate supported content type for a file data type.
@@ -51,8 +48,7 @@ public final class ContentTypeValidator {
 
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(contentType, StandardCharsets.UTF_8.toString(),
-                                   Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE));
+                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE));
                 break;
             default:
                 // No restriction
@@ -70,8 +66,7 @@ public final class ContentTypeValidator {
 
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(contentType, StandardCharsets.UTF_8.toString(),
-                                   Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
+                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
                                                  MediaType.TEXT_HTML_VALUE));
                 break;
             default:
@@ -81,16 +76,8 @@ public final class ContentTypeValidator {
 
     }
 
-    private static void checkFileSupported(String contentType, String expectedCharset,
-            Collection<String> expectedContentTypes) throws InvalidCharsetException, InvalidContentTypeException {
-
-        // Check charset
-        if (expectedCharset != null) {
-            String charset = getCharset(contentType);
-            if (!expectedCharset.equals(charset)) {
-                throw new InvalidCharsetException(expectedCharset, charset);
-            }
-        }
+    private static void checkFileSupported(String contentType, Collection<String> expectedContentTypes)
+            throws InvalidCharsetException, InvalidContentTypeException {
 
         // Check content types
         if (expectedContentTypes != null) {
