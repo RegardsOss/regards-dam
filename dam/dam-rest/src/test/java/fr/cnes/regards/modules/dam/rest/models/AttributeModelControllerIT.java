@@ -69,8 +69,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.Abstract
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.LongRangeRestriction;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.RestrictionType;
-import fr.cnes.regards.modules.dam.rest.models.AttributeModelController;
-import fr.cnes.regards.modules.dam.rest.models.ModelAttrAssocController;
 
 /**
  * Test module API
@@ -181,6 +179,9 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         descriptors.addAll(documentAttributeProperties(creation, prefixPath + "properties[]"));
         descriptors.add(constrainedFields
                 .withPath(prefixPath + "dynamic", "dynamic", "Used in search request parsing only", "Defaults to true")
+                .type(JSON_BOOLEAN_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "internal", "internal",
+                                                   "Used in search request parsing only", "Defaults to false")
                 .type(JSON_BOOLEAN_TYPE).optional());
         descriptors.add(constrainedFields
                 .withPath(prefixPath + "jsonPath", "jsonPath",
