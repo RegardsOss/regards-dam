@@ -25,7 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 
 /**
  * Class IDataSourcePlugin
@@ -55,7 +55,7 @@ public interface IDataSourcePlugin {
      * @param date Allows to filter the new entities created after this date parameter (can be null)
      * @return a page of entities
      */
-    Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException;
+    Page<DataObjectFeature> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException;
 
     /**
      * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.
@@ -63,7 +63,7 @@ public interface IDataSourcePlugin {
      * @param pageable the pagination information
      * @return a page of entities
      */
-    default Page<DataObject> findAll(String tenant, Pageable pageable) throws DataSourceException {
+    default Page<DataObjectFeature> findAll(String tenant, Pageable pageable) throws DataSourceException {
         return this.findAll(tenant, pageable, null);
     }
 

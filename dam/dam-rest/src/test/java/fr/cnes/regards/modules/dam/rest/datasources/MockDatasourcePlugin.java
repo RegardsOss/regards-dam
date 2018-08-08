@@ -28,7 +28,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 
 /**
  * For testing purpose
@@ -45,7 +45,8 @@ public class MockDatasourcePlugin implements IDBDataSourcePlugin {
     }
 
     @Override
-    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
+    public Page<DataObjectFeature> findAll(String tenant, Pageable pageable, OffsetDateTime date)
+            throws DataSourceException {
         return null;
     }
 

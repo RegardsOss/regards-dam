@@ -234,7 +234,7 @@ public class DataFile {
      *
      * @param dataType the file {@link DataType}
      * @param filename the original filename
-     * @param uri the file uri
+     * @param uri the file uri as string
      * @param online true if file can be downloaded
      * @param reference true if file is not managed by REGARDS storage process
      *
@@ -251,6 +251,24 @@ public class DataFile {
         return datafile;
     }
 
+    /**
+     * Base builder with required properties.<br/>
+     * For image, size is required, use {@link #setImageWidth(Integer)} and {@link #setImageHeight(Integer)}.<br/>
+     * Additional file properties can be supplied using :
+     *
+     * <ul>
+     * <li>{@link #setFilesize(Long)}</li>
+     * <li>{@link #setChecksum(String)}</li>
+     * <li>{@link #setDigestAlgorithm(String)}</li>
+     * </ul>
+     *
+     * @param dataType the file {@link DataType}
+     * @param filename the original filename
+     * @param uri the file uri
+     * @param online true if file can be downloaded
+     * @param reference true if file is not managed by REGARDS storage process
+     *
+     */
     public static DataFile build(DataType dataType, String filename, URI uri, MimeType mimeType, Boolean online,
             Boolean reference) {
         return DataFile.build(dataType, filename, uri.toString(), mimeType, online, reference);

@@ -12,7 +12,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 
 /**
@@ -24,12 +24,11 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class FakeDataSourcePlugin implements IDataSourcePlugin {
-    
+
     public static final String MODEL = "model";
 
     @PluginParameter(label = MODEL, name = MODEL)
     private Model dataModel;
-
 
     @Override
     public int getRefreshRate() {
@@ -42,8 +41,9 @@ public class FakeDataSourcePlugin implements IDataSourcePlugin {
     }
 
     @Override
-    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
-        List<DataObject> content = new ArrayList<>();
+    public Page<DataObjectFeature> findAll(String tenant, Pageable pageable, OffsetDateTime date)
+            throws DataSourceException {
+        List<DataObjectFeature> content = new ArrayList<>();
         return new PageImpl<>(content);
     }
 }

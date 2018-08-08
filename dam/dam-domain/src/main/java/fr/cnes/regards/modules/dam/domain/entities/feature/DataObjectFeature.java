@@ -38,6 +38,10 @@ public class DataObjectFeature extends EntityFeature {
         super(null, null, EntityType.DATA, null);
     }
 
+    public DataObjectFeature(UniformResourceName id, String providerId, String label) {
+        super(id, providerId, EntityType.DATA, label);
+    }
+
     public DataObjectFeature(String tenant, String providerId, String label) {
         super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1), providerId,
               EntityType.DATA, label);

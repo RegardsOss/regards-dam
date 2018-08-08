@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -50,10 +52,14 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.IAipDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -67,6 +73,9 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent>
         implements ICrawlerAndIngesterService {
+
+    @Autowired
+    private IModelService modelService;
 
     @Autowired
     private IPluginService pluginService;
@@ -138,7 +147,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     private int readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
-            throws DataSourceException, InterruptedException, ExecutionException {
+            throws DataSourceException, InterruptedException, ExecutionException, ModuleException {
         int savedObjectsCount = 0;
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
@@ -174,13 +183,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
         savedObjectsCount += task.get();
         sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount), dsiId);
+                                  availableRecordsCount),
+                    dsiId);
         return savedObjectsCount;
     }
 
     private int readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
-            throws DataSourceException, InterruptedException, ExecutionException {
+            throws DataSourceException, InterruptedException, ExecutionException, ModuleException {
         int savedObjectsCount = 0;
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
@@ -216,21 +226,42 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
         savedObjectsCount += task.get();
         sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount), dsiId);
+                                  availableRecordsCount),
+                    dsiId);
         return savedObjectsCount;
     }
 
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
+     * @throws ModuleException
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            String datasourceId, Pageable pageable) throws DataSourceException {
-        Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
-        // Generate IpId only if datasource plugin hasn't yet generate it
-        page.getContent().stream().filter(obj -> obj.getIpId().isRandomEntityId())
-                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getProviderId(), datasourceId)));
-        return page;
+            String datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
+        // Retrieve target model
+        Model model = modelService.getModelByName(dsPlugin.getModelName());
+
+        // Find all features
+        Page<DataObjectFeature> page = dsPlugin.findAll(tenant, pageable, date);
+
+        // Decorate features with its related entity (i.e. DataObject)
+        List<DataObject> dataObjects = new ArrayList<>();
+
+        for (DataObjectFeature feature : page.getContent()) {
+            // Wrap each feature into its decorator
+            DataObject wrap = DataObject.wrap(model, feature,
+                                              IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
+            wrap.setDataSourceId(datasourceId);
+            // Generate IpId only if datasource plugin hasn't yet generate it
+            if (wrap.getIpId().isRandomEntityId()) {
+                wrap.setIpId(buildIpId(tenant, wrap.getProviderId(), datasourceId));
+            }
+
+            dataObjects.add(wrap);
+        }
+
+        // Build decorated page
+        return new PageImpl<>(dataObjects, pageable, page.getTotalElements());
     }
 
     /**
@@ -242,7 +273,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      */
     private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
+                UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
 
     @Override

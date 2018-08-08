@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.dam.domain.entities;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.util.Assert;
+
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.dam.domain.models.Model;
@@ -69,6 +71,10 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         super(model, new DataObjectFeature(tenant, providerId, label));
     }
 
+    private DataObject(Model model, DataObjectFeature feature) {
+        super(model, feature);
+    }
+
     public String getDataSourceId() {
         return dataSourceId;
     }
@@ -110,4 +116,23 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     public boolean equals(Object obj) {
         return super.equals(obj);
     }
+
+    /**
+     * Wrap a {@link DataObjectFeature} into a {@link DataObject} decorator
+     */
+    public static DataObject wrap(Model model, DataObjectFeature feature, Boolean internal) {
+        Assert.notNull(model, "Model is required");
+        Assert.notNull(feature, "Feature is required");
+        Assert.notNull(internal, "Internal is required");
+
+        DataObject dataObject = new DataObject(model, feature);
+        dataObject.setInternal(internal);
+        dataObject.setIpId(feature.getId());
+        if ((feature.getTags() != null) && !feature.getTags().isEmpty()) {
+            dataObject.setTags(feature.getTags());
+        }
+        // FIXME manage last update?
+        return dataObject;
+    }
+
 }
