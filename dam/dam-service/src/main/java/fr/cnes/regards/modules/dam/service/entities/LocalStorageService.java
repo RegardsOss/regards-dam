@@ -198,20 +198,32 @@ public class LocalStorageService implements ILocalStorageService {
      * Store file in local storage and keep a database reference
      */
     private void store(String checksum, MultipartFile file, AbstractEntity<?> entity) throws IOException {
-        // We assume that baseStorageLocation already exists on the file system.
-        // We just need to create, if required, the directory between localStoragePath and the file.
 
-        // folder = localStoragePath + 2 first char of checksum
-        Path folderPath = Paths.get(localStoragePath, checksum.substring(0, 2));
-        if (!Files.exists(folderPath)) {
-            Files.createDirectory(folderPath);
+        if (localStorageRepo.findOneByEntityAndFileChecksum(entity, checksum).isPresent()) {
+            // Silently skip
+            LOGGER.warn("File {} already attached to the entity {}. Skipping store action.", file.getOriginalFilename(),
+                        entity.getLabel());
+            return;
         }
 
-        // Save file
-        Path filePath = getDataFilePath(checksum);
-        // Accept a file to be attached to several entities
-        if (!Files.exists(filePath)) {
-            Files.copy(file.getInputStream(), filePath);
+        if (localStorageRepo.countByFileChecksum(checksum) == 0) {
+            // Copy file
+
+            // We assume that baseStorageLocation already exists on the file system.
+            // We just need to create, if required, the directory between localStoragePath and the file.
+
+            // folder = localStoragePath + 2 first char of checksum
+            Path folderPath = Paths.get(localStoragePath, checksum.substring(0, 2));
+            if (!Files.exists(folderPath)) {
+                Files.createDirectory(folderPath);
+            }
+
+            // Save file
+            Path filePath = getDataFilePath(checksum);
+            // Accept a file to be attached to several entities
+            if (!Files.exists(filePath)) {
+                Files.copy(file.getInputStream(), filePath);
+            }
         }
 
         // Save reference in database

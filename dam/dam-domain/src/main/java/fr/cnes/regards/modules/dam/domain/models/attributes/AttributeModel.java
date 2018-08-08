@@ -189,6 +189,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private boolean dynamic = true;
 
     /**
+     * Used in search request parsing only to identify an internal (i.e. private) properties. It's a property available
+     * in the feature decorator in other words : the entity.
+     */
+    @Transient
+    private boolean internal = false;
+
+    /**
      * Used in search request. Define the JSON path to the related values in entities
      */
     @Transient
@@ -441,6 +448,14 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         dynamic = pDynamic;
     }
 
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public void setInternal(boolean internal) {
+        this.internal = internal;
+    }
+
     public String getJsonPath() {
         return jsonPath;
     }
@@ -495,4 +510,5 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         return "AttributeModel{" + "id=" + id + ", name='" + name + '\'' + ", defaultValue='" + defaultValue + '\''
                 + ", type=" + type + ", fragment=" + fragment + ", jsonPath='" + jsonPath + '\'' + '}';
     }
+
 }

@@ -140,6 +140,11 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         // Tags
         tenantMap.put(StaticProperties.FEATURE_TAGS, AttributeModelBuilder
                 .build(StaticProperties.FEATURE_TAGS, AttributeType.STRING, null).isStatic().get());
+
+        // Allows to filter on dataset model id when searching for dataobjects
+        tenantMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
+                .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.LONG, null).isInternal().get());
+
     }
 
     @Override

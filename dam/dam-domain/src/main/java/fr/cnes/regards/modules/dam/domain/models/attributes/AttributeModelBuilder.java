@@ -97,6 +97,11 @@ public final class AttributeModelBuilder {
         return this;
     }
 
+    public AttributeModelBuilder isInternal() {
+        attributeModel.setInternal(true);
+        return this;
+    }
+
     // Restriction
 
     public <T extends AbstractRestriction> AttributeModel withRestriction(T pRestriction) {
