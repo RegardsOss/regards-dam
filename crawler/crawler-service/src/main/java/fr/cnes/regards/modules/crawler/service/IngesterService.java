@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -55,20 +54,6 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
 
     /**
-     * To avoid CPU overload, a delay is set between each loop of tenants event inspection. This delay is doubled each
-     * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
-     * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
-     */
-    private static final int INITIAL_DELAY_MS = 1000;
-
-    /**
-     * To avoid CPU overload, a delay is set between each loop of tenants event inspection. This delay is doubled each
-     * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
-     * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
-     */
-    private static final int MAX_DELAY_MS = 10000;
-
-    /**
      * All tenants resolver
      */
     @Autowired
@@ -104,11 +89,6 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     @Autowired
     @Lazy
     private IIngesterService self;
-
-    /**
-     * Current delay between all tenants poll check
-     */
-    private final AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
 
     /**
      * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
@@ -182,7 +162,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             }
 
             do {
-                // First, update all DatasourceIngestions of all tenants (to reflect all datasource plugin configurations
+                // First, update all DatasourceIngestions of all tenants (to reflect all datasource plugin
+                // configurations
                 // states and to update nextPlannedIngestDate)
                 for (String tenant : tenantResolver.getAllActiveTenants()) {
                     runtimeTenantResolver.forceTenant(tenant);
@@ -298,7 +279,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         switch (dsIngestion.getStatus()) {
-            case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
+            case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no
+                        // error)
                 OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
                         ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
                         : dsIngestion.getLastIngestDate();

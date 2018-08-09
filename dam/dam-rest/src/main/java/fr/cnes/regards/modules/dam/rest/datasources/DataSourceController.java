@@ -35,7 +35,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -51,8 +50,6 @@ import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
  * @author oroussel
  */
 @RestController
-@ModuleInfo(name = "datasource", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
 @RequestMapping(DataSourceController.TYPE_MAPPING)
 public class DataSourceController implements IResourceController<PluginConfiguration> {
 
