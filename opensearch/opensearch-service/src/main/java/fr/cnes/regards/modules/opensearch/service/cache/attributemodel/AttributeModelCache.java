@@ -279,8 +279,14 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
 
         @Override
         public void handle(TenantWrapper<AttributeModelCreated> pWrapper) {
-            LOGGER.info("New attribute model created, refreshing the cache", pWrapper.getContent().getAttributeName());
-            getAttributeModelsThenCache(pWrapper.getTenant());
+            try {
+                runtimeTenantResolver.forceTenant(pWrapper.getTenant());
+                LOGGER.info("New attribute model created, refreshing the cache",
+                            pWrapper.getContent().getAttributeName());
+                getAttributeModelsThenCache(pWrapper.getTenant());
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
         }
     }
 
@@ -292,8 +298,14 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
 
         @Override
         public void handle(TenantWrapper<AttributeModelDeleted> pWrapper) {
-            LOGGER.info("New attribute model deleted, refreshing the cache", pWrapper.getContent().getAttributeName());
-            getAttributeModelsThenCache(pWrapper.getTenant());
+            try {
+                runtimeTenantResolver.forceTenant(pWrapper.getTenant());
+                LOGGER.info("New attribute model deleted, refreshing the cache",
+                            pWrapper.getContent().getAttributeName());
+                getAttributeModelsThenCache(pWrapper.getTenant());
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
         }
     }
 
