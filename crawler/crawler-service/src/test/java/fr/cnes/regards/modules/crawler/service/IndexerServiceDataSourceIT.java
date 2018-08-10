@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -283,8 +282,7 @@ public class IndexerServiceDataSourceIT {
         List<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(TestDataSourcePlugin.MODEL, dataModel)
                 .addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
-        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class, Arrays
-                .asList(PLUGIN_CURRENT_PACKAGE, IDataSourcePlugin.class.getPackage().getName()));
+        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class);
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")

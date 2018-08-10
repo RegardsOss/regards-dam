@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,11 +93,6 @@ public class EntitiesService implements IEntitiesService {
 
     public EntitiesService() {
         super();
-    }
-
-    @PostConstruct
-    public void initPluginPackage() {
-        pluginService.addPluginPackage("fr.cnes.regards.modules.dam.plugin.entities");
     }
 
     @Override
@@ -198,8 +191,7 @@ public class EntitiesService implements IEntitiesService {
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, Arrays.asList(ttt.getPackage().getName()),
-                                                           new HashMap<>());
+            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, new HashMap<>());
         } catch (ClassNotFoundException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalArgumentException(e.getMessage());

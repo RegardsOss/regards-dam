@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.assertj.core.util.Lists;
 import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -63,9 +62,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilde
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.dam.plugin.entities.AbstractDataObjectComputePlugin;
-import fr.cnes.regards.modules.dam.plugin.entities.CountPlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin;
-import fr.cnes.regards.modules.dam.rest.models.ModelAttrAssocController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
@@ -139,22 +136,19 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
             descriptors
                     .add(constrainedFields.withPath(prefixPath + "id", "id", "Model attribute association identifier"));
         }
-        descriptors.add(constrainedFields.withPath(prefixPath + "attribute",
-                                                   "attribute",
+        descriptors.add(constrainedFields.withPath(prefixPath + "attribute", "attribute",
                                                    "Model attribute association attribute"));
         descriptors.addAll(AttributeModelControllerIT.documentBody(false, prefixPath + "attribute"));
         descriptors.add(constrainedFields.withPath(prefixPath + "model", "model", "Model attribute association model"));
         descriptors.addAll(ModelControllerIT.documentBody(false, prefixPath + "model"));
-        descriptors.add(constrainedFields.withPath(prefixPath + "computationConf",
-                                                   "computationConf",
-                                                   "Computation plugin configuration",
-                                                   "Should respect PluginConfiguration structure")
-                                .type(JSON_OBJECT_TYPE).optional());
-        descriptors.add(constrainedFields.withPath(prefixPath + "pos",
-                                                   "pos",
-                                                   "Position (allows to sort attribute in model)",
-                                                   "Should be a whole number. Defaults to 0").type(JSON_NUMBER_TYPE)
-                                .optional());
+        descriptors.add(constrainedFields
+                .withPath(prefixPath + "computationConf", "computationConf", "Computation plugin configuration",
+                          "Should respect PluginConfiguration structure")
+                .type(JSON_OBJECT_TYPE).optional());
+        descriptors.add(constrainedFields
+                .withPath(prefixPath + "pos", "pos", "Position (allows to sort attribute in model)",
+                          "Should be a whole number. Defaults to 0")
+                .type(JSON_NUMBER_TYPE).optional());
         return descriptors;
     }
 
@@ -234,26 +228,17 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectations(defaultExpectations(att, mod));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
         requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
         requestBuilderCustomizer
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         // Perform request
-        performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING,
-                           modAtt,
-                           requestBuilderCustomizer,
-                           "Attribute should be binded",
-                           mod.getName());
+        performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, modAtt,
+                           requestBuilderCustomizer, "Attribute should be binded", mod.getName());
     }
 
     /**
@@ -274,45 +259,37 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id")
-                                                        .value(att.getId().intValue()));
+                .value(att.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type")
-                                                        .value(att.getType().toString()));
+                .value(att.getType().toString()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.type")
-                                                        .value(mod.getType().toString()));
+                .value(mod.getType().toString()));
 
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id")
-                                                        .value(att2.getId().intValue()));
+                .value(att2.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
-                                                        .value(att2.getType().toString()));
+                .value(att2.getType().toString()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.type")
-                                                        .value(mod.getType().toString()));
+                .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING,
-                          requestBuilderCustomizer,
-                          "All attributes should be listed",
-                          mod.getName());
+                          requestBuilderCustomizer, "All attributes should be listed", mod.getName());
 
     }
 
@@ -334,53 +311,32 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE)),
-                                                                                             RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "pAttributeId")
-                                                                                                     .description(
-                                                                                                             "Attribute identifier")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_NUMBER_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
+                                RequestDocumentation.parameterWithName("pAttributeId")
+                                        .description("Attribute identifier").attributes(Attributes
+                                                .key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                          requestBuilderCustomizer,
-                          "Should return an attribute",
-                          mod.getName(),
-                          modAtt.getId());
+                          requestBuilderCustomizer, "Should return an attribute", mod.getName(), modAtt.getId());
     }
 
     @Test
     public void testGetMappingForComputedAttribute() throws ModuleException {
         // lets add a package where we know there is plugin to get some results
-        pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
         List<PluginParameter> params = PluginParametersFactory.build()
                 .addParameter(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto")
                 .addParameter(AbstractDataObjectComputePlugin.RESULT_ATTRIBUTE_NAME, "titi").getParameters();
         PluginConfiguration confWithUnknownParameter = PluginUtils.getPluginConfiguration(params,
-                                                                                          IntSumComputePlugin.class,
-                                                                                          Lists.newArrayList(
-                                                                                                  IntSumComputePlugin.class
-                                                                                                          .getPackage()
-                                                                                                          .getName()));
+                                                                                          IntSumComputePlugin.class);
         pluginService.savePluginConfiguration(confWithUnknownParameter);
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.COMPUTATION_TYPE_MAPPING,
-                          requestBuilderCustomizer,
-                          "Should return mappings possible for computed attribute");
+                          requestBuilderCustomizer, "Should return mappings possible for computed attribute");
     }
 
     @Test
@@ -404,9 +360,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBeCollections), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.COLLECTION,
-                          requestBuilderCustomizer,
-                          "Should return model attribute association");
+                + EntityType.COLLECTION, requestBuilderCustomizer, "Should return model attribute association");
 
         requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
@@ -416,9 +370,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBeData), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.DATA,
-                          requestBuilderCustomizer,
-                          "Should return model attribute association");
+                + EntityType.DATA, requestBuilderCustomizer, "Should return model attribute association");
 
         requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
@@ -426,32 +378,17 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBe.size())));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBe), false));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
-                                                                                                        .parameterWithName(
-                                                                                                                "type")
-                                                                                                        .description(
-                                                                                                                "Model type for which we want the associations")
-                                                                                                        .attributes(
-                                                                                                                Attributes
-                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                        .value(JSON_STRING_TYPE),
-                                                                                                                Attributes
-                                                                                                                        .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
-                                                                                                                        .value("Available values: "
-                                                                                                                                       + Arrays
-                                                                                                                                .stream(EntityType
-                                                                                                                                                .values())
-                                                                                                                                .map(type -> type
-                                                                                                                                        .name())
-                                                                                                                                .collect(
-                                                                                                                                        Collectors
-                                                                                                                                                .joining(
-                                                                                                                                                        ", "))))
-                                                                                                        .optional()));
+        requestBuilderCustomizer
+                .addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
+                        .parameterWithName("type").description("Model type for which we want the associations")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE),
+                                    Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                            .value("Available values: " + Arrays.stream(EntityType.values())
+                                                    .map(type -> type.name()).collect(Collectors.joining(", "))))
+                        .optional()));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING,
-                          requestBuilderCustomizer,
-                          "Should return model attribute association");
+                          requestBuilderCustomizer, "Should return model attribute association");
     }
 
     private EntityType getEntityType(int pI) {
@@ -494,30 +431,15 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE)),
-                                                                                             RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "pAttributeId")
-                                                                                                     .description(
-                                                                                                             "Attribute identifier")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_NUMBER_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
+                                RequestDocumentation.parameterWithName("pAttributeId")
+                                        .description("Attribute identifier").attributes(Attributes
+                                                .key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
         performDefaultPut(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                          modAtt,
-                          requestBuilderCustomizer,
-                          "Should update the model attribute",
-                          mod.getName(),
+                          modAtt, requestBuilderCustomizer, "Should update the model attribute", mod.getName(),
                           modAtt.getId());
     }
 
@@ -535,31 +457,15 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE)),
-                                                                                             RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "pAttributeId")
-                                                                                                     .description(
-                                                                                                             "Attribute identifier")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_NUMBER_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
+                                RequestDocumentation.parameterWithName("pAttributeId")
+                                        .description("Attribute identifier").attributes(Attributes
+                                                .key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
-        performDefaultDelete(
-                ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                requestBuilderCustomizer,
-                "Model should be deleted",
-                mod.getName(),
-                modAtt.getId());
+        performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                + apiAttribute, requestBuilderCustomizer, "Model should be deleted", mod.getName(), modAtt.getId());
     }
 
     /**
@@ -585,51 +491,41 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id")
-                                                        .value(att.getId().intValue()));
+                .value(att.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type")
-                                                        .value(att.getType().toString()));
+                .value(att.getType().toString()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.type")
-                                                        .value(mod.getType().toString()));
+                .value(mod.getType().toString()));
 
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id")
-                                                        .value(att2.getId().intValue()));
+                .value(att2.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
-                                                        .value(att2.getType().toString()));
+                .value(att2.getType().toString()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
         requestBuilderCustomizer
                 .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.type")
-                                                        .value(mod.getType().toString()));
+                .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(FragmentControllerIT
-                                                                                                    .documentBody(false,
-                                                                                                                  "")));
+        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation
+                .requestFields(FragmentControllerIT.documentBody(false, "")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                   + ModelAttrAssocController.FRAGMENT_BIND_MAPPING,
-                           frag,
-                           requestBuilderCustomizer,
-                           "Should bind fragment",
-                           mod.getName());
+                + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, requestBuilderCustomizer,
+                           "Should bind fragment", mod.getName());
     }
 
     /**
@@ -653,36 +549,21 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
         modelAttributeService.bindNSAttributeToModel(mod.getName(), frag);
 
-        final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(name);
+        modelAttributeService.getModelAttrAssocs(name);
 
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "Model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE)),
-                                                                                             RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "pFragmentId")
-                                                                                                     .description(
-                                                                                                             "Fragment identifier")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_NUMBER_TYPE))));
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
+                                RequestDocumentation.parameterWithName("pFragmentId").description("Fragment identifier")
+                                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                .value(JSON_NUMBER_TYPE))));
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                     + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING,
-                             requestBuilderCustomizer,
-                             "Fragment's attributes should be deleted",
-                             mod.getName(),
-                             frag.getId());
+                + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, requestBuilderCustomizer,
+                             "Fragment's attributes should be deleted", mod.getName(), frag.getId());
     }
 
 }

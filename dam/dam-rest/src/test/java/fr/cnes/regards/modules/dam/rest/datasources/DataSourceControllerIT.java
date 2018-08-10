@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.dam.rest.datasources;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
@@ -130,7 +129,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException, JwtException {
-        jwtService.injectToken(DEFAULT_TENANT, DEFAULT_ROLE, DEFAULT_USER_EMAIL);
+        jwtService.injectToken(getDefaultTenant(), DEFAULT_ROLE, getDefaultUserEmail());
         try {
             // Remove the model if existing
             modelService.getModelByName(DEFAULT_MODEL_NAME);
@@ -412,8 +411,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
                 .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters();
 
-        return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_PACKAGE));
+        return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class);
     }
 
 }
