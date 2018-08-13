@@ -80,6 +80,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     public static final String PARAM_FRAGMENT_NAME = "fragmentName";
 
+    public static final String ATTRIBUTE_MAPPING = "/{pAttributeId}";
+
     /**
      * Attribute service
      */
@@ -170,7 +172,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
-    @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
+    @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
     public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long pAttributeId)
             throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(pAttributeId);
@@ -187,7 +189,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Update an attribute")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pAttributeId}")
+    @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
     public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable final Long pAttributeId,
             @Valid @RequestBody final AttributeModel pAttributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.updateAttribute(pAttributeId, pAttributeModel)));
@@ -199,8 +201,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @return nothing
      */
     @ResourceAccess(description = "Delete an attribute")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pAttributeId}")
-    public ResponseEntity<Void> deleteAttribute(@PathVariable final Long pAttributeId) {
+    @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
+    public ResponseEntity<Void> deleteAttribute(@PathVariable final Long pAttributeId) throws ModuleException {
         attributeService.deleteAttribute(pAttributeId);
         return ResponseEntity.noContent().build();
     }
@@ -238,7 +240,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, attributeModel.getId()),
                                 MethodParamFactory.build(AttributeModel.class));
-        if (isDeletable(attributeModel)) {
+        if (attributeService.isDeletable(attributeModel.getId())) {
             resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));
         }
@@ -246,15 +248,5 @@ public class AttributeModelController implements IResourceController<AttributeMo
                                 MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class),
                                 MethodParamFactory.build(Set.class));
         return resource;
-    }
-
-    private boolean isDeletable(AttributeModel attributeModel) {
-        // Allows deletion for given attribute if it is not linked to any model.
-        // FIXME : Remove delete attributes functionality for V1. How to delete an attribute already indexed in
-        // elasticsearch ?
-        // Problem is caused by the MultinantAtributeAdapterFactory during mapping between elasticsearch results and
-        // attributes models.
-        // return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty();
-        return false;
     }
 }

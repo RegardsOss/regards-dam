@@ -436,6 +436,19 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    public void deleteAttribute() {
+        String json = payload(createAttribute("BOOLEAN_ATT", "boolean description", AttributeType.BOOLEAN));
+        Integer id = JsonPath.read(json, JSON_ID);
+
+        // Delete
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+
+        performDefaultDelete(AttributeModelController.TYPE_MAPPING + AttributeModelController.ATTRIBUTE_MAPPING,
+                             requestBuilderCustomizer, "Should be deleted", id);
+    }
+
+    @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createDateArrayAttribute() {
         createAttribute("DATE_ARRAY_ATT", "date array description", AttributeType.DATE_ARRAY);

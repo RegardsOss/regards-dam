@@ -84,4 +84,15 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelIdIn(Set<Long> pModelIds);
+
+    long countByDataModelIn(Set<String> dataModelNames);
+
+    /**
+     * Check if at least one model is already linked to at least one dataset as a data source model
+     * @param dataModelNames model list
+     * @return true if no dataset exists linked with at least one model
+     */
+    default boolean isLinkedToDatasetsAsDataModel(Set<String> dataModelNames) {
+        return countByDataModelIn(dataModelNames) > 0;
+    }
 }

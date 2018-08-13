@@ -113,7 +113,6 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         modelAttributeRepository = modelAttrAssocRepository;
         this.attributeModelService = attributeModelService;
         this.pluginService = pluginService;
-        this.pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
     }
 
     @Override

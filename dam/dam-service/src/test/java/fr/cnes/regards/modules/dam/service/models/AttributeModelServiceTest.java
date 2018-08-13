@@ -35,9 +35,13 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
 import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IRestrictionRepository;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
@@ -45,8 +49,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeProperty;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.RestrictionFactory;
-import fr.cnes.regards.modules.dam.service.models.AttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.exception.UnsupportedRestrictionException;
 
 /**
@@ -86,6 +88,14 @@ public class AttributeModelServiceTest {
      */
     private IAttributePropertyRepository mockAttPropertyR;
 
+    private IModelAttrAssocRepository mockModelAttrAssocR;
+
+    private IDatasetRepository datasetRepository;
+
+    private ICollectionRepository collectionRepository;
+
+    private IDocumentRepository documentRepository;
+
     /**
      * Publish for model changes
      */
@@ -97,9 +107,14 @@ public class AttributeModelServiceTest {
         mockRestrictionR = Mockito.mock(IRestrictionRepository.class);
         mockFragmentR = Mockito.mock(IFragmentRepository.class);
         mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
+        mockModelAttrAssocR = Mockito.mock(IModelAttrAssocRepository.class);
+        datasetRepository = Mockito.mock(IDatasetRepository.class);
+        collectionRepository = Mockito.mock(ICollectionRepository.class);
+        documentRepository = Mockito.mock(IDocumentRepository.class);
         mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                mockAttPropertyR, mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
+                mockAttPropertyR, mockModelAttrAssocR, datasetRepository, collectionRepository, documentRepository,
+                mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
     }
 
     @Test
@@ -270,9 +285,10 @@ public class AttributeModelServiceTest {
 
     /**
      * Delete attribute
+     * @throws ModuleException
      */
     @Test
-    public void deleteAttributeTest() {
+    public void deleteAttributeTest() throws ModuleException {
         final Long attributeId = 1L;
         final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();

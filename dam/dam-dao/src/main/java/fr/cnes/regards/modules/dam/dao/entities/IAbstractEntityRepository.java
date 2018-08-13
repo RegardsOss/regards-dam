@@ -82,11 +82,20 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
 
     /**
      * Find all entities complient with the given modelName
-     * @param pModelName name of the model we want to be complient with
+     * @param modelIds model list
      * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<T> findAllByModelIdIn(Set<Long> pModelIds);
+    Set<T> findAllByModelIdIn(Set<Long> modelIds);
+
+    /**
+     * Check if at least one model is already linked to at least one entity
+     * @param modelIds model list
+     * @return true if no entity exists linked with at least one model
+     */
+    default boolean isLinkedToEntities(Set<Long> modelIds) {
+        return !findAllByModelIdIn(modelIds).isEmpty();
+    }
 
     /**
      * Find all entities containing given tag

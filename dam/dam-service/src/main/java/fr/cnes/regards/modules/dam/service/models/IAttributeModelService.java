@@ -78,7 +78,12 @@ public interface IAttributeModelService {
 
     AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException;
 
-    void deleteAttribute(Long pAttributeId);
+    void deleteAttribute(Long attributeId) throws ModuleException;
+
+    /**
+     * Check if attribute not already linked to any entity.
+     */
+    boolean isDeletable(Long attributeId);
 
     /**
      * Check if attribute is linked to a particular fragment (not default one)

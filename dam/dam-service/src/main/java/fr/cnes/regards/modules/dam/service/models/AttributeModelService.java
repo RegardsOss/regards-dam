@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.dam.service.models;
 
 import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,12 +36,18 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.dao.models.AttributeModelSpecifications;
 import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
 import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IRestrictionRepository;
+import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeProperty;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
@@ -87,6 +95,14 @@ public class AttributeModelService implements IAttributeModelService {
      */
     private final IAttributePropertyRepository attPropertyRepository;
 
+    private final IModelAttrAssocRepository modelAttrAssocRepository;
+
+    private final IDatasetRepository datasetRepository;
+
+    private final ICollectionRepository collectionRepository;
+
+    private final IDocumentRepository documentRepository;
+
     /**
      * Publish for model changes
      */
@@ -99,12 +115,17 @@ public class AttributeModelService implements IAttributeModelService {
 
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
             IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
-            IAttributePropertyRepository pAttPropertyRepository, IPublisher pPublisher,
-            ApplicationEventPublisher eventPublisher) {
+            IAttributePropertyRepository pAttPropertyRepository, IModelAttrAssocRepository modelAttrAssocRepository,
+            IDatasetRepository datasetRepository, ICollectionRepository collectionRepository,
+            IDocumentRepository documentRepository, IPublisher pPublisher, ApplicationEventPublisher eventPublisher) {
         attModelRepository = pAttModelRepository;
         restrictionRepository = pRestrictionRepository;
         fragmentRepository = pFragmentRepository;
         attPropertyRepository = pAttPropertyRepository;
+        this.modelAttrAssocRepository = modelAttrAssocRepository;
+        this.datasetRepository = datasetRepository;
+        this.collectionRepository = collectionRepository;
+        this.documentRepository = documentRepository;
         publisher = pPublisher;
         this.eventPublisher = eventPublisher;
     }
@@ -162,13 +183,41 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public void deleteAttribute(Long pAttributeId) {
-        AttributeModel attMod = attModelRepository.findOne(pAttributeId);
+    public void deleteAttribute(Long attributeId) throws ModuleException {
+        AttributeModel attMod = attModelRepository.findOne(attributeId);
         if (attMod != null) {
-            attModelRepository.delete(pAttributeId);
+            if (!isDeletable(attributeId)) {
+                String errorMessage = "Attribute cannot be deleted because already linked to at least one entity or datasource";
+                LOGGER.error(errorMessage);
+                throw new EntityOperationForbiddenException(String.valueOf(attributeId), AttributeModel.class,
+                        errorMessage);
+            }
+
+            attModelRepository.delete(attributeId);
             // Publish attribute deletion
             publisher.publish(new AttributeModelDeleted(attMod));
         }
+    }
+
+    @Override
+    public boolean isDeletable(Long attributeId) {
+        // Before deletion, look for already linked models
+        Collection<ModelAttrAssoc> assocs = modelAttrAssocRepository.findAllByAttributeId(attributeId);
+        if (!assocs.isEmpty()) {
+            Set<Long> modelIds = new HashSet<>();
+            Set<String> modelNames = new HashSet<>();
+            assocs.forEach(a -> {
+                modelIds.add(a.getModel().getId());
+                modelNames.add(a.getModel().getName());
+            });
+            // Check if linked models not already used, so attribute must not be deleted
+            if (datasetRepository.isLinkedToEntities(modelIds) || collectionRepository.isLinkedToEntities(modelIds)
+                    || documentRepository.isLinkedToEntities(modelIds)
+                    || datasetRepository.isLinkedToDatasetsAsDataModel(modelNames)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -226,9 +275,9 @@ public class AttributeModelService implements IAttributeModelService {
         if (fragment == null) {
             pFragment.setId(null);
             if (!isFragmentCreatable(pFragment.getName())) {
-                throw new EntityAlreadyExistsException(
-                        String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                                      pFragment.getName()));
+                throw new EntityAlreadyExistsException(String
+                        .format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                pFragment.getName()));
             }
             fragment = fragmentRepository.save(pFragment);
         }
@@ -256,18 +305,18 @@ public class AttributeModelService implements IAttributeModelService {
                                                    pAttributeModel.getName());
                 } else {
                     // CHECKSTYLE:OFF
-                    message = MessageFormat.format(
-                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
-                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    message = MessageFormat
+                            .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
                 LOGGER.error(message);
                 throw new EntityAlreadyExistsException(message);
             }
             if (fragmentRepository.findByName(pAttributeModel.getName()) != null) {
-                throw new EntityAlreadyExistsException(MessageFormat.format(
-                                                                            "Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
-                                                                            pAttributeModel.getName()));
+                throw new EntityAlreadyExistsException(MessageFormat
+                        .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
+                                pAttributeModel.getName()));
             }
         }
         return attModelRepository.save(pAttributeModel);
