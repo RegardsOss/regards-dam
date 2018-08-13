@@ -25,19 +25,21 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.dam.service.models.xml.XmlImportHelper;
 
 /**
  * @author Marc Sordi
@@ -48,6 +50,11 @@ public class ModelImportTest {
      * Class logger
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelImportTest.class);
+
+    @Before
+    public void setup() {
+        PluginUtils.setup();
+    }
 
     /**
      * Import model definition file from resources directory

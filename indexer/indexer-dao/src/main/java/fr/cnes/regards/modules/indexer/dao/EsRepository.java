@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.indexer.dao;
 
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -121,19 +122,17 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -236,8 +235,8 @@ public class EsRepository implements IEsRepository {
         LOGGER.info(connectionInfoMessage);
 
         restClient = RestClient.builder(new HttpHost(esHost, esPort))
-                //                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(60_000))
-                //                .setMaxRetryTimeoutMillis(60_000).build();
+                // .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(60_000))
+                // .setMaxRetryTimeoutMillis(60_000).build();
                 .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1200_000))
                 .setMaxRetryTimeoutMillis(1200_000).build();
 
@@ -305,18 +304,17 @@ public class EsRepository implements IEsRepository {
                             .startObject("wgs84").field("type", "geo_shape")
                             // With geohash
                             .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
-                            //                                .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
-                            //                            .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
-                            //                            .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
-                            //                            .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
+                            // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
+                            // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
+                            // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
+                            // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
 
                             // With quadtree
                             .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
-                            //                                .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
-                            //                            .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
+                            // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
+                            // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
 
-                            .endObject().
-                                    endObject().endObject().endObject().string();
+                            .endObject().endObject().endObject().endObject().string();
 
                     HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
                     Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
@@ -337,12 +335,11 @@ public class EsRepository implements IEsRepository {
         try {
             try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                 String mapping = builder.startObject().startObject("index").field("refresh_interval", "-1")
-                        .field("number_of_replicas", "0").
-                                endObject().endObject().string();
+                        .field("number_of_replicas", "0").endObject().endObject().string();
 
                 HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
+                Response response = restClient.performRequest("PUT", index.toLowerCase() + "/_settings",
+                                                              Collections.emptyMap(), entity);
                 if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                     return false;
                 }
@@ -359,12 +356,11 @@ public class EsRepository implements IEsRepository {
         try {
             try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                 String mapping = builder.startObject().startObject("index").field("refresh_interval", "1s")
-                        .field("number_of_replicas", "1").
-                                endObject().endObject().string();
+                        .field("number_of_replicas", "1").endObject().endObject().string();
 
                 HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
+                Response response = restClient.performRequest("PUT", index.toLowerCase() + "/_settings",
+                                                              Collections.emptyMap(), entity);
                 if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                     return false;
                 }
@@ -604,8 +600,8 @@ public class EsRepository implements IEsRepository {
                 if (searchKey.getCrs() == Crs.ASTRO) {
                     CircleCriterion initialCircleCriterion = GeoHelper.findCircleCriterion(crit);
                     // Radius MUST NOT HAVE A UNIT
-                    initialCircleCriterion.setRadius(
-                            FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
+                    initialCircleCriterion
+                            .setRadius(FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
                                     * AUTHALIC_SPHERE_RADIUS);
                 }
                 // If criterion contains a Circle criterion, it is more complicated :
@@ -639,10 +635,9 @@ public class EsRepository implements IEsRepository {
                             new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
                 }
                 CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
-                LOGGER.debug(
-                        "Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
-                        intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
-                        Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
+                LOGGER.debug("Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
+                             intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
+                             Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
                 // SECOND: retrieve all data between inner and outer circles
                 start = System.currentTimeMillis();
                 FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
@@ -657,7 +652,7 @@ public class EsRepository implements IEsRepository {
                              betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
 
                 // THIRD: keep only entities with a shape nearer than specified radius from specified center
-                // Retrieve radius of specified  circle on given Crs
+                // Retrieve radius of specified circle on given Crs
                 CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
                 double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
                 double[] center = circleCriterionOnCrs.getCoordinates();
@@ -727,7 +722,7 @@ public class EsRepository implements IEsRepository {
             if (lastSearchAfterSortValues != null) {
                 builder.searchAfter(lastSearchAfterSortValues).from(0);
                 manageSortRequest(index, builder, sort);
-                //            } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
+                // } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
             } else if (sort != null) {
                 manageSortRequest(index, builder, sort);
             }
@@ -767,8 +762,8 @@ public class EsRepository implements IEsRepository {
 
                 // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
                 // (not necessarly)
-                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize()
-                        == MAX_RESULT_WINDOW)) {
+                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW)
+                        || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
                     saveReminder(searchKey, pageRequest, criterion, sort, response);
                 }
 

@@ -34,11 +34,6 @@ import org.springframework.data.domain.Sort.Order;
  */
 public class SortToLinkedHashMap implements Converter<Sort, LinkedHashMap<String, Boolean>> {
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-     */
     @Override
     public LinkedHashMap<String, Boolean> convert(Sort pSource) {
         if (pSource == null) {
