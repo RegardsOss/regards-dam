@@ -32,6 +32,11 @@ public interface IFacet<T> extends Serializable {
      */
     String getAttributeName();
 
+    /**
+     * Allows to mutate attribute name after facet computation to reset it to a shorter one
+     */
+    void setAttributeName(String attributeName);
+
     FacetType getType();
 
     T getValues();

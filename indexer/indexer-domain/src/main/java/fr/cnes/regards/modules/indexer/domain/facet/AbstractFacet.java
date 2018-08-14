@@ -24,12 +24,13 @@ package fr.cnes.regards.modules.indexer.domain.facet;
  * @param <T> facet type
  * @author oroussel
  */
+@SuppressWarnings("serial")
 public abstract class AbstractFacet<T> implements IFacet<T> {
 
     /**
      * Concerned attribute name
      */
-    private final String attributeName;
+    private String attributeName;
 
     /**
      * Number of values not covered by facet
@@ -48,6 +49,11 @@ public abstract class AbstractFacet<T> implements IFacet<T> {
     @Override
     public String getAttributeName() {
         return this.attributeName;
+    }
+
+    @Override
+    public void setAttributeName(String attributeName) {
+        this.attributeName = attributeName;
     }
 
     /**
