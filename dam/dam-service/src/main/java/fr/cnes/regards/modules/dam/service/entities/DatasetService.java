@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
@@ -47,10 +48,12 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -84,6 +87,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Autowired
     private IAttributeFinder finder;
+
+    @Autowired
+    private IAccessRightRepository accessRightRepository;
 
     public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
             IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
@@ -225,5 +231,16 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         // Build JSON path
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
+    }
+
+    @Override
+    public Dataset delete(Long datasetId) throws ModuleException {
+        Assert.notNull(datasetId, "Entity identifier is required");
+        Dataset toDelete = load(datasetId);
+        // Remove access rights
+        List<AccessRight> accessRights = accessRightRepository.findAllByDataset(toDelete);
+        accessRights.forEach(ar -> accessRightRepository.delete(ar));
+        // Delete dataset
+        return delete(toDelete);
     }
 }

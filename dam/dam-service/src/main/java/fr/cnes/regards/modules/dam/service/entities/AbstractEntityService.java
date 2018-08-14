@@ -537,7 +537,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         return delete(toDelete);
     }
 
-    private U delete(U toDelete) throws ModuleException {
+    protected U delete(U toDelete) throws ModuleException {
         UniformResourceName urn = toDelete.getIpId();
         // IpId URNs that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();

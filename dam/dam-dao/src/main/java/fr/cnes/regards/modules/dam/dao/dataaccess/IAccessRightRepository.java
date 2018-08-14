@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.dao.dataaccess;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -44,6 +45,8 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
     AccessRight findById(Long pId);
 
     Page<AccessRight> findAllByDataset(Dataset dataset, Pageable pageable);
+
+    List<AccessRight> findAllByDataset(Dataset dataset);
 
     @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
     Page<AccessRight> findAllByAccessGroup(AccessGroup accessGroup, Pageable pageable);
