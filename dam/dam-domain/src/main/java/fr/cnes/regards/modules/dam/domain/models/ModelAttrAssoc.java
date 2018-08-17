@@ -33,6 +33,7 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
@@ -62,6 +63,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
      * Internal identifier
      */
     @Id
+    @ConfigIgnore
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "modelAttSequence")
     private Long id;
 
