@@ -94,6 +94,14 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
                 // here is the tricky part: lets try to create the association
                 // in case of EntityAlreadyExistsException, lets log import has been skipped
                 // in case of FragmentAttributeException, lets bind the fragment
+                // first, lets get the attribute from DB to get the id
+                assoc.setAttribute(attributeModelService.findByNameAndFragmentName(assoc.getAttribute().getName(),
+                                                                                   assoc.getAttribute().getFragment()
+                                                                                           == null ?
+                                                                                           null :
+                                                                                           assoc.getAttribute()
+                                                                                                   .getFragment()
+                                                                                                   .getName()));
                 try {
                     modelAttrAssocService.bindAttributeToModel(assoc.getModel().getName(), assoc);
                 } catch (EntityAlreadyExistsException e) {

@@ -34,6 +34,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.modules.dam.domain.models.IXmlisable;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 
@@ -64,6 +65,7 @@ public class Fragment
      * Internal identifier
      */
     @Id
+    @ConfigIgnore
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fragmentSequence")
     private Long id;
 
