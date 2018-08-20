@@ -245,6 +245,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             }
         }
 
+        if(modelAttrAssoc.getComputationConf() != null) {
+            eventualyCreatePluginConfiguration(modelAttrAssoc.getComputationConf());
+        }
+
         modelAttrAssoc.setModel(model);
         return modelAttributeRepository.save(modelAttrAssoc);
     }
@@ -424,40 +428,44 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     private void eventualyCreatePluginConfigurations(List<PluginConfiguration> plgConfigurations)
             throws ModuleException {
         for (PluginConfiguration plgConf : plgConfigurations) {
-            // If plugin configuration already exists
-            if (pluginService.existsByLabel(plgConf.getLabel())) {
-                // New one must be consistent with existing one
-                PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
-                // Most of plugin configuration attributes come from plugin DataObjectMetadata which have been retrieved
-                // from database
-                // so only plugin parameters should be consistently checked
-                for (PluginParameter param : plgConf.getParameters()) {
-                    String curValue = currentPlgConf.getStripParameterValue(param.getName());
-                    // Plugin parameter found
-                    if (curValue != null) {
-                        if (!Objects.equals(param.getStripParameterValue(), curValue)) {
-                            String msg = String
-                                    .format("Compute plugin with label %s is inconsistent with existing one : "
-                                            + "plugin parameter %s with value %s differs from existing value (%s)",
-                                            plgConf.getLabel(), param.getName(), curValue,
-                                            param.getStripParameterValue());
-                            LOGGER.error(msg);
-                            throw new ImportException(msg);
-                        }
-                    } else { // Plugin parameter not found
-                        String msg = String.format(
-                                                   "Compute plugin with label %s is inconsistent with existing one : "
-                                                           + "no plugin parameter %s found",
-                                                   plgConf.getLabel(), param.getName());
+            eventualyCreatePluginConfiguration(plgConf);
+        }
+    }
+
+    private void eventualyCreatePluginConfiguration(PluginConfiguration plgConf) throws ModuleException {
+        // If plugin configuration already exists
+        if (pluginService.existsByLabel(plgConf.getLabel())) {
+            // New one must be consistent with existing one
+            PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
+            // Most of plugin configuration attributes come from plugin DataObjectMetadata which have been retrieved
+            // from database
+            // so only plugin parameters should be consistently checked
+            for (PluginParameter param : plgConf.getParameters()) {
+                String curValue = currentPlgConf.getStripParameterValue(param.getName());
+                // Plugin parameter found
+                if (curValue != null) {
+                    if (!Objects.equals(param.getStripParameterValue(), curValue)) {
+                        String msg = String
+                                .format("Compute plugin with label %s is inconsistent with existing one : "
+                                        + "plugin parameter %s with value %s differs from existing value (%s)",
+                                        plgConf.getLabel(), param.getName(), curValue,
+                                        param.getStripParameterValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }
+                } else { // Plugin parameter not found
+                    String msg = String.format(
+                                               "Compute plugin with label %s is inconsistent with existing one : "
+                                                       + "no plugin parameter %s found",
+                                               plgConf.getLabel(), param.getName());
+                    LOGGER.error(msg);
+                    throw new ImportException(msg);
                 }
-                // No need to save new one
-            } else {
-                // Plugin is ok (new or consistent with previous one
-                pluginService.savePluginConfiguration(plgConf);
             }
+            // No need to save new one
+        } else {
+            // Plugin is ok (new or consistent with previous one
+            pluginService.savePluginConfiguration(plgConf);
         }
     }
 
