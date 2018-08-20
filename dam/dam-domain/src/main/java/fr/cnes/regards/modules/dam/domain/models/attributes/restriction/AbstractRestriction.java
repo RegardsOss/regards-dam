@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
 
 import com.google.gson.annotations.JsonAdapter;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.modules.dam.domain.models.adapters.gson.RestrictionJsonAdapterFactory;
 
 /**
@@ -52,6 +53,7 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
      * Internal identifier
      */
     @Id
+    @ConfigIgnore
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "restrictionSequence")
     protected Long id;
 

@@ -18,10 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.domain.models.attributes;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -43,11 +39,15 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.validator.constraints.NotBlank;
 
 import fr.cnes.regards.framework.gson.utils.GSONConstants;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.modules.dam.domain.models.IXmlisable;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.AbstractRestriction;
@@ -75,6 +75,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Internal identifier
      */
     @Id
+    @ConfigIgnore
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attModelSequence")
     private Long id;
 
@@ -84,8 +85,9 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
-            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
+            message = "Attribute name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE
+                    + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
@@ -462,6 +464,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setJsonPath(String pJsonPath) {
         jsonPath = pJsonPath;
+    }
+
+    public String getFullName() {
+        return fragment == null ? name : fragment.getName() + "." + name;
     }
 
     public String buildJsonPath(String namespace) {

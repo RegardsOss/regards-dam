@@ -36,6 +36,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 
 /**
@@ -70,6 +71,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
      * Internal identifier
      */
     @Id
+    @ConfigIgnore
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "modelSequence")
     private Long id;
 
