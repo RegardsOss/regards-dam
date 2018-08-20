@@ -234,40 +234,26 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+
+        ModelAttrAssoc that = (ModelAttrAssoc) o;
+
+        if (attribute != null ? !attribute.equals(that.attribute) : that.attribute != null) {
             return false;
         }
-        ModelAttrAssoc other = (ModelAttrAssoc) obj;
-        if (attribute == null) {
-            if (other.attribute != null) {
-                return false;
-            }
-        } else if (!attribute.equals(other.attribute)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        return true;
+        return model != null ? model.equals(that.model) : that.model == null;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = (prime * result) + ((attribute == null) ? 0 : attribute.hashCode());
-        result = (prime * result) + ((id == null) ? 0 : id.hashCode());
+        int result = attribute != null ? attribute.hashCode() : 0;
+        result = 31 * result + (model != null ? model.hashCode() : 0);
         return result;
     }
 
