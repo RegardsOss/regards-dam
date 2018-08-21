@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.attribute.builder;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -147,7 +148,7 @@ public final class AttributeBuilder {
                     return (T) buildStringArray(name, (String[]) value);
                 }
             case URL:
-                return (T) buildUrl(name, (URL) value);
+                return (T) ((value instanceof URL) ? buildUrl(name, (URL) value) : buildUrl(name, (String) value));
             default:
                 throw new IllegalArgumentException(attributeType + " is not a handled value of "
                         + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
@@ -256,7 +257,7 @@ public final class AttributeBuilder {
             case STRING_ARRAY:
                 return (T) buildStringArray(name);
             case URL:
-                return (T) buildUrl(name, null);
+                return (T) buildUrl(name);
             default:
                 throw new IllegalArgumentException(attributeType + " is not a handled value of "
                         + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
@@ -295,6 +296,24 @@ public final class AttributeBuilder {
         UrlAttribute att = new UrlAttribute();
         att.setName(name);
         att.setValue(value);
+        return att;
+    }
+
+    public static UrlAttribute buildUrl(String name) {
+        UrlAttribute att = new UrlAttribute();
+        att.setName(name);
+        att.setValue(null);
+        return att;
+    }
+
+    public static UrlAttribute buildUrl(String name, String value) {
+        UrlAttribute att = new UrlAttribute();
+        att.setName(name);
+        try {
+            att.setValue(new URL(value));
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(name + " is not a handled value of " + URL.class.getName());
+        }
         return att;
     }
 
