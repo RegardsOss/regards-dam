@@ -96,6 +96,21 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
+     * {@link UUID#nameUUIDFromBytes(byte[]).
+     * @param tenant the tenant name
+     * @param providerId the original primary key value
+     * @return the IpId generated from given parameters
+     */
+    private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
+        return new UniformResourceName(OAISIdentifier.AIP,
+                                       EntityType.DATA,
+                                       tenant,
+                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()),
+                                       1);
+    }
+
     @Override
     @Async
     public void crawl() {
@@ -120,11 +135,19 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
             sendMessage("Start reading datasource and creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate,
+                                                                   tenant,
+                                                                   dsPlugin,
+                                                                   now,
+                                                                   datasourceId,
                                                                    dsiId);
         } else { // index exists, data objects may also exist
             sendMessage("Start reading datasource and merging/creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate,
+                                                                  tenant,
+                                                                  dsPlugin,
+                                                                  now,
+                                                                  datasourceId,
                                                                   dsiId);
         }
         sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
@@ -153,7 +176,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
-        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate,
+                                                      tenant,
+                                                      dsPlugin,
+                                                      datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
@@ -182,9 +208,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount),
-                    dsiId);
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
+                                  savedObjectsCount,
+                                  availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
 
@@ -196,7 +222,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
-        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate,
+                                                      tenant,
+                                                      dsPlugin,
+                                                      datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
@@ -225,9 +254,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount),
-                    dsiId);
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
+                                  savedObjectsCount,
+                                  availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
 
@@ -249,8 +278,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
         for (DataObjectFeature feature : page.getContent()) {
             // Wrap each feature into its decorator
-            DataObject wrap = DataObject.wrap(model, feature,
-                                              IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
+            DataObject wrap = DataObject
+                    .wrap(model, feature, IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
             wrap.setDataSourceId(datasourceId);
             // Generate IpId only if datasource plugin hasn't yet generate it
             if (wrap.getIpId().isRandomEntityId()) {
@@ -261,19 +290,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
 
         // Build decorated page
-        return new PageImpl<>(dataObjects, pageable, page.getTotalElements());
-    }
-
-    /**
-     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
-     * {@link UUID#nameUUIDFromBytes(byte[]).
-     * @param tenant the tenant name
-     * @param providerId the original primary key value
-     * @return the IpId generated from given parameters
-     */
-    private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
+        return new PageImpl<>(dataObjects,
+                              new PageRequest(new Long(page.getNumber()).intValue(),
+                                              page.getSize() == 0 ? 1 : page.getSize()),
+                              page.getTotalElements());
     }
 
     @Override
