@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.feature;
 
-import java.util.UUID;
-
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -43,7 +41,7 @@ public class DataObjectFeature extends EntityFeature {
     }
 
     public DataObjectFeature(String tenant, String providerId, String label) {
-        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1), providerId,
+        super(UniformResourceName.pseudoRandomUrm(OAISIdentifier.AIP, EntityType.DATA, tenant, 1), providerId,
               EntityType.DATA, label);
     }
 
