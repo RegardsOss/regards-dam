@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -318,6 +319,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
                     dataset.getId());
+        
         sendMessage(String.format("Starting computing of %d attributes...", computationPlugins.size()), dsiId);
         computationPlugins.parallelStream().forEach(p -> {
             runtimeTenantResolver.forceTenant(tenant);
@@ -325,6 +327,10 @@ public class EntityIndexerService implements IEntityIndexerService {
         });
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
+        
+        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList(computationPlugins);
+        ll.stream().forEach(comAtt->LOGGER.info("attribute {} is computed",comAtt.getAttributeToCompute().getName()));
+        
         LOGGER.info("...computing OK");
         sendMessage(String.format("...Computing ended.", computationPlugins.size()), dsiId);
 
