@@ -164,9 +164,9 @@ public class DBConnectionServiceTest {
 
         return Arrays.asList(
                              PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE,
-                                                        false, false),
+                                                        false, false, false),
                              PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
-                                                        ParamType.PLUGIN, false, false));
+                                                        ParamType.PLUGIN, false, false, false));
     }
 
 }
