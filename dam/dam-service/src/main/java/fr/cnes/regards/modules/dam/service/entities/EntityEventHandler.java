@@ -87,9 +87,10 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
             try {
                 AIPEvent event = wrapper.getContent();
                 if (event.getAipState() == AIPState.STORED) {
-                    runtimeTenantResolver.forceTenant(wrapper.getTenant());
                     UniformResourceName urn = UniformResourceName.fromString(event.getAipId());
-
+                    if (EntityType.DATA.equals(urn.getEntityType())) return;
+                    
+                    runtimeTenantResolver.forceTenant(wrapper.getTenant());
                     AbstractEntity<?> entity = getService(urn.getEntityType()).loadWithRelations(urn);
 
                     FeignSecurityManager.asSystem();
