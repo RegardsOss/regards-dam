@@ -41,7 +41,7 @@ public class DataObjectFeature extends EntityFeature {
     }
 
     public DataObjectFeature(String tenant, String providerId, String label) {
-        super(UniformResourceName.pseudoRandomUrm(OAISIdentifier.AIP, EntityType.DATA, tenant, 1), providerId,
+        super(UniformResourceName.pseudoRandomUrn(OAISIdentifier.AIP, EntityType.DATA, tenant, 1), providerId,
               EntityType.DATA, label);
     }
 
