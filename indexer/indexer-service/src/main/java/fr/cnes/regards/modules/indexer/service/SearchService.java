@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -140,8 +141,9 @@ public class SearchService implements ISearchService {
         repository.computeInternalDataFilesSummary(searchKey, internalCrit, discriminantProperty, summary, fileTypes);
         // Adjust criterion to search for external data (=> internal is false and all at least one searched file type
         // has an uri starting with http or https
-        ICriterion filterUriCrit = ICriterion.or(Arrays.stream(fileTypes)
-                .map(fileType -> ICriterion.likes("files." + fileType + ".uri", "https?://.*"))
+        ICriterion filterUriCrit = ICriterion.or(Arrays
+                .stream(fileTypes).map(fileType -> ICriterion
+                        .likes(StaticProperties.FEATURE_FILES_PATH + fileType + ".uri", "https?://.*"))
                 .collect(Collectors.toList()));
         ICriterion externalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", false), filterUriCrit);
         repository.computeExternalDataFilesSummary(searchKey, externalCrit, discriminantProperty, summary, fileTypes);
