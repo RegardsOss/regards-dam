@@ -24,7 +24,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.geotools.geometry.DirectPosition2D;
@@ -48,7 +47,6 @@ import com.google.common.collect.Table;
 import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
-import fr.cnes.regards.framework.geojson.geometry.AbstractGeometry;
 import fr.cnes.regards.framework.geojson.geometry.GeometryCollection;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.IGeometryVisitor;
@@ -59,6 +57,7 @@ import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.geojson.geometry.Unlocated;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
@@ -137,6 +136,8 @@ public class GeoHelper {
      */
     private static final double MAX_CHEATED_LONGITUDE = 359.999999999999;
 
+    private static final GeometryNormalizerVisitor GEOMETRY_NORMALIZER_VISITOR = new GeometryNormalizerVisitor();
+
     public static double getDistanceOnEarth(double[] lonLat1, double[] lonLat2) {
         return getDistance(lonLat1, lonLat2, Crs.WGS_84);
     }
@@ -200,39 +201,61 @@ public class GeoHelper {
         return calc.getDestinationPosition().getCoordinate();
     }
 
-    public static double[] transform(double[] fromPoint, Crs fromCrs, Crs toCrs) throws TransformException {
+    public static double[] transform(double[] fromPoint, Crs fromCrs, Crs toCrs) {
         MathTransform transform = TRANSFORM_TABLE.get(fromCrs, toCrs);
         DirectPosition srcPos = new DirectPosition2D(fromPoint[0], fromPoint[1]);
-        DirectPosition destPos = transform.transform(srcPos, null);
+        DirectPosition destPos = null;
+        try {
+            destPos = transform.transform(srcPos, null);
+        } catch (TransformException e) {
+            throw new RsRuntimeException(e);
+        }
         return destPos.getCoordinate();
     }
 
-    public static double[][] transform(double[][] fromPoints, Crs fromCrs, Crs toCrs) throws TransformException {
+    public static double[][] transform(double[][] fromPoints, Crs fromCrs, Crs toCrs) {
         MathTransform transform = TRANSFORM_TABLE.get(fromCrs, toCrs);
         double[][] toPoints = new double[fromPoints.length][];
         for (int i = 0; i < fromPoints.length; i++) {
             double[] fromPoint = fromPoints[i];
             DirectPosition srcPos = new DirectPosition2D(fromPoint[0], fromPoint[1]);
-            DirectPosition destPos = transform.transform(srcPos, null);
+            DirectPosition destPos = null;
+            try {
+                destPos = transform.transform(srcPos, null);
+            } catch (TransformException e) {
+                throw new RsRuntimeException(e);
+            }
             toPoints[i] = destPos.getCoordinate();
         }
         return toPoints;
     }
 
-    public static double[][][] transform(double[][][] fromPointsLines, Crs fromCrs, Crs toCrs)
-            throws TransformException {
+    public static double[][][] transform(double[][][] fromPointsLines, Crs fromCrs, Crs toCrs) {
         MathTransform transform = TRANSFORM_TABLE.get(fromCrs, toCrs);
         double[][][] toPointsLines = new double[fromPointsLines.length][][];
-        for (int i = 0; i < fromPointsLines.length; i++) {
-            toPointsLines[i] = new double[fromPointsLines[i].length][];
-            for (int j = 0; j < fromPointsLines[i].length; j++) {
-                double[] fromPoint = fromPointsLines[i][j];
-                DirectPosition srcPos = new DirectPosition2D(fromPoint[0], fromPoint[1]);
-                DirectPosition destPos = transform.transform(srcPos, null);
-                toPointsLines[i][j] = destPos.getCoordinate();
+        try {
+            for (int i = 0; i < fromPointsLines.length; i++) {
+                toPointsLines[i] = new double[fromPointsLines[i].length][];
+                for (int j = 0; j < fromPointsLines[i].length; j++) {
+                    double[] fromPoint = fromPointsLines[i][j];
+                    DirectPosition srcPos = new DirectPosition2D(fromPoint[0], fromPoint[1]);
+                    DirectPosition destPos = transform.transform(srcPos, null);
+                    toPointsLines[i][j] = destPos.getCoordinate();
+                }
             }
+        } catch (TransformException e) {
+            throw new RsRuntimeException(e);
         }
+
         return toPointsLines;
+    }
+
+    /**
+     * Transform geometry from one Crs to another
+     */
+    public static IGeometry transform(IGeometry geometry, Crs fromCrs, Crs toCrs) {
+        GeometryTransformerVisitor visitor = new GeometryTransformerVisitor(fromCrs, toCrs);
+        return geometry.accept(visitor);
     }
 
     /**
@@ -399,23 +422,13 @@ public class GeoHelper {
      * line strings.<br/>
      */
     public static IGeometry normalize(IGeometry geometry) {
-        if (geometry instanceof Polygon) {
-            return normalizePolygon((Polygon) geometry);
-        } else if (geometry instanceof MultiPolygon) {
-            return normalizeMultiPolygon((MultiPolygon) geometry);
-        } else if (geometry instanceof LineString) {
-            return normalizeLineString((LineString) geometry);
-        } else if (geometry instanceof MultiLineString) {
-            return normalizeMultiLineString((MultiLineString) geometry);
-        } else if (geometry instanceof GeometryCollection) {
-            ((GeometryCollection) geometry).setGeometries(((GeometryCollection) geometry).getGeometries().stream()
-                                                                  .map(g -> (AbstractGeometry<?>) GeoHelper
-                                                                          .normalize(g)).collect(Collectors.toList()));
-        }
-        return geometry;
+        return geometry.accept(GEOMETRY_NORMALIZER_VISITOR);
     }
 
-    private static MultiLineString normalizeMultiLineString(MultiLineString multiLineString) {
+    /**
+     * Normalize MultiLineString
+     */
+    public static MultiLineString normalizeMultiLineString(MultiLineString multiLineString) {
         MultiLineString normMultiLineString = new MultiLineString();
         for (Positions positions : multiLineString.getCoordinates()) {
             IGeometry normGeometry = normalizeLineString(IGeometry.lineString(positions));
@@ -432,7 +445,7 @@ public class GeoHelper {
      * Normalize lineString
      * @return a LineString or a MultiLineString if it crosses dateLine
      */
-    private static IGeometry normalizeLineString(LineString lineString) {
+    public static IGeometry normalizeLineString(LineString lineString) {
         Positions positions = lineString.getCoordinates();
         // First, normalize position with a longitude between 180 and 360
         for (Position p : positions) {
@@ -444,7 +457,7 @@ public class GeoHelper {
 
         Positions curPositions = new Positions();
         curPositions.add(positions.get(0));
-        // For all line straing positions
+        // For all line string positions
         for (int i = 1; i < positions.size(); i++) {
             Position previous = positions.get(i - 1);
             Position current = positions.get(i);
@@ -490,7 +503,7 @@ public class GeoHelper {
     /**
      * Normalize polygon without hole
      */
-    private static Polygon normalizePolygon(Polygon polygon) {
+    public static Polygon normalizePolygon(Polygon polygon) {
         // Too complex if polygon contains holes
         if (polygon.containsHoles()) {
             return polygon;
@@ -498,7 +511,10 @@ public class GeoHelper {
         return Polygon.fromArray(normalizePolygonAsArray(polygon.toArray()));
     }
 
-    private static MultiPolygon normalizeMultiPolygon(MultiPolygon multiPolygon) {
+    /**
+     * Normalize multi polygon
+     */
+    public static MultiPolygon normalizeMultiPolygon(MultiPolygon multiPolygon) {
         List<PolygonPositions> poss = multiPolygon.getCoordinates();
         for (ListIterator<PolygonPositions> li = poss.listIterator(); li.hasNext(); ) {
             PolygonPositions positions = li.next();
@@ -535,7 +551,7 @@ public class GeoHelper {
         // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
         // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
         // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
-        // point and left border one, go straigth the north until 90° (with a constant longitude), go "to the west" at
+        // point and left border one, go straight the north until 90° (with a constant longitude), go "to the west" at
         // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
         // reaching median latitude then reach the left border point.
         if (!goesThroughNorthPole(exteriorRing)) {
