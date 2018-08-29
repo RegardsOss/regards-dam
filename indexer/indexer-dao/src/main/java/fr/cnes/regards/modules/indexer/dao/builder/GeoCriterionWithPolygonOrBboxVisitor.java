@@ -18,10 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.dao.builder;
 
-import org.opengis.referencing.operation.TransformException;
-
 import com.google.common.base.Preconditions;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -128,25 +125,17 @@ public class GeoCriterionWithPolygonOrBboxVisitor implements ICriterionVisitor<I
 
     @Override
     public ICriterion visitPolygonCriterion(PolygonCriterion criterion) {
-        try {
-            return ICriterion.intersectsPolygon(GeoHelper.transform(criterion.getCoordinates(), crs, Crs.WGS_84));
-        } catch (TransformException e) {
-            throw new RsRuntimeException(e);
-        }
+        return ICriterion.intersectsPolygon(GeoHelper.transform(criterion.getCoordinates(), crs, Crs.WGS_84));
     }
 
     @Override
     public ICriterion visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
-        try {
-            double[][] fromBbox = new double[][] { { criterion.getMinX(), criterion.getMinY() },
-                    { criterion.getMaxX(), criterion.getMaxY() } };
-            double[][] toBbox = GeoHelper.transform(fromBbox, crs, Crs.WGS_84);
-            // DON'T TOUCH THE F$%CKING LONGITUDES !!! (180 -> -180 which is very annoying for a cap Bbox and
-            // longitudes are not impacted by projection transformations)
-            return ICriterion.intersectsBbox(fromBbox[0][0], toBbox[0][1], fromBbox[1][0], toBbox[1][1]);
-        } catch (TransformException e) {
-            throw new RsRuntimeException(e);
-        }
+        double[][] fromBbox = new double[][] { { criterion.getMinX(), criterion.getMinY() },
+                { criterion.getMaxX(), criterion.getMaxY() } };
+        double[][] toBbox = GeoHelper.transform(fromBbox, crs, Crs.WGS_84);
+        // DON'T TOUCH THE F$%CKING LONGITUDES !!! (180 -> -180 which is very annoying for a cap Bbox and
+        // longitudes are not impacted by projection transformations)
+        return ICriterion.intersectsBbox(fromBbox[0][0], toBbox[0][1], fromBbox[1][0], toBbox[1][1]);
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -47,6 +48,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -61,8 +63,10 @@ import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -104,11 +108,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * @return the IpId generated from given parameters
      */
     private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
-        return new UniformResourceName(OAISIdentifier.AIP,
-                                       EntityType.DATA,
-                                       tenant,
-                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()),
-                                       1);
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
 
     @Override
@@ -135,19 +136,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
             sendMessage("Start reading datasource and creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate,
-                                                                   tenant,
-                                                                   dsPlugin,
-                                                                   now,
-                                                                   datasourceId,
+            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
                                                                    dsiId);
         } else { // index exists, data objects may also exist
             sendMessage("Start reading datasource and merging/creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate,
-                                                                  tenant,
-                                                                  dsPlugin,
-                                                                  now,
-                                                                  datasourceId,
+            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
                                                                   dsiId);
         }
         sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
@@ -176,10 +169,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
-        Page<DataObject> page = findAllFromDatasource(lastUpdateDate,
-                                                      tenant,
-                                                      dsPlugin,
-                                                      datasourceId,
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
@@ -208,8 +198,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
-                                  savedObjectsCount,
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
                                   availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
@@ -222,10 +211,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
-        Page<DataObject> page = findAllFromDatasource(lastUpdateDate,
-                                                      tenant,
-                                                      dsPlugin,
-                                                      datasourceId,
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
@@ -254,8 +240,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
-                                  savedObjectsCount,
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
                                   availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
@@ -263,7 +248,6 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
-     * @throws ModuleException
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
             String datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
@@ -278,21 +262,39 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
         for (DataObjectFeature feature : page.getContent()) {
             // Wrap each feature into its decorator
-            DataObject wrap = DataObject
+            DataObject dataObject = DataObject
                     .wrap(model, feature, IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
-            wrap.setDataSourceId(datasourceId);
+            dataObject.setDataSourceId(datasourceId);
             // Generate IpId only if datasource plugin hasn't yet generate it
-            if (wrap.getIpId().isRandomEntityId()) {
-                wrap.setIpId(buildIpId(tenant, wrap.getProviderId(), datasourceId));
+            if (dataObject.getIpId().isRandomEntityId()) {
+                dataObject.setIpId(buildIpId(tenant, dataObject.getProviderId(), datasourceId));
+            }
+            // Manage geometries
+            if (feature.getGeometry() != null) {
+                IGeometry geometry = feature.getGeometry();
+                if (feature.getCrs().isPresent() && (!feature.getCrs().get().equals(Crs.WGS_84.toString()))) {
+                    try {
+                        // Transform to Wgs84...
+                        IGeometry wgs84Geometry = GeoHelper
+                                .transform(geometry, Crs.valueOf(feature.getCrs().get()), Crs.WGS_84);
+                        // ...and save it onto DataObject after havinf normalized it
+                        dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
+                    } catch (IllegalArgumentException e) {
+                        throw new RsRuntimeException(
+                                String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                    }
+                } else { // Even if Crs is WGS84, don't forget to copy geometry (no need to normalized, it has already
+                    // be done
+                    dataObject.setWgs84(geometry);
+                }
             }
 
-            dataObjects.add(wrap);
+            dataObjects.add(dataObject);
         }
 
         // Build decorated page
-        return new PageImpl<>(dataObjects,
-                              new PageRequest(new Long(page.getNumber()).intValue(),
-                                              page.getSize() == 0 ? 1 : page.getSize()),
+        return new PageImpl<>(dataObjects, new PageRequest(new Long(page.getNumber()).intValue(),
+                                                           page.getSize() == 0 ? 1 : page.getSize()),
                               page.getTotalElements());
     }
 
