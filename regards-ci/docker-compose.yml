@@ -1,11 +1,11 @@
 version: '2'
 services:
-  rs_rabbitmq:
+  rs-rabbitmq:
     image: rabbitmq:3.6.5-management
     networks:
       - regards_IT_network
 
-  rs_postgres:
+  rs-postgres:
     image: postgres:9.6
     environment:
       - POSTGRES_PASSWORD=azertyuiop123456789
@@ -15,7 +15,7 @@ services:
     networks:
       - regards_IT_network
 
-  rs_elasticsearch:
+  rs-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
     environment:
       - cluster.name=regards
@@ -34,7 +34,7 @@ services:
     networks:
       - regards_IT_network
 
-  rs_build:
+  rs-build:
     image: 172.26.46.158/rs-maven
     environment:
       - BRANCH_NAME
@@ -47,9 +47,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ../.:/app_to_build
     links:
-      - rs_rabbitmq
-      - rs_postgres
-      - rs_elasticsearch
+      - rs-rabbitmq
+      - rs-postgres
+      - rs-elasticsearch
     networks:
       - regards_IT_network
 
