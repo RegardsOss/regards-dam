@@ -39,9 +39,9 @@ import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
  */
 public class GeometryTransformerVisitor implements IGeometryVisitor<IGeometry> {
 
-    private Crs fromCrs;
+    private final Crs fromCrs;
 
-    private Crs toCrs;
+    private final Crs toCrs;
 
     public GeometryTransformerVisitor(Crs fromCrs, Crs toCrs) {
         this.fromCrs = fromCrs;
@@ -51,7 +51,8 @@ public class GeometryTransformerVisitor implements IGeometryVisitor<IGeometry> {
     @Override
     public GeometryCollection visitGeometryCollection(GeometryCollection geometry) {
         GeometryCollection geomColl = new GeometryCollection();
-        geomColl.setGeometries(geomColl.getGeometries().stream().map(g -> (AbstractGeometry)g.accept(this)).collect(Collectors.toList()));
+        geomColl.setGeometries(geomColl.getGeometries().stream().map(g -> (AbstractGeometry<?>) g.accept(this))
+                .collect(Collectors.toList()));
         return geomColl;
     }
 
