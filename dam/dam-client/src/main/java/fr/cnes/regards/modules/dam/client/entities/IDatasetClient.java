@@ -47,6 +47,8 @@ public interface IDatasetClient {
 
     String DATASET_ID_PATH = "/{dataset_id}";
 
+    String DATASET_IP_ID_PATH = "/ipId/{dataset_ipId}";
+
     String DATASET_ID_ASSOCIATE_PATH = DATASET_ID_PATH + "/associate";
 
     String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
@@ -70,7 +72,7 @@ public interface IDatasetClient {
     /**
      * Retrieve a dataset using its ip id
      */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_IP_ID_PATH)
     ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_ipId") String datasetIpId);
 
     /**
