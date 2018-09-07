@@ -58,6 +58,7 @@ import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.geojson.geometry.Unlocated;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.spring.SpringContext;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
@@ -542,34 +543,38 @@ public class GeoHelper {
             normalizeNextCoordinate(exteriorRing[i - 1], exteriorRing[i]);
         }
 
-        // Second: if polygon is around a pole WITHOUT using it in its exterior ring, a "pass around pole" deviation is
-        // added. The idea is to reach north pole (f. example) with (90, x) than adding (90, x + 90), (90, x + 180),
-        // (90, x + 270), etc.... and finish with (90, x).
-        // Because of the cylindric projection, projected polygon does not reach 90° of latitude (except when it passes
-        // through it). For example, a simple 80° latitude polygon "turning" around north pole is represented as a
-        // simple line. To add the "pole deviation", it is necessary add a "hat" reaching 90° of latitude on top of the
-        // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
-        // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
-        // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
-        // point and left border one, go straight the north until 90° (with a constant longitude), go "to the west" at
-        // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
-        // reaching median latitude then reach the left border point.
-        if (!goesThroughNorthPole(exteriorRing)) {
-            if (!goesThroughSouthPole(exteriorRing)) {
-                SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(exteriorRing);
-                // North Pole is inside polygon
-                if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                    LOGGER.trace("NORTH POLE is inside polygon");
-                    exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
+        ProjectGeoSettings settings = SpringContext.getBean(ProjectGeoSettings.class);
+        // Second normalization phase only if pole management is asked to be done
+        if (settings.getShouldManagePolesOnGeometries()) {
+            // Second: if polygon is around a pole WITHOUT using it in its exterior ring, a "pass around pole" deviation is
+            // added. The idea is to reach north pole (f. example) with (90, x) than adding (90, x + 90), (90, x + 180),
+            // (90, x + 270), etc.... and finish with (90, x).
+            // Because of the cylindric projection, projected polygon does not reach 90° of latitude (except when it passes
+            // through it). For example, a simple 80° latitude polygon "turning" around north pole is represented as a
+            // simple line. To add the "pole deviation", it is necessary add a "hat" reaching 90° of latitude on top of the
+            // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
+            // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
+            // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
+            // point and left border one, go straight the north until 90° (with a constant longitude), go "to the west" at
+            // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
+            // reaching median latitude then reach the left border point.
+            if (!goesThroughNorthPole(exteriorRing)) {
+                if (!goesThroughSouthPole(exteriorRing)) {
+                    SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(exteriorRing);
+                    // North Pole is inside polygon
+                    if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
+                        LOGGER.trace("NORTH POLE is inside polygon");
+                        exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
+                    }
+                    // South Pole is inside polygon
+                    if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
+                        LOGGER.trace("SOUTH POLE is inside polygon");
+                        // Work with ecuadorian symetric polygon as if north pole is south pole
+                        exteriorRing = getSymetricPolygon(
+                                normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                    }
+                    polygonAsArray[0] = exteriorRing;
                 }
-                // South Pole is inside polygon
-                if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                    LOGGER.trace("SOUTH POLE is inside polygon");
-                    // Work with ecuadorian symetric polygon as if north pole is south pole
-                    exteriorRing = getSymetricPolygon(
-                            normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
-                }
-                polygonAsArray[0] = exteriorRing;
             }
         }
         // Case of last longitude as 359.999999999 and first 0.0 for example, or -90 and 270, ...
