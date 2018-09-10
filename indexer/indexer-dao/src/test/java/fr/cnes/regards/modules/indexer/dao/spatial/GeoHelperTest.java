@@ -27,9 +27,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.opengis.referencing.operation.TransformException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
@@ -38,14 +47,50 @@ import fr.cnes.regards.framework.geojson.geometry.LineString;
 import fr.cnes.regards.framework.geojson.geometry.MultiLineString;
 import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.utils.spring.SpringContext;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * @author oroussel
  */
+@RunWith(SpringRunner.class)
 public class GeoHelperTest {
+
+    @Autowired
+    private ApplicationContext appContext;
+
+    @Configuration
+    static class GeoHelperConfiguration {
+
+        @Primary
+        @Bean
+        public IProjectsClient getProjectsClient() {
+            return Mockito.mock(IProjectsClient.class);
+        }
+
+        @Bean
+        public ProjectGeoSettings getProjectGeoSettings() {
+            ProjectGeoSettings settings = Mockito.mock(ProjectGeoSettings.class);
+            Mockito.when(settings.getShouldManagePolesOnGeometries()).thenReturn(true);
+            Mockito.when(settings.getCrs()).thenReturn(Crs.WGS_84);
+            return settings;
+        }
+
+        @Bean
+        public IRuntimeTenantResolver getTenantResolver() {
+            return Mockito.mock(IRuntimeTenantResolver.class);
+        }
+    }
+
+    @Before
+    public void initSpringContext() throws IllegalAccessException, InstantiationException {
+        SpringContext springContext = SpringContext.class.newInstance();
+        springContext.setApplicationContext(appContext);
+    }
 
     @Test
     public void getDistanceOnMarsTest() {
