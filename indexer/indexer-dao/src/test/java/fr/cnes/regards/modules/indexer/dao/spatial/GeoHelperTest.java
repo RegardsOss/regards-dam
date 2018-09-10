@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Lists;
@@ -66,7 +65,6 @@ public class GeoHelperTest {
     @Configuration
     static class GeoHelperConfiguration {
 
-        @Primary
         @Bean
         public IProjectsClient getProjectsClient() {
             return Mockito.mock(IProjectsClient.class);
@@ -86,8 +84,12 @@ public class GeoHelperTest {
         }
     }
 
+    /**
+     * Creating SpringContext to avoid initializing all Spring configurations bullshits
+     */
     @Before
     public void initSpringContext() throws IllegalAccessException, InstantiationException {
+        // H4cker styleZ.... woooooooouh
         SpringContext springContext = SpringContext.class.newInstance();
         springContext.setApplicationContext(appContext);
     }
