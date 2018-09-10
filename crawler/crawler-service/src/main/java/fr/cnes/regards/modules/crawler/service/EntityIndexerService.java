@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -18,9 +20,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,6 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -461,15 +459,17 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
             validateDataObject(toSaveObjects, dataObject, buf);
         }
-        if (buf.length() > 0) {
-            self.createNotificationForAdmin(tenant, buf);
-        }
-        int createdCount = esRepos.saveBulk(tenant, toSaveObjects);
+        int createdCount = esRepos.saveBulk(tenant, toSaveObjects, buf);
         if (createdCount != 0) {
             // Ingest needs to know when an internal DataObject is indexed
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, toSaveObjects.stream()
                     .filter(DataObject::isInternal).map(DataObject::getIpId).toArray(n -> new UniformResourceName[n])));
         }
+        // If there are errors, notify Admin
+        if (buf.length() > 0) {
+            self.createNotificationForAdmin(tenant, buf);
+        }
+
         return createdCount;
     }
 
@@ -548,16 +548,17 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
             validateDataObject(toSaveObjects, dataObject, buf);
         }
-        if (buf.length() > 0) {
-            self.createNotificationForAdmin(tenant, buf);
-        }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
-        int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
+        int savedCount = esRepos.saveBulk(tenant, toSaveObjects, buf);
         if (savedCount != 0) {
             // Ingest needs to know when an internal DataObject is indexed
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, toSaveObjects.stream()
                     .filter(DataObject::isInternal).map(DataObject::getIpId).toArray(n -> new UniformResourceName[n])));
+        }
+        // If there are errors, notify admin
+        if (buf.length() > 0) {
+            self.createNotificationForAdmin(tenant, buf);
         }
         return savedCount;
     }
