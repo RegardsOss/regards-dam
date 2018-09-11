@@ -125,7 +125,22 @@ public interface IEsRepository {
      * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
      */
     @SuppressWarnings("unchecked")
-    <T extends IIndexable> int saveBulk(String index, T... documents) throws IllegalArgumentException;
+    default <T extends IIndexable> int saveBulk(String index, T... documents) throws IllegalArgumentException {
+        return this.saveBulk(index, null,documents);
+    }
+
+    /**
+     * Create or update several documents into same index. Errors are logged.
+     * @param index index
+     * @param errorBuffer errorBuffer filled with documents that cannot be saved
+     * @param documents documents to save (docId and type are mandatory for all of them)
+     * @param <T> parameterized type to avoid array inheritance restriction type definition
+     * @return the number of effectively saved documents
+     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     */
+    @SuppressWarnings("unchecked")
+    <T extends IIndexable> int saveBulk(String index, StringBuilder errorBuffer, T... documents)
+            throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}
@@ -137,6 +152,19 @@ public interface IEsRepository {
     default int saveBulk(final String index, final Collection<? extends IIndexable> documents)
             throws IllegalArgumentException {
         return this.saveBulk(index, documents.toArray(new IIndexable[documents.size()]));
+    }
+
+    /**
+     * {@link #saveBulk(String, IIndexable...)}
+     * @param index index
+     * @param documents documents to save (docId and type are mandatory for all of them)
+     * @param errorBuffer errorBuffer filled with documents that cannot be saved
+     * @return the number of effectively saved documents
+     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     */
+    default int saveBulk(final String index, final Collection<? extends IIndexable> documents,
+            StringBuilder errorBuffer) throws IllegalArgumentException {
+        return this.saveBulk(index, errorBuffer, documents.toArray(new IIndexable[documents.size()]));
     }
 
     /**
@@ -435,10 +463,10 @@ public interface IEsRepository {
      * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
      * types. Only internal data files with a strictly positive size are taken into account. This size is used to count
      * files and to compute sum.
-     * @see DocFilesSummary
      * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
      * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @see DocFilesSummary
      */
     <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
             String discriminantProperty, DocFilesSummary summary, String... fileTypes);
@@ -447,10 +475,10 @@ public interface IEsRepository {
      * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
      * types. Only external data files with an http or https uri are taken into account. This uri is used to count
      * files. No sum is computed.
-     * @see DocFilesSummary
      * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
      * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @see DocFilesSummary
      */
     <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
             String discriminantProperty, DocFilesSummary summary, String... fileTypes);
