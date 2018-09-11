@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 
 /**
@@ -47,15 +48,19 @@ public interface IModelAttrAssocClient {
     /**
      * Client type path
      */
-    String TYPE_MAPPING = "/{pModelId}/attributes";
+    String TYPE_MAPPING = "/{modelName}/attributes";
 
     /**
      * Client association path
      */
     String ASSOCS_MAPPING = "/assocs";
 
-    @RequestMapping(method = RequestMethod.GET, path = TYPE_MAPPING)
-    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
+    @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("modelName") Long modelName);
+
+    @RequestMapping(path = "{datasetUrn}" + ASSOCS_MAPPING, method = RequestMethod.GET)
+    ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(
+            @RequestParam(name = "datasetUrn") UniformResourceName datasetUrn);
 
     /**
      * Retrieve model attribute associations for a given entity type (optional)

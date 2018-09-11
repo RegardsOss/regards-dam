@@ -18,11 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,14 +43,17 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.TypeMetadataConfMapping;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
 /**
@@ -79,6 +84,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     public static final String ASSOCS_MAPPING = "/assocs";
 
+    public static final String ENTITY_ASSOCS_MAPPING = "{datasetUrn}" + ASSOCS_MAPPING;
+
     /**
      * Controller path
      */
@@ -87,22 +94,17 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * Model attribute association service
      */
-    private final IModelAttrAssocService modelAttrAssocService;
+    @Autowired
+    private IModelAttrAssocService modelAttrAssocService;
 
     /**
      * Resource service
      */
-    private final IResourceService resourceService;
+    @Autowired
+    private IResourceService resourceService;
 
-    /**
-     * Constructor
-     * @param pModelAttrAssocService Model attribute association service
-     * @param pResourceService Resource service
-     */
-    public ModelAttrAssocController(IModelAttrAssocService pModelAttrAssocService, IResourceService pResourceService) {
-        modelAttrAssocService = pModelAttrAssocService;
-        resourceService = pResourceService;
-    }
+    @Autowired
+    private IDatasetService datasetService;
 
     /**
      * Retrieve model attribute associations for a given entity type (optional)
@@ -110,11 +112,20 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return the model attribute associations
      */
     @ResourceAccess(
-            description = "endpoint allowing to retrieve all links between models and attribute for a given type of entity")
+            description = "Endpoint allowing to retrieve all links between models and attribute for a given type of entity")
     @RequestMapping(path = ASSOCS_MAPPING, method = RequestMethod.GET)
     public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
             @RequestParam(name = "type", required = false) EntityType type) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(type);
+        return ResponseEntity.ok(assocs);
+    }
+
+    @ResourceAccess(description = "Retrieve all attributes related to given entity")
+    @RequestMapping(path = ENTITY_ASSOCS_MAPPING, method = RequestMethod.GET)
+    public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(
+            @RequestParam(name = "datasetUrn") UniformResourceName datasetUrn) throws ModuleException {
+        Dataset dataset = datasetService.load(datasetUrn);
+        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocs(dataset.getDataModel());
         return ResponseEntity.ok(assocs);
     }
 
