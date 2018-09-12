@@ -98,6 +98,7 @@ public final class AttributeModelBuilder {
     }
 
     public AttributeModelBuilder isInternal() {
+        attributeModel.setDynamic(false);
         attributeModel.setInternal(true);
         return this;
     }

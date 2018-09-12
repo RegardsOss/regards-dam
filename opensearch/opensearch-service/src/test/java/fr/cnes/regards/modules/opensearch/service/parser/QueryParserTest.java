@@ -58,9 +58,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeFinder;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
 
@@ -94,9 +92,7 @@ public class QueryParserTest {
         IAttributeModelClient attributeModelClient = Mockito.mock(IAttributeModelClient.class);
         Mockito.when(attributeModelClient.getAttributes(null, null))
                 .thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
-        IAttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber,
-                runtimeTenantResolver);
-        IAttributeFinder finder = new AttributeFinder(runtimeTenantResolver, attributeModelCache);
+        IAttributeFinder finder = new AttributeFinder(attributeModelClient, subscriber, runtimeTenantResolver);
 
         parser = new QueryParser(finder);
     }

@@ -50,7 +50,7 @@ public class PropertyMapChecker {
 
     private static final int STATICS_NB = 6;
 
-    private AttributeModelCache cache;
+    private AttributeFinder finder;
 
     private IAttributeModelClient attributeModelClientMock;
 
@@ -60,7 +60,7 @@ public class PropertyMapChecker {
     public void init() {
         atts = new ArrayList<>();
         attributeModelClientMock = Mockito.mock(IAttributeModelClient.class);
-        cache = new AttributeModelCache(attributeModelClientMock, Mockito.mock(ISubscriber.class),
+        finder = new AttributeFinder(attributeModelClientMock, Mockito.mock(ISubscriber.class),
                 Mockito.mock(IRuntimeTenantResolver.class));
     }
 
@@ -68,9 +68,9 @@ public class PropertyMapChecker {
         List<Resource<AttributeModel>> resAtts = new ArrayList<>();
         atts.forEach(att -> resAtts.add(new Resource<AttributeModel>(att)));
         Mockito.when(attributeModelClientMock.getAttributes(null, null)).thenReturn(ResponseEntity.ok(resAtts));
-        cache.getAttributeModels(TENANT);
+        finder.computePropertyMap(TENANT);
         // Return built map
-        return cache.getPropertyMap().get(TENANT);
+        return finder.getPropertyMap().get(TENANT);
     }
 
     private void assertCount(Map<String, AttributeModel> builtMap, int expectedDynamics) {
