@@ -30,17 +30,23 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownPar
 public interface IAttributeFinder {
 
     /**
-    * Return the {@link AttributeModel} related to the passed name
-    * @param name open search parameter name
-    * @return the {@link AttributeModel}
-    * @throws OpenSearchUnknownParameter if parameter name cannot be mapped to an attribute
-    */
+     * Return the {@link AttributeModel} related to the passed name
+     * @param name open search parameter name
+     * @return the {@link AttributeModel}
+     * @throws OpenSearchUnknownParameter if parameter name cannot be mapped to an attribute
+     */
     AttributeModel findByName(String name) throws OpenSearchUnknownParameter;
 
     /**
-     * Return the smaller distinct path of the given attribute by removing if possible "feature", "properties" and fragment names.
+     * Return the smaller distinct path of the given attribute by removing if possible "feature", "properties" and
+     * fragment names.
      * @param attribute {@link AttributeModel} to find smaller path name.
      * @return {@link String} smaller path name
      */
     public String findName(AttributeModel attribute);
+
+    /**
+     * Refresh finder cache for specified tenant
+     */
+    public void refresh(String tenant);
 }

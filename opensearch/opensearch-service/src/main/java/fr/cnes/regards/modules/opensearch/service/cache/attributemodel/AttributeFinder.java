@@ -115,6 +115,11 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         return name;
     }
 
+    @Override
+    public void refresh(String tenant) {
+        computePropertyMap(tenant);
+    }
+
     private Map<String, AttributeModel> getTenantMap() {
         String tenant = runtimeTenantResolver.getTenant();
         if (!propertyMap.containsKey(tenant)) {
