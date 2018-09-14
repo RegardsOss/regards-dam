@@ -58,6 +58,11 @@ public class AbstractOnPointsTest {
         public void setWgs84(Geometry wgs84) {
             this.wgs84 = wgs84;
         }
+
+        @Override
+        public String getLabel() {
+            return id;
+        }
     }
 
     protected static class Feature {

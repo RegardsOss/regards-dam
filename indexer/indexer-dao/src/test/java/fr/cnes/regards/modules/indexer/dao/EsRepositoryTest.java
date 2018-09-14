@@ -338,6 +338,11 @@ public class EsRepositoryTest {
             this.name = name;
         }
 
+        @Override
+        public String getLabel() {
+            return name;
+        }
+
         public Item getSubItem() {
             return subItem;
         }

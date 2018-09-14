@@ -189,6 +189,11 @@ public class EsAggsTest {
             this.docId = docId;
         }
 
+        @Override
+        public String getLabel() {
+            return docId;
+        }
+
         @SuppressWarnings("unused")
         public Set<String> getTags() {
             return tags;
