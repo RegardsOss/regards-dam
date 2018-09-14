@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -109,6 +110,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -484,23 +486,28 @@ public class EsRepository implements IEsRepository {
             }
             int savedDocCount = 0;
             BulkRequest bulkRequest = new BulkRequest();
+            Map<String, String> map = new HashMap<>();
             for (T doc : documents) {
                 bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId())
                                         .source(gson.toJson(doc), XContentType.JSON));
+                map.put(doc.getDocId(), doc.getLabel());
             }
 
             BulkResponse response = client.bulk(bulkRequest);
             for (final BulkItemResponse itemResponse : response.getItems()) {
                 if (itemResponse.isFailed()) {
-                    String msg = String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                               itemResponse.getId());
+                    String msg = String.format("Document of type %s and id %s with label %s cannot be saved",
+                                               documents[0].getClass(), itemResponse.getId(),
+                                               map.get(itemResponse.getId()));
                     LOGGER.warn(msg, itemResponse.getFailure().getCause());
                     if (errorBuffer != null) {
                         if (errorBuffer.length() > 0) {
                             errorBuffer.append('\n');
                         }
                         errorBuffer.append(msg).append('\n').append("Cause: ");
-                        errorBuffer.append(itemResponse.getFailure().getCause().getMessage());
+                        // ElasticSearch creates Exception on exception (root one is more appropriate)
+                        Throwable exception = Throwables.getRootCause(itemResponse.getFailure().getCause());
+                        errorBuffer.append(exception.getMessage());
                     }
                 } else {
                     savedDocCount++;
