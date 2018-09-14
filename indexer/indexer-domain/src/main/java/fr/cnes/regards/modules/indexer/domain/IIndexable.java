@@ -19,7 +19,9 @@
 package fr.cnes.regards.modules.indexer.domain;
 
 /**
- * Identifies that something is indexable into Elasticsearch (need an id and a type)
+ * Identifies that something is indexable into Elasticsearch (need an id and a type).
+ * getLabel() has been added to permit identification of failed documents (actually, docId is used into error messages
+ * but most of the time, it is generated so it is impossible to identify which document raises an error)
  * @author oroussel
  */
 public interface IIndexable {
@@ -27,4 +29,6 @@ public interface IIndexable {
     String getDocId();
 
     String getType();
+
+    String getLabel();
 }
