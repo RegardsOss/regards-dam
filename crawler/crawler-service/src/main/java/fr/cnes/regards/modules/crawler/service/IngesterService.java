@@ -190,8 +190,14 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                                 dsIngestion);
                                 // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
                                 dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
-                                dsIngestion.setStatus(IngestionStatus.FINISHED);
+                                if (summary.getInErrorObjectsCount() > 0) {
+                                    dsIngestion.setStatus(IngestionStatus.FINISHED_WITH_WARNINGS);
+                                } else {
+                                    dsIngestion.setStatus(IngestionStatus.FINISHED);
+                                }
+
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
+                                dsIngestion.setInErrorObjectsCount(summary.getInErrorObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
@@ -311,6 +317,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             // Reinit old DatasourceIngestion properties
             dsIngestion.setStackTrace(null);
             dsIngestion.setSavedObjectsCount(0);
+            dsIngestion.setInErrorObjectsCount(0);
             dsIngestion.setStatus(IngestionStatus.STARTED);
             dsIngestionRepos.save(dsIngestion);
         }

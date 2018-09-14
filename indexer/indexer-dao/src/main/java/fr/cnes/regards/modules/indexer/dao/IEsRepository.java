@@ -121,11 +121,10 @@ public interface IEsRepository {
      * @param index index
      * @param documents documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
-     * @return the number of effectively saved documents
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @return bulk save result     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
      */
     @SuppressWarnings("unchecked")
-    default <T extends IIndexable> int saveBulk(String index, T... documents) throws IllegalArgumentException {
+    default <T extends IIndexable> BulkSaveResult saveBulk(String index, T... documents) throws IllegalArgumentException {
         return this.saveBulk(index, null,documents);
     }
 
@@ -135,21 +134,21 @@ public interface IEsRepository {
      * @param errorBuffer errorBuffer filled with documents that cannot be saved
      * @param documents documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
-     * @return the number of effectively saved documents
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @return bulk save result
+     * @throws IllegalArgumentException If at least one document hasn't its mandatory properties (docId, type, label...).
      */
     @SuppressWarnings("unchecked")
-    <T extends IIndexable> int saveBulk(String index, StringBuilder errorBuffer, T... documents)
+    <T extends IIndexable> BulkSaveResult saveBulk(String index, StringBuilder errorBuffer, T... documents)
             throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}
      * @param index index
      * @param documents documents to save (docId and type are mandatory for all of them)
-     * @return the number of effectively saved documents
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @return bulk save result
+     * @throws IllegalArgumentException If at least one document hasn't its mandatory properties (docId, type, label...).
      */
-    default int saveBulk(final String index, final Collection<? extends IIndexable> documents)
+    default BulkSaveResult saveBulk(final String index, final Collection<? extends IIndexable> documents)
             throws IllegalArgumentException {
         return this.saveBulk(index, documents.toArray(new IIndexable[documents.size()]));
     }
@@ -159,10 +158,10 @@ public interface IEsRepository {
      * @param index index
      * @param documents documents to save (docId and type are mandatory for all of them)
      * @param errorBuffer errorBuffer filled with documents that cannot be saved
-     * @return the number of effectively saved documents
+     * @return bulk save result
      * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
      */
-    default int saveBulk(final String index, final Collection<? extends IIndexable> documents,
+    default BulkSaveResult saveBulk(final String index, final Collection<? extends IIndexable> documents,
             StringBuilder errorBuffer) throws IllegalArgumentException {
         return this.saveBulk(index, errorBuffer, documents.toArray(new IIndexable[documents.size()]));
     }
@@ -407,7 +406,6 @@ public interface IEsRepository {
      * @param searchKey the search key
      * @param crit search criterion
      * @param attributes non text attributes
-     * @param textAttributes text attributes
      * @return the stats of each attribute
      */
     <T extends IIndexable> Aggregations getAggregations(SearchKey<?, T> searchKey, ICriterion crit,

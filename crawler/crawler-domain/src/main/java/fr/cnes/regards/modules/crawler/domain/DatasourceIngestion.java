@@ -58,7 +58,7 @@ public class DatasourceIngestion {
      * Status of previous or current ingestion
      */
     @Enumerated(EnumType.STRING)
-    @Column(length = 10)
+    @Column(length = 32)
     private IngestionStatus status = IngestionStatus.NEW;
 
     /**
@@ -73,6 +73,12 @@ public class DatasourceIngestion {
      */
     @Column(name = "saved_objects_count")
     private Integer savedObjectsCount;
+
+    /**
+     * Last ingestion number of objects that couldn't be saved
+     */
+    @Column(name = "error_objects_count")
+    private Integer inErrorObjectsCount;
 
     /**
      * When status is ERROR, the exception stack trace
@@ -149,6 +155,14 @@ public class DatasourceIngestion {
 
     public void setSavedObjectsCount(Integer savedObjectsCount) {
         this.savedObjectsCount = savedObjectsCount;
+    }
+
+    public Integer getInErrorObjectsCount() {
+        return inErrorObjectsCount;
+    }
+
+    public void setInErrorObjectsCount(Integer inErrorObjectsCount) {
+        this.inErrorObjectsCount = inErrorObjectsCount;
     }
 
     public String getStackTrace() {

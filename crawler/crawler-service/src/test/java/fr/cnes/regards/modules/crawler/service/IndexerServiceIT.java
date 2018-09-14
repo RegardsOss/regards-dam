@@ -66,6 +66,7 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBu
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
@@ -248,9 +249,9 @@ public class IndexerServiceIT {
             collections.add(createCollection(collModel, i + 1));
         }
         final long start = System.currentTimeMillis();
-        final int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
+        final BulkSaveResult bulkSaveResult = indexerService.saveBulkEntities(SEARCH, collections);
         LOGGER.info("Bulk save ({} collections) : {} ms", collections.size(), System.currentTimeMillis() - start);
-        Assert.assertEquals(collections.size(), savedCollCount);
+        Assert.assertEquals(collections.size(), bulkSaveResult.getSavedDocsCount());
     }
 
     private Collection createCollection(final Model collModel, final int i) {

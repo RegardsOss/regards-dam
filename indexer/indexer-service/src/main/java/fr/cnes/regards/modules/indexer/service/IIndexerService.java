@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Collection;
 
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
@@ -57,9 +58,9 @@ public interface IIndexerService {
      */
     void refresh(String index);
 
-    int saveBulkEntities(String index, IIndexable... entities);
+    BulkSaveResult saveBulkEntities(String index, IIndexable... entities);
 
-    int saveBulkEntities(String index, Collection<? extends IIndexable> entities);
+    BulkSaveResult saveBulkEntities(String index, Collection<? extends IIndexable> entities);
 
     boolean deleteEntity(String index, IIndexable entity);
 }

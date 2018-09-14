@@ -10,6 +10,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.
@@ -64,9 +65,9 @@ public interface IEntityIndexerService {
      * @param datasourceId id of data source from where data objects come
      * @param now update date (usually now)
      * @param objects objects to save
-     * @return number of objects effectively created
+     * @return bulk save result
      */
-    int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
+    BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
     /**
      * Merge given data objects into Elasticsearch
@@ -74,9 +75,9 @@ public interface IEntityIndexerService {
      * @param datasourceId id of data source from where data objects come
      * @param now update date (usually now)
      * @param objects objects to save
-     * @return number of objects effectively saved
+     * @return bulk save result
      */
-    int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
+    BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
     /**
      * Delete given data object from Elasticsearch

@@ -194,8 +194,8 @@ public class EsRepositoryTest {
 
         // remove failed item
         list.remove(2);
-        int savedItemsCount = repository.saveBulk("bulktest", list);
-        Assert.assertEquals(list.size(), savedItemsCount);
+        BulkSaveResult bulkSaveResult = repository.saveBulk("bulktest", list);
+        Assert.assertEquals(list.size(), bulkSaveResult.getSavedDocsCount());
 
         // If someone could find a case when a document save failed...Don't hesitate to talk it to me
     }

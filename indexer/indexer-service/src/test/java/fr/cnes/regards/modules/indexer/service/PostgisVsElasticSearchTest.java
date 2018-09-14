@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
-import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -46,7 +44,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -55,11 +52,13 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
 
 /**
@@ -96,8 +95,8 @@ public class PostgisVsElasticSearchTest {
         props.put("password", "root");
         ctx = DriverManager.getConnection("jdbc:postgresql://localhost:5442/postgres", props);
 
-        distancePstmt = ctx
-                .prepareStatement("SELECT ST_Distance(ST_SetSRID(geometry::geography, 949900), ST_SetSRID(ST_Point(-144.0, -78.0)::geography, 949900), true) FROM s1_geo WHERE id = ?");
+        distancePstmt = ctx.prepareStatement(
+                "SELECT ST_Distance(ST_SetSRID(geometry::geography, 949900), ST_SetSRID(ST_Point(-144.0, -78.0)::geography, 949900), true) FROM s1_geo WHERE id = ?");
     }
 
     @After
@@ -137,29 +136,30 @@ public class PostgisVsElasticSearchTest {
             int i = 0;
             int bulkSize = BULK_SIZES[i];
 
-            try (PreparedStatement pstmt = ctx
-                    .prepareStatement("SELECT id, title, ST_AsGeoJSON(geometry) FROM s1_geo WHERE id <= 100000 ORDER BY id")) {
-                for (ResultSet rset = pstmt.executeQuery(); rset.next();) {
+            try (PreparedStatement pstmt = ctx.prepareStatement(
+                    "SELECT id, title, ST_AsGeoJSON(geometry) FROM s1_geo WHERE id <= 100000 ORDER BY id")) {
+                for (ResultSet rset = pstmt.executeQuery(); rset.next(); ) {
                     // System.out.printf("%d, %s, %s\n", rset.getInt(1), rset.getString(2), rset.getString(3));
                     IGeometry geometry = gson.fromJson(rset.getString(3), IGeometry.class);
                     DataObject object = new DataObject(model, TENANT, rset.getString(2), rset.getString(2));
                     object.setId((long) rset.getInt(1));
-                    object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
-                            UUID.randomUUID(), 1));
+                    object.setIpId(
+                            new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
                     geometry.setCrs(Crs.MARS_49900.toString());
                     object.setGeometry(geometry);
                     object.setWgs84(toWgs84(geometry));
                     dos.add(object);
 
                     if (dos.size() >= bulkSize) {
-                        int saved = 0;
+                        BulkSaveResult saved;
                         try {
                             long now = System.currentTimeMillis();
                             saved = repos.saveBulk(TENANT, dos);
                             long duration = System.currentTimeMillis() - now;
                             System.out
                                     .printf("Bulk size: %d, saved objects: %d, time: %d ms, time rate: %f ms per object\n",
-                                            bulkSize, saved, duration, duration / (double) saved);
+                                            bulkSize, saved.getSavedDocsCount(), duration,
+                                            duration / (double) saved.getSavedDocsCount());
                         } catch (RsRuntimeException e) {
                             System.out.println("Time out !");
                             repos.refresh(TENANT);
@@ -171,13 +171,14 @@ public class PostgisVsElasticSearchTest {
                             long duration = System.currentTimeMillis() - now;
                             System.out
                                     .printf("Bulk size: %d, saved objects: %d, time: %d ms, time rate: %f ms per object\n",
-                                            bulkSize, saved, duration, duration / (double) saved);
+                                            bulkSize, saved.getSavedDocsCount(), duration,
+                                            duration / (double) saved.getSavedDocsCount());
                         }
                         i = (i + 1) % BULK_SIZES.length;
                         bulkSize = BULK_SIZES[i];
                         count += dos.size();
-                        System.out.println("Saved " + count + "(" + ((System.currentTimeMillis() - start) / 1000)
-                                + ") s");
+                        System.out.println(
+                                "Saved " + count + "(" + ((System.currentTimeMillis() - start) / 1000) + ") s");
                         dos.clear();
                     }
                 }
@@ -204,13 +205,13 @@ public class PostgisVsElasticSearchTest {
         List<Integer> postgisIds = new ArrayList<>();
         // With Postgis
         try (PreparedStatement pstmt = ctx.prepareStatement(
-                                                            // "SELECT id FROM s1_geo WHERE
-                                                            // ST_DWithin(geometry::geography, "
-                                                            // + "ST_SetSRID(ST_Point(-144.0, -78.0),
-                                                            // 949900)::geography, 50000) AND id <= 100000;"
-                                                            "SELECT id FROM s1_geo WHERE ST_Distance(geometry::geography, "
-                                                                    + "ST_SetSRID(ST_Point(-144.0, -78.0)::geography, 949900), true) <= 50000 AND id <= 100000")) {
-            for (ResultSet rset = pstmt.executeQuery(); rset.next();) {
+                // "SELECT id FROM s1_geo WHERE
+                // ST_DWithin(geometry::geography, "
+                // + "ST_SetSRID(ST_Point(-144.0, -78.0),
+                // 949900)::geography, 50000) AND id <= 100000;"
+                "SELECT id FROM s1_geo WHERE ST_Distance(geometry::geography, "
+                        + "ST_SetSRID(ST_Point(-144.0, -78.0)::geography, 949900), true) <= 50000 AND id <= 100000")) {
+            for (ResultSet rset = pstmt.executeQuery(); rset.next(); ) {
                 postgisIds.add(rset.getInt(1));
             }
         }
@@ -232,12 +233,11 @@ public class PostgisVsElasticSearchTest {
         postgisIds.removeAll(esIds);
         if (!postgisIds.isEmpty()) {
             System.out.println("In Postgis results, not In ES");
-            for (Iterator<Integer> i = postgisIds.iterator(); i.hasNext();) {
+            for (Iterator<Integer> i = postgisIds.iterator(); i.hasNext(); ) {
                 Integer id = i.next();
                 double trueDistance = GeoHelper.getDistance(
-                                                            repos.search(searchKey, 1, ICriterion.eq("id", id))
-                                                                    .getContent().get(0).getGeometry(),
-                                                            center, Crs.MARS_49900);
+                        repos.search(searchKey, 1, ICriterion.eq("id", id)).getContent().get(0).getGeometry(), center,
+                        Crs.MARS_49900);
                 if (trueDistance > 50_000.0) {
                     System.out
                             .printf("id: %d, false positive returned by Postgis (%f m) while distance computed with GeoTools is %f m\n",
@@ -253,9 +253,10 @@ public class PostgisVsElasticSearchTest {
             }
         }
 
-        Assert.assertTrue(String.format("PG found %d results, ES %d, %d by PG and not by ES, %d by ES and not by PG",
-                                        pgCount, esIds.size(), postgisIds.size(), esIdsCopy.size()),
-                          postgisIds.isEmpty() && esIdsCopy.isEmpty());
+        Assert.assertTrue(
+                String.format("PG found %d results, ES %d, %d by PG and not by ES, %d by ES and not by PG", pgCount,
+                              esIds.size(), postgisIds.size(), esIdsCopy.size()),
+                postgisIds.isEmpty() && esIdsCopy.isEmpty());
 
     }
 
@@ -263,11 +264,11 @@ public class PostgisVsElasticSearchTest {
     public void testPolygonOnMars() throws SQLException {
         List<Integer> postgisIds = new ArrayList<>();
         // With Postgis
-        try (PreparedStatement pstmt = ctx
-                .prepareStatement("SELECT id FROM s1_geo WHERE ST_Intersects(geometry::geography, "
+        try (PreparedStatement pstmt = ctx.prepareStatement(
+                "SELECT id FROM s1_geo WHERE ST_Intersects(geometry::geography, "
                         + "ST_Polygon(ST_GeomFromText('LINESTRING(-146.0 -78.0, -146.0 -77.0, -148.0 -77.0, "
                         + "-148.0 -78.0, -146.0 -78.0)'), 949900)::geography) AND id <= 100000")) {
-            for (ResultSet rset = pstmt.executeQuery(); rset.next();) {
+            for (ResultSet rset = pstmt.executeQuery(); rset.next(); ) {
                 postgisIds.add(rset.getInt(1));
             }
         }
@@ -297,9 +298,10 @@ public class PostgisVsElasticSearchTest {
             System.out.printf("id: %d\n", id);
         }
 
-        Assert.assertTrue(String.format("PG found %d results, ES %d, %d by PG and not by ES, %d by ES and not by PG",
-                                        pgCount, esIds.size(), postgisIds.size(), esIdsCopy.size()),
-                          postgisIds.isEmpty() && esIdsCopy.isEmpty());
+        Assert.assertTrue(
+                String.format("PG found %d results, ES %d, %d by PG and not by ES, %d by ES and not by PG", pgCount,
+                              esIds.size(), postgisIds.size(), esIdsCopy.size()),
+                postgisIds.isEmpty() && esIdsCopy.isEmpty());
 
     }
 }
