@@ -33,6 +33,12 @@ public class BulkSaveResult {
 
     private Map<String, Exception> inErrorDocsMap = new HashMap<>();
 
+    /**
+     * Error detailed message is set by EsRespository when notify to admin. It is then used to show error message while
+     * ingesting a datasource
+     */
+    private String detailedErrorMsg;
+
     public BulkSaveResult() {
     }
 
@@ -62,6 +68,14 @@ public class BulkSaveResult {
 
     public Exception getInErrorDocCause(String docId) {
         return inErrorDocsMap.get(docId);
+    }
+
+    public String getDetailedErrorMsg() {
+        return detailedErrorMsg;
+    }
+
+    public void setDetailedErrorMsg(String detailedErrorMsg) {
+        this.detailedErrorMsg = detailedErrorMsg;
     }
 
     /**

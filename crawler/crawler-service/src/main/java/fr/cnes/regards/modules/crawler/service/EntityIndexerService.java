@@ -474,6 +474,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         // If there are errors, notify Admin
         if (buf.length() > 0) {
             self.createNotificationForAdmin(tenant, buf);
+            // Also add detailed message to datasource ingestion
+            bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
 
         return bulkSaveResult;
@@ -576,6 +578,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         // If there are errors, notify admin
         if (buf.length() > 0) {
             self.createNotificationForAdmin(tenant, buf);
+            // Also add detailed message to datasource ingestion
+            bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
         return bulkSaveResult;
     }

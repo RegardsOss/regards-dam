@@ -137,12 +137,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
             sendMessage("Start reading datasource and creating objects...", dsiId);
-            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
-                                                                   dsiId);
+            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId);
         } else { // index exists, data objects may also exist
             sendMessage("Start reading datasource and merging/creating objects...", dsiId);
-            saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
-                                                                  dsiId);
+            saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId);
         }
         sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
         // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
@@ -223,6 +221,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
             BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            if (bulkSaveResult.getInErrorDocsCount() > 0) {
+                sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
+            }
             sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()), dsiId);
             return bulkSaveResult;
         });
@@ -239,6 +241,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
                 BulkSaveResult bulkSaveResult = entityIndexerService
                         .createDataObjects(tenant, datasourceId, now, otherList);
+                if (bulkSaveResult.getInErrorDocsCount() > 0) {
+                    sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                              bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                }
                 sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
                             dsiId);
                 return bulkSaveResult;
