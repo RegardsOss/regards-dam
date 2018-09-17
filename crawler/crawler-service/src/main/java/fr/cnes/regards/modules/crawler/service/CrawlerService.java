@@ -62,6 +62,7 @@ import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -130,17 +131,17 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf.getId());
 
-        int savedObjectsCount;
+        BulkSaveResult saveResult;
         OffsetDateTime now = OffsetDateTime.now();
         String datasourceId = pluginConf.getId().toString();
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
             sendMessage("Start reading datasource and creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
                                                                    dsiId);
         } else { // index exists, data objects may also exist
             sendMessage("Start reading datasource and merging/creating objects...", dsiId);
-            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+            saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
                                                                   dsiId);
         }
         sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
@@ -158,13 +159,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             sendMessage("...End updating datasets.", dsiId);
         }
 
-        return new IngestionResult(now, savedObjectsCount);
+        return new IngestionResult(now, saveResult.getSavedDocsCount(), saveResult.getInErrorDocsCount());
     }
 
-    private int readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+    private BulkSaveResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
             throws DataSourceException, InterruptedException, ExecutionException, ModuleException {
-        int savedObjectsCount = 0;
+        BulkSaveResult saveResult = new BulkSaveResult();
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -174,12 +175,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
-        Future<Integer> task = executor.submit(() -> {
+        Future<BulkSaveResult> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
-            int count = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
-            sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
-            return count;
+            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()), dsiId);
+            return bulkSaveResult;
         });
 
         while (page.hasNext()) {
@@ -187,26 +188,28 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
             sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
             availableRecordsCount += page.getNumberOfElements();
-            savedObjectsCount += task.get();
+            saveResult.append(task.get());
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
                 sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
-                int count = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
-                sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
-                return count;
+                BulkSaveResult bulkSaveResult = entityIndexerService
+                        .mergeDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                            dsiId);
+                return bulkSaveResult;
             });
         }
-        savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount), dsiId);
-        return savedObjectsCount;
+        saveResult.append(task.get());
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
+                                  saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
+        return saveResult;
     }
 
-    private int readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+    private BulkSaveResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
             throws DataSourceException, InterruptedException, ExecutionException, ModuleException {
-        int savedObjectsCount = 0;
+        BulkSaveResult saveResult = new BulkSaveResult();
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -216,12 +219,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
-        Future<Integer> task = executor.submit(() -> {
+        Future<BulkSaveResult> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
-            int count = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
-            sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
-            return count;
+            BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()), dsiId);
+            return bulkSaveResult;
         });
 
         while (page.hasNext()) {
@@ -229,20 +232,22 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
             sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
             availableRecordsCount += page.getNumberOfElements();
-            savedObjectsCount += task.get();
+            saveResult.append(task.get());
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
                 sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
-                int count = entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
-                sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
-                return count;
+                BulkSaveResult bulkSaveResult = entityIndexerService
+                        .createDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                            dsiId);
+                return bulkSaveResult;
             });
         }
-        savedObjectsCount += task.get();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
-                                  availableRecordsCount), dsiId);
-        return savedObjectsCount;
+        saveResult.append(task.get());
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
+                                  saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
+        return saveResult;
     }
 
     /**

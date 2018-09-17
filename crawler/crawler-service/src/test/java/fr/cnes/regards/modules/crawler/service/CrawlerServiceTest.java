@@ -60,6 +60,7 @@ import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 
 @RunWith(SpringRunner.class)
@@ -144,15 +145,15 @@ public class CrawlerServiceTest {
             dataObjects.add(wrap);
         }
 
-        int savedItemsCount = indexerService.saveBulkEntities(TENANT, dataObjects);
-        LOGGER.info("...{} entities saved", savedItemsCount);
+        BulkSaveResult bulkSaveResult = indexerService.saveBulkEntities(TENANT, dataObjects);
+        LOGGER.info("...{} entities saved", bulkSaveResult.getSavedDocsCount());
         while (page.hasNext()) {
             page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
             LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
-            savedItemsCount = indexerService.saveBulkEntities(TENANT, dataObjects);
-            LOGGER.info("...{} entities saved", savedItemsCount);
+            bulkSaveResult = indexerService.saveBulkEntities(TENANT, dataObjects);
+            LOGGER.info("...{} entities saved", bulkSaveResult.getSavedDocsCount());
         }
         Assert.assertTrue(true);
     }

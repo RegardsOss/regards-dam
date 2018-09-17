@@ -12,10 +12,13 @@ public class IngestionResult {
 
     private int savedObjectsCount = 0;
 
-    public IngestionResult(OffsetDateTime pDate, int pSaveObjectsCount) {
+    private int inErrorObjectsCount = 0;
+
+    public IngestionResult(OffsetDateTime date, int saveObjectsCount, int inErrorObjectsCount) {
         super();
-        date = pDate;
-        savedObjectsCount = pSaveObjectsCount;
+        this.date = date;
+        this.savedObjectsCount = saveObjectsCount;
+        this.inErrorObjectsCount = inErrorObjectsCount;
     }
 
     public OffsetDateTime getDate() {
@@ -30,8 +33,7 @@ public class IngestionResult {
         return savedObjectsCount;
     }
 
-    public void setSavedObjectsCount(int pSaveObjectsCount) {
-        savedObjectsCount = pSaveObjectsCount;
+    public int getInErrorObjectsCount() {
+        return inErrorObjectsCount;
     }
-
 }

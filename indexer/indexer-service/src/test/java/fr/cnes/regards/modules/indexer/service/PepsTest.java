@@ -53,6 +53,7 @@ import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -106,13 +107,13 @@ public class PepsTest {
     private void createDataFromPeps() throws IOException {
         // Select all data between parallels -80 and -60 from peps on S1
         List<DataObject> objects = selectFromPeps("-180.0,-80.0,180.0,-60.0", "2018-06-01", "2018-07-01");
-        int savedCount = repos.saveBulk(TENANT, objects);
-        System.out.printf("Saved %d/%d objects\n", savedCount, objects.size());
+        BulkSaveResult bulkSaveResult = repos.saveBulk(TENANT, objects);
+        System.out.printf("Saved %d/%d objects\n", bulkSaveResult.getSavedDocsCount(), objects.size());
 
         // Select all data between parallels 60 and 80 from peps on S1
         objects = selectFromPeps("-180.0,60.0,180.0,80.0", "2017-12-01", "2018-04-01");
-        savedCount = repos.saveBulk(TENANT, objects);
-        System.out.printf("Saved %d/%d objects\n", savedCount, objects.size());
+        bulkSaveResult = repos.saveBulk(TENANT, objects);
+        System.out.printf("Saved %d/%d objects\n", bulkSaveResult.getSavedDocsCount(), objects.size());
 
         repos.unsetSettingsForBulk(TENANT);
         repos.refresh(TENANT);

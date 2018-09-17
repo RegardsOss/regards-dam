@@ -29,15 +29,20 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.springframework.context.ApplicationContext;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
+import fr.cnes.regards.framework.utils.spring.SpringContext;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.AbstractOnPointsTest;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -98,6 +103,18 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
 
         searchKey = new SimpleSearchKey<PointItem>(TYPE, PointItem.class);
         searchKey.setSearchIndex(INDEX);
+
+        SpringContext springContext = SpringContext.class.newInstance();
+        ApplicationContext appContext = Mockito.mock(ApplicationContext.class);
+        ProjectGeoSettings settings = new ProjectGeoSettings() {
+
+            @Override
+            public Boolean getShouldManagePolesOnGeometries() {
+                return true;
+            }
+        };
+        Mockito.when(appContext.getBean(Matchers.eq(ProjectGeoSettings.class))).thenReturn(settings);
+        springContext.setApplicationContext(appContext);
     }
 
     @Test
@@ -346,8 +363,7 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
         Assert.assertEquals(1, result.size());
         Assert.assertEquals("P1", result.get(0).getDocId());
         System.out.printf("Error near equator : %d m (radius : %d m)\n",
-                          (int) GeoHelper.getDistanceOnEarth(point(180.0, 20.1), point(180, 20)) - d3,
-                          d3);
+                          (int) GeoHelper.getDistanceOnEarth(point(180.0, 20.1), point(180, 20)) - d3, d3);
 
     }
 

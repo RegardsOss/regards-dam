@@ -895,6 +895,10 @@ public class EsQueryTest {
             type = pType;
         }
 
+        @Override
+        public String getLabel() {
+            return docId;
+        }
     }
 
     private static class Item extends AbstractItem implements IIndexable, Serializable {
