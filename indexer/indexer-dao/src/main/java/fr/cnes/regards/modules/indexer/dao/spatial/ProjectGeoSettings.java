@@ -18,12 +18,18 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
@@ -44,39 +50,39 @@ public class ProjectGeoSettings {
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
+    private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
+
+                @Override
+                public Pair<Boolean, Crs> load(String key) throws Exception {
+                    try {
+                        FeignSecurityManager.asSystem();
+
+                        ResponseEntity<Resource<Project>> response = projectsClient
+                                .retrieveProject(tenantResolver.getTenant());
+                        if (response.getStatusCode() == HttpStatus.OK) {
+                            Project currentProject = response.getBody().getContent();
+                            return Pair.of(currentProject.getPoleToBeManaged(), Crs.valueOf(currentProject.getCrs()));
+                        } else { // Must throw something
+                            throw new RsRuntimeException(new Exception(
+                                    String.format("Error while asking project client: Error %d",
+                                                  response.getStatusCode())));
+                        }
+                    } finally {
+                        FeignSecurityManager.reset();
+                    }
+                }
+            });
+
     private Boolean shouldManagePolesOnGeometries = null;
 
     private Crs crs = null;
 
-    public void fillValuesFromCurrentProject() {
-        try {
-            FeignSecurityManager.asSystem();
-
-            ResponseEntity<Resource<Project>> response = projectsClient.retrieveProject(tenantResolver.getTenant());
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Project currentProject = response.getBody().getContent();
-                this.shouldManagePolesOnGeometries = currentProject.getPoleToBeManaged();
-                this.crs = Crs.valueOf(currentProject.getCrs());
-            } else { // Must throw something
-                throw new RsRuntimeException(new Exception(
-                        String.format("Error while asking project client: Error %d", response.getStatusCode())));
-            }
-        } finally {
-            FeignSecurityManager.reset();
-        }
-    }
-
     public Boolean getShouldManagePolesOnGeometries() {
-        if (shouldManagePolesOnGeometries == null) {
-            this.fillValuesFromCurrentProject();
-        }
-        return shouldManagePolesOnGeometries;
+        return settingsCache.getUnchecked(tenantResolver.getTenant()).getLeft();
     }
 
     public Crs getCrs() {
-        if (shouldManagePolesOnGeometries == null) {
-            this.fillValuesFromCurrentProject();
-        }
-        return crs;
+        return settingsCache.getUnchecked(tenantResolver.getTenant()).getRight();
     }
 }
