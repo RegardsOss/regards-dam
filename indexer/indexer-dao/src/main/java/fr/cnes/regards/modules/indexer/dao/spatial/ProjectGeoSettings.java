@@ -38,7 +38,7 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import fr.cnes.regards.modules.project.domain.Project;
 
 /**
- * Current project settings concerning geospatial behavior
+ * Projects settings concerning geospatial behavior.<br/>
  * @author oroussel
  */
 @Component
@@ -50,6 +50,11 @@ public class ProjectGeoSettings {
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
+    /**
+     * Using a cache to manage projects values and to be refreshed every 5 minutes in case project properties have
+     * changed.
+     * This cache contains Crs and shouldManagePolsOnGeometries values associated to projects
+     */
     private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
@@ -74,14 +79,16 @@ public class ProjectGeoSettings {
                 }
             });
 
-    private Boolean shouldManagePolesOnGeometries = null;
-
-    private Crs crs = null;
-
+    /**
+     * @return current tenant/project shouldManagePolesOnGeometries property
+     */
     public Boolean getShouldManagePolesOnGeometries() {
         return settingsCache.getUnchecked(tenantResolver.getTenant()).getLeft();
     }
 
+    /**
+     * @return current tenant/project crs property
+     */
     public Crs getCrs() {
         return settingsCache.getUnchecked(tenantResolver.getTenant()).getRight();
     }
