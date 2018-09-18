@@ -94,19 +94,19 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param toAssociates URNs of entities to be associated by source entity
+     * @param toAssociates tags to be associated by source entity (may be entity URNs)
      * @throws EntityNotFoundException
      */
-    void associate(Long pEntityId, Set<UniformResourceName> toAssociates) throws EntityNotFoundException;
+    void associate(Long pEntityId, Set<String> toAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param toBeDissociated URNs of entities to be dissociated from source entity
+     * @param toBeDissociated tags to be dissociated from source entity (may be entity URNs)
      * @throws EntityNotFoundException
      */
-    void dissociate(Long pEntityId, Set<UniformResourceName> toBeDissociated) throws EntityNotFoundException;
+    void dissociate(Long pEntityId, Set<String> toBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity

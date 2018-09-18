@@ -47,8 +47,6 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
-import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=cdgroups",
         "regards.dam.post.aip.entities.to.storage=false" }, locations = "classpath:es.properties")
@@ -295,9 +293,10 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
 
         // Dissociate all datasets and their tags to collections
-        dataSetService.dissociate(dataset1.getId(), Sets.newHashSet(coll1.getIpId()));
-        dataSetService.dissociate(dataset2.getId(), Sets.newHashSet(coll1.getIpId()));
-        dataSetService.dissociate(dataset3.getId(), Sets.newHashSet(coll2.getIpId(), coll3.getIpId()));
+        dataSetService.dissociate(dataset1.getId(), Sets.newHashSet(coll1.getIpId().toString()));
+        dataSetService.dissociate(dataset2.getId(), Sets.newHashSet(coll1.getIpId().toString()));
+        dataSetService.dissociate(dataset3.getId(),
+                                  Sets.newHashSet(coll2.getIpId().toString(), coll3.getIpId().toString()));
 
         coll1 = collService.load(coll1.getId());
         Assert.assertTrue(coll1.getGroups().isEmpty());
@@ -307,9 +306,10 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         Assert.assertTrue(coll3.getGroups().isEmpty());
 
         // Re-associate all datasets and their tags to collections
-        dataSetService.associate(dataset1.getId(), Sets.newHashSet(coll1.getIpId()));
-        dataSetService.associate(dataset2.getId(), Sets.newHashSet(coll1.getIpId()));
-        dataSetService.associate(dataset3.getId(), Sets.newHashSet(coll2.getIpId(), coll3.getIpId()));
+        dataSetService.associate(dataset1.getId(), Sets.newHashSet(coll1.getIpId().toString()));
+        dataSetService.associate(dataset2.getId(), Sets.newHashSet(coll1.getIpId().toString()));
+        dataSetService.associate(dataset3.getId(),
+                                 Sets.newHashSet(coll2.getIpId().toString(), coll3.getIpId().toString()));
 
         coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
@@ -323,7 +323,7 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         coll4 = new Collection(modelColl, "PROJECT", "ProviderId7", "coll4");
         coll4 = collService.create(coll4);
 
-        collService.associate(coll2.getId(), Sets.newHashSet(coll4.getIpId()));
+        collService.associate(coll2.getId(), Sets.newHashSet(coll4.getIpId().toString()));
 
         coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
@@ -332,7 +332,7 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         // tag through DS1->C1->C2), C4 (indirect tag through DS1->C1->C2->C4)
         // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and
         // the logic is respected
-        Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "DS1", "labelDs1");
+        final Dataset dataset1Updated = new Dataset(modelDataset, "PROJECT", "DS1", "labelDs1");
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
         dataset1Updated.setDataModel(dataset1.getDataModel());
         dataset1Updated.setCreationDate(dataset1.getCreationDate());
@@ -458,7 +458,7 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         coll2 = collService.create(coll2);
         coll3 = collService.create(coll3);
 
-        List<Collection> collections = collService.findAll();
+        final List<Collection> collections = collService.findAll();
         Assert.assertEquals(3, collections.size());
         Assert.assertTrue(collections.contains(coll1));
         Assert.assertTrue(collections.contains(coll2));

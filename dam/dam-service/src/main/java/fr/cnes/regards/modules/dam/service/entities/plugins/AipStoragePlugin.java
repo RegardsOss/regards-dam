@@ -59,27 +59,6 @@ public class AipStoragePlugin implements IStorageService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AipStoragePlugin.class);
 
-    // FIXME remove
-    // private final static String MD5 = "MD5";
-    //
-    // private final static String SLASH = "/";
-    //
-    // private final static String PATH_COLLECTIONS = "/collections/";
-    //
-    // private final static String PATH_DATASETS = "/datasets/";
-    //
-    // private final static String PATH_DOCUMENTS = "/documents/";
-    //
-    // private final static String REGARDS_DESCRIPTION = "entity description";
-    //
-    // private final static String PATH_FILE = "/file/";
-    //
-    // private final String SCOPE_PARAM = "scope=";
-    //
-    // private final String TOKEN_PARAM = "token=";
-
-    private static final String DAM_SESSION = "DAM";
-
     /**
      * Prefix for static properties to avoid collision with dynamic ones
      */
@@ -89,19 +68,6 @@ public class AipStoragePlugin implements IStorageService {
 
     @Autowired
     private IAipClient aipClient;
-
-    // FIXME Remove
-    // @Autowired
-    // private IProjectsClient projectsClient;
-    //
-    // /**
-    // * {@link IRuntimeTenantResolver} instance
-    // */
-    // @Autowired
-    // private IRuntimeTenantResolver runtimeTenantResolver;
-    //
-    // @Autowired
-    // private JWTService jwtService;
 
     @Value("${zuul.prefix}")
     private String gatewayPrefix;
@@ -115,22 +81,22 @@ public class AipStoragePlugin implements IStorageService {
     @Override
     public <T extends AbstractEntity<?>> T storeAIP(T toPersist) {
         try {
-            AIPCollection collection = new AIPCollection();
+            final AIPCollection collection = new AIPCollection();
             FeignSecurityManager.asSystem();
 
             collection.add(getBuilder(toPersist).build());
 
-            ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
+            final ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
             handleClientAIPResponse(response.getStatusCode(), toPersist, response.getBody());
-        } catch (ModuleException e) {
+        } catch (final ModuleException e) {
             LOGGER.error("The AIP entity {} can not be store by microservice storage", toPersist.getIpId(), e);
             toPersist.setStateAip(EntityAipState.AIP_STORE_ERROR);
-        } catch (HttpClientErrorException e) {
+        } catch (final HttpClientErrorException e) {
             // Handle non 2xx or 404 status code
             List<RejectedAip> rejectedAips = null;
             if (e.getStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY) {
                 @SuppressWarnings("serial")
-                TypeToken<List<RejectedAip>> bodyTypeToken = new TypeToken<List<RejectedAip>>() {
+                final TypeToken<List<RejectedAip>> bodyTypeToken = new TypeToken<List<RejectedAip>>() {
                 };
                 rejectedAips = gson.fromJson(e.getResponseBodyAsString(), bodyTypeToken.getType());
             }
@@ -148,11 +114,11 @@ public class AipStoragePlugin implements IStorageService {
         try {
             FeignSecurityManager.asSystem();
 
-            AIP aip = getBuilder(toUpdate).build();
+            final AIP aip = getBuilder(toUpdate).build();
 
             response = aipClient.updateAip(toUpdate.getIpId().toString(), aip);
             handleClientAIPResponse(response.getStatusCode(), toUpdate, response.getBody());
-        } catch (ModuleException e) {
+        } catch (final ModuleException e) {
             LOGGER.error("The AIP entity {} can not be update by microservice storage", toUpdate.getIpId(), e);
             toUpdate.setStateAip(EntityAipState.AIP_STORE_ERROR);
         } finally {
@@ -166,24 +132,26 @@ public class AipStoragePlugin implements IStorageService {
     public void deleteAIP(AbstractEntity<?> toDelete) {
         FeignSecurityManager.asSystem();
 
-        ResponseEntity<String> response = aipClient.deleteAip(toDelete.getIpId().toString());
+        final ResponseEntity<String> response = aipClient.deleteAip(toDelete.getIpId().toString());
         handleClientAIPDeleteResponse(response.getStatusCode(), toDelete, response.getBody());
         FeignSecurityManager.reset();
     }
 
     /**
-     * Build an {@link AIPBuilder} for an entity that can be
-     * a {@link EntityType#COLLECTION}, {@link EntityType#DATASET} or {@link EntityType#DOCUMENT}.
+     * Build an {@link AIPBuilder} for an entity that can be a
+     * {@link EntityType#COLLECTION}, {@link EntityType#DATASET} or
+     * {@link EntityType#DOCUMENT}.
      *
-     * @param entity the {@link AbstractEntity} for which to build an {@link AIPBuilder}
+     * @param entity the {@link AbstractEntity} for which to build an
+     *               {@link AIPBuilder}
      * @return the created {@link AIPBuilder}
      * @throws ModuleException
      */
     private <T extends AbstractEntity<?>> AIPBuilder getBuilder(T entity) throws ModuleException {
-        AIPBuilder builder = new AIPBuilder(entity.getIpId(), Optional.empty(), entity.getProviderId(),
-                entity.getFeature().getEntityType(), DAM_SESSION);
+        final AIPBuilder builder = new AIPBuilder(entity.getIpId(), Optional.empty(), entity.getProviderId(),
+                entity.getFeature().getEntityType(), getSession(entity));
 
-        if ((entity.getTags() != null) && (entity.getTags().size() > 0)) {
+        if (entity.getTags() != null && entity.getTags().size() > 0) {
             builder.addTags(entity.getTags().toArray(new String[entity.getTags().size()]));
         }
 
@@ -199,7 +167,7 @@ public class AipStoragePlugin implements IStorageService {
         builder.addDescriptiveInformation(STATIC_PPTY_LABEL, entity.getLabel());
 
         // Add dynamic properties
-        if ((entity.getProperties() != null) && (entity.getProperties().size() > 0)) {
+        if (entity.getProperties() != null && entity.getProperties().size() > 0) {
             entity.getProperties().stream().forEach(property -> {
                 builder.addDescriptiveInformation(property.getName(), gson.toJson(property.getValue()));
             });
@@ -209,10 +177,10 @@ public class AipStoragePlugin implements IStorageService {
         builder.setGeometry(entity.getGeometry());
 
         // Propagate files
-        if ((entity.getFiles() != null) && (entity.getFiles().size() > 0)) {
+        if (entity.getFiles() != null && entity.getFiles().size() > 0) {
             try {
-                for (DataFile dataFile : entity.getFiles().values()) {
-                    ContentInformationBuilder ciBuilder = builder.getContentInformationBuilder();
+                for (final DataFile dataFile : entity.getFiles().values()) {
+                    final ContentInformationBuilder ciBuilder = builder.getContentInformationBuilder();
                     // Manage reference
                     if (dataFile.isReference()) {
                         ciBuilder.setDataObjectReference(dataFile.getDataType(), dataFile.getFilename(),
@@ -225,7 +193,7 @@ public class AipStoragePlugin implements IStorageService {
                     ciBuilder.setSyntax(dataFile.getMimeType());
                     builder.addContentInformation();
                 }
-            } catch (MalformedURLException e) {
+            } catch (final MalformedURLException e) {
                 LOGGER.error("Error building data object for entity {}", entity.getIpId());
                 throw new ModuleException(e);
             }
@@ -234,47 +202,9 @@ public class AipStoragePlugin implements IStorageService {
         return builder;
     }
 
-    // FIXME remove
-    // private URL toPublicDescription(UniformResourceName owningAip) throws MalformedURLException {
-    // // Lets reconstruct the public url of rs-dam
-    // // First lets get the public hostname from rs-admin-instance
-    // String projectHost = projectsClient.retrieveProject(runtimeTenantResolver.getTenant()).getBody().getContent()
-    // .getHost();
-    //
-    // // now lets add it the gateway prefix and the microservice name and the endpoint path to it
-    // StringBuilder sb = new StringBuilder();
-    // sb.append(projectHost);
-    // sb.append(SLASH);
-    // sb.append(gatewayPrefix);
-    // sb.append(SLASH);
-    // sb.append(microserviceName);
-    // sb.append(SLASH);
-    //
-    // if (owningAip.getEntityType().equals(EntityType.COLLECTION)) {
-    // sb.append(PATH_COLLECTIONS);
-    // } else if (owningAip.getEntityType().equals(EntityType.DATASET)) {
-    // sb.append(PATH_DATASETS);
-    // } else if (owningAip.getEntityType().equals(EntityType.DOCUMENT)) {
-    // sb.append(PATH_DOCUMENTS);
-    // }
-    //
-    // sb.append(owningAip.toString());
-    // sb.append(PATH_FILE);
-    // sb.append("?");
-    // sb.append(SCOPE_PARAM);
-    // sb.append(runtimeTenantResolver.getTenant());
-    //
-    // if (owningAip.getEntityType().equals(EntityType.DATASET)) {
-    // sb.append("&");
-    // sb.append(TOKEN_PARAM);
-    // // FIXME sys role?
-    // sb.append(jwtService.generateToken(runtimeTenantResolver.getTenant(), microserviceName,
-    // RoleAuthority.getSysRole(microserviceName)));
-    // }
-    //
-    // URL downloadUrl = new URL(sb.toString());
-    // return downloadUrl;
-    // }
+    private <T extends AbstractEntity<?>> String getSession(T entity) {
+        return "DAM " + entity.getType();
+    }
 
     private void handleClientAIPResponse(HttpStatus status, AbstractEntity<?> entity, List<RejectedAip> rejectedAips) {
         LOGGER.info("status=" + status.toString());

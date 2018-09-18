@@ -171,8 +171,8 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") final Long datasetId)
             throws ModuleException {
-        Dataset dataset = service.load(datasetId);
-        Resource<Dataset> resource = toResource(dataset);
+        final Dataset dataset = service.load(datasetId);
+        final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -199,7 +199,7 @@ public class DatasetController implements IResourceController<Dataset> {
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") final Long datasetId) throws ModuleException {
         try {
             service.delete(datasetId);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             // Ugliest method to manage constraints on entites which are associated to this datasource but because
             // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
             // do things cleanly so let's be pigs and do shit without any problems....
@@ -243,7 +243,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
     public ResponseEntity<Void> dissociate(@PathVariable("dataset_id") final Long datasetId,
-            @Valid @RequestBody final Set<UniformResourceName> toBeDissociated) throws ModuleException {
+            @Valid @RequestBody final Set<String> toBeDissociated) throws ModuleException {
         service.dissociate(datasetId, toBeDissociated);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -258,7 +258,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     @ResourceAccess(description = "associate the list of entities to the dataset")
     public ResponseEntity<Void> associate(@PathVariable("dataset_id") final Long datasetId,
-            @Valid @RequestBody final Set<UniformResourceName> toBeAssociatedWith) throws ModuleException {
+            @Valid @RequestBody final Set<String> toBeAssociatedWith) throws ModuleException {
         service.associate(datasetId, toBeAssociatedWith);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -312,10 +312,10 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestBody Query query) throws ModuleException {
         // we have to add "q=" to be able to parse the query
         try {
-            ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
-            ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
+            final ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
+            final ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
             return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
-        } catch (OpenSearchParseException e) {
+        } catch (final OpenSearchParseException e) {
             LOG.error(e.getMessage(), e);
             return ResponseEntity.ok(new Validity(false));
         }

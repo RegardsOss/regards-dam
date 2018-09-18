@@ -174,7 +174,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public U load(UniformResourceName ipId) throws ModuleException {
-        U entity = repository.findOneByIpId(ipId);
+        final U entity = repository.findOneByIpId(ipId);
         if (entity == null) {
             throw new EntityNotFoundException(ipId.toString(), this.getClass());
         }
@@ -184,7 +184,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public U load(Long id) throws ModuleException {
         Assert.notNull(id, "Entity identifier is required");
-        U entity = repository.findById(id);
+        final U entity = repository.findById(id);
         if (entity == null) {
             throw new EntityNotFoundException(id, this.getClass());
         }
@@ -193,7 +193,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public U loadWithRelations(UniformResourceName ipId) throws ModuleException {
-        U entity = repository.findByIpId(ipId);
+        final U entity = repository.findByIpId(ipId);
         if (entity == null) {
             throw new EntityNotFoundException(ipId.toString(), this.getClass());
         }
@@ -217,7 +217,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public Page<U> search(String label, Pageable pageRequest) {
-        EntitySpecifications<U> spec = new EntitySpecifications<>();
+        final EntitySpecifications<U> spec = new EntitySpecifications<>();
         return repository.findAll(spec.search(label), pageRequest);
     }
 
@@ -234,7 +234,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
         // Load model by name if id not specified
-        if ((model.getId() == null) && (model.getName() != null)) {
+        if (model.getId() == null && model.getName() != null) {
             model = modelService.getModelByName(model.getName());
             entity.setModel(model);
         }
@@ -251,18 +251,18 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
             AbstractEntity<?> entity) {
 
-        AttributeModel attModel = modelAttribute.getAttribute();
+        final AttributeModel attModel = modelAttribute.getAttribute();
 
-        List<Validator> validators = new ArrayList<>();
+        final List<Validator> validators = new ArrayList<>();
         // Check computation mode
         validators.add(new ComputationModeValidator(modelAttribute.getMode(), attributeKey));
         // Check alterable attribute
         // Update mode only :
         if (manageAlterable && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
-            AbstractEntity<?> fromDb = entityRepository.findByIpId(entity.getIpId());
-            AbstractAttribute<?> valueFromDb = extractProperty(fromDb, attModel);
-            AbstractAttribute<?> valueFromEntity = extractProperty(entity, attModel);
+            final AbstractEntity<?> fromDb = entityRepository.findByIpId(entity.getIpId());
+            final AbstractAttribute<?> valueFromDb = extractProperty(fromDb, attModel);
+            final AbstractAttribute<?> valueFromEntity = extractProperty(entity, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
             validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, valueFromDb, valueFromEntity));
         }
@@ -276,9 +276,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     protected AbstractAttribute<?> extractProperty(AbstractEntity<?> entity, AttributeModel attribute) {
-        Fragment fragment = attribute.getFragment();
-        String attName = attribute.getName();
-        String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
+        final Fragment fragment = attribute.getFragment();
+        final String attName = attribute.getName();
+        final String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
         return entity.getProperty(attPath);
     }
 
@@ -291,10 +291,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> attMap, String namespace,
             Set<AbstractAttribute<?>> attributes) {
         if (attributes != null) {
-            for (AbstractAttribute<?> att : attributes) {
+            for (final AbstractAttribute<?> att : attributes) {
                 // Compute value
                 if (ObjectAttribute.class.equals(att.getClass())) {
-                    ObjectAttribute o = (ObjectAttribute) att;
+                    final ObjectAttribute o = (ObjectAttribute) att;
                     buildAttributeMap(attMap, att.getName(), o.getValue());
                 } else {
                     // Compute key
@@ -314,7 +314,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * @param ipIds UniformResourceName Set representing AbstractEntity to be associated to pCollection
      */
     @Override
-    public void associate(Long pEntityId, Set<UniformResourceName> ipIds) throws EntityNotFoundException {
+    public void associate(Long pEntityId, Set<String> ipIds) throws EntityNotFoundException {
         final U entity = repository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId, this.getClass());
@@ -339,7 +339,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         }
 
         // IpIds of entities that will need an AMQP event publishing
-        Set<UniformResourceName> updatedIpIds = new HashSet<>();
+        final Set<UniformResourceName> updatedIpIds = new HashSet<>();
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         this.manageGroups(entity, updatedIpIds);
 
@@ -354,14 +354,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public void dissociate(Long entityId, Set<UniformResourceName> ipIds) throws EntityNotFoundException {
+    public void dissociate(Long entityId, Set<String> ipIds) throws EntityNotFoundException {
         final U entity = repository.findById(entityId);
         if (entity == null) {
             throw new EntityNotFoundException(entityId, this.getClass());
         }
         // Removing tags to detached entity
         em.detach(entity);
-        entity.removeTags(ipIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        entity.removeTags(ipIds);
         final U entityInDb = repository.findById(entityId);
         // And detach it too because it is the other one that will be persisted
         em.detach(entityInDb);
@@ -374,12 +374,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * @param ipIds ipId URNs of entities that need an Event publication onto AMQP
      */
     private void publishEvents(EventType eventType, Set<UniformResourceName> ipIds) {
-        UniformResourceName[] datasetsIpIds = ipIds.stream().filter(ipId -> ipId.getEntityType() == EntityType.DATASET)
-                .toArray(n -> new UniformResourceName[n]);
+        final UniformResourceName[] datasetsIpIds = ipIds.stream()
+                .filter(ipId -> ipId.getEntityType() == EntityType.DATASET).toArray(n -> new UniformResourceName[n]);
         if (datasetsIpIds.length > 0) {
             publisher.publish(new DatasetEvent(datasetsIpIds));
         }
-        UniformResourceName[] notDatasetsIpIds = ipIds.stream()
+        final UniformResourceName[] notDatasetsIpIds = ipIds.stream()
                 .filter(ipId -> ipId.getEntityType() != EntityType.DATASET).toArray(n -> new UniformResourceName[n]);
         if (notDatasetsIpIds.length > 0) {
             publisher.publish(new NotDatasetEntityEvent(notDatasetsIpIds));
@@ -395,19 +395,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     private <T extends AbstractEntity<?>> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
         // Search Datasets and collections which tag this entity (if entity is a collection)
         if (entity instanceof Collection) {
-            List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
-            for (AbstractEntity<?> e : taggingEntities) {
-                if ((e instanceof Dataset) || (e instanceof Collection)) {
+            final List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
+            for (final AbstractEntity<?> e : taggingEntities) {
+                if (e instanceof Dataset || e instanceof Collection) {
                     entity.getGroups().addAll(e.getGroups());
                 }
             }
         }
 
         // If entity is a collection or a dataset => propagate its groups to tagged collections (recursively)
-        if (((entity instanceof Collection) || (entity instanceof Dataset)) && !entity.getTags().isEmpty()) {
-            List<AbstractEntity<?>> taggedColls = entityRepository
+        if ((entity instanceof Collection || entity instanceof Dataset) && !entity.getTags().isEmpty()) {
+            final List<AbstractEntity<?>> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
-            for (AbstractEntity<?> coll : taggedColls) {
+            for (final AbstractEntity<?> coll : taggedColls) {
                 if (coll.getGroups().addAll(entity.getGroups())) {
                     // If collection has already been updated, stop recursion !!! (else StackOverflow)
                     updatedIpIds.add(coll.getIpId());
@@ -438,9 +438,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
      */
     private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
-        U entityInDb = repository.findById(pEntityId);
+        final U entityInDb = repository.findById(pEntityId);
         em.detach(entityInDb);
-        if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
+        if (entityInDb == null || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         if (!pEntityId.equals(pEntity.getId())) {
@@ -453,7 +453,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public U update(Long pEntityId, U pEntity) throws ModuleException {
         // checks
-        U entityInDb = checkUpdate(pEntityId, pEntity);
+        final U entityInDb = checkUpdate(pEntityId, pEntity);
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
@@ -476,12 +476,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * @return updated entity with group set correclty
      */
     private U updateWithoutCheck(U entity, U entityInDb) {
-        Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
-        Set<UniformResourceName> newLinks = extractUrns(entity.getTags());
-        Set<String> oldGroups = entityInDb.getGroups();
-        Set<String> newGroups = entity.getGroups();
+        final Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
+        final Set<UniformResourceName> newLinks = extractUrns(entity.getTags());
+        final Set<String> oldGroups = entityInDb.getGroups();
+        final Set<String> newGroups = entity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
-        Set<UniformResourceName> updatedIpIds = new HashSet<>();
+        final Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
@@ -492,25 +492,26 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             entity.setStateAip(EntityAipState.AIP_TO_UPDATE);
         }
 
-        U updated = repository.save(entity);
+        final U updated = repository.save(entity);
 
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {
-            Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
+            final Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
             // For all previously tagged entities, retrieve all groups...
-            Set<String> groupsToRemove = new HashSet<>();
-            List<AbstractEntity<?>> taggedEntitiesWithGroupsToRemove = entityRepository.findByIpIdIn(tagsToRemove);
+            final Set<String> groupsToRemove = new HashSet<>();
+            final List<AbstractEntity<?>> taggedEntitiesWithGroupsToRemove = entityRepository
+                    .findByIpIdIn(tagsToRemove);
             taggedEntitiesWithGroupsToRemove.forEach(e -> groupsToRemove.addAll(e.getGroups()));
             // ... delete all these groups on all collections...
-            for (String group : groupsToRemove) {
-                List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
+            for (final String group : groupsToRemove) {
+                final List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
                 collectionsWithGroup.forEach(c -> c.getGroups().remove(group));
                 collectionsWithGroup.forEach(collectionRepository::save);
                 // Add collections to IpIds to be published on AMQP
                 collectionsWithGroup.forEach(c -> updatedIpIds.add(c.getIpId()));
                 // ... then manage concerned groups on all datasets containing them
-                List<Dataset> datasetsWithGroup = datasetRepository.findByGroups(group);
+                final List<Dataset> datasetsWithGroup = datasetRepository.findByGroups(group);
                 datasetsWithGroup.forEach(ds -> this.manageGroups(ds, updatedIpIds));
                 datasetsWithGroup.forEach(datasetRepository::save);
                 // Add datasets to IpIds to be published on AMQP
@@ -533,19 +534,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public U delete(Long pEntityId) throws ModuleException {
         Assert.notNull(pEntityId, "Entity identifier is required");
-        U toDelete = load(pEntityId);
+        final U toDelete = load(pEntityId);
         return delete(toDelete);
     }
 
     protected U delete(U toDelete) throws ModuleException {
-        UniformResourceName urn = toDelete.getIpId();
+        final UniformResourceName urn = toDelete.getIpId();
         // IpId URNs that will need an AMQP event publishing
-        Set<UniformResourceName> updatedIpIds = new HashSet<>();
+        final Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Manage tags (must be done before group managing to avoid bad propagation)
         // Retrieve all entities tagging the one to delete
         final List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(urn.toString());
         // Manage tags
-        for (AbstractEntity<?> taggingEntity : taggingEntities) {
+        for (final AbstractEntity<?> taggingEntity : taggingEntities) {
             // remove tag to ipId
             taggingEntity.removeTags(Arrays.asList(urn.toString()));
         }
@@ -554,12 +555,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         taggingEntities.forEach(e -> updatedIpIds.add(e.getIpId()));
 
         // datasets that contain one of the entity groups
-        Set<Dataset> datasets = new HashSet<>();
+        final Set<Dataset> datasets = new HashSet<>();
         // If entity contains groups => update all entities tagging this entity (recursively)
         // Need to manage groups one by one
-        for (String group : ((AbstractEntity<?>) toDelete).getGroups()) {
+        for (final String group : ((AbstractEntity<?>) toDelete).getGroups()) {
             // Find all collections containing group.
-            List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
+            final List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
             // Remove group from collections groups
             collectionsWithGroup.stream().filter(c -> !c.equals(toDelete)).forEach(c -> c.getGroups().remove(group));
             // Find all datasets containing this group (to rebuild groups propagation later)
@@ -568,7 +569,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // Remove dataset to delete from datasets (no need to manage its groups)
         datasets.remove(toDelete);
         // Remove relate files
-        for (Map.Entry<DataType, DataFile> entry : toDelete.getFiles().entries()) {
+        for (final Map.Entry<DataType, DataFile> entry : toDelete.getFiles().entries()) {
             if (localStorageService.isFileLocallyStored(toDelete, entry.getValue())) {
                 localStorageService.removeFile(toDelete, entry.getValue());
             }
@@ -617,7 +618,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     private static DeletedEntity createDeletedEntity(AbstractEntity<?> entity) {
-        DeletedEntity delEntity = new DeletedEntity();
+        final DeletedEntity delEntity = new DeletedEntity();
         delEntity.setCreationDate(entity.getCreationDate());
         delEntity.setDeletionDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         delEntity.setIpId(entity.getIpId());
@@ -629,10 +630,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, List<DataFile> refs,
             String fileUriTemplate) throws ModuleException {
 
-        U entity = loadWithRelations(urn);
+        final U entity = loadWithRelations(urn);
         // Store files locally
-        java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
-                                                                               fileUriTemplate);
+        final java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
+                                                                                     fileUriTemplate);
         // Merge previous files with new ones
         if (entity.getFiles().get(dataType) != null) {
             entity.getFiles().get(dataType).addAll(files);
@@ -642,7 +643,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
         // Merge references
         if (refs != null) {
-            for (DataFile ref : refs) {
+            for (final DataFile ref : refs) {
                 // Same logic as for normal file is applied to check format support
                 ContentTypeValidator.supportsForReference(dataType, ref.getFilename(), ref.getMimeType().toString());
                 // Compute checksum on URI for removal
@@ -651,7 +652,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                                                                      LocalStorageService.DIGEST_ALGORITHM));
                     ref.setDigestAlgorithm(LocalStorageService.DIGEST_ALGORITHM);
                 } catch (NoSuchAlgorithmException | IOException e) {
-                    String message = String.format("Error while computing checksum");
+                    final String message = String.format("Error while computing checksum");
                     LOGGER.error(message, e);
                     throw new ModuleException(message, e);
                 }
@@ -669,17 +670,17 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public DataFile getFile(UniformResourceName urn, String checksum) throws ModuleException {
 
-        U entity = load(urn);
+        final U entity = load(urn);
         // Search data file
-        Multimap<DataType, DataFile> files = entity.getFiles();
-        for (Map.Entry<DataType, DataFile> entry : files.entries()) {
+        final Multimap<DataType, DataFile> files = entity.getFiles();
+        for (final Map.Entry<DataType, DataFile> entry : files.entries()) {
             if (checksum.equals(entry.getValue().getChecksum())) {
                 return entry.getValue();
             }
         }
 
-        String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
-                                       urn.toString());
+        final String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
+                                             urn.toString());
         LOGGER.error(message);
         throw new EntityNotFoundException(message);
     }
@@ -687,9 +688,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException {
 
-        U entity = load(urn);
+        final U entity = load(urn);
         // Retrieve data file
-        DataFile dataFile = getFile(urn, checksum);
+        final DataFile dataFile = getFile(urn, checksum);
         if (localStorageService.isFileLocallyStored(entity, dataFile)) {
             localStorageService.getFileContent(checksum, output);
         } else {
@@ -700,9 +701,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Override
     public U removeFile(UniformResourceName urn, String checksum) throws ModuleException {
 
-        U entity = load(urn);
+        final U entity = load(urn);
         // Retrieve data file
-        DataFile dataFile = getFile(urn, checksum);
+        final DataFile dataFile = getFile(urn, checksum);
         // Try to remove the file if locally stored, otherwise the file is not stored on this microservice
         if (localStorageService.isFileLocallyStored(entity, dataFile)) {
             localStorageService.removeFile(entity, dataFile);
@@ -719,12 +720,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             return null;
         }
 
-        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        final List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
             return (IStorageService) PluginUtils.getPlugin(parameters, ttt, new HashMap<>());
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             logger.error(e.getMessage());
         }
 
@@ -732,11 +733,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     private void deleteAipStorage(U entity) {
-        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
             return;
         }
 
-        IStorageService storageService = getStorageService();
+        final IStorageService storageService = getStorageService();
 
         if (storageService == null) {
             return;

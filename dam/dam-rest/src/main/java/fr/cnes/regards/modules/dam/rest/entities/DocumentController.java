@@ -44,7 +44,6 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
@@ -171,7 +170,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResponseBody
     @ResourceAccess(description = "Dissociate a document from  a list of entities")
     public ResponseEntity<Void> dissociate(@PathVariable("document_id") Long id,
-            @Valid @RequestBody Set<UniformResourceName> toBeDissociated) throws ModuleException {
+            @Valid @RequestBody Set<String> toBeDissociated) throws ModuleException {
         documentService.dissociate(id, toBeDissociated);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -187,7 +186,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResponseBody
     @ResourceAccess(description = "Associate the document of id document_id to the list of entities in parameter")
     public ResponseEntity<Void> associate(@PathVariable("document_id") Long id,
-            @Valid @RequestBody Set<UniformResourceName> toBeAssociatedWith) throws ModuleException {
+            @Valid @RequestBody Set<String> toBeAssociatedWith) throws ModuleException {
         documentService.associate(id, toBeAssociatedWith);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
