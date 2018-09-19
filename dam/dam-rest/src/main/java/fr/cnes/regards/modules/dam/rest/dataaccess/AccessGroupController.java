@@ -46,6 +46,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
+import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 
 /**
  * Controller REST handling requests about {@link AccessGroup}s to the data
@@ -80,6 +81,9 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
 
     @Autowired
     private IAccessGroupService accessGroupService;
+
+    @Autowired
+    private IAccessRightService accessRightService;
 
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "send the whole list of accessGroups")
@@ -162,19 +166,19 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     }
 
     @Override
-    public Resource<AccessGroup> toResource(final AccessGroup pElement, final Object... pExtras) {
-        final Resource<AccessGroup> resource = resourceService.toResource(pElement);
+    public Resource<AccessGroup> toResource(AccessGroup accessGroup, Object... pExtras) {
+        Resource<AccessGroup> resource = resourceService.toResource(accessGroup);
         resourceService.addLink(resource, this.getClass(), "retrieveAccessGroup", LinkRels.SELF,
-                                MethodParamFactory.build(String.class, pElement.getName()));
+                                MethodParamFactory.build(String.class, accessGroup.getName()));
         resourceService.addLink(resource, this.getClass(), "updateAccessGroup", LinkRels.UPDATE,
-                                MethodParamFactory.build(String.class, pElement.getName()),
+                                MethodParamFactory.build(String.class, accessGroup.getName()),
                                 MethodParamFactory.build(AccessGroup.class));
-        if (pElement.getUsers().isEmpty()) {
+        if (accessGroup.getUsers().isEmpty() && !accessRightService.hasAccessRights(accessGroup)) {
             resourceService.addLink(resource, this.getClass(), "deleteAccessGroup", LinkRels.DELETE,
-                                    MethodParamFactory.build(String.class, pElement.getName()));
+                                    MethodParamFactory.build(String.class, accessGroup.getName()));
         }
         resourceService.addLink(resource, this.getClass(), "createAccessGroup", LinkRels.CREATE,
-                                MethodParamFactory.build(AccessGroup.class, pElement));
+                                MethodParamFactory.build(AccessGroup.class, accessGroup));
         return resource;
     }
 }

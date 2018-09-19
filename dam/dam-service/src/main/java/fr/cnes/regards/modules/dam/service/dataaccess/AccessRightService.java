@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.google.common.base.Preconditions;
 
@@ -101,6 +102,13 @@ public class AccessRightService implements IAccessRightService {
         Dataset dataset = datasetService.load(datasetIpId);
 
         return repository.findAccessRightByAccessGroupAndDataset(ag, dataset);
+    }
+
+    @Override
+    public boolean hasAccessRights(AccessGroup accessGroup) {
+        Assert.notNull(accessGroup, "Access group is required");
+        Page<AccessRight> accessRights = repository.findAllByAccessGroup(accessGroup, new PageRequest(0, 1));
+        return accessRights.getTotalElements() > 0;
     }
 
     @Override

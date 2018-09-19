@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
@@ -54,6 +55,11 @@ public interface IAccessRightService {
      */
     Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
             throws ModuleException;
+
+    /**
+     * Check if access group is still linked to at least one access right
+     */
+    boolean hasAccessRights(AccessGroup accessGroup);
 
     /**
      * Retrieve groups access levels of a specified dataset
