@@ -290,6 +290,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
             // Manage geometries
             if (feature.getGeometry() != null) {
+                // This geometry has been set by plugin, IT IS NOT NORMALIZED
                 IGeometry geometry = feature.getGeometry();
                 if (feature.getCrs().isPresent() && (!feature.getCrs().get().equals(Crs.WGS_84.toString()))) {
                     try {
@@ -306,6 +307,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     // be done
                     dataObject.setWgs84(geometry);
                 }
+                // Don't forget to normalize initial geometry
+                feature.setGeometry(GeoHelper.normalize(geometry));
             }
 
             dataObjects.add(dataObject);
