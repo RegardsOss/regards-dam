@@ -732,7 +732,7 @@ public class GeoHelperTest {
      */
     @Test
     @Ignore
-    public void reverseConsetellationTest() throws IOException {
+    public void reverseConstellationTest() throws IOException {
         String constellation =
                 "15.08333  00.00000 LIB  O\n" + "14.66667  00.00000 LIB  O\n" + "14.66667 -08.00000 LIB  O\n"
                         + "14.25000 -08.00000 LIB  O\n" + "14.25000 -22.00000 LIB  O\n" + "14.25000 -24.50000 LIB  O\n"

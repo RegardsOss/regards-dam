@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -38,6 +39,8 @@ import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -68,6 +71,9 @@ public class GeometryIT {
 
     @Autowired
     private Gson gson;
+
+    @Autowired
+    private ProjectGeoSettings geoSettings;
 
     private Model collectionModel;
 
@@ -419,6 +425,28 @@ public class GeometryIT {
         Collection coll = new Collection(collectionModel, TENANT, "TOTO", "collection");
         coll.setGeometry(polygon);
         coll.setWgs84(GeoHelper.normalize(polygon));
+        System.out.println(gson.toJson(coll.getWgs84(), IGeometry.class));
+        esRepos.save(TENANT, coll);
+
+        esRepos.refresh(TENANT);
+    }
+
+    @Test
+    public void testConstellation() {
+        Mockito.when(geoSettings.getShouldManagePolesOnGeometries()).thenReturn(true);
+        Mockito.when(geoSettings.getCrs()).thenReturn(Crs.ASTRO);
+        IGeometry polygon = IGeometry
+                .simplePolygon(-164.1794, 76.3289, -163.9025, 69.3294, -149.3492, 69.3991, -149.1794, 65.3997,
+                               -124.6704, 65.6023, -124.9494, 69.6009, -112.1589, 69.7383, -112.7793, 74.7348, -98.4634,
+                               74.9033, -99.7821, 79.8953, -92.344, 79.9857, -98.2778, 85.9496, -51.279, 86.4656,
+                               -51.6686, 86.6306, -16.4893, 86.8369, -20.739, 88.6639, 0.9483, 88.6092, 24.7077,
+                               88.3564, 57.6647, 88.0063, 135.8325, 87.5689, 130.4028, 86.0975, -146.977, 85.9308,
+                               -143.2171, 79.445, -156.1908, 79.3629, -155.843, 76.3638);
+        System.out.println(gson.toJson(polygon, IGeometry.class));
+        Collection coll = new Collection(collectionModel, TENANT, "TITI", "Corvus");
+        coll.setGeometry(GeoHelper.normalize(polygon));
+        IGeometry wgs84Geometry = GeoHelper.transform(coll.getGeometry(), Crs.ASTRO, Crs.WGS_84);
+        coll.setWgs84(GeoHelper.normalize(wgs84Geometry));
         System.out.println(gson.toJson(coll.getWgs84(), IGeometry.class));
         esRepos.save(TENANT, coll);
 

@@ -607,7 +607,7 @@ public class GeoHelper {
     private static double[][] normalizePolygonAroundNorthPole(double[][] exteriorRing) {
         // Search for north hemisphere right border longitude (max longitude) and left border longitude (immediate
         // after max)
-        int idxMaxLon = maxNorthHemisphereLongitudeIndex(exteriorRing);
+        int idxMaxLon = eastmostAfterMaxLatitudeNorthHemisphereIndex(exteriorRing);
         int idxLeftBorderAfterMaxLon = (idxMaxLon + 1) % exteriorRing.length;
         // Be careful: if idxMaxLon is exteriorRing.length - 1, index 0 corresponds to same point
         // if index 0 is max longitude, idxMaxLon should have been 0 so we are here in case that it is the
@@ -686,11 +686,29 @@ public class GeoHelper {
         return pointList.toArray(new double[pointList.size()][]);
     }
 
-    private static int maxNorthHemisphereLongitudeIndex(double[][] lineString) {
+    /**
+     * @return index of northern point from LineString
+     */
+    private static int northernIndex(double[][] lineString) {
         int idxMaxLon = 0;
         for (int i = 0; i < lineString.length; i++) {
-            // Take the "rightest" max (except if it is at index 0 which means it is already the rightest, think as
-            // cycle array
+            if ((lineString[i][0] > 0.0) && (lineString[i][1] > lineString[idxMaxLon][1])) {
+                idxMaxLon = i;
+            }
+        }
+        return idxMaxLon;
+    }
+
+    /**
+     * @return index of eastmost after northern point from lineString
+     */
+    private static int eastmostAfterMaxLatitudeNorthHemisphereIndex(double[][] lineString) {
+        int startIdx = northernIndex(lineString);
+
+        int idxMaxLon = startIdx;
+        for (int i = startIdx; i < lineString.length; i++) {
+            // Take the "eastmost" max (except if it is at index 0 which means it is already the rightest, think as
+            // cycle array)
             if ((lineString[i][1] > 0.0) && ((lineString[i][0] > lineString[idxMaxLon][0])
                     || ((lineString[i][0] == lineString[idxMaxLon][0])) && (i != 0))) {
                 idxMaxLon = i;

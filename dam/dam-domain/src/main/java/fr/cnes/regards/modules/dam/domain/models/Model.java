@@ -60,7 +60,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     /**
      * Name min size
      */
-    public static final int NAME_MIN_SIZE = 3;
+    public static final int NAME_MIN_SIZE = 1;
 
     /**
      * Name max size
