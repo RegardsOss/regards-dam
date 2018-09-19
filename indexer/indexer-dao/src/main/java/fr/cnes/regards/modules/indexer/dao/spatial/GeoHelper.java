@@ -528,7 +528,12 @@ public class GeoHelper {
     }
 
     public static double[][][] normalizePolygonAsArray(double[][][] polygonAsArray) {
-        double[][] exteriorRing = polygonAsArray[0];
+        polygonAsArray[0] = normalizeExteriorRing(polygonAsArray[0]);
+        return polygonAsArray;
+    }
+
+    private static double[][] normalizeExteriorRing(double[][] inExteriorRing) {
+        double[][] exteriorRing = Arrays.copyOf(inExteriorRing, inExteriorRing.length);
         // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
         // cross dateline better than 0 line)
         if ((exteriorRing[0][0] > -180) && (exteriorRing[0][0] <= -90)) {
@@ -560,20 +565,27 @@ public class GeoHelper {
             // reaching median latitude then reach the left border point.
             if (!goesThroughNorthPole(exteriorRing)) {
                 if (!goesThroughSouthPole(exteriorRing)) {
-                    SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(exteriorRing);
+                    // BEWARE: use inExteriorRing !! not exteriorRing, Hipparchus is better than all of us !!
+                    SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(inExteriorRing);
                     // North Pole is inside polygon
+                    boolean northPoleIn = false;
                     if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
                         LOGGER.trace("NORTH POLE is inside polygon");
                         exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
+                        northPoleIn = true;
                     }
                     // South Pole is inside polygon
                     if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
                         LOGGER.trace("SOUTH POLE is inside polygon");
-                        // Work with ecuadorian symetric polygon as if north pole is south pole
-                        exteriorRing = getSymetricPolygon(
-                                normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                        if (!northPoleIn) {
+                            // Only South pole, best way is to apply whole algorithm on ecuadorian symetric polygon
+                            return getSymetricPolygon(normalizeExteriorRing(getSymetricPolygon(inExteriorRing)));
+                        } else { // Both poles...ouch, this will be tricky...but who knows...
+                            // Work with ecuadorian symetric polygon as if north pole is south pole
+                            exteriorRing = getSymetricPolygon(
+                                    normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                        }
                     }
-                    polygonAsArray[0] = exteriorRing;
                 }
             }
         }
@@ -581,7 +593,7 @@ public class GeoHelper {
         if (!exteriorRing[exteriorRing.length - 1].equals(exteriorRing[0])) {
             exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
         }
-        return polygonAsArray;
+        return exteriorRing;
     }
 
     /**

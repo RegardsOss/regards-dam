@@ -436,16 +436,13 @@ public class GeometryIT {
         Mockito.when(geoSettings.getShouldManagePolesOnGeometries()).thenReturn(true);
         Mockito.when(geoSettings.getCrs()).thenReturn(Crs.ASTRO);
         IGeometry polygon = IGeometry
-                .simplePolygon(-164.1794, 76.3289, -163.9025, 69.3294, -149.3492, 69.3991, -149.1794, 65.3997,
-                               -124.6704, 65.6023, -124.9494, 69.6009, -112.1589, 69.7383, -112.7793, 74.7348, -98.4634,
-                               74.9033, -99.7821, 79.8953, -92.344, 79.9857, -98.2778, 85.9496, -51.279, 86.4656,
-                               -51.6686, 86.6306, -16.4893, 86.8369, -20.739, 88.6639, 0.9483, 88.6092, 24.7077,
-                               88.3564, 57.6647, 88.0063, 135.8325, 87.5689, 130.4028, 86.0975, -146.977, 85.9308,
-                               -143.2171, 79.445, -156.1908, 79.3629, -155.843, 76.3638);
+                .simplePolygon(1.5334, -81.804, 1.5663, -74.304, -8.0022, -74.3125, -36.8152, -74.4545, -85.8049,
+                               -74.9745, -83.134, -82.4583, -150.8889, -83.1201, 111.6521, -82.7759, 109.0197, -85.2614,
+                               48.2329, -84.5554, 50.0917, -82.0645);
         System.out.println(gson.toJson(polygon, IGeometry.class));
-        Collection coll = new Collection(collectionModel, TENANT, "TITI", "Corvus");
+        Collection coll = new Collection(collectionModel, TENANT, "TITI", "Octans");
         coll.setGeometry(GeoHelper.normalize(polygon));
-        IGeometry wgs84Geometry = GeoHelper.transform(coll.getGeometry(), Crs.ASTRO, Crs.WGS_84);
+        IGeometry wgs84Geometry = GeoHelper.transform(polygon, Crs.ASTRO, Crs.WGS_84);
         coll.setWgs84(GeoHelper.normalize(wgs84Geometry));
         System.out.println(gson.toJson(coll.getWgs84(), IGeometry.class));
         esRepos.save(TENANT, coll);
