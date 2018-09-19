@@ -86,13 +86,13 @@ public class CrawlerConfiguration {
     }
 
     @Bean
-    IAttributeFinder attributeFinder() {
+    public IAttributeFinder attributeFinder() {
         return Mockito.mock(IAttributeFinder.class);
     }
 
     @Primary
     @Bean
-    ProjectGeoSettings getProjectGeoSettings() {
+    public ProjectGeoSettings getProjectGeoSettings() {
         ProjectGeoSettings p = Mockito.mock(ProjectGeoSettings.class);
         return p;
     }
