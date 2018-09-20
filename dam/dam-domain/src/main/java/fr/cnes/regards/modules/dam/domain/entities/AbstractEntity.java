@@ -263,6 +263,13 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setTags(tags);
     }
 
+    public void addTags(Collection<String> tags) {
+        this.tags.addAll(tags);
+        // Propagate to feature
+        feature.addTags(tags);
+    }
+
+
     public void addTags(String... tags) {
         Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags.addAll(Arrays.asList(tags));

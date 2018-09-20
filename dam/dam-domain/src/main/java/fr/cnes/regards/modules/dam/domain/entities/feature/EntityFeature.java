@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.feature;
 
+import javax.persistence.Transient;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,17 +28,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.persistence.Transient;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-
 import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -168,6 +166,10 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
 
     public void addTags(String... tags) {
         this.tags.addAll(Arrays.asList(tags));
+    }
+
+    public void addTags(Collection<String> tags) {
+        this.tags.addAll(tags);
     }
 
     public void removeTags(Collection<String> tags) {
