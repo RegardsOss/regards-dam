@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import fr.cnes.regards.modules.indexer.dao.EsRepository;
  *
  * @author oroussel
  */
+@Ignore("not testable nor in local nor on jenkins")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { MultitenantConfiguration.class })
 public class MultiTenantCrawlerIT {
