@@ -120,7 +120,7 @@ public class GeometryTest {
         // Assert.assertEquals(1, page.getTotalElements());
         // Assert.assertEquals("LS2", page.getContent().get(0).getLabel());
         // Assert.assertTrue("LS2 should have been transformed into MultiLineString",
-        // page.getContent().get(0).getGeometry() instanceof MultiLineString);
+        // page.getContent().get(0).getNormalizedGeometry() instanceof MultiLineString);
         // Assert.assertTrue("LS2 should have been transformed into MultiLineString",
         // page.getContent().get(0).getWgs84() instanceof MultiLineString);
 

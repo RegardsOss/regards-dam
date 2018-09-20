@@ -139,10 +139,10 @@ public class GeometryIT {
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.POINT);
-        Assert.assertTrue(collFromDB.getGeometry() instanceof Point);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry().getType() == GeoJsonType.POINT);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry() instanceof Point);
 
-        Point point = (Point) collFromDB.getGeometry();
+        Point point = (Point) collFromDB.getNormalizedGeometry();
         Assert.assertEquals(IGeometry.position(41.12, -71.34), point.getCoordinates());
     }
 
@@ -156,8 +156,8 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.POINT);
-        Point point = (Point) collFromEs.getGeometry();
+        Assert.assertTrue(collFromEs.getNormalizedGeometry().getType() == GeoJsonType.POINT);
+        Point point = (Point) collFromEs.getNormalizedGeometry();
         Assert.assertEquals(IGeometry.position(41.12, -71.34), point.getCoordinates());
     }
 
@@ -170,9 +170,9 @@ public class GeometryIT {
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.MULTIPOINT);
-        Assert.assertTrue(collFromDB.getGeometry() instanceof MultiPoint);
-        multipoint = (MultiPoint) collFromDB.getGeometry();
+        Assert.assertTrue(collFromDB.getNormalizedGeometry().getType() == GeoJsonType.MULTIPOINT);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry() instanceof MultiPoint);
+        multipoint = (MultiPoint) collFromDB.getNormalizedGeometry();
 
         double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
         Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
@@ -184,9 +184,9 @@ public class GeometryIT {
         collService.create(collection2);
 
         final Collection coll2FromDB = collService.load(collection2.getId());
-        Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeoJsonType.LINESTRING);
-        Assert.assertTrue(coll2FromDB.getGeometry() instanceof LineString);
-        lineString = (LineString) coll2FromDB.getGeometry();
+        Assert.assertTrue(coll2FromDB.getNormalizedGeometry().getType() == GeoJsonType.LINESTRING);
+        Assert.assertTrue(coll2FromDB.getNormalizedGeometry() instanceof LineString);
+        lineString = (LineString) coll2FromDB.getNormalizedGeometry();
         Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
@@ -202,8 +202,8 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTIPOINT);
-        multipoint = collFromEs.getGeometry();
+        Assert.assertTrue(collFromEs.getNormalizedGeometry().getType() == GeoJsonType.MULTIPOINT);
+        multipoint = collFromEs.getNormalizedGeometry();
 
         double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
         Assert.assertArrayEquals(ref1, multipoint.getCoordinates().toArray());
@@ -217,8 +217,8 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection coll2FromEs = esRepos.get(TENANT, collection2);
-        Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeoJsonType.LINESTRING);
-        lineString = (LineString) coll2FromEs.getGeometry();
+        Assert.assertTrue(coll2FromEs.getNormalizedGeometry().getType() == GeoJsonType.LINESTRING);
+        lineString = (LineString) coll2FromEs.getNormalizedGeometry();
         Assert.assertArrayEquals(ref1, lineString.getCoordinates().toArray());
 
     }
@@ -235,9 +235,9 @@ public class GeometryIT {
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.MULTILINESTRING);
-        Assert.assertTrue(collFromDB.getGeometry() instanceof MultiLineString);
-        geometry = collFromDB.getGeometry();
+        Assert.assertTrue(collFromDB.getNormalizedGeometry().getType() == GeoJsonType.MULTILINESTRING);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry() instanceof MultiLineString);
+        geometry = collFromDB.getNormalizedGeometry();
 
         double[][] ref1 = { { 41.12, -71.34 }, { 42., -72. } };
         Assert.assertArrayEquals(ref1, geometry.getCoordinates().get(0).toArray());
@@ -256,7 +256,7 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTILINESTRING);
+        Assert.assertTrue(collFromEs.getNormalizedGeometry().getType() == GeoJsonType.MULTILINESTRING);
 
         collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         // Polygon with hole defined using http://geojson.io
@@ -277,8 +277,8 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection coll2FromEs = esRepos.get(TENANT, collection2);
-        Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeoJsonType.POLYGON);
-        Assert.assertTrue(coll2FromEs.getGeometry() instanceof Polygon);
+        Assert.assertTrue(coll2FromEs.getNormalizedGeometry().getType() == GeoJsonType.POLYGON);
+        Assert.assertTrue(coll2FromEs.getNormalizedGeometry() instanceof Polygon);
     }
 
     @Test
@@ -296,8 +296,8 @@ public class GeometryIT {
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertTrue(collFromDB.getGeometry().getType() == GeoJsonType.MULTIPOLYGON);
-        Assert.assertTrue(collFromDB.getGeometry() instanceof MultiPolygon);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry().getType() == GeoJsonType.MULTIPOLYGON);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry() instanceof MultiPolygon);
     }
 
     @Test
@@ -316,7 +316,7 @@ public class GeometryIT {
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertTrue(collFromEs.getGeometry().getType() == GeoJsonType.MULTIPOLYGON);
+        Assert.assertTrue(collFromEs.getNormalizedGeometry().getType() == GeoJsonType.MULTIPOLYGON);
     }
 
     @Test
@@ -327,14 +327,14 @@ public class GeometryIT {
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
-        Assert.assertTrue(collFromDB.getGeometry() instanceof Unlocated);
+        Assert.assertTrue(collFromDB.getNormalizedGeometry() instanceof Unlocated);
 
         // Index creation with geometry mapping
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
-        Assert.assertTrue(collFromEs.getGeometry() instanceof Unlocated);
+        Assert.assertTrue(collFromEs.getNormalizedGeometry() instanceof Unlocated);
     }
 
     @Test

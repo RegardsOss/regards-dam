@@ -678,7 +678,7 @@ public class EsRepository implements IEsRepository {
                 List<T> inOuterCircleEntities = new ArrayList<>();
                 for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
                     if (entity instanceof ILocalizable) {
-                        IGeometry shape = ((ILocalizable) entity).getGeometry();
+                        IGeometry shape = ((ILocalizable) entity).getNormalizedGeometry();
                         if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
                             inOuterCircleEntities.add(entity);
                         } else {

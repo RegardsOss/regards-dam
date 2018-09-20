@@ -168,10 +168,10 @@ public class SearchServiceTest {
         boolean ended = false;
         do {
             for (DataObject object : page.getContent()) {
-                if (!GeoHelper.isNearer(object.getGeometry(), center, distance, Crs.MARS_49900)) {
+                if (!GeoHelper.isNearer(object.getNormalizedGeometry(), center, distance, Crs.MARS_49900)) {
                     errorCount++;
-                    if (object.getGeometry() instanceof Point) {
-                        Point point = object.getGeometry();
+                    if (object.getNormalizedGeometry() instanceof Point) {
+                        Point point = object.getNormalizedGeometry();
                         double error = GeoHelper.getDistance(point.getCoordinates().getLongitude(),
                                                              point.getCoordinates().getLatitude(), center[0], center[1],
                                                              Crs.MARS_49900)
@@ -218,10 +218,10 @@ public class SearchServiceTest {
             for (DataObject object : page.getContent()) {
                 System.out.println(object.getFeature().getGeometry());
                 //
-                // if (!GeoHelper.isNearer(object.getGeometry(), center, distance, Crs.MARS_49900)) {
+                // if (!GeoHelper.isNearer(object.getNormalizedGeometry(), center, distance, Crs.MARS_49900)) {
                 // errorCount++;
-                // if (object.getGeometry() instanceof Point) {
-                // Point point = object.getGeometry();
+                // if (object.getNormalizedGeometry() instanceof Point) {
+                // Point point = object.getNormalizedGeometry();
                 // double error = GeoHelper.getDistance(point.getCoordinates().getLongitude(),
                 // point.getCoordinates().getLatitude(), center[0], center[1],
                 // Crs.MARS_49900) - distance;

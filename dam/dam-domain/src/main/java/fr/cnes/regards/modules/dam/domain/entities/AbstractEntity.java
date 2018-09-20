@@ -366,6 +366,10 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     @Override
     @SuppressWarnings("unchecked")
+    public <T extends IGeometry> T getNormalizedGeometry() {
+        return (T) feature.getNormalizedGeometry();
+    }
+
     public <T extends IGeometry> T getGeometry() {
         return (T) feature.getGeometry();
     }

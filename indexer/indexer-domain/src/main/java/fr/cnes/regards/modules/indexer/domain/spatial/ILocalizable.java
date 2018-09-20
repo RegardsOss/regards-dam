@@ -25,5 +25,5 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
  * @author oroussel
  */
 public interface ILocalizable {
-    <T extends IGeometry> T getGeometry();
+    <T extends IGeometry> T getNormalizedGeometry();
 }

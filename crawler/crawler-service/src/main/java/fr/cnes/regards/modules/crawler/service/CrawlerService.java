@@ -307,8 +307,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     // be done
                     dataObject.setWgs84(geometry);
                 }
-                // Don't forget to normalize initial geometry
-                feature.setGeometry(GeoHelper.normalize(geometry));
+                // Don't forget to set normalized geometry
+                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
             }
 
             dataObjects.add(dataObject);

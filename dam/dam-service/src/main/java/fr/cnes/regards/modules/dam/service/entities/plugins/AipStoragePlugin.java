@@ -174,7 +174,7 @@ public class AipStoragePlugin implements IStorageService {
         }
 
         // Propagate geometry
-        builder.setGeometry(entity.getGeometry());
+        builder.setGeometry(entity.getNormalizedGeometry());
 
         // Propagate files
         if (entity.getFiles() != null && entity.getFiles().size() > 0) {

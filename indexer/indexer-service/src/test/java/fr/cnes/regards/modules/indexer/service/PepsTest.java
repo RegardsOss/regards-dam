@@ -311,15 +311,15 @@ public class PepsTest {
             List<DataObject> objectsFromPeps) {
         // most polygons from Peps have an area betwwen 1e10 and 1e11
         // A polygon with an area > 1e12 means there is a problem (polygon crossing dateline)
-        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12)
-                || !GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bboxPolygon), objectsFromEs, objectsFromPeps);
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12)
+                || !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bboxPolygon), objectsFromEs, objectsFromPeps);
     }
 
     private void checkResults(double[][] bbox1Polygon, double[][] bbox2Polygon, List<DataObject> objectsFromEs,
             List<DataObject> objectsFromPeps) {
-        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getGeometry())) > 1.e12)
-                || (!GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bbox1Polygon)
-                        && !GeoGeometry.overlap(GeoUtil.toArray(o.getGeometry()), bbox2Polygon)),
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12)
+                || (!GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox1Polygon)
+                        && !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox2Polygon)),
                      objectsFromEs, objectsFromPeps);
     }
 
@@ -330,7 +330,7 @@ public class PepsTest {
                 .collect(Collectors.toSet());
         if (!badPepsResults.isEmpty()) {
             System.out.printf("Peps returned %d false positive data objects: %s\n", badPepsResults.size(),
-                              badPepsResults.stream().map(o -> o.toString() + ", " + o.getGeometry().toString())
+                              badPepsResults.stream().map(o -> o.toString() + ", " + o.getNormalizedGeometry().toString())
                                       .collect(Collectors.joining("\n")));
             objectsFromPeps.removeAll(badPepsResults);
         }
@@ -339,7 +339,7 @@ public class PepsTest {
         Set<DataObject> badEsResults = objectsFromEs.stream().filter(intersectPredicate).collect(Collectors.toSet());
         if (!badEsResults.isEmpty()) {
             System.out.printf("Elasticsearch returned %d false positive data objects: %s\n", badEsResults.size(),
-                              badEsResults.stream().map(o -> o.toString() + ", " + o.getGeometry().toString())
+                              badEsResults.stream().map(o -> o.toString() + ", " + o.getNormalizedGeometry().toString())
                                       .collect(Collectors.joining("\n")));
             objectsFromEs.removeAll(badEsResults);
         }

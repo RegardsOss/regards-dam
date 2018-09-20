@@ -236,7 +236,7 @@ public class PostgisVsElasticSearchTest {
             for (Iterator<Integer> i = postgisIds.iterator(); i.hasNext(); ) {
                 Integer id = i.next();
                 double trueDistance = GeoHelper.getDistance(
-                        repos.search(searchKey, 1, ICriterion.eq("id", id)).getContent().get(0).getGeometry(), center,
+                        repos.search(searchKey, 1, ICriterion.eq("id", id)).getContent().get(0).getNormalizedGeometry(), center,
                         Crs.MARS_49900);
                 if (trueDistance > 50_000.0) {
                     System.out

@@ -49,7 +49,6 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBu
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.rest.entities.CollectionController;
 import fr.cnes.regards.modules.dam.rest.models.ModelController;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
@@ -233,7 +232,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts = new HashSet<>();
         Collection newCollection = new Collection(model1, getDefaultTenant(), "NEW1", "newone");
         newCollection.setCreationDate(collection.getCreationDate());
-        newCollection.setGeometry(collection.getGeometry());
+        newCollection.setGeometry(collection.getNormalizedGeometry());
         newCollection.setGroups(collection.getGroups());
         newCollection.setId(collection.getId());
         newCollection.setIpId(collection.getIpId());
@@ -277,7 +276,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts = new HashSet<>();
         Collection optionalAltered = new Collection(model, getDefaultTenant(), "COL2", "optionalAltered");
         optionalAltered.setCreationDate(optionalNonAlterable.getCreationDate());
-        optionalAltered.setGeometry(optionalNonAlterable.getGeometry());
+        optionalAltered.setGeometry(optionalNonAlterable.getNormalizedGeometry());
         optionalAltered.setGroups(optionalNonAlterable.getGroups());
         optionalAltered.setId(optionalNonAlterable.getId());
         optionalAltered.setIpId(optionalNonAlterable.getIpId());
@@ -312,7 +311,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection optionalAlteredNotGiven = new Collection(model, getDefaultTenant(), "COL4",
                 "optionalAlteredNotGiven");
         optionalAlteredNotGiven.setCreationDate(optionalNotGivenNonAlterable.getCreationDate());
-        optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getGeometry());
+        optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getNormalizedGeometry());
         optionalAlteredNotGiven.setGroups(optionalNotGivenNonAlterable.getGroups());
         optionalAlteredNotGiven.setId(optionalNotGivenNonAlterable.getId());
         optionalAlteredNotGiven.setIpId(optionalNotGivenNonAlterable.getIpId());

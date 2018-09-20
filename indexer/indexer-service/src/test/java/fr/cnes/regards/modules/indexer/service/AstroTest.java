@@ -252,7 +252,7 @@ public class AstroTest {
         } catch (RuntimeException e) {
             System.out.println("Cannot save " + constMap.get(curConstellation));
             e.printStackTrace();
-            System.out.println(gson.toJson(object.getGeometry(), Polygon.class));
+            System.out.println(gson.toJson(object.getNormalizedGeometry(), Polygon.class));
             System.out.println(gson.toJson(object.getWgs84(), Polygon.class));
         }
     }
