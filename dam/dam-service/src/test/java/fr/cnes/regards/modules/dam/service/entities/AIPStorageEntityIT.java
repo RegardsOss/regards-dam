@@ -45,7 +45,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -65,10 +64,6 @@ import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
-import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
-import fr.cnes.regards.modules.dam.service.entities.LocalStorageService;
 import fr.cnes.regards.modules.dam.service.entities.plugins.AipStoragePlugin;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
@@ -336,7 +331,7 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
-        dataset1.setGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
+        dataset1.setNormalizedGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
                                                   IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));

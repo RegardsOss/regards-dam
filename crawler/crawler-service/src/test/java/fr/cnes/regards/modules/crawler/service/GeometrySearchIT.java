@@ -1,10 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -89,12 +88,12 @@ public class GeometrySearchIT {
         // Setting a geometry onto collection
         final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "COLB202",
                 "collection on b202 office room");
-        collectionOnB202.setGeometry(p202);
+        collectionOnB202.setNormalizedGeometry(p202);
         collectionOnB202.setWgs84(p202);
 
         final Collection collectionOnB259 = new Collection(collectionModel, TENANT, "COLB100",
                 "collection on b100 office room");
-        collectionOnB259.setGeometry(p259);
+        collectionOnB259.setNormalizedGeometry(p259);
         collectionOnB259.setWgs84(p259);
 
         this.save(collectionOnB202, collectionOnB259);
@@ -124,17 +123,17 @@ public class GeometrySearchIT {
         Point nearEastNorthPolePoint = IGeometry.point(IGeometry.position(175., 85.));
 
         final Collection collNorthPole = new Collection(collectionModel, TENANT, "COLNORTH", "North Pole");
-        collNorthPole.setGeometry(northPolePoint);
+        collNorthPole.setNormalizedGeometry(northPolePoint);
         collNorthPole.setWgs84(northPolePoint);
 
         final Collection collNearWestNorthPole = new Collection(collectionModel, TENANT, "COLWEST",
                 "West near North Pole");
-        collNearWestNorthPole.setGeometry(nearWestNorthPolePoint);
+        collNearWestNorthPole.setNormalizedGeometry(nearWestNorthPolePoint);
         collNearWestNorthPole.setWgs84(nearWestNorthPolePoint);
 
         final Collection collNearEastNorthPole = new Collection(collectionModel, TENANT, "COLEAST",
                 "East near North Pole");
-        collNearEastNorthPole.setGeometry(nearEastNorthPolePoint);
+        collNearEastNorthPole.setNormalizedGeometry(nearEastNorthPolePoint);
         collNearEastNorthPole.setWgs84(nearEastNorthPolePoint);
 
         this.save(collNorthPole, collNearWestNorthPole, collNearEastNorthPole);
@@ -155,12 +154,12 @@ public class GeometrySearchIT {
         double[] eastPole = new double[] { 180., 0. };
         Point eastPolePoint = IGeometry.point(IGeometry.position(180., 0.));
         Collection collEastPole = new Collection(collectionModel, TENANT, "COLEAST", "East Pole");
-        collEastPole.setGeometry(eastPolePoint);
+        collEastPole.setNormalizedGeometry(eastPolePoint);
         collEastPole.setWgs84(eastPolePoint);
 
         Point honoluluPoint = IGeometry.point(IGeometry.position(201.005859375 - 360., 21.53484700204879));
         Collection collHonolulu = new Collection(collectionModel, TENANT, "HONO", "Honolulu");
-        collHonolulu.setGeometry(honoluluPoint);
+        collHonolulu.setNormalizedGeometry(honoluluPoint);
         collHonolulu.setWgs84(honoluluPoint);
 
         this.save(collEastPole, collHonolulu);
@@ -178,7 +177,7 @@ public class GeometrySearchIT {
         // Setting a geometry onto collection
         final Collection collectionOnB202 = new Collection(collectionModel, TENANT, "COLB202",
                 "collection on b202 office room");
-        collectionOnB202.setGeometry(p202);
+        collectionOnB202.setNormalizedGeometry(p202);
         collectionOnB202.setWgs84(p202);
 
         this.save(collectionOnB202);

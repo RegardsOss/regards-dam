@@ -146,7 +146,7 @@ public class PostgisVsElasticSearchTest {
                     object.setIpId(
                             new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
                     geometry.setCrs(Crs.MARS_49900.toString());
-                    object.setGeometry(geometry);
+                    object.setNormalizedGeometry(geometry);
                     object.setWgs84(toWgs84(geometry));
                     dos.add(object);
 

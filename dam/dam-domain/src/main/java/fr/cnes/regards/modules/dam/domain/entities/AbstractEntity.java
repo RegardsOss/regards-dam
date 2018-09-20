@@ -370,6 +370,10 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         return (T) feature.getNormalizedGeometry();
     }
 
+    public void setNormalizedGeometry(IGeometry geometry) {
+        feature.setNormalizedGeometry(geometry);
+    }
+
     public <T extends IGeometry> T getGeometry() {
         return (T) feature.getGeometry();
     }
@@ -377,6 +381,8 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     public void setGeometry(IGeometry geometry) {
         feature.setGeometry(geometry);
     }
+
+
 
     @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getWgs84() {

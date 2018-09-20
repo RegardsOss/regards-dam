@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
-import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -53,6 +51,7 @@ import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
 
 /**
@@ -98,7 +97,7 @@ public class SearchServiceTest {
                         1));
                 Point point = IGeometry.point(EsHelper.scaled(lon), EsHelper.scaled(lat))
                         .withCrs(Crs.MARS_49900.toString());
-                object.setGeometry(point);
+                object.setNormalizedGeometry(point);
                 object.setWgs84(toWgs84(point));
                 dos.add(object);
             }
@@ -125,7 +124,7 @@ public class SearchServiceTest {
                         1));
                 Polygon polygon = IGeometry.simplePolygon(lon, lat, lon + 1, lat, lon + 1, lat + 1, lon, lat + 1)
                         .withCrs(Crs.MARS_49900.toString());
-                object.setGeometry(polygon);
+                object.setNormalizedGeometry(polygon);
                 object.setWgs84(toWgs84(polygon));
                 dos.add(object);
             }

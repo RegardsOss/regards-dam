@@ -340,7 +340,7 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         dataset1Updated.setLicence(dataset1.getLicence());
         dataset1Updated.setMetadata(dataset1.getMetadata());
         dataset1Updated.setOpenSearchSubsettingClause(dataset1.getOpenSearchSubsettingClause());
-        dataset1Updated.setGeometry(dataset1.getNormalizedGeometry());
+        dataset1Updated.setNormalizedGeometry(dataset1.getNormalizedGeometry());
         dataset1Updated.setId(dataset1.getId());
         dataset1Updated.setIpId(dataset1.getIpId());
         dataset1Updated.setLabel(dataset1.getLabel());

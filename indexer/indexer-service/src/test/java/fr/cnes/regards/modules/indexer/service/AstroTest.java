@@ -272,7 +272,7 @@ public class AstroTest {
         System.out.println("Saving " + label);
         DataObject object = new DataObject(model, TENANT, label, label);
         object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
-        object.setGeometry(GeoHelper.normalize(shape));
+        object.setNormalizedGeometry(GeoHelper.normalize(shape));
         object.getFeature().setCrs(Crs.ASTRO.toString());
         object.setWgs84(GeoHelper.normalize(shapeWgs84));
 

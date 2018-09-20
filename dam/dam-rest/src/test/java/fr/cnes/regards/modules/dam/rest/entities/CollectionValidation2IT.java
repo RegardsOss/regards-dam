@@ -232,7 +232,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts = new HashSet<>();
         Collection newCollection = new Collection(model1, getDefaultTenant(), "NEW1", "newone");
         newCollection.setCreationDate(collection.getCreationDate());
-        newCollection.setGeometry(collection.getNormalizedGeometry());
+        newCollection.setNormalizedGeometry(collection.getNormalizedGeometry());
         newCollection.setGroups(collection.getGroups());
         newCollection.setId(collection.getId());
         newCollection.setIpId(collection.getIpId());
@@ -276,7 +276,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts = new HashSet<>();
         Collection optionalAltered = new Collection(model, getDefaultTenant(), "COL2", "optionalAltered");
         optionalAltered.setCreationDate(optionalNonAlterable.getCreationDate());
-        optionalAltered.setGeometry(optionalNonAlterable.getNormalizedGeometry());
+        optionalAltered.setNormalizedGeometry(optionalNonAlterable.getNormalizedGeometry());
         optionalAltered.setGroups(optionalNonAlterable.getGroups());
         optionalAltered.setId(optionalNonAlterable.getId());
         optionalAltered.setIpId(optionalNonAlterable.getIpId());
@@ -311,7 +311,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection optionalAlteredNotGiven = new Collection(model, getDefaultTenant(), "COL4",
                 "optionalAlteredNotGiven");
         optionalAlteredNotGiven.setCreationDate(optionalNotGivenNonAlterable.getCreationDate());
-        optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getNormalizedGeometry());
+        optionalAlteredNotGiven.setNormalizedGeometry(optionalNotGivenNonAlterable.getNormalizedGeometry());
         optionalAlteredNotGiven.setGroups(optionalNotGivenNonAlterable.getGroups());
         optionalAlteredNotGiven.setId(optionalNotGivenNonAlterable.getId());
         optionalAlteredNotGiven.setIpId(optionalNotGivenNonAlterable.getIpId());

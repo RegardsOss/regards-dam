@@ -40,7 +40,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -55,7 +54,6 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBu
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.entities.plugins.AipStoragePlugin;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
@@ -195,7 +193,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
-        dataset1.setGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
+        dataset1.setNormalizedGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
                                                   IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));

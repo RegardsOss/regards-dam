@@ -135,7 +135,7 @@ public class GeometryIT {
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "COL", "collection with geometry");
-        collection.setGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
+        collection.setNormalizedGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
@@ -150,7 +150,7 @@ public class GeometryIT {
     public void testOnEsPoint() throws ModuleException, IOException {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "COL", "collection with geometry");
-        collection.setGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
+        collection.setNormalizedGeometry(IGeometry.point(IGeometry.position(41.12, -71.34)));
 
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
@@ -166,7 +166,7 @@ public class GeometryIT {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
-        collection.setGeometry(multipoint);
+        collection.setNormalizedGeometry(multipoint);
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
@@ -180,7 +180,7 @@ public class GeometryIT {
         collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         LineString lineString = IGeometry.lineString(
                 IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)));
-        collection2.setGeometry(lineString);
+        collection2.setNormalizedGeometry(lineString);
         collService.create(collection2);
 
         final Collection coll2FromDB = collService.load(collection2.getId());
@@ -196,7 +196,7 @@ public class GeometryIT {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
         MultiPoint multipoint = IGeometry.multiPoint(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.));
-        collection.setGeometry(multipoint);
+        collection.setNormalizedGeometry(multipoint);
 
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
@@ -211,7 +211,7 @@ public class GeometryIT {
         collection2 = new Collection(collectionModel, TENANT, "COL2", "another collection with geometry");
         LineString lineString = IGeometry.lineString(
                 IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)));
-        collection2.setGeometry(lineString);
+        collection2.setNormalizedGeometry(lineString);
 
         esRepos.save(TENANT, collection2);
         esRepos.refresh(TENANT);
@@ -231,7 +231,7 @@ public class GeometryIT {
         MultiLineString geometry = IGeometry.multiLineString(
                 IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)),
                 IGeometry.toLineStringCoordinates(IGeometry.position(39.12, -70.34), IGeometry.position(38., -70.)));
-        collection.setGeometry(geometry);
+        collection.setNormalizedGeometry(geometry);
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
@@ -249,7 +249,7 @@ public class GeometryIT {
     public void testOnEsMultiLineStringPolygon() throws ModuleException, IOException {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "COL1", "collection with geometry");
-        collection.setGeometry(IGeometry.multiLineString(
+        collection.setNormalizedGeometry(IGeometry.multiLineString(
                 IGeometry.toLineStringCoordinates(IGeometry.position(41.12, -71.34), IGeometry.position(42., -72.)),
                 IGeometry.toLineStringCoordinates(IGeometry.position(39.12, -70.34), IGeometry.position(38., -70.))));
         esRepos.save(TENANT, collection);
@@ -271,7 +271,7 @@ public class GeometryIT {
                 IGeometry.position(1.50787353515625, 43.58735421230633),
                 IGeometry.position(1.5085601806640625, 43.60823944964323),
                 IGeometry.position(1.47216796875, 43.608736628843445))));
-        collection2.setGeometry(polygon);
+        collection2.setNormalizedGeometry(polygon);
 
         esRepos.save(TENANT, collection2);
         esRepos.refresh(TENANT);
@@ -292,7 +292,7 @@ public class GeometryIT {
                 IGeometry.toLinearRingCoordinates(IGeometry.position(100.0, 0.0), IGeometry.position(101.0, 0.0),
                                                   IGeometry.position(101.0, 1.0), IGeometry.position(100.0, 1.0),
                                                   IGeometry.position(100.0, 0.0))));
-        collection.setGeometry(mp);
+        collection.setNormalizedGeometry(mp);
         collService.create(collection);
 
         final Collection collFromDB = collService.load(collection.getId());
@@ -310,7 +310,7 @@ public class GeometryIT {
                 IGeometry.toLinearRingCoordinates(IGeometry.position(100.0, 0.0), IGeometry.position(101.0, 0.0),
                                                   IGeometry.position(101.0, 1.0), IGeometry.position(100.0, 1.0),
                                                   IGeometry.position(100.0, 0.0))));
-        collection.setGeometry(mp);
+        collection.setNormalizedGeometry(mp);
 
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
@@ -423,7 +423,7 @@ public class GeometryIT {
                                -0.044186809693518486, 46.95837119466449, -0.038153345460296736, 46.98939008519809,
                                -0.06675773993609899, 46.99387700352016, -0.08113082448484565, 47.01267677238524);
         Collection coll = new Collection(collectionModel, TENANT, "TOTO", "collection");
-        coll.setGeometry(polygon);
+        coll.setNormalizedGeometry(polygon);
         coll.setWgs84(GeoHelper.normalize(polygon));
         System.out.println(gson.toJson(coll.getWgs84(), IGeometry.class));
         esRepos.save(TENANT, coll);
@@ -441,7 +441,7 @@ public class GeometryIT {
                                48.2329, -84.5554, 50.0917, -82.0645);
         System.out.println(gson.toJson(polygon, IGeometry.class));
         Collection coll = new Collection(collectionModel, TENANT, "TITI", "Octans");
-        coll.setGeometry(GeoHelper.normalize(polygon));
+        coll.setNormalizedGeometry(GeoHelper.normalize(polygon));
         IGeometry wgs84Geometry = GeoHelper.transform(polygon, Crs.ASTRO, Crs.WGS_84);
         coll.setWgs84(GeoHelper.normalize(wgs84Geometry));
         System.out.println(gson.toJson(coll.getWgs84(), IGeometry.class));
