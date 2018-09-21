@@ -26,12 +26,12 @@ import org.springframework.context.ApplicationEvent;
  * @author oroussel
  */
 public class MessageEvent extends ApplicationEvent {
-    private String tenant;
+    private final String tenant;
 
-    private String message;
+    private final String message;
 
     // Entity concerned by the message
-    private Long entityId;
+    private final Long entityId;
 
     public MessageEvent(Object source, String tenant, String message, Long entityId) {
         super(source);

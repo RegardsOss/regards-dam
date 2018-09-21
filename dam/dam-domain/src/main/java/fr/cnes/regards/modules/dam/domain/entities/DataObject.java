@@ -23,11 +23,9 @@ import java.util.Set;
 
 import org.springframework.util.Assert;
 
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  *

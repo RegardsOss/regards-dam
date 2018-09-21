@@ -86,7 +86,7 @@ public final class AttributeBuilder {
         switch (attributeType) {
             case INTEGER:
                 return (T) ((value instanceof Number) ? buildInteger(name, ((Number) value).intValue())
-                        : buildInteger(name, new Integer((String) value)));
+                        : buildInteger(name, Integer.valueOf((String) value)));
             case BOOLEAN:
                 return (T) ((value instanceof Boolean) ? buildBoolean(name, (Boolean) value)
                         : buildBoolean(name, Boolean.valueOf((String) value)));
@@ -129,7 +129,7 @@ public final class AttributeBuilder {
                 return (T) buildIntegerInterval(name, (Range<Integer>) value);
             case LONG:
                 return (T) ((value instanceof Number) ? buildLong(name, ((Number) value).longValue())
-                        : buildLong(name, new Long((String) value)));
+                        : buildLong(name, Long.valueOf((String) value)));
             case LONG_ARRAY:
                 if (value instanceof Collection) {
                     return (T) buildLongCollection(name, (Collection<Long>) value);

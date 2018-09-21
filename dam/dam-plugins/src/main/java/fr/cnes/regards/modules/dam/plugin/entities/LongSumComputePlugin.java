@@ -101,7 +101,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
         searchKey.setSearchIndex(tenantResolver.getTenant());
         Double doubleResult = esRepo.sum(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
         result = doubleResult.longValue();
-        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
                   dataset.getIpId().toString(), result);
     }
 

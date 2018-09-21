@@ -59,7 +59,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
      */
     public static final String PARAMETER_FRAGMENT_NAME = "parameterAttributeFragmentName";
 
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private IEsRepository esRepo;
 
@@ -145,7 +145,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
-        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
                   dataset.getIpId().toString(), result);
     }
 

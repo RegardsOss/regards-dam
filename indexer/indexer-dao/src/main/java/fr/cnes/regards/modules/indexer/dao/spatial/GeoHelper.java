@@ -590,7 +590,7 @@ public class GeoHelper {
             }
         }
         // Case of last longitude as 359.999999999 and first 0.0 for example, or -90 and 270, ...
-        if (!exteriorRing[exteriorRing.length - 1].equals(exteriorRing[0])) {
+        if (exteriorRing[exteriorRing.length - 1] != exteriorRing[0]) {
             exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
         }
         return exteriorRing;
