@@ -9,9 +9,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fr.cnes.regards.framework.module.manager.AbstractModuleConfigurationManager;
+import fr.cnes.regards.framework.module.manager.AbstractModuleManager;
 import fr.cnes.regards.framework.module.manager.ModuleConfiguration;
 import fr.cnes.regards.framework.module.manager.ModuleConfigurationItem;
+import fr.cnes.regards.framework.module.manager.ModuleReadinessReport;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -36,7 +37,7 @@ import fr.cnes.regards.modules.dam.service.models.exception.FragmentAttributeExc
  * @author Sylvain VISSIERE-GUERINET
  */
 @Component
-public class DamConfigurationManager extends AbstractModuleConfigurationManager {
+public class DamConfigurationManager extends AbstractModuleManager<Void> {
 
     public static final String PLUGIN_CONFIGURATION_ALREADY_EXISTS = "A plugin configuration already exists with same label, skipping import of %s.";
 
@@ -82,8 +83,7 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
                 try {
                     attributeModelService.createAttribute(attribute);
                 } catch (ModuleException e) {
-                    importErrors.add(String.format("Skipping import of AttributeModel %s: %s",
-                                                   attribute.getFullName(),
+                    importErrors.add(String.format("Skipping import of AttributeModel %s: %s", attribute.getFullName(),
                                                    e.getMessage()));
                     logger.error(e.getMessage(), e);
                 }
@@ -95,40 +95,33 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
                 // in case of EntityAlreadyExistsException, lets log import has been skipped
                 // in case of FragmentAttributeException, lets bind the fragment
                 // first, lets get the attribute from DB to get the id
-                assoc.setAttribute(attributeModelService.findByNameAndFragmentName(assoc.getAttribute().getName(),
-                                                                                   assoc.getAttribute().getFragment()
-                                                                                           == null ?
-                                                                                           null :
-                                                                                           assoc.getAttribute()
-                                                                                                   .getFragment()
-                                                                                                   .getName()));
+                assoc.setAttribute(attributeModelService
+                        .findByNameAndFragmentName(assoc.getAttribute().getName(),
+                                                   assoc.getAttribute().getFragment() == null ? null
+                                                           : assoc.getAttribute().getFragment().getName()));
                 try {
                     modelAttrAssocService.bindAttributeToModel(assoc.getModel().getName(), assoc);
                 } catch (EntityAlreadyExistsException e) {
                     // no rethrow or log of exception because we know what happened
-                    importErrors.add(String.format(
-                            "Association between model %s and attribute %s already exists, skipping import.",
-                            assoc.getModel().getName(),
-                            assoc.getAttribute().getFullName()));
+                    importErrors.add(String
+                            .format("Association between model %s and attribute %s already exists, skipping import.",
+                                    assoc.getModel().getName(), assoc.getAttribute().getFullName()));
                 } catch (FragmentAttributeException e1) {
                     // association reflects association between a model and a fragment so lets try to bind the fragment
                     try {
-                        modelAttrAssocService
-                                .bindNSAttributeToModel(assoc.getModel().getName(), assoc.getAttribute().getFragment());
+                        modelAttrAssocService.bindNSAttributeToModel(assoc.getModel().getName(),
+                                                                     assoc.getAttribute().getFragment());
                     } catch (ModuleException e) {
-                        importErrors.add(String.format(
-                                "Skipping import of association between model %s and fragment %s: %s",
-                                assoc.getModel().getName(),
-                                assoc.getAttribute().getFragment().getName(),
-                                e.getMessage()));
+                        importErrors.add(String
+                                .format("Skipping import of association between model %s and fragment %s: %s",
+                                        assoc.getModel().getName(), assoc.getAttribute().getFragment().getName(),
+                                        e.getMessage()));
                         logger.error(e.getMessage(), e);
                     }
                 } catch (ModuleException e) {
-                    importErrors.add(String.format(
-                            "Skipping import of association between model %s and attribute %s: %s",
-                            assoc.getModel().getName(),
-                            assoc.getAttribute().getFullName(),
-                            e.getMessage()));
+                    importErrors.add(String
+                            .format("Skipping import of association between model %s and attribute %s: %s",
+                                    assoc.getModel().getName(), assoc.getAttribute().getFullName(), e.getMessage()));
                     logger.error(e.getMessage(), e);
                 }
             }
@@ -146,8 +139,7 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
                                 connectionService.createDBConnection(plgConf);
                             } catch (ModuleException e) {
                                 importErrors.add(String.format("Skipping import of Data Storage %s: %s",
-                                                               plgConf.getLabel(),
-                                                               e.getMessage()));
+                                                               plgConf.getLabel(), e.getMessage()));
                                 logger.error(e.getMessage(), e);
                             }
                         } else {
@@ -157,17 +149,14 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
                                 } catch (ModuleException e) {
                                     // This should not occurs, but we never know
                                     importErrors.add(String.format("Skipping import of PluginConfiguration %s: %s",
-                                                                   plgConf.getLabel(),
-                                                                   e.getMessage()));
+                                                                   plgConf.getLabel(), e.getMessage()));
                                     logger.error(e.getMessage(), e);
                                 }
                             }
                         }
                     } else {
-                        importErrors.add(String.format(VALIDATION_ISSUES,
-                                                       plgConf.getLabel(),
-                                                       validationIssues.getMessages().stream()
-                                                               .collect(Collectors.joining(",", "", "."))));
+                        importErrors.add(String.format(VALIDATION_ISSUES, plgConf.getLabel(), validationIssues
+                                .getMessages().stream().collect(Collectors.joining(",", "", "."))));
                     }
                 }
             }
@@ -201,5 +190,10 @@ public class DamConfigurationManager extends AbstractModuleConfigurationManager 
             configurations.add(ModuleConfigurationItem.build(connection));
         }
         return ModuleConfiguration.build(info, configurations);
+    }
+
+    @Override
+    public ModuleReadinessReport<Void> isReady() {
+        return new ModuleReadinessReport<Void>(true, null, null);
     }
 }
