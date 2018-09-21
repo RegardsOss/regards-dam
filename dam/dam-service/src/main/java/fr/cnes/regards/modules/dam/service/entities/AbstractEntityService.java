@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -33,8 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -736,13 +734,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
             return;
         }
-
-        final IStorageService storageService = getStorageService();
-
-        if (storageService == null) {
-            return;
+        IStorageService storageService = getStorageService();
+        if (storageService != null) {
+            storageService.deleteAIP(entity);
         }
-
-        getStorageService().deleteAIP(entity);
     }
 }

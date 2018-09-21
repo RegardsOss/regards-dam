@@ -198,8 +198,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 BulkSaveResult bulkSaveResult = entityIndexerService
                         .mergeDataObjects(tenant, datasourceId, now, otherList);
                 if (bulkSaveResult.getInErrorDocsCount() > 0) {
-                    sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                              bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                    sendMessage(
+                            String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
                 }
                 sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
                             dsiId);
@@ -250,8 +251,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 BulkSaveResult bulkSaveResult = entityIndexerService
                         .createDataObjects(tenant, datasourceId, now, otherList);
                 if (bulkSaveResult.getInErrorDocsCount() > 0) {
-                    sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                              bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                    sendMessage(
+                            String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
                 }
                 sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
                             dsiId);
@@ -315,8 +317,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
 
         // Build decorated page
-        return new PageImpl<>(dataObjects, new PageRequest(new Long(page.getNumber()).intValue(),
-                                                           page.getSize() == 0 ? 1 : page.getSize()),
+        return new PageImpl<>(dataObjects, new PageRequest(page.getNumber(), page.getSize() == 0 ? 1 : page.getSize()),
                               page.getTotalElements());
     }
 

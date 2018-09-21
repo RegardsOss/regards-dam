@@ -91,7 +91,7 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
         result = esRepo.minDate(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
-        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
                   dataset.getIpId().toString(), result);
     }
 
