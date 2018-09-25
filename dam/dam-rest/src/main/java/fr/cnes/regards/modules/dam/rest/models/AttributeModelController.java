@@ -67,7 +67,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
     /**
      * Entity type mapping
      */
-    public static final String ENTITY_TYPE_MAPPING = "/modeltype/{pModelType}";
+    public static final String ENTITY_TYPE_MAPPING = "/modeltype/{modelType}";
 
     /**
      * Request parameter : attribute type
@@ -141,7 +141,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ENTITY_TYPE_MAPPING)
-    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(@PathVariable EntityType modelType) {
+    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(@PathVariable(name = "modelType") EntityType modelType) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(modelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
                 .collect(Collectors.toList());
@@ -171,7 +171,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long id) throws ModuleException {
+    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "id") final Long id) throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(id);
 
         attribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
@@ -187,7 +187,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Update an attribute")
     @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable final Long id,
+    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable(name = "id") final Long id,
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.updateAttribute(id, attributeModel)));
     }
@@ -199,7 +199,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Delete an attribute")
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Void> deleteAttribute(@PathVariable final Long id) throws ModuleException {
+    public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "id") final Long id) throws ModuleException {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
     }
