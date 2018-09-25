@@ -134,8 +134,8 @@ public class FragmentController implements IResourceController<Fragment> {
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Get a fragment")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}")
-    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable Long id) throws ModuleException {
+    @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}")
+    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.getFragment(id)));
     }
 
@@ -147,8 +147,8 @@ public class FragmentController implements IResourceController<Fragment> {
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Update a fragment")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pFragmentId}")
-    public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable Long id,
+    @RequestMapping(method = RequestMethod.PUT, value = "/{fragmentId}")
+    public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable(name = "fragmentId") Long id,
             @Valid @RequestBody Fragment fragment) throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.updateFragment(id, fragment)));
     }
@@ -160,8 +160,8 @@ public class FragmentController implements IResourceController<Fragment> {
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Delete a fragment")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pFragmentId}")
-    public ResponseEntity<Void> deleteFragment(@PathVariable Long id) throws ModuleException {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{fragmentId}")
+    public ResponseEntity<Void> deleteFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
         fragmentService.deleteFragment(id);
         return ResponseEntity.noContent().build();
     }
@@ -174,8 +174,8 @@ public class FragmentController implements IResourceController<Fragment> {
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Export a fragment")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/export")
-    public void exportFragment(HttpServletRequest request, HttpServletResponse response, @PathVariable Long fragmentId)
+    @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}/export")
+    public void exportFragment(HttpServletRequest request, HttpServletResponse response, @PathVariable(name = "fragmentId") Long fragmentId)
             throws ModuleException {
 
         Fragment fragment = fragmentService.getFragment(fragmentId);

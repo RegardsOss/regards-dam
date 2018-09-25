@@ -158,11 +158,11 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
-                .pathParameters(RequestDocumentation.parameterWithName("pFragmentId").description("Fragment identifier")
+                .pathParameters(RequestDocumentation.parameterWithName("fragmentId").description("Fragment identifier")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value("Number"), Attributes
                                 .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Should be a whole number"))));
 
-        final ResultActions resultActions = performDefaultGet(FragmentController.TYPE_MAPPING + "/{pFragmentId}/export",
+        final ResultActions resultActions = performDefaultGet(FragmentController.TYPE_MAPPING + "/{fragmentId}/export",
                                                               requestBuilderCustomizer, "Should return result",
                                                               defaultFragment.getId());
 
