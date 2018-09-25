@@ -79,7 +79,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     public static final String PARAM_FRAGMENT_NAME = "fragmentName";
 
-    public static final String ATTRIBUTE_MAPPING = "/{pAttributeId}";
+    public static final String ATTRIBUTE_MAPPING = "/{attributeId}";
 
     /**
      * Attribute service
@@ -171,7 +171,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "id") final Long id) throws ModuleException {
+    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "attributeId") final Long id) throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(id);
 
         attribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
@@ -187,7 +187,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Update an attribute")
     @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable(name = "id") final Long id,
+    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable(name = "attributeId") final Long id,
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.updateAttribute(id, attributeModel)));
     }
@@ -199,7 +199,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Delete an attribute")
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "id") final Long id) throws ModuleException {
+    public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "attributeId") final Long id) throws ModuleException {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
     }
