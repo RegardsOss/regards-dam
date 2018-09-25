@@ -18,13 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -104,32 +103,32 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Constructor
-     * @param pAttributeService Attribute service
+     * @param attributeModelService Attribute service
      * @param pResourceService Resource service
-     * @param pRestrictionService Restriction service
+     * @param restrictionService Restriction service
      */
-    public AttributeModelController(final IAttributeModelService pAttributeService,
-            final IResourceService pResourceService, IModelAttrAssocService pModelAttrAssocService,
-            final RestrictionService pRestrictionService) {
-        this.attributeService = pAttributeService;
+    public AttributeModelController(final IAttributeModelService attributeModelService,
+            final IResourceService pResourceService, IModelAttrAssocService modelAttrAssocService,
+            final RestrictionService restrictionService) {
+        this.attributeService = attributeModelService;
         this.resourceService = pResourceService;
-        this.restrictionService = pRestrictionService;
-        this.modelAttrAssocService = pModelAttrAssocService;
+        this.restrictionService = restrictionService;
+        this.modelAttrAssocService = modelAttrAssocService;
     }
 
     /**
      * Retrieve all attributes. The request can be filtered by {@link AttributeType}
-     * @param pType filter by type
-     * @param pFragmentName filter by fragment
+     * @param type filter by type
+     * @param fragmentName filter by fragment
      * @return list of {@link AttributeModel}
      */
     @ResourceAccess(description = "List all attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
-            @RequestParam(value = PARAM_TYPE, required = false) final AttributeType pType,
-            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) final String pFragmentName,
-            @RequestParam(name = "modelIds", required = false) final Set<Long> pModelIds) {
-        final List<AttributeModel> attributes = attributeService.getAttributes(pType, pFragmentName, pModelIds);
+            @RequestParam(value = PARAM_TYPE, required = false) AttributeType type,
+            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
+            @RequestParam(name = "modelIds", required = false) Set<Long> modelIds) {
+        List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds);
         // Build JSON path
         attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
@@ -137,14 +136,13 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
-     * @param pModelType filter
+     * @param modelType filter
      * @return a list of {@link Model}
      */
     @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ENTITY_TYPE_MAPPING)
-    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(
-            @PathVariable final EntityType pModelType) {
-        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(pModelType);
+    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(@PathVariable EntityType modelType) {
+        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(modelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
                 .collect(Collectors.toList());
         attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
@@ -154,28 +152,27 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Add a new attribute.
-     * @param pAttributeModel the attribute to create
+     * @param attributeModel the attribute to create
      * @return the created {@link AttributeModel}
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Add an attribute")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<AttributeModel>> addAttribute(
-            @Valid @RequestBody final AttributeModel pAttributeModel) throws ModuleException {
-        return ResponseEntity.ok(toResource(attributeService.addAttribute(pAttributeModel, false)));
+            @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(attributeService.addAttribute(attributeModel, false)));
     }
 
     /**
      * Get an attribute
-     * @param pAttributeId attribute identifier
+     * @param id attribute identifier
      * @return the retrieved {@link AttributeModel}
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long pAttributeId)
-            throws ModuleException {
-        AttributeModel attribute = attributeService.getAttribute(pAttributeId);
+    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long id) throws ModuleException {
+        AttributeModel attribute = attributeService.getAttribute(id);
 
         attribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         return ResponseEntity.ok(toResource(attribute));
@@ -183,39 +180,39 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Update an attribute
-     * @param pAttributeId attribute identifier
-     * @param pAttributeModel attribute
+     * @param id attribute identifier
+     * @param attributeModel attribute
      * @return the updated {@link AttributeModel}
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Update an attribute")
     @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable final Long pAttributeId,
-            @Valid @RequestBody final AttributeModel pAttributeModel) throws ModuleException {
-        return ResponseEntity.ok(toResource(attributeService.updateAttribute(pAttributeId, pAttributeModel)));
+    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable final Long id,
+            @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(attributeService.updateAttribute(id, attributeModel)));
     }
 
     /**
      * Delete an attribute
-     * @param pAttributeId attribute identifier
+     * @param id attribute identifier
      * @return nothing
      */
     @ResourceAccess(description = "Delete an attribute")
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Void> deleteAttribute(@PathVariable final Long pAttributeId) throws ModuleException {
-        attributeService.deleteAttribute(pAttributeId);
+    public ResponseEntity<Void> deleteAttribute(@PathVariable final Long id) throws ModuleException {
+        attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Get all restriction by {@link AttributeType}
-     * @param pType filter on attribute type
+     * @param type filter on attribute type
      * @return list of restriction name
      */
     @ResourceAccess(description = "List available restriction by attribute model type")
     @RequestMapping(method = RequestMethod.GET, value = "/restrictions")
-    public ResponseEntity<List<String>> getRestrictions(@RequestParam(value = "type") final AttributeType pType) {
-        return ResponseEntity.ok(restrictionService.getRestrictions(pType));
+    public ResponseEntity<List<String>> getRestrictions(@RequestParam(value = "type") final AttributeType type) {
+        return ResponseEntity.ok(restrictionService.getRestrictions(type));
     }
 
     /**
@@ -225,8 +222,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
     @ResourceAccess(description = "List all attribute model types")
     @RequestMapping(method = RequestMethod.GET, value = "/types")
     public ResponseEntity<List<String>> getAttributeTypes() {
-        final List<String> types = new ArrayList<>();
-        for (final AttributeType type : AttributeType.values()) {
+        List<String> types = new ArrayList<>();
+        for (AttributeType type : AttributeType.values()) {
             types.add(type.name());
         }
         return ResponseEntity.ok(types);
@@ -234,7 +231,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     @Override
     public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... pExtras) {
-        final Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
+        Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, attributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,

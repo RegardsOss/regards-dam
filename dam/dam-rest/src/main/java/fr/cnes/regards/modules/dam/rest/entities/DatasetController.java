@@ -18,16 +18,17 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -128,7 +129,6 @@ public class DatasetController implements IResourceController<Dataset> {
     /**
      * Create a dataset
      * @param dataset the dataset to create
-     * @param descriptionFile the description file
      * @param result for validation of entites' properties
      * @return the created dataset wrapped in an HTTP response
      */
@@ -153,11 +153,11 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
     public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(
-            @RequestParam(name = "label", required = false) String label, final Pageable pageable,
-            final PagedResourcesAssembler<Dataset> assembler) {
-
-        final Page<Dataset> datasets = service.search(label, pageable);
-        final PagedResources<Resource<Dataset>> resources = toPagedResources(datasets, assembler);
+            @RequestParam(name = "label", required = false) String label,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
+            PagedResourcesAssembler<Dataset> assembler) {
+        Page<Dataset> datasets = service.search(label, pageable);
+        PagedResources<Resource<Dataset>> resources = toPagedResources(datasets, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
     }
@@ -171,8 +171,8 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") final Long datasetId)
             throws ModuleException {
-        final Dataset dataset = service.load(datasetId);
-        final Resource<Dataset> resource = toResource(dataset);
+        Dataset dataset = service.load(datasetId);
+        Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -185,7 +185,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves a dataset", role = DefaultRole.INSTANCE_ADMIN)
     public ResponseEntity<Dataset> retrieveDataset(@PathVariable("dataset_ipId") final String datasetIpId)
             throws ModuleException {
-        final Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
+        Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
         return new ResponseEntity<>(dataset, HttpStatus.OK);
     }
 
@@ -228,8 +228,8 @@ public class DatasetController implements IResourceController<Dataset> {
         // Validate dynamic model
         service.validate(dataset, result, true);
 
-        final Dataset dataSet = service.update(datasetId, dataset);
-        final Resource<Dataset> resource = toResource(dataSet);
+        Dataset dataSet = service.update(datasetId, dataset);
+        Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -277,7 +277,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> urns,
             @RequestParam(name = "modelIds", required = false) final Set<Long> modelIds, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
-        final Page<AttributeModel> result = service.getDataAttributeModels(urns, modelIds, pageable);
+        Page<AttributeModel> result = service.getDataAttributeModels(urns, modelIds, pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 
@@ -295,16 +295,13 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> urns,
             @RequestParam(name = "modelIds", required = false) final Set<Long> modelIds, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
-        final Page<AttributeModel> result = service.getAttributeModels(urns, modelIds, pageable);
+        Page<AttributeModel> result = service.getAttributeModels(urns, modelIds, pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 
     /**
      * Validate an open search query for the given data model, represented by its id
-     * @param dataModelName
-     * @param query
      * @return whether the query is valid or not
-     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
     @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
@@ -312,10 +309,10 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestBody Query query) throws ModuleException {
         // we have to add "q=" to be able to parse the query
         try {
-            final ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
-            final ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
+            ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
+            ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
             return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
-        } catch (final OpenSearchParseException e) {
+        } catch (OpenSearchParseException e) {
             LOG.error(e.getMessage(), e);
             return ResponseEntity.ok(new Validity(false));
         }
@@ -363,7 +360,6 @@ public class DatasetController implements IResourceController<Dataset> {
 
         /**
          * Constructor setting the parameter as attribute
-         * @param query
          */
         public Query(String query) {
             this.query = query;
@@ -378,7 +374,6 @@ public class DatasetController implements IResourceController<Dataset> {
 
         /**
          * Set the query
-         * @param query
          */
         public void setQuery(String query) {
             this.query = query;

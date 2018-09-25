@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.dam.rest.dataaccess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -76,8 +78,9 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
     public ResponseEntity<PagedResources<Resource<DatasetWithAccessRight>>> retrieveDatasets(
             @PathVariable(name = "accessGroupName") String accessGroupName,
-            @RequestParam(name = "datasetLabel", required = false) String label, final Pageable pageRequest,
-            final PagedResourcesAssembler<DatasetWithAccessRight> assembler) throws ModuleException {
+            @RequestParam(name = "datasetLabel", required = false) String label,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageRequest,
+            PagedResourcesAssembler<DatasetWithAccessRight> assembler) throws ModuleException {
         final Page<DatasetWithAccessRight> datasetsWithAR = service.search(label, accessGroupName, pageRequest);
         final PagedResources<Resource<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);

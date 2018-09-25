@@ -18,14 +18,15 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -82,10 +83,11 @@ public class DocumentController implements IResourceController<Document> {
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all documents")
-    public ResponseEntity<PagedResources<Resource<Document>>> retrieveDocuments(Pageable pageable,
+    public ResponseEntity<PagedResources<Resource<Document>>> retrieveDocuments(
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             PagedResourcesAssembler<Document> assembler) {
-        final Page<Document> documents = documentService.findAll(pageable);
-        final PagedResources<Resource<Document>> resources = toPagedResources(documents, assembler);
+        Page<Document> documents = documentService.findAll(pageable);
+        PagedResources<Resource<Document>> resources = toPagedResources(documents, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
@@ -98,8 +100,8 @@ public class DocumentController implements IResourceController<Document> {
     @ResourceAccess(description = "Retrieve a document")
     public ResponseEntity<Resource<Document>> retrieveDocument(@PathVariable("document_id") Long id)
             throws ModuleException {
-        final Document document = documentService.load(id);
-        final Resource<Document> resource = toResource(document);
+        Document document = documentService.load(id);
+        Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -119,8 +121,8 @@ public class DocumentController implements IResourceController<Document> {
         documentService.checkAndOrSetModel(inDocument);
         // Validate dynamic model
         documentService.validate(inDocument, result, true);
-        final Document document = documentService.update(id, inDocument);
-        final Resource<Document> resource = toResource(document);
+        Document document = documentService.update(id, inDocument);
+        Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -154,8 +156,8 @@ public class DocumentController implements IResourceController<Document> {
         // Validate dynamic model
         documentService.validate(inDocument, result, false);
 
-        final Document document = documentService.create(inDocument);
-        final Resource<Document> resource = toResource(document);
+        Document document = documentService.create(inDocument);
+        Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }
 
