@@ -37,34 +37,34 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 /**
  * Client of UserController
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = IUserClient.BASE_PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public interface IUserClient { // NOSONAR
+@RequestMapping(value = IUserClient.BASE_PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+public interface IUserClient {
 
-    public static final String BASE_PATH = "/users/{email}/accessgroups";
+    String BASE_PATH = "/users/{email}/accessgroups";
 
-    public static final String GROUP_NAME_PATH = "/{name}";
+    String GROUP_NAME_PATH = "/{name}";
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
-            @Valid @PathVariable("email") final String pUserEmail, @RequestParam("page") int pPage,
-            @RequestParam("size") int pSize);
+    ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
+            @Valid @PathVariable("email") String userEmail, @RequestParam("page") int page,
+            @RequestParam("size") int size);
 
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
-    public ResponseEntity<Void> setAccessGroupsOfUser(@Valid @PathVariable("email") final String pUserEmail,
-            final List<AccessGroup> pNewAcessGroups);
+    ResponseEntity<Void> setAccessGroupsOfUser(@Valid @PathVariable("email") String userEmail,
+            List<AccessGroup> newAccessGroups);
 
     @RequestMapping(method = RequestMethod.PUT, value = GROUP_NAME_PATH)
     @ResponseBody
-    public ResponseEntity<Void> associateAccessGroupToUser(@Valid @PathVariable("email") final String pUserEmail,
-            @Valid @PathVariable("name") final String pAcessGroupNameToBeAdded);
+    ResponseEntity<Void> associateAccessGroupToUser(@Valid @PathVariable("email") String userEmail,
+            @Valid @PathVariable("name") String accessGroupNameToBeAdded);
 
     @RequestMapping(method = RequestMethod.DELETE, value = GROUP_NAME_PATH)
     @ResponseBody
-    public ResponseEntity<Void> dissociateAccessGroupFromUser(@Valid @PathVariable("email") final String pUserEmail,
-            @Valid @PathVariable("name") final String pAcessGroupNameToBeAdded);
+    ResponseEntity<Void> dissociateAccessGroupFromUser(@Valid @PathVariable("email") String userEmail,
+            @Valid @PathVariable("name") String accessGroupNameToBeAdded);
 }

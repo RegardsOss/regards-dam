@@ -53,9 +53,7 @@ import fr.cnes.regards.modules.dam.service.models.IFragmentService;
 
 /**
  * REST controller for managing {@link Fragment}
- *
  * @author Marc Sordi
- *
  */
 @RestController
 @RequestMapping(FragmentController.TYPE_MAPPING)
@@ -98,20 +96,16 @@ public class FragmentController implements IResourceController<Fragment> {
 
     /**
      * Constructor setting the parameters as attributes
-     * @param pFragmentService
-     * @param pResourceService
-     * @param attributeModelService
      */
-    public FragmentController(IFragmentService pFragmentService, IResourceService pResourceService,
+    public FragmentController(IFragmentService fragmentService, IResourceService resourceService,
             IAttributeModelService attributeModelService) {
-        this.fragmentService = pFragmentService;
-        this.resourceService = pResourceService;
+        this.fragmentService = fragmentService;
+        this.resourceService = resourceService;
         this.attributeModelService = attributeModelService;
     }
 
     /**
      * Retrieve all fragments except default one
-     *
      * @return list of fragments
      */
     @ResourceAccess(description = "List all fragments")
@@ -122,96 +116,78 @@ public class FragmentController implements IResourceController<Fragment> {
 
     /**
      * Create a new fragment
-     *
-     * @param pFragment
-     *            the fragment to create
+     * @param fragment the fragment to create
      * @return the created {@link Fragment}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Add a fragment")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<Fragment>> addFragment(@Valid @RequestBody Fragment pFragment)
+    public ResponseEntity<Resource<Fragment>> addFragment(@Valid @RequestBody Fragment fragment)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(fragmentService.addFragment(pFragment)));
+        return ResponseEntity.ok(toResource(fragmentService.addFragment(fragment)));
     }
 
     /**
      * Retrieve a fragment
-     *
-     * @param pFragmentId
-     *            fragment identifier
+     * @param id fragment identifier
      * @return the retrieved {@link Fragment}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Get a fragment")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}")
-    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable Long pFragmentId) throws ModuleException {
-        return ResponseEntity.ok(toResource(fragmentService.getFragment(pFragmentId)));
+    @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}")
+    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
+        return ResponseEntity.ok(toResource(fragmentService.getFragment(id)));
     }
 
     /**
      * Update fragment. At the moment, only its description is updatable.
-     *
-     * @param pFragmentId
-     *            fragment identifier
-     * @param pFragment
-     *            the fragment
+     * @param id fragment identifier
+     * @param fragment the fragment
      * @return the updated {@link Fragment}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Update a fragment")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pFragmentId}")
-    public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable Long pFragmentId,
-            @Valid @RequestBody Fragment pFragment) throws ModuleException {
-        return ResponseEntity.ok(toResource(fragmentService.updateFragment(pFragmentId, pFragment)));
+    @RequestMapping(method = RequestMethod.PUT, value = "/{fragmentId}")
+    public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable(name = "fragmentId") Long id,
+            @Valid @RequestBody Fragment fragment) throws ModuleException {
+        return ResponseEntity.ok(toResource(fragmentService.updateFragment(id, fragment)));
     }
 
     /**
      * Delete a fragment
-     *
-     * @param pFragmentId
-     *            fragment identifier
+     * @param id fragment identifier
      * @return nothing
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Delete a fragment")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pFragmentId}")
-    public ResponseEntity<Void> deleteFragment(@PathVariable Long pFragmentId) throws ModuleException {
-        fragmentService.deleteFragment(pFragmentId);
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{fragmentId}")
+    public ResponseEntity<Void> deleteFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
+        fragmentService.deleteFragment(id);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Export a model fragment
-     *
-     * @param pRequest
-     *            HTTP request
-     * @param pResponse
-     *            HTTP response
-     * @param pFragmentId
-     *            fragment to export
-     * @throws ModuleException
-     *             if error occurs!
+     * @param request HTTP request
+     * @param response HTTP response
+     * @param fragmentId fragment to export
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Export a fragment")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/export")
-    public void exportFragment(HttpServletRequest pRequest, HttpServletResponse pResponse,
-            @PathVariable Long pFragmentId) throws ModuleException {
+    @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}/export")
+    public void exportFragment(HttpServletRequest request, HttpServletResponse response, @PathVariable(name = "fragmentId") Long fragmentId)
+            throws ModuleException {
 
-        final Fragment fragment = fragmentService.getFragment(pFragmentId);
-        final String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + FRAGMENT_EXTENSION;
+        Fragment fragment = fragmentService.getFragment(fragmentId);
+        String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + FRAGMENT_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
-        pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
 
         try {
-            fragmentService.exportFragment(pFragmentId, pResponse.getOutputStream());
-            pResponse.getOutputStream().flush();
+            fragmentService.exportFragment(fragmentId, response.getOutputStream());
+            response.getOutputStream().flush();
         } catch (IOException e) {
             final String message = String
                     .format("Error with servlet output stream while exporting fragment %s.", fragment.getName());
@@ -222,19 +198,16 @@ public class FragmentController implements IResourceController<Fragment> {
 
     /**
      * Import a model fragment
-     *
-     * @param pFile
-     *            file representing the fragment
+     * @param file file representing the fragment
      * @return nothing
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Import a fragment")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile pFile)
+    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile file)
             throws ModuleException {
         try {
-            Fragment frag = fragmentService.importFragment(pFile.getInputStream());
+            Fragment frag = fragmentService.importFragment(file.getInputStream());
             return new ResponseEntity<>(toResource(frag), HttpStatus.CREATED);
         } catch (IOException e) {
             final String message = "Error with file stream while importing fragment.";
@@ -244,7 +217,7 @@ public class FragmentController implements IResourceController<Fragment> {
     }
 
     @Override
-    public Resource<Fragment> toResource(Fragment fragment, Object... pExtras) {
+    public Resource<Fragment> toResource(Fragment fragment, Object... extras) {
         final Resource<Fragment> resource = resourceService.toResource(fragment);
         resourceService.addLink(resource, this.getClass(), "getFragment", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, fragment.getId()));
@@ -265,7 +238,7 @@ public class FragmentController implements IResourceController<Fragment> {
     }
 
     private boolean isDeletable(Fragment fragment) {
-            List<AttributeModel> fragmentAttributes = attributeModelService.findByFragmentId(fragment.getId());
-            return fragmentAttributes.isEmpty();
+        List<AttributeModel> fragmentAttributes = attributeModelService.findByFragmentId(fragment.getId());
+        return fragmentAttributes.isEmpty();
     }
 }

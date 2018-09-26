@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -28,9 +29,9 @@ import java.util.stream.Stream;
  * @author oroussel
  */
 public class BulkSaveResult {
-    private Set<String> savedDocIds = ConcurrentHashMap.newKeySet();
+    private Set<String> savedDocIds = new HashSet<>();
 
-    private Map<String, Exception> inErrorDocsMap = new ConcurrentHashMap<>();
+    private Map<String, Exception> inErrorDocsMap = new HashMap<>();
 
     /**
      * Error detailed message is set by EsRespository when notify to admin. It is then used to show error message while

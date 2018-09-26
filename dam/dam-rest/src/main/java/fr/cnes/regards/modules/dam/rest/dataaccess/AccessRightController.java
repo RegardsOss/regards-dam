@@ -18,16 +18,17 @@
  */
 package fr.cnes.regards.modules.dam.rest.dataaccess;
 
+import javax.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import java.util.Optional;
-
-import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -107,10 +108,11 @@ public class AccessRightController implements IResourceController<AccessRight> {
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
     public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String accessGroupName,
-            @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId, final Pageable pageable,
-            final PagedResourcesAssembler<AccessRight> assembler) throws ModuleException {
-        Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(accessGroupName, datasetIpId,
-                                                                                 pageable);
+            @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
+            PagedResourcesAssembler<AccessRight> assembler) throws ModuleException {
+        Page<AccessRight> accessRights = accessRightService
+                .retrieveAccessRights(accessGroupName, datasetIpId, pageable);
         return new ResponseEntity<>(toPagedResources(accessRights, assembler), HttpStatus.OK);
     }
 

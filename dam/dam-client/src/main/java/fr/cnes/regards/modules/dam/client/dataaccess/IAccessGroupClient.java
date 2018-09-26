@@ -36,7 +36,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
@@ -46,72 +45,65 @@ public interface IAccessGroupClient { // NOSONAR
     /**
      * Client base path
      */
-    public static final String PATH_ACCESS_GROUPS = "/accessgroups";
+    String PATH_ACCESS_GROUPS = "/accessgroups";
 
     /**
      * Client path using name as path variable
      */
-    public static final String PATH_ACCESS_GROUPS_NAME = "/{name}";
+    String PATH_ACCESS_GROUPS_NAME = "/{name}";
 
     /**
      * Client path user name and email as path variable
      */
-    public static final String PATH_ACCESS_GROUPS_NAME_EMAIL = PATH_ACCESS_GROUPS_NAME + "/{email}";
+    String PATH_ACCESS_GROUPS_NAME_EMAIL = PATH_ACCESS_GROUPS_NAME + "/{email}";
 
     /**
      * Retrieve access group
      * @param isPublic whether we are also looking for public groups
-     * @param pPage which page
-     * @param pSize which page size
+     * @param page which page
+     * @param size which page size
      * @return a page of access group
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(
-            @RequestParam(name = "public", required = false) Boolean isPublic, @RequestParam("page") int pPage,
-            @RequestParam("size") int pSize);
+    ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(
+            @RequestParam(name = "public", required = false) Boolean isPublic, @RequestParam("page") int page,
+            @RequestParam("size") int size);
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup pToBeCreated);
+    ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup toBeCreated);
 
     /**
      * Retrieve an access group by its name
-     * @param pAccessGroupName
      * @return the retrieved access group
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
-    public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName);
+    ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(@Valid @PathVariable("name") String groupName);
 
     /**
      * Delete an access group by its name
-     * @param pAccessGroupName
      */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
-    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String pAccessGroupName);
+    ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String groupName);
 
     /**
      * Associate a user, represented by its email, to an access group, represented by its name.
-     * @param pAccessGroupName
-     * @param pUserEmail
      * @return the updated access group
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
-    public ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail);
+    ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(@Valid @PathVariable("name") String groupName,
+            @Valid @PathVariable("email") String userEmail);
 
     /**
      * Dissociate a user, represented by its email, from an access group, represented by its name.
-     * @param pAccessGroupName
-     * @param pUserEmail
      * @return the updated access group
      */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
-    public ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail);
+    ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(@Valid @PathVariable("name") String groupName,
+            @Valid @PathVariable("email") String userEmail);
 }

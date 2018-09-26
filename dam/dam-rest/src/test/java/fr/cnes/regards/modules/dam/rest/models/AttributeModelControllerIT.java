@@ -418,7 +418,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
         requestBuilderCustomizer
                 .addDocumentationSnippet(RequestDocumentation
-                        .pathParameters(RequestDocumentation.parameterWithName("pModelType").description("model type")
+                        .pathParameters(RequestDocumentation.parameterWithName("modelType").description("model type")
                                 .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE),
                                             Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
                                                     .value("Available values: " + Arrays.stream(EntityType.values())
@@ -637,10 +637,10 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
-                .pathParameters(RequestDocumentation.parameterWithName("pAttributeId").description("attribute id")
+                .pathParameters(RequestDocumentation.parameterWithName("attributeId").description("attribute id")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", requestBuilderCustomizer,
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{attributeId}", requestBuilderCustomizer,
                           "Cannot retrieve attribute", id);
     }
 
@@ -814,10 +814,10 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
-                .pathParameters(RequestDocumentation.parameterWithName("pAttributeId").description("attribute id")
+                .pathParameters(RequestDocumentation.parameterWithName("attributeId").description("attribute id")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
-        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{attributeId}", attModel,
                                           requestBuilderCustomizer, "Update should be successful.", id);
     }
 
@@ -847,10 +847,10 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                 .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
-                .pathParameters(RequestDocumentation.parameterWithName("pAttributeId").description("attribute id")
+                .pathParameters(RequestDocumentation.parameterWithName("attributeId").description("attribute id")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
-        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{attributeId}", attModel,
                                           requestBuilderCustomizer, "Update should be successful.", id);
     }
 }

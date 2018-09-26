@@ -18,14 +18,15 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -84,7 +85,8 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
     public ResponseEntity<PagedResources<Resource<Collection>>> retrieveCollections(
-            @RequestParam(name = "label", required = false) String label, Pageable pageable,
+            @RequestParam(name = "label", required = false) String label,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             PagedResourcesAssembler<Collection> assembler) {
         final Page<Collection> collections = collectionService.search(label, pageable);
         final PagedResources<Resource<Collection>> resources = toPagedResources(collections, assembler);
@@ -130,7 +132,6 @@ public class CollectionController implements IResourceController<Collection> {
      * Entry point to delete a collection using its id
      * @param id {@link Collection} id
      * @return nothing
-     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "delete the collection of collection_id")
