@@ -556,7 +556,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(
                 RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
-                RequestDocumentation.parameterWithName("pFragmentId").description("Fragment identifier")
+                RequestDocumentation.parameterWithName("fragmentId").description("Fragment identifier")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
