@@ -150,7 +150,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
      * Initial delay of 2 mn to avoid been launched too soon.
      */
     @Override
-    @Scheduled(initialDelay = 120000, fixedDelayString = "${regards.ingester.rate.ms:300000}")
+    @Scheduled(initialDelay = 300000, fixedDelayString = "${regards.ingester.rate.ms:300000}")
     public void manage() {
         LOGGER.info("IngesterService.manage() called...");
         try {

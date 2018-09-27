@@ -66,7 +66,7 @@ public class ScheduledStoreAipEntitiesTasks {
     private Boolean postAipEntitiesToStorage;
 
     @Scheduled(fixedRateString = "${regards.dam.store.aip.entities.delay:60000}",
-            initialDelayString = "${regards.dam.store.aip.entities.initial.delay:60000}")
+            initialDelayString = "${regards.dam.store.aip.entities.initial.delay:300000}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void processStoreAips() {
         if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
