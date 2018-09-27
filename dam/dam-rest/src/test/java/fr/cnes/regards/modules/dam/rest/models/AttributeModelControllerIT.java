@@ -18,13 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
@@ -45,7 +44,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -736,7 +734,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         attMod.setDescription(description);
         attMod.setType(AttributeType.BOOLEAN);
 
-        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attMod, requestBuilderCustomizer,
+        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{attributeId}", attMod, requestBuilderCustomizer,
                           "Update should be successful.", id);
 
         // Perform a get attribute to retrieved real database content and avoid false negative
@@ -754,7 +752,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                 .pathParameters(RequestDocumentation.parameterWithName("pAttributeId").description("attribute id")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_NUMBER_TYPE))));
 
-        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", requestBuilderCustomizer,
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{attributeId}", requestBuilderCustomizer,
                           "Cannot retrieve attribute", id);
     }
 
@@ -783,7 +781,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
         // expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasProperty("restrictions")));
 
-        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attMod, requestBuilderCustomizer,
+        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{attributeId}", attMod, requestBuilderCustomizer,
                           "Restriction should be deleted.", id);
 
     }

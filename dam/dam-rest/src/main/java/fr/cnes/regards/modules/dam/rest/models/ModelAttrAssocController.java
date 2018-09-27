@@ -18,11 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -77,7 +76,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
 
     public static final String FRAGMENT_BIND_MAPPING = "/fragments";
 
-    public static final String FRAGMENT_UNBIND_MAPPING = "/fragments/{pFragmentId}";
+    public static final String FRAGMENT_UNBIND_MAPPING = "/fragments/{fragmentId}";
 
     /**
      * Controller path
@@ -186,34 +185,34 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * Retrieve a {@link ModelAttrAssoc} linked to a {@link Model} id
      *
      * @param modelName model name
-     * @param pAttributeId attribute id
+     * @param attributeId attribute id
      * @return linked model attribute
      * @throws ModuleException if attribute cannot be retrieved
      */
     @ResourceAccess(description = "Get a model attribute")
-    @RequestMapping(method = RequestMethod.GET, value = TYPE_MAPPING + "/{pAttributeId}")
+    @RequestMapping(method = RequestMethod.GET, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable String modelName,
-            @PathVariable Long pAttributeId) throws ModuleException {
+            @PathVariable Long attributeId) throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttrAssocService.getModelAttrAssoc(modelName, pAttributeId), modelName));
+                .ok(toResource(modelAttrAssocService.getModelAttrAssoc(modelName, attributeId), modelName));
     }
 
     /**
      * Allow to update calculation properties
      *
      * @param modelName model name
-     * @param pAttributeId attribute id
+     * @param attributeId attribute id
      * @param pModelAttribute attribute
      * @return update model attribute
      * @throws ModuleException if attribute cannot be updated
      */
     @ResourceAccess(description = "Update a model attribute")
-    @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{pAttributeId}")
+    @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
-            @PathVariable Long pAttributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute)
+            @PathVariable Long attributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute)
             throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttrAssocService.updateModelAttribute(modelName, pAttributeId, pModelAttribute),
+                .ok(toResource(modelAttrAssocService.updateModelAttribute(modelName, attributeId, pModelAttribute),
                                modelName));
     }
 
@@ -223,15 +222,15 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * namespace).
      *
      * @param modelName model name
-     * @param pAttributeId attribute id
+     * @param attributeId attribute id
      * @return nothing
      * @throws ModuleException if attribute cannot be removed
      */
     @ResourceAccess(description = "Unbind an attribute from a model")
-    @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/{pAttributeId}")
+    @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable String modelName,
-            @PathVariable Long pAttributeId) throws ModuleException {
-        modelAttrAssocService.unbindAttributeFromModel(modelName, pAttributeId);
+            @PathVariable Long attributeId) throws ModuleException {
+        modelAttrAssocService.unbindAttributeFromModel(modelName, attributeId);
         return ResponseEntity.noContent().build();
     }
 
@@ -260,15 +259,15 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * space, not default one).
      *
      * @param modelName model name
-     * @param pFragmentId fragment identifier
+     * @param fragmentId fragment identifier
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
      */
     @ResourceAccess(description = "Unbind fragment attributes from a model")
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + FRAGMENT_UNBIND_MAPPING)
     public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable String modelName,
-            @PathVariable Long pFragmentId) throws ModuleException {
-        modelAttrAssocService.unbindNSAttributeToModel(modelName, pFragmentId);
+            @PathVariable Long fragmentId) throws ModuleException {
+        modelAttrAssocService.unbindNSAttributeToModel(modelName, fragmentId);
         return ResponseEntity.noContent().build();
     }
 
