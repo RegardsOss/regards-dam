@@ -18,10 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -92,6 +88,7 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
@@ -125,17 +122,19 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -1611,8 +1610,8 @@ public class EsRepository implements IEsRepository {
             }
 
             SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
-            // Add files count aggregation
-            addFilesCountAgg(searchKey, discriminantProperty, builder, fileTypes);
+            // Add files cardinality aggregation
+            addFilesCardinalityAgg(searchKey, discriminantProperty, builder, fileTypes);
 
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
                     .source(builder);
@@ -1623,8 +1622,8 @@ public class EsRepository implements IEsRepository {
             Aggregations aggs = response.getAggregations();
             long totalFileCount = 0;
             for (String fileType : fileTypes) {
-                ValueCount valueCount = aggs.get("total_" + fileType + "_files_count");
-                totalFileCount += valueCount.getValue();
+                Cardinality cardinality = aggs.get("total_" + fileType + "_files_count");
+                totalFileCount += cardinality.getValue();
             }
             summary.addFilesCount(totalFileCount);
             // Then discriminants buckets aggregations results
@@ -1639,9 +1638,9 @@ public class EsRepository implements IEsRepository {
                 Aggregations discAggs = bucket.getAggregations();
                 long filesCount = 0;
                 for (String fileType : fileTypes) {
-                    ValueCount valueCount = discAggs.get(fileType + "_files_count");
-                    filesCount += valueCount.getValue();
-                    discSummary.getFileTypesSummaryMap().get(fileType).addFilesCount(valueCount.getValue());
+                    Cardinality cardinality = discAggs.get(fileType + "_files_count");
+                    filesCount += cardinality.getValue();
+                    discSummary.getFileTypesSummaryMap().get(fileType).addFilesCount(cardinality.getValue());
                 }
                 discSummary.addFilesCount(filesCount);
             }
@@ -1650,14 +1649,21 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    private <T extends IIndexable & IDocFiles> void addFilesCountAgg(SearchKey<T, T> searchKey,
+    /**
+     * Difference between addFilesCardinalityAgg and addFilesCountAndSumAggs is on the type of aggregagtion (and the
+     * file size sum of course).
+     * In first case, propertie values are counted (for internal data files, it is sufficient because data files should
+     * be differents), in second, distinct property values are counted (and for external files, which is the case here,
+     * nothing prevents from use same uri on several data objects)
+     */
+    private <T extends IIndexable & IDocFiles> void addFilesCardinalityAgg(SearchKey<T, T> searchKey,
             String discriminantProperty, SearchSourceBuilder builder, String[] fileTypes) throws IOException {
         // Add aggregations to manage compute summary
         // First "global" aggregations on each asked file types
         for (String fileType : fileTypes) {
-            // file count
-            builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
+            // file cardinality
+            builder.aggregation(AggregationBuilders.cardinality("total_" + fileType + "_files_count")
+                                        .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1669,9 +1675,9 @@ public class EsRepository implements IEsRepository {
                 .field(termsFieldProperty).size(Integer.MAX_VALUE);
         // and "total" aggregations on each asked file types
         for (String fileType : fileTypes) {
-            // files count
-            termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX));
+            // files cardinality
+            termsAggBuilder.subAggregation(AggregationBuilders.cardinality(fileType + "_files_count")
+                                                   .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX));
         }
         builder.aggregation(termsAggBuilder);
     }

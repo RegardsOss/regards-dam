@@ -59,7 +59,7 @@ public class ProjectGeoSettings {
             .expireAfterWrite(5, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
                 @Override
-                public Pair<Boolean, Crs> load(String key) throws Exception {
+                public Pair<Boolean, Crs> load(String key) {
                     try {
                         FeignSecurityManager.asSystem();
 
