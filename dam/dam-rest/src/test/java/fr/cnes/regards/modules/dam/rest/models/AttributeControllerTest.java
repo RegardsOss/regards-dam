@@ -34,7 +34,6 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.rest.models.AttributeModelController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.RestrictionService;
@@ -100,7 +99,7 @@ public class AttributeControllerTest {
         // CHECKSTYLE:ON
         Mockito.when(attributeServiceMocked.getAttributes(null, null, null)).thenReturn(attributes);
         final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null,
-                                                                                                          null);
+                                                                                                          null, null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 

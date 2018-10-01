@@ -127,11 +127,17 @@ public class AttributeModelController implements IResourceController<AttributeMo
     public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) AttributeType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
-            @RequestParam(name = "modelIds", required = false) Set<Long> modelIds) {
+            @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
+            @RequestParam(name = "noLink", required = false) Boolean noLink) {
         List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds);
         // Build JSON path
         attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
-        return ResponseEntity.ok(toResources(attributes));
+        long now = System.currentTimeMillis();
+        noLink = (noLink == null) ? Boolean.FALSE : noLink;
+        List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
+        long duration = System.currentTimeMillis() - now;
+        System.out.println(duration);
+        return ResponseEntity.ok(resources);
     }
 
     /**
@@ -141,7 +147,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ENTITY_TYPE_MAPPING)
-    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(@PathVariable(name = "modelType") EntityType modelType) {
+    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(
+            @PathVariable(name = "modelType") EntityType modelType) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(modelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
                 .collect(Collectors.toList());
@@ -171,7 +178,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "attributeId") final Long id) throws ModuleException {
+    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "attributeId") final Long id)
+            throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(id);
 
         attribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
@@ -199,7 +207,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Delete an attribute")
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "attributeId") final Long id) throws ModuleException {
+    public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "attributeId") final Long id)
+            throws ModuleException {
         attributeService.deleteAttribute(id);
         return ResponseEntity.noContent().build();
     }
@@ -229,21 +238,28 @@ public class AttributeModelController implements IResourceController<AttributeMo
         return ResponseEntity.ok(types);
     }
 
+    /**
+     * @param extras For now, only one case: a Boolean: noLink. If true, no link should be added.
+     */
     @Override
-    public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... pExtras) {
+    public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... extras) {
         Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
-        resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, attributeModel.getId()));
-        resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, attributeModel.getId()),
-                                MethodParamFactory.build(AttributeModel.class));
-        if (attributeService.isDeletable(attributeModel.getId())) {
-            resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
+        boolean addLinks =
+                (extras == null) || (extras.length == 0) || ((extras[0] instanceof Boolean) && !(Boolean) extras[0]);
+        if (addLinks) {
+            resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));
+            resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
+                                    MethodParamFactory.build(Long.class, attributeModel.getId()),
+                                    MethodParamFactory.build(AttributeModel.class));
+            if (attributeService.isDeletable(attributeModel.getId())) {
+                resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
+                                        MethodParamFactory.build(Long.class, attributeModel.getId()));
+            }
+            resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
+                                    MethodParamFactory.build(AttributeType.class),
+                                    MethodParamFactory.build(String.class), MethodParamFactory.build(Set.class));
         }
-        resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
-                                MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class),
-                                MethodParamFactory.build(Set.class));
         return resource;
     }
 }
