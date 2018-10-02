@@ -27,7 +27,9 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 /**
  * Indexer interface
  * @author oroussel
+ * @deprecated only used by dam and catalog tests
  */
+@Deprecated
 public interface IIndexerService {
 
     int BULK_SIZE = IEsRepository.BULK_SIZE;
