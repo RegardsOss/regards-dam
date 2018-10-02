@@ -88,14 +88,19 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
                 AIPEvent event = wrapper.getContent();
                 if (event.getAipState() == AIPState.STORED) {
                     UniformResourceName urn = UniformResourceName.fromString(event.getAipId());
-                    if (EntityType.DATA.equals(urn.getEntityType())) return;
-                    
+                    if (EntityType.DATA.equals(urn.getEntityType())) {
+                        return;
+                    }
+
                     runtimeTenantResolver.forceTenant(wrapper.getTenant());
                     AbstractEntity<?> entity = getService(urn.getEntityType()).loadWithRelations(urn);
 
                     FeignSecurityManager.asSystem();
                     entity.setIpId(urn);
-                    entity.setStateAip(EntityAipState.AIP_STORE_OK);
+                    if (entity.getStateAip().equals(EntityAipState.AIP_STORE_PENDING)
+                            || entity.getStateAip().equals(EntityAipState.AIP_STORE_ERROR)) {
+                        entity.setStateAip(EntityAipState.AIP_STORE_OK);
+                    }
                     getService(urn.getEntityType()).save(entity);
 
                     LOGGER.info("AIP with IP_ID <" + urn.toString() + "> state set to <" + event.getAipState() + ">");
