@@ -33,4 +33,9 @@ public interface IDatasourceIngesterService {
      * @param id DatasourceIngestion id
      */
     void deleteDatasourceIngestion(Long id);
+
+    /**
+     * Schedule datasource ingestion to be executed as soon as possible
+     */
+    void scheduleNowDatasourceIngestion(Long id);
 }

@@ -62,8 +62,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     private IResourceService resourceService;
 
     /**
-     * Retrieve all {@link DatasourceIngestion}.
-     * @return a list of {@link DatasourceIngestion}
+     * Retrieve all DatasourceIngestion.
+     * @return a list of DatasourceIngestion
      */
     @ResourceAccess(description = "List all crawler datasources.")
     @RequestMapping(method = RequestMethod.GET)
@@ -72,12 +72,22 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     }
 
     /**
-     * Delete a {@link DatasourceIngestion}.
+     * Delete a DatasourceIngestion.
      */
-    @ResourceAccess(description = "List all crawler datasources.")
+    @ResourceAccess(description = "Delete selected datasource.")
     @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
     public ResponseEntity<Void> deleteDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
         crawlerService.deleteDatasourceIngestion(ingestionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Schedule datasource ingestion to be executed as soon as possible
+     */
+    @ResourceAccess(description = "Schedule datasource to be ingested as soon as possible.")
+    @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
+    public ResponseEntity<Void> scheduleNowDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
+        crawlerService.scheduleNowDatasourceIngestion(ingestionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

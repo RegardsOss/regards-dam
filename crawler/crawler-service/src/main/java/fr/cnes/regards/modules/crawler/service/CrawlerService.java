@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -329,6 +330,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Override
     public void deleteDatasourceIngestion(Long id) {
         datasourceIngestionRepo.delete(id);
+    }
+
+    @Override
+    public void scheduleNowDatasourceIngestion(Long id) {
+        DatasourceIngestion dsi = datasourceIngestionRepo.findOne(id);
+        dsi.setNextPlannedIngestDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        datasourceIngestionRepo.save(dsi);
     }
 
     /**
