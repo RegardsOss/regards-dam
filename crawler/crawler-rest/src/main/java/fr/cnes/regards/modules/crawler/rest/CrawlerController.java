@@ -96,6 +96,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
         Resource<DatasourceIngestion> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, element.getId()));
+        resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion", "SCHEDULE",
+                                MethodParamFactory.build(Long.class, element.getId()));
         return resource;
     }
 
