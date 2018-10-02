@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dam.service.entities.plugins;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,7 @@ import com.google.gson.Gson;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.builder.ContentInformationBuilder;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
@@ -74,6 +76,9 @@ public class AipStoragePlugin implements IStorageService {
 
     @Value("${spring.application.name}")
     private String microserviceName;
+
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
     private Gson gson;
@@ -151,7 +156,7 @@ public class AipStoragePlugin implements IStorageService {
         final AIPBuilder builder = new AIPBuilder(entity.getIpId(), Optional.empty(), entity.getProviderId(),
                 entity.getFeature().getEntityType(), getSession(entity));
 
-        if (entity.getTags() != null && entity.getTags().size() > 0) {
+        if ((entity.getTags() != null) && (entity.getTags().size() > 0)) {
             builder.addTags(entity.getTags().toArray(new String[entity.getTags().size()]));
         }
 
@@ -167,7 +172,7 @@ public class AipStoragePlugin implements IStorageService {
         builder.addDescriptiveInformation(STATIC_PPTY_LABEL, entity.getLabel());
 
         // Add dynamic properties
-        if (entity.getProperties() != null && entity.getProperties().size() > 0) {
+        if ((entity.getProperties() != null) && (entity.getProperties().size() > 0)) {
             entity.getProperties().stream().forEach(property -> {
                 builder.addDescriptiveInformation(property.getName(), gson.toJson(property.getValue()));
             });
@@ -177,18 +182,20 @@ public class AipStoragePlugin implements IStorageService {
         builder.setGeometry(entity.getNormalizedGeometry());
 
         // Propagate files
-        if (entity.getFiles() != null && entity.getFiles().size() > 0) {
+        if ((entity.getFiles() != null) && (entity.getFiles().size() > 0)) {
             try {
                 for (final DataFile dataFile : entity.getFiles().values()) {
                     final ContentInformationBuilder ciBuilder = builder.getContentInformationBuilder();
+                    // Add scope to URL. As the files are public access, we don't need token to access them.
+                    String fileUrl = dataFile.getUri() + "?scope=" + tenantResolver.getTenant();
                     // Manage reference
                     if (dataFile.isReference()) {
                         ciBuilder.setDataObjectReference(dataFile.getDataType(), dataFile.getFilename(),
-                                                         dataFile.asUri().toURL());
+                                                         new URL(fileUrl));
                     } else {
                         ciBuilder.setDataObject(dataFile.getDataType(), dataFile.getFilename(),
                                                 dataFile.getDigestAlgorithm(), dataFile.getChecksum(),
-                                                dataFile.getFilesize(), dataFile.asUri().toURL());
+                                                dataFile.getFilesize(), new URL(fileUrl));
                     }
                     ciBuilder.setSyntax(dataFile.getMimeType());
                     builder.addContentInformation();

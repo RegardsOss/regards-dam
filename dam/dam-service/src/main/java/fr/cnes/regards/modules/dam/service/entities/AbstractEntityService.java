@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -232,7 +234,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
         // Load model by name if id not specified
-        if (model.getId() == null && model.getName() != null) {
+        if ((model.getId() == null) && (model.getName() != null)) {
             model = modelService.getModelByName(model.getName());
             entity.setModel(model);
         }
@@ -308,18 +310,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     /**
+     * Associate a list of {@link String} tags to the given existing entity.
      * @param pEntityId an AbstractEntity identifier
-     * @param ipIds UniformResourceName Set representing AbstractEntity to be associated to pCollection
+     * @param tagList UniformResourceName Set representing AbstractEntity to be associated to pCollection
      */
     @Override
-    public void associate(Long pEntityId, Set<String> ipIds) throws EntityNotFoundException {
+    public void associate(Long pEntityId, Set<String> tagList) throws EntityNotFoundException {
         final U entity = repository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         // Adding new tags to detached entity
         em.detach(entity);
-        ipIds.forEach(ipId -> entity.addTags(ipId.toString()));
+        tagList.forEach(ipId -> entity.addTags(ipId.toString()));
         final U entityInDb = repository.findById(pEntityId);
         // And detach it because it is the other one that will be persisted
         em.detach(entityInDb);
@@ -395,14 +398,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (entity instanceof Collection) {
             final List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
             for (final AbstractEntity<?> e : taggingEntities) {
-                if (e instanceof Dataset || e instanceof Collection) {
+                if ((e instanceof Dataset) || (e instanceof Collection)) {
                     entity.getGroups().addAll(e.getGroups());
                 }
             }
         }
 
         // If entity is a collection or a dataset => propagate its groups to tagged collections (recursively)
-        if ((entity instanceof Collection || entity instanceof Dataset) && !entity.getTags().isEmpty()) {
+        if (((entity instanceof Collection) || (entity instanceof Dataset)) && !entity.getTags().isEmpty()) {
             final List<AbstractEntity<?>> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
             for (final AbstractEntity<?> coll : taggedColls) {
@@ -438,7 +441,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
         final U entityInDb = repository.findById(pEntityId);
         em.detach(entityInDb);
-        if (entityInDb == null || !entityInDb.getClass().equals(pEntity.getClass())) {
+        if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         if (!pEntityId.equals(pEntity.getId())) {
@@ -731,7 +734,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     private void deleteAipStorage(U entity) {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
             return;
         }
         IStorageService storageService = getStorageService();
