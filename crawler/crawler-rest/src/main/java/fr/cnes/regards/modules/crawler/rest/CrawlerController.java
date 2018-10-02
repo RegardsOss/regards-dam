@@ -85,7 +85,7 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
      * Schedule datasource ingestion to be executed as soon as possible
      */
     @ResourceAccess(description = "Schedule datasource to be ingested as soon as possible.")
-    @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
+    @RequestMapping(method = RequestMethod.PUT, value = INGESTION_ID)
     public ResponseEntity<Void> scheduleNowDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
         crawlerService.scheduleNowDatasourceIngestion(ingestionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
