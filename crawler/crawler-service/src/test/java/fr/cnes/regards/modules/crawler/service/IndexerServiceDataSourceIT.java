@@ -59,7 +59,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -84,7 +83,6 @@ import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -252,8 +250,6 @@ public class IndexerServiceDataSourceIT {
         attrModelRepo.deleteAll();
         modelRepository.deleteAll();
         fragRepo.deleteAll();
-        pluginService.addPluginPackage(IDataSourcePlugin.class.getPackage().getName());
-        pluginService.addPluginPackage(PLUGIN_CURRENT_PACKAGE);
 
         // get a model for DataObject, by importing them it also register them for (de)serialization
         importModel(DATA_MODEL_FILE_NAME);
