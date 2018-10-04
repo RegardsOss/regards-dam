@@ -90,8 +90,8 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
-        result = esRepo.maxDate(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
-        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+        result = esRepo.maxDate(searchKey, dataset.getSubsettingClause(), parameterAttribute.getFullJsonPath());
+        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getFullJsonPath(),
                   dataset.getIpId().toString(), result);
     }
 

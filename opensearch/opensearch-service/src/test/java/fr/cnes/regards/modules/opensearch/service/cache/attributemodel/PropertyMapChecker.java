@@ -112,7 +112,9 @@ public class PropertyMapChecker {
         assertCount(builtMap, 2);
 
         Assert.assertTrue(builtMap.containsKey(startDate));
-        Assert.assertTrue(builtMap.containsKey(startDateModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap
+                .containsKey(startDateModel.getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel.getFullJsonPath()));
     }
 
     @Test
@@ -129,8 +131,10 @@ public class PropertyMapChecker {
         assertCount(builtMap, 3);
 
         Assert.assertTrue(builtMap.containsKey(startDate));
-        Assert.assertTrue(builtMap.containsKey(startDateModel.buildJsonPath("")));
-        Assert.assertTrue(builtMap.containsKey(startDateModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel.getJsonPathForNamespace("")));
+        Assert.assertTrue(builtMap
+                .containsKey(startDateModel.getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel.getFullJsonPath()));
     }
 
     @Test
@@ -154,9 +158,13 @@ public class PropertyMapChecker {
         assertCount(builtMap, 4);
 
         Assert.assertTrue(!builtMap.containsKey(startDate));
-        Assert.assertTrue(builtMap.containsKey(startDateModel.buildJsonPath("")));
-        Assert.assertTrue(builtMap.containsKey(startDateModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES)));
-        Assert.assertTrue(builtMap.containsKey(startDateModel2.buildJsonPath("")));
-        Assert.assertTrue(builtMap.containsKey(startDateModel2.buildJsonPath(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel.getJsonPathForNamespace("")));
+        Assert.assertTrue(builtMap
+                .containsKey(startDateModel.getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel.getFullJsonPath()));
+        Assert.assertTrue(builtMap.containsKey(startDateModel2.getJsonPathForNamespace("")));
+        Assert.assertTrue(builtMap
+                .containsKey(startDateModel2.getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES)));
+        Assert.assertTrue(builtMap.containsKey(startDateModel2.getFullJsonPath()));
     }
 }

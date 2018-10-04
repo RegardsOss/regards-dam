@@ -57,7 +57,6 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
 import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
@@ -191,10 +190,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public List<ModelAttrAssoc> getModelAttrAssocs(String modelName) {
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelName(modelName);
-
         if (modelAttributes != null) {
-            modelAttributes
-                    .forEach(modelAttr -> modelAttr.getAttribute().buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
             return ImmutableList.copyOf(modelAttributes);
         } else {
             return Collections.emptyList();
@@ -245,7 +241,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             }
         }
 
-        if(modelAttrAssoc.getComputationConf() != null) {
+        if (modelAttrAssoc.getComputationConf() != null) {
             eventualyCreatePluginConfiguration(modelAttrAssoc.getComputationConf());
         }
 
@@ -445,11 +441,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 // Plugin parameter found
                 if (curValue != null) {
                     if (!Objects.equals(param.getStripParameterValue(), curValue)) {
-                        String msg = String
-                                .format("Compute plugin with label %s is inconsistent with existing one : "
-                                        + "plugin parameter %s with value %s differs from existing value (%s)",
-                                        plgConf.getLabel(), param.getName(), curValue,
-                                        param.getStripParameterValue());
+                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one : "
+                                + "plugin parameter %s with value %s differs from existing value (%s)",
+                                                   plgConf.getLabel(), param.getName(), curValue,
+                                                   param.getStripParameterValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }

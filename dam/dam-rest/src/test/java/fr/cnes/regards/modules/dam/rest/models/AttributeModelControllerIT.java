@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
@@ -44,6 +45,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -338,6 +340,9 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         modelAttr.setAttribute(attribute3);
         modelAttr.setModel(model2);
         modelAttributeRepository.save(modelAttr);
+
+        entityManager.flush();
+        entityManager.clear();
 
     }
 

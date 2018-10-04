@@ -97,7 +97,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     @Override
     public String findName(AttributeModel attribute) {
         // Check dynamic properties
-        String name = attribute.getJsonPath();
+        String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
         if (!attribute.isDynamic() && (attribute.getId() != null)) {
@@ -216,12 +216,15 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
                 // Prevent conflicts with static properties
                 if (!StaticProperties.FEATURES_STATICS.contains(fragment)) {
                     // Bind fragment qualified property name to attribute
-                    tenantMap.put(attModel.buildJsonPath(""), attModel);
+                    tenantMap.put(attModel.getJsonPathForNamespace(""), attModel);
                 }
             }
 
+            // - Add mapping between public json path and attribute model
+            tenantMap.put(attModel.getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES), attModel);
+
             // - Add mapping between fully qualified property and attribute
-            tenantMap.put(attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES), attModel);
+            tenantMap.put(attModel.getFullJsonPath(), attModel);
         }
     }
 

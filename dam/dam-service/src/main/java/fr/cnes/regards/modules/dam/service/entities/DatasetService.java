@@ -58,7 +58,6 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.service.entities.visitor.SubsettingCoherenceVisitor;
@@ -216,8 +215,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             }
         }
 
-        // Add jsonpath to each attribute
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
     }
 
@@ -228,8 +225,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             final Pageable pageable) throws ModuleException {
         final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
         Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
-        // Build JSON path
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
     }
 

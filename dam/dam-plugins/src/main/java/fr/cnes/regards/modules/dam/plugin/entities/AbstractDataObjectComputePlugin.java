@@ -33,7 +33,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
@@ -130,7 +129,6 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
-        parameterAttribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES_PATH);
 
     }
 
@@ -145,7 +143,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
-        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+        log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getFullJsonPath(),
                   dataset.getIpId().toString(), result);
     }
 

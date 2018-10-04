@@ -45,6 +45,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -242,8 +243,8 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
     private void waitAndCheck(AbstractEntity<?> entity, EntityAipState expectedState) throws InterruptedException {
         int iteration = 0;
         boolean testOK = false;
+        AbstractEntity<?> loadedEntity = null;
         while ((iteration <= 20) && !testOK) {
-            AbstractEntity<?> loadedEntity;
             switch (entity.getFeature().getEntityType()) {
                 case COLLECTION:
                     loadedEntity = colRepository.findOne(entity.getId());
@@ -261,7 +262,8 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
             Thread.sleep(1000);
             iteration++;
         }
-        Assert.assertTrue(testOK);
+        Assert.assertNotNull(loadedEntity);
+        Assert.assertEquals(expectedState, loadedEntity.getStateAip());
     }
 
     /**
@@ -331,8 +333,9 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
-        dataset1.setNormalizedGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
-                                                  IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
+        dataset1.setNormalizedGeometry(IGeometry
+                .multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
+                            IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));
         dataset1.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusHours(15)));

@@ -216,6 +216,7 @@ public class AipStoragePlugin implements IStorageService {
     private void handleClientAIPResponse(HttpStatus status, AbstractEntity<?> entity, List<RejectedAip> rejectedAips) {
         LOGGER.info("status=" + status.toString());
         switch (status) {
+            case OK:
             case CREATED:
                 LOGGER.info("{} : update entity state to AIP_STORE_OK:", entity.getIpId());
                 entity.setStateAip(EntityAipState.AIP_STORE_PENDING);
@@ -239,6 +240,7 @@ public class AipStoragePlugin implements IStorageService {
     private void handleClientAIPResponse(HttpStatus status, AbstractEntity<?> entity, AIP aip) {
         LOGGER.info("status=" + status.toString());
         switch (status) {
+            case OK:
             case CREATED:
                 LOGGER.info("{} : entity state set to AIP_STORE_PENDING", entity.getIpId());
                 entity.setStateAip(EntityAipState.AIP_STORE_PENDING);

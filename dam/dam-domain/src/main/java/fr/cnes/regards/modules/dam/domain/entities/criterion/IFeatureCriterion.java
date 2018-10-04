@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.dam.domain.entities.criterion;
 
 import java.time.OffsetDateTime;
 
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
@@ -33,90 +32,80 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
  */
 public interface IFeatureCriterion extends ICriterion {
 
-    static String buildQueryablePath(AttributeModel att) {
-        if (att.isInternal()) {
-            return att.buildJsonPath("");
-        } else if (att.isDynamic()) {
-            return att.buildJsonPath(StaticProperties.FEATURE_PROPERTIES_PATH);
-        } else {
-            return att.buildJsonPath(StaticProperties.FEATURE);
-        }
-    }
-
     static <T extends Number & Comparable<T>> ICriterion gt(AttributeModel att, T value) {
-        return ICriterion.gt(buildQueryablePath(att), value);
+        return ICriterion.gt(att.getFullJsonPath(), value);
     }
 
     static <T extends Number & Comparable<T>> ICriterion ge(AttributeModel att, T value) {
-        return ICriterion.ge(buildQueryablePath(att), value);
+        return ICriterion.ge(att.getFullJsonPath(), value);
     }
 
     static <T extends Number & Comparable<T>> ICriterion lt(AttributeModel att, T value) {
-        return ICriterion.lt(buildQueryablePath(att), value);
+        return ICriterion.lt(att.getFullJsonPath(), value);
     }
 
     static <T extends Number & Comparable<T>> ICriterion le(AttributeModel att, T value) {
-        return ICriterion.le(buildQueryablePath(att), value);
+        return ICriterion.le(att.getFullJsonPath(), value);
     }
 
     static ICriterion gt(AttributeModel att, OffsetDateTime date) {
-        return ICriterion.gt(buildQueryablePath(att), date);
+        return ICriterion.gt(att.getFullJsonPath(), date);
     }
 
     static ICriterion ge(AttributeModel att, OffsetDateTime date) {
-        return ICriterion.ge(buildQueryablePath(att), date);
+        return ICriterion.ge(att.getFullJsonPath(), date);
     }
 
     static ICriterion lt(AttributeModel att, OffsetDateTime date) {
-        return ICriterion.lt(buildQueryablePath(att), date);
+        return ICriterion.lt(att.getFullJsonPath(), date);
     }
 
     static ICriterion le(AttributeModel att, OffsetDateTime date) {
-        return ICriterion.le(buildQueryablePath(att), date);
+        return ICriterion.le(att.getFullJsonPath(), date);
     }
 
     static ICriterion eq(AttributeModel att, int value) {
-        return ICriterion.eq(buildQueryablePath(att), value);
+        return ICriterion.eq(att.getFullJsonPath(), value);
     }
 
     static ICriterion eq(AttributeModel att, long value) {
-        return ICriterion.eq(buildQueryablePath(att), value);
+        return ICriterion.eq(att.getFullJsonPath(), value);
     }
 
     static ICriterion isTrue(AttributeModel att) {
-        return ICriterion.isTrue(buildQueryablePath(att));
+        return ICriterion.isTrue(att.getFullJsonPath());
     }
 
     static ICriterion isFalse(AttributeModel att) {
-        return ICriterion.isFalse(buildQueryablePath(att));
+        return ICriterion.isFalse(att.getFullJsonPath());
     }
 
     static ICriterion eq(AttributeModel att, boolean value) {
-        return ICriterion.eq(buildQueryablePath(att), value);
+        return ICriterion.eq(att.getFullJsonPath(), value);
     }
 
     static ICriterion in(AttributeModel att, int... values) {
-        return ICriterion.in(buildQueryablePath(att), values);
+        return ICriterion.in(att.getFullJsonPath(), values);
     }
 
     static ICriterion in(AttributeModel att, long... values) {
-        return ICriterion.in(buildQueryablePath(att), values);
+        return ICriterion.in(att.getFullJsonPath(), values);
     }
 
     static ICriterion eq(AttributeModel att, double value, double precision) {
-        return ICriterion.eq(buildQueryablePath(att), value, precision);
+        return ICriterion.eq(att.getFullJsonPath(), value, precision);
     }
 
     static ICriterion ne(AttributeModel att, int value) {
-        return ICriterion.ne(buildQueryablePath(att), value);
+        return ICriterion.ne(att.getFullJsonPath(), value);
     }
 
     static ICriterion ne(AttributeModel att, long value) {
-        return ICriterion.ne(buildQueryablePath(att), value);
+        return ICriterion.ne(att.getFullJsonPath(), value);
     }
 
     static ICriterion ne(AttributeModel att, double value, double precision) {
-        return ICriterion.ne(buildQueryablePath(att), value, precision);
+        return ICriterion.ne(att.getFullJsonPath(), value, precision);
     }
 
     /**
@@ -127,7 +116,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion eq(AttributeModel att, String text) {
-        return ICriterion.eq(buildQueryablePath(att), text);
+        return ICriterion.eq(att.getFullJsonPath(), text);
     }
 
     /**
@@ -137,7 +126,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion eq(AttributeModel att, OffsetDateTime date) {
-        return ICriterion.eq(buildQueryablePath(att), date);
+        return ICriterion.eq(att.getFullJsonPath(), date);
     }
 
     /**
@@ -148,7 +137,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion startsWith(AttributeModel att, String text) {
-        return ICriterion.startsWith(buildQueryablePath(att), text);
+        return ICriterion.startsWith(att.getFullJsonPath(), text);
     }
 
     /**
@@ -159,7 +148,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion endsWith(AttributeModel att, String text) {
-        return ICriterion.endsWith(buildQueryablePath(att), text);
+        return ICriterion.endsWith(att.getFullJsonPath(), text);
     }
 
     /**
@@ -170,7 +159,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion contains(AttributeModel att, String text) {
-        return ICriterion.contains(buildQueryablePath(att), text);
+        return ICriterion.contains(att.getFullJsonPath(), text);
     }
 
     /**
@@ -181,7 +170,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion likes(AttributeModel att, String text) {
-        return ICriterion.likes(buildQueryablePath(att), text);
+        return ICriterion.likes(att.getFullJsonPath(), text);
     }
 
     /**
@@ -191,7 +180,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion contains(AttributeModel att, int value) {
-        return ICriterion.contains(buildQueryablePath(att), value);
+        return ICriterion.contains(att.getFullJsonPath(), value);
     }
 
     /**
@@ -201,7 +190,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion contains(AttributeModel att, long value) {
-        return ICriterion.contains(buildQueryablePath(att), value);
+        return ICriterion.contains(att.getFullJsonPath(), value);
     }
 
     /**
@@ -212,7 +201,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion contains(AttributeModel att, double value, double precision) {
-        return ICriterion.contains(buildQueryablePath(att), value, precision);
+        return ICriterion.contains(att.getFullJsonPath(), value, precision);
     }
 
     /**
@@ -223,7 +212,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion containsDateBetween(AttributeModel att, OffsetDateTime lowerDate, OffsetDateTime upperDate) {
-        return ICriterion.containsDateBetween(buildQueryablePath(att), lowerDate, upperDate);
+        return ICriterion.containsDateBetween(att.getFullJsonPath(), lowerDate, upperDate);
     }
 
     /**
@@ -233,7 +222,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion in(AttributeModel att, String... texts) {
-        return ICriterion.in(buildQueryablePath(att), texts);
+        return ICriterion.in(att.getFullJsonPath(), texts);
     }
 
     /**
@@ -244,7 +233,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion between(AttributeModel att, int lower, int upper) {
-        return ICriterion.between(buildQueryablePath(att), lower, upper);
+        return ICriterion.between(att.getFullJsonPath(), lower, upper);
     }
 
     /**
@@ -255,7 +244,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion between(AttributeModel att, long lower, long upper) {
-        return ICriterion.between(buildQueryablePath(att), lower, upper);
+        return ICriterion.between(att.getFullJsonPath(), lower, upper);
     }
 
     /**
@@ -266,7 +255,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion between(AttributeModel att, OffsetDateTime lower, OffsetDateTime upper) {
-        return ICriterion.between(buildQueryablePath(att), lower, upper);
+        return ICriterion.between(att.getFullJsonPath(), lower, upper);
     }
 
     /**
@@ -277,7 +266,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion between(AttributeModel att, double lower, double upper) {
-        return ICriterion.between(buildQueryablePath(att), lower, upper);
+        return ICriterion.between(att.getFullJsonPath(), lower, upper);
     }
 
     /**
@@ -291,7 +280,7 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion between(AttributeModel att, int lower, boolean lowerInclusive, int upper,
             boolean upperInclusive) {
-        return ICriterion.between(buildQueryablePath(att), lower, lowerInclusive, upper, upperInclusive);
+        return ICriterion.between(att.getFullJsonPath(), lower, lowerInclusive, upper, upperInclusive);
     }
 
     /**
@@ -305,7 +294,7 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion between(AttributeModel att, long lower, boolean lowerInclusive, long upper,
             boolean upperInclusive) {
-        return ICriterion.between(buildQueryablePath(att), lower, lowerInclusive, upper, upperInclusive);
+        return ICriterion.between(att.getFullJsonPath(), lower, lowerInclusive, upper, upperInclusive);
     }
 
     /**
@@ -319,7 +308,7 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion between(AttributeModel att, OffsetDateTime lower, boolean lowerInclusive, OffsetDateTime upper,
             boolean upperInclusive) {
-        return ICriterion.between(buildQueryablePath(att), lower, lowerInclusive, upper, upperInclusive);
+        return ICriterion.between(att.getFullJsonPath(), lower, lowerInclusive, upper, upperInclusive);
     }
 
     /**
@@ -333,7 +322,7 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion between(AttributeModel att, double lower, boolean lowerInclusive, double upper,
             boolean upperInclusive) {
-        return ICriterion.between(buildQueryablePath(att), lower, lowerInclusive, upper, upperInclusive);
+        return ICriterion.between(att.getFullJsonPath(), lower, lowerInclusive, upper, upperInclusive);
     }
 
     /**
@@ -343,7 +332,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static <T extends Number & Comparable<T>> ICriterion into(AttributeModel att, T value) {
-        return ICriterion.into(buildQueryablePath(att), value);
+        return ICriterion.into(att.getFullJsonPath(), value);
     }
 
     /**
@@ -354,7 +343,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion intersects(AttributeModel att, OffsetDateTime lowerBound, OffsetDateTime upperBound) {
-        return ICriterion.intersects(buildQueryablePath(att), lowerBound, upperBound);
+        return ICriterion.intersects(att.getFullJsonPath(), lowerBound, upperBound);
     }
 
     /**
@@ -365,7 +354,7 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static <T extends Number & Comparable<T>> ICriterion intersects(AttributeModel att, T lowerBound, T upperBound) {
-        return ICriterion.intersects(buildQueryablePath(att), lowerBound, upperBound);
+        return ICriterion.intersects(att.getFullJsonPath(), lowerBound, upperBound);
     }
 
     /**
@@ -374,6 +363,6 @@ public interface IFeatureCriterion extends ICriterion {
      * @return criterion
      */
     static ICriterion attributeExists(AttributeModel att) {
-        return ICriterion.attributeExists(buildQueryablePath(att));
+        return ICriterion.attributeExists(att.getFullJsonPath());
     }
 }

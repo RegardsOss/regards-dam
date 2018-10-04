@@ -18,6 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.domain.models.attributes;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -31,6 +35,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -39,15 +44,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.validator.constraints.NotBlank;
 
 import fr.cnes.regards.framework.gson.utils.GSONConstants;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.module.manager.ConfigIgnore;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.models.IXmlisable;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.AbstractRestriction;
@@ -85,9 +88,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
-            message = "Attribute name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE
-                    + " length.")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
@@ -218,6 +220,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setName(String pName) {
         name = pName;
+        buildPublicJsonPath();
     }
 
     public AttributeType getType() {
@@ -238,6 +241,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setFragment(Fragment pFragment) {
         fragment = pFragment;
+        buildPublicJsonPath();
     }
 
     public String getDescription() {
@@ -424,6 +428,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             }
             setProperties(ppts);
         }
+        buildPublicJsonPath();
     }
 
     public String getDefaultValue() {
@@ -448,6 +453,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setDynamic(boolean pDynamic) {
         dynamic = pDynamic;
+        buildPublicJsonPath();
     }
 
     public boolean isInternal() {
@@ -470,7 +476,26 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         return fragment == null ? name : fragment.getName() + "." + name;
     }
 
-    public String buildJsonPath(String namespace) {
+    /**
+     * Retrieve full feature attribute json path
+     * @return
+     */
+    public String getFullJsonPath() {
+        if (isInternal()) {
+            return getJsonPathForNamespace("");
+        } else if (isDynamic()) {
+            return getJsonPathForNamespace(StaticProperties.FEATURE_PROPERTIES_PATH);
+        } else {
+            return getJsonPathForNamespace(StaticProperties.FEATURE);
+        }
+    }
+
+    /**
+     * Construct a json path for the current attribute depending on given prefix namespace
+     * @param namespace
+     * @return
+     */
+    public String getJsonPathForNamespace(String namespace) {
         StringBuilder builder = new StringBuilder(namespace);
         if (!namespace.isEmpty()) {
             builder.append(GSONConstants.JSON_PATH_SEPARATOR);
@@ -480,8 +505,26 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             builder.append(GSONConstants.JSON_PATH_SEPARATOR);
         }
         builder.append(name);
-        jsonPath = builder.toString();
-        return jsonPath;
+        return builder.toString();
+    }
+
+    /**
+     * Private method to construct the public json path of the attribute.
+     * The public json path is the path requested by clients to search for features.
+     * if full private path is feature.properties.attribute, then the public path is properties.attribute.
+     * The public entities returned does not contains the feature element.
+     */
+    @PostLoad
+    public void buildPublicJsonPath() {
+        if (!isInternal()) {
+            String namespace = "";
+            if (isDynamic()) {
+                namespace = StaticProperties.FEATURE_PROPERTIES;
+            }
+            jsonPath = getJsonPathForNamespace(namespace);
+        } else {
+            jsonPath = null;
+        }
     }
 
     /**

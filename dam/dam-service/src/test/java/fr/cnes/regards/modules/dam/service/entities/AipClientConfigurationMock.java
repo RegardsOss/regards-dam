@@ -107,12 +107,12 @@ class AipClientConfigurationMock {
         }
 
         @SuppressWarnings("unused")
-        public ResponseEntity<AIP> updateAip(@PathVariable(name = "ip_id") String ipId,
+        public ResponseEntity<Void> updateAip(@PathVariable(name = "ip_id") String ipId,
                 @RequestBody @Valid AIP updated) {
             String gsonString = gson.toJson(updated);
             LOGGER.info("==========>  UPDATE   ===> " + ipId + " =============" + gsonString);
             publishAIP(updated.getId());
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
 
         private void publishAIP(UniformResourceName urn) {
