@@ -51,7 +51,6 @@ public class DBConnectionService implements IDBConnectionService {
     public DBConnectionService(IPluginService pPluginService) {
         super();
         this.pluginService = pPluginService;
-        this.pluginService.addPluginPackage("fr.cnes.regards.modules.dam.domain.datasources");
     }
 
     @Override

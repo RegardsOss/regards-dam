@@ -58,7 +58,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
     private ISubscriber subscriber;
 
     @Autowired
-    private IDatasetService dasService;
+    private IDatasetService dsService;
 
     @Autowired
     private IDocumentService docService;
@@ -97,8 +97,8 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
 
                     FeignSecurityManager.asSystem();
                     entity.setIpId(urn);
-                    if (entity.getStateAip().equals(EntityAipState.AIP_STORE_PENDING)
-                            || entity.getStateAip().equals(EntityAipState.AIP_STORE_ERROR)) {
+                    if ((entity.getStateAip() == EntityAipState.AIP_STORE_PENDING)
+                            || (entity.getStateAip() == EntityAipState.AIP_STORE_ERROR)) {
                         entity.setStateAip(EntityAipState.AIP_STORE_OK);
                     }
                     getService(urn.getEntityType()).save(entity);
@@ -117,7 +117,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
         @SuppressWarnings("rawtypes")
         private IEntityService getService(EntityType type) {
             if (type.equals(EntityType.DATASET)) {
-                return dasService;
+                return dsService;
             } else if (type.equals(EntityType.DOCUMENT)) {
                 return docService;
             } else if (type.equals(EntityType.COLLECTION)) {

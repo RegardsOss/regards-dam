@@ -22,8 +22,6 @@ package fr.cnes.regards.modules.dam.service.datasources;
 
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,11 +51,6 @@ public class DataSourceService implements IDataSourceService {
     @Autowired
     private IPluginService service;
 
-    @PostConstruct
-    public void init() {
-        this.service.addPluginPackage("fr.cnes.regards.modules.dam.domain.datasources");
-    }
-
     @Override
     public List<PluginConfiguration> getAllDataSources() {
         return service.getPluginConfigurationsByType(IDataSourcePlugin.class);
@@ -86,8 +79,11 @@ public class DataSourceService implements IDataSourceService {
         // Manage the activation change
         dataSourceFromDb.setIsActive(dataSource.isActive());
 
-        // Update all PluginParameters
+        // Update all existing PluginParameters
         dataSourceFromDb.getParameters().replaceAll(param -> mergeParameter(param, dataSource));
+        // Add new PluginParameters
+        dataSource.getParameters().removeAll(dataSourceFromDb.getParameters());
+        dataSource.getParameters().forEach(p -> dataSourceFromDb.getParameters().add(p));
         return service.updatePluginConfiguration(dataSourceFromDb);
     }
 

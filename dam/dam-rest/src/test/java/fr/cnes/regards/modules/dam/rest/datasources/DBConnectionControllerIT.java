@@ -108,8 +108,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createPostgresDBConnection() throws ModuleException {
 
-        pluginService.addPluginPackage(MockConnectionPlugin.class.getPackage().getName());
-
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().is2xxSuccessful());
 
