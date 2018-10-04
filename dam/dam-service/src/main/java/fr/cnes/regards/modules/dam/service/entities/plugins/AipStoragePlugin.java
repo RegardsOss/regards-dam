@@ -115,14 +115,14 @@ public class AipStoragePlugin implements IStorageService {
 
     @Override
     public <T extends AbstractEntity<?>> T updateAIP(T toUpdate) {
-        ResponseEntity<AIP> response;
+        ResponseEntity<Void> response;
         try {
             FeignSecurityManager.asSystem();
 
             final AIP aip = getBuilder(toUpdate).build();
 
             response = aipClient.updateAip(toUpdate.getIpId().toString(), aip);
-            handleClientAIPResponse(response.getStatusCode(), toUpdate, response.getBody());
+            handleClientAIPResponse(response.getStatusCode(), toUpdate, aip);
         } catch (final ModuleException e) {
             LOGGER.error("The AIP entity {} can not be update by microservice storage", toUpdate.getIpId(), e);
             toUpdate.setStateAip(EntityAipState.AIP_STORE_ERROR);
