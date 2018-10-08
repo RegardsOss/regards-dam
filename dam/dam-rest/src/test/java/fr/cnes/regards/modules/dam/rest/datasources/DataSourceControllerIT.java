@@ -74,8 +74,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceControllerIT.class);
 
-    private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.dam.domain.datasources.plugins";
-
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
     private final static String FROM_CLAUSE_TEST = "from T_TEST_PLUGIN_DATA_SOURCE";
@@ -84,11 +82,16 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private final static String JSON_PATH_LABEL = "$.content.label";
 
-    private final static String JSON_PATH_FROM_CLAUSE = "$.content.parameters.[0].value";
+    private final static String JSON_PATH_FROM_CLAUSE = "$.content.parameters.[?(@.name == '"
+            + DataSourcePluginConstants.FROM_CLAUSE + "')].value";
 
-    private final static String JSON_PATH_TABLE_NAME = "$.content.parameters.[0].value";
+    private final static String JSON_PATH_TABLE_NAME = "$.content.parameters.[?(@.name == '"
+            + DataSourcePluginConstants.TABLE_PARAM + "')].value";
 
-    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content.parameters.[3].pluginConfiguration.id";
+    private final static String PLUGIN_CONNECTION_PARAM_PATH = "parameters.[?(@.name == '"
+            + DataSourcePluginConstants.CONNECTION_PARAM + "')].pluginConfiguration.id";
+
+    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content." + PLUGIN_CONNECTION_PARAM_PATH;
 
     private static final String DEFAULT_MODEL_NAME = "VALIDATION_MODEL_2";
 
@@ -163,7 +166,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -185,7 +188,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_TABLE_NAME,
-                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.TABLE_PARAM))));
+                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.TABLE_PARAM))));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -209,11 +212,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
                           "DataSource shouldn't be retrieve.", dataSource.getId());
@@ -278,7 +281,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
                 .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
@@ -323,12 +326,12 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
                            "DataSource shouldn't be created.");
 
-        expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[0].content.parameters.[3].pluginConfiguration.id",
-                          Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[1].content.parameters.[3].pluginConfiguration.id",
-                          Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[0].content." + PLUGIN_CONNECTION_PARAM_PATH,
+                                                    Matchers.hasItem(pluginPostgreDbConnection.getId().intValue())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[1].content." + PLUGIN_CONNECTION_PARAM_PATH,
+                                                    Matchers.hasItem(pluginPostgreDbConnection.getId().intValue())));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");
     }
