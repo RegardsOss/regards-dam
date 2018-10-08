@@ -21,6 +21,8 @@
 package fr.cnes.regards.modules.dam.service.datasources;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +82,9 @@ public class DataSourceService implements IDataSourceService {
         dataSourceFromDb.setIsActive(dataSource.isActive());
 
         // Update all existing PluginParameters
-        dataSourceFromDb.getParameters().replaceAll(param -> mergeParameter(param, dataSource));
+        Set<PluginParameter> mergedParams = dataSourceFromDb.getParameters().stream()
+                .map(param -> mergeParameter(param, dataSource)).collect(Collectors.toSet());
+        dataSourceFromDb.setParameters(mergedParams);
         // Add new PluginParameters
         dataSource.getParameters().removeAll(dataSourceFromDb.getParameters());
         dataSource.getParameters().forEach(p -> dataSourceFromDb.getParameters().add(p));

@@ -721,7 +721,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             return null;
         }
 
-        final List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        final Set<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);

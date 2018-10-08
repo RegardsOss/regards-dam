@@ -22,6 +22,7 @@ package fr.cnes.regards.modules.dam.service.datasources;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -94,7 +95,7 @@ public class DBConnectionServiceTest {
         dbConnectionServiceMock = new DBConnectionService(pluginServiceMock);
 
         // create PluginConfiguration
-        List<PluginParameter> parameters = initializePluginParameters();
+        Set<PluginParameter> parameters = initializePluginParameters();
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
                 parameters));
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
@@ -151,7 +152,7 @@ public class DBConnectionServiceTest {
         return pluginMetaData;
     }
 
-    private List<PluginParameter> initializePluginParameters() {
+    private Set<PluginParameter> initializePluginParameters() {
         return PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
                 .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
                 .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)

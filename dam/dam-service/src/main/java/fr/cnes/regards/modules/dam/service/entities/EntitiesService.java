@@ -187,7 +187,7 @@ public class EntitiesService implements IEntitiesService {
             return null;
         }
 
-        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        Set<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);

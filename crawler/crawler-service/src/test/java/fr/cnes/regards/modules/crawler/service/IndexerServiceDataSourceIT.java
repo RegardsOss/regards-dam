@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;
@@ -59,6 +60,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -112,8 +114,6 @@ import fr.cnes.regards.modules.indexer.service.Searches;
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
-
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.crawler.plugins";
 
     @SuppressWarnings("unused")
     private static final String TABLE_NAME_TEST = "t_validation_1";
@@ -275,8 +275,7 @@ public class IndexerServiceDataSourceIT {
     }
 
     private PluginConfiguration getPostgresDataSource() {
-        List<PluginParameter> param = PluginParametersFactory.build()
-                .addParameter(TestDataSourcePlugin.MODEL, dataModel)
+        Set<PluginParameter> param = PluginParametersFactory.build().addParameter(TestDataSourcePlugin.MODEL, dataModel)
                 .addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
         return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class);
     }

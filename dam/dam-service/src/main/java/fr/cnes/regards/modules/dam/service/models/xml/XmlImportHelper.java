@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dam.service.models.xml;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -33,6 +34,8 @@ import javax.xml.validation.SchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -236,7 +239,7 @@ public final class XmlImportHelper {
             PluginMetaData plgMetaData = PluginUtils.createPluginMetaData(pluginClass);
             PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
             // Add plugin parameters (from attribute and associated fragment)
-            List<PluginParameter> parameters = new ArrayList<>();
+            Set<PluginParameter> parameters = Sets.newHashSet();
             // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)
             if (xmlParamPluginType != null) {
                 parameters.add(new PluginParameter("parameterAttributeName",

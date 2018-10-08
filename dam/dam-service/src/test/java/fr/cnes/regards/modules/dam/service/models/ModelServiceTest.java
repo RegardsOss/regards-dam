@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -337,10 +337,10 @@ public class ModelServiceTest {
         PluginConfiguration sumComputeConf = new PluginConfiguration();
         sumComputeConf.setLabel("SumComputeValue");
         sumComputeConf.setPluginClassName("fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin");
-        sumComputeConf.setParameters(Lists.newArrayList(new PluginParameter("parameterAttributeName", "\"paramName\""),
-                                                        // No parameter fragment => default value => "" => stripped as
-                                                        // """"
-                                                        new PluginParameter("parameterAttributeFragmentName", "\"\"")));
+        sumComputeConf.setParameters(Sets.newHashSet(new PluginParameter("parameterAttributeName", "\"paramName\""),
+                                                     // No parameter fragment => default value => "" => stripped as
+                                                     // """"
+                                                     new PluginParameter("parameterAttributeFragmentName", "\"\"")));
 
         modAtt.setComputationConf(sumComputeConf);
         modelAttrAssocs.add(modAtt);
