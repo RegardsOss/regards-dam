@@ -250,11 +250,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasToString(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+                          Matchers.hasItem(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
@@ -268,11 +268,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
-        final PluginConfiguration dataSource = createDataSourceWithFromClause();
-        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
                            "DataSource shouldn't be created.");
+
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
-        dataSource.setId(pls.get(0).getId());
+        PluginConfiguration dataSource = pls.get(0);
 
         // Update the DataSource
         PluginConfiguration otherDbConnection = pluginService
@@ -282,10 +282,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().toString())));
+                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.equalTo(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+                          Matchers.hasItem(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
