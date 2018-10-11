@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.indexer.domain.spatial;
 
 /**
- * Some Coordinat references systems
+ * Some Coordinate references systems
  * @author oroussel
  */
 public enum Crs {

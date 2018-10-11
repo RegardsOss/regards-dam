@@ -21,21 +21,38 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 
 /**
- * Listening for tenant creation
+ * Listening for tenant creation and application ready to manage Elasticsearch index creation
  * @author oroussel
  */
 @Component
-public class IndexerEventListener {
+public class IndexerEventsListener {
     @Autowired
     private IEsRepository repository;
+
+    @Autowired
+    private ITenantResolver tenantResolver;
+
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    @EventListener
+    public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
+            runtimeTenantResolver.forceTenant(tenant);
+            this.checkIndex(tenant);
+        }
+    }
 
     /**
      * A tenant (or project) has been created and is ready to be used => create ElasticSearch index (if id doesn't
@@ -43,13 +60,17 @@ public class IndexerEventListener {
      */
     @EventListener
     public void handleTenantConnectionReady(TenantConnectionReady event) {
-        if (!repository.indexExists(event.getTenant())) {
-            boolean created = repository.createIndex(event.getTenant());
+        checkIndex(event.getTenant());
+    }
+
+    private void checkIndex(String tenant) {
+        if (!repository.indexExists(tenant)) {
+            boolean created = repository.createIndex(tenant);
             if (created) {
                 String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
                         .toArray(length -> new String[length]);
-                repository.setAutomaticDoubleMapping(event.getTenant(), types);
-                repository.setGeometryMapping(event.getTenant(), types);
+                repository.setAutomaticDoubleMapping(tenant, types);
+                repository.setGeometryMapping(tenant, types);
             }
         }
     }
