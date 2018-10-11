@@ -42,7 +42,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>opensearch</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.0.0-RELEASE</version>
 	</parent>
 
 	<build>
