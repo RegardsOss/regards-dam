@@ -80,7 +80,7 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
             if (AttributeModel.class.isAssignableFrom(item.getKey())) {
                 AttributeModel attribute = item.getTypedValue();
                 try {
-                    attributeModelService.createAttribute(attribute);
+                    attributeModelService.addAttribute(attribute, false);
                 } catch (ModuleException e) {
                     importErrors.add(String.format("Skipping import of AttributeModel %s: %s", attribute.getFullName(),
                                                    e.getMessage()));
