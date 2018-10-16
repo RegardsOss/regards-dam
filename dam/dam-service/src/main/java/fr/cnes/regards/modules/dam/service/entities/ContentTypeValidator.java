@@ -35,6 +35,11 @@ import org.springframework.http.MediaType;
  */
 public final class ContentTypeValidator {
 
+    /**
+     * Before the RFC7763 (March 2016), some browser were using a different MediaType.
+     */
+    public static String TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE = "text/x-markdown";
+
     private ContentTypeValidator() {
         // Nothing to do
     }
@@ -48,7 +53,8 @@ public final class ContentTypeValidator {
 
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE));
+                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
+                        TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
                 break;
             default:
                 // No restriction
@@ -67,7 +73,7 @@ public final class ContentTypeValidator {
         switch (dataType) {
             case DESCRIPTION:
                 checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
-                                                 MediaType.TEXT_HTML_VALUE));
+                                                 MediaType.TEXT_HTML_VALUE, TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
                 break;
             default:
                 // No restriction
