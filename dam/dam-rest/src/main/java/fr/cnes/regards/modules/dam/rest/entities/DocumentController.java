@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities;
 
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -205,6 +206,8 @@ public class DocumentController implements IResourceController<Document> {
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Document.class),
                                 MethodParamFactory.build(BindingResult.class));
+        resourceService.addLink(resource, this.getClass(), "deleteDocument", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Set.class));
