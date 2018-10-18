@@ -57,6 +57,7 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
     }
 
     @Override
+    @EventListener
     public void onComputedAttributeModelEvent(ComputedAttributeModelEvent event) {
         ModelAttrAssoc modelAttrAssoc = event.getSource();
         // Only recompute if a plugin conf is set (a priori if a plugin confis removed it is to be changed soon)
