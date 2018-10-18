@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
@@ -58,6 +59,7 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
 
     @Override
     @EventListener
+    @RegardsTransactional
     public void onComputedAttributeModelEvent(ComputedAttributeModelEvent event) {
         ModelAttrAssoc modelAttrAssoc = event.getSource();
         // Only recompute if a plugin conf is set (a priori if a plugin confis removed it is to be changed soon)
@@ -65,6 +67,7 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
             for (Dataset dataset : datasetRepository
                     .findAllByModelIdIn(Collections.singleton(modelAttrAssoc.getModel().getId()))) {
                 entityIndexerService.computeComputedAttributes(dataset, null, tenantResolver.getTenant());
+                datasetRepository.save(dataset);
             }
         }
     }
