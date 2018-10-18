@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,8 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+package fr.cnes.regards.modules.dam.service.models.event;
+
+import org.springframework.context.ApplicationEvent;
+
+import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
+
 /**
- * @author msordi
- *
+ * Event sent when a plugin configuration is updated on a computed attribute
+ * @author oroussel
  */
-package fr.cnes.regards.modules.dam.service.models;
+public class ComputedAttributeModelEvent extends ApplicationEvent {
+
+    public ComputedAttributeModelEvent(ModelAttrAssoc source) {
+        super(source);
+    }
+
+    @Override
+    public ModelAttrAssoc getSource() {
+        return (ModelAttrAssoc) super.getSource();
+    }
+}

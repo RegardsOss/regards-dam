@@ -18,12 +18,11 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,41 +98,41 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Constructor
-     * @param pModelService Model attribute service
-     * @param pResourceService Resource service
+     * @param modelService Model attribute service
+     * @param resourceService Resource service
      */
-    public ModelController(IModelService pModelService, IResourceService pResourceService) {
-        this.modelService = pModelService;
-        this.resourceService = pResourceService;
+    public ModelController(IModelService modelService, IResourceService resourceService) {
+        this.modelService = modelService;
+        this.resourceService = resourceService;
     }
 
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
-     * @param pType filter
+     * @param type filter
      * @return a list of {@link Model}
      */
     @ResourceAccess(description = "List all models")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<Model>>> getModels(
-            @RequestParam(value = "type", required = false) EntityType pType) {
-        return ResponseEntity.ok(toResources(modelService.getModels(pType)));
+            @RequestParam(value = "type", required = false) EntityType type) {
+        return ResponseEntity.ok(toResources(modelService.getModels(type)));
     }
 
     /**
      * Create a {@link Model}
-     * @param pModel the {@link Model} to create
+     * @param model the {@link Model} to create
      * @return the created {@link Model}
      * @throws ModuleException if problem occurs during model creation
      */
     @ResourceAccess(description = "Create a model")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<Model>> createModel(@Valid @RequestBody Model pModel) throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.createModel(pModel)));
+    public ResponseEntity<Resource<Model>> createModel(@Valid @RequestBody Model model) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.createModel(model)));
     }
 
     /**
      * Get a {@link Model} without its attributes
-     * @param pModelId {@link Model} identifier
+     * @param modelName {@link Model} identifier
      * @return a {@link Model}
      * @throws ModuleException if model cannot be retrieved
      */
@@ -145,21 +144,21 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Allow to update {@link Model} description
-     * @param pModelId {@link Model} identifier
-     * @param pModel {@link Model} to update
+     * @param modelName {@link Model} identifier
+     * @param model {@link Model} to update
      * @return updated {@link Model}
      * @throws ModuleException if model cannot be updated
      */
     @ResourceAccess(description = "Update a model")
     @RequestMapping(method = RequestMethod.PUT, value = MODEL_MAPPING)
-    public ResponseEntity<Resource<Model>> updateModel(@PathVariable String modelName, @Valid @RequestBody Model pModel)
+    public ResponseEntity<Resource<Model>> updateModel(@PathVariable String modelName, @Valid @RequestBody Model model)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.updateModel(modelName, pModel)));
+        return ResponseEntity.ok(toResource(modelService.updateModel(modelName, model)));
     }
 
     /**
      * Delete a {@link Model} and detach all {@link ModelAttrAssoc}
-     * @param pModelId {@link Model} identifier
+     * @param modelName {@link Model} identifier
      * @return nothing
      * @throws ModuleException if model cannot be deleted
      */
@@ -172,39 +171,39 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Duplicate a model
-     * @param pModelId {@link Model} to duplicate
-     * @param pModel new model to create with its own name, description and type
+     * @param modelName {@link Model} to duplicate
+     * @param model new model to create with its own name, description and type
      * @return a new model based on actual one
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Duplicate a model")
     @RequestMapping(method = RequestMethod.POST, value = MODEL_MAPPING + "/duplicate")
     public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable String modelName,
-            @Valid @RequestBody Model pModel) throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.duplicateModel(modelName, pModel)));
+            @Valid @RequestBody Model model) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.duplicateModel(modelName, model)));
     }
 
     /**
      * Export a model
-     * @param pRequest HTTP request
-     * @param pResponse HTTP response
-     * @param pModelId model to export
+     * @param request HTTP request
+     * @param response HTTP response
+     * @param modelName model to export
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Export a model")
     @RequestMapping(method = RequestMethod.GET, value = MODEL_MAPPING + "/export")
-    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable String modelName)
+    public void exportModel(HttpServletRequest request, HttpServletResponse response, @PathVariable String modelName)
             throws ModuleException {
         final Model model = modelService.getModelByName(modelName);
         final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + MODEL_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
-        pResponse.setContentType(MediaType.APPLICATION_XML_VALUE);
-        pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
+        response.setContentType(MediaType.APPLICATION_XML_VALUE);
+        response.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
 
         try {
-            modelService.exportModel(modelName, pResponse.getOutputStream());
-            pResponse.getOutputStream().flush();
+            modelService.exportModel(modelName, response.getOutputStream());
+            response.getOutputStream().flush();
         } catch (IOException e) {
             final String message = String.format("Error with servlet output stream while exporting model %s.",
                                                  model.getName());

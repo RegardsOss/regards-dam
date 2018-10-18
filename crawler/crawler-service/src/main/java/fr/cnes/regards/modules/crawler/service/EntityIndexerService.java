@@ -316,7 +316,20 @@ public class EntityIndexerService implements IEntityIndexerService {
                                          saveDataObjectsCallable, dsiId);
         addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
                                            saveDataObjectsCallable, dsiId);
+        computeComputedAttributes(dataset, dsiId, tenant);
 
+        esRepos.save(tenant, dataset);
+        LOGGER.info("Dataset {} updated", dataset.getId());
+        sendMessage("...Dataset indexation updated.", dsiId);
+    }
+
+    /**
+     * Manage computed attributes computation
+     * @param dataset concerned dataset
+     * @param dsiId can be null (in this case, no notification is sent)
+     */
+    @Override
+    public void computeComputedAttributes(Dataset dataset, Long dsiId, String tenant) {
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
@@ -336,10 +349,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         LOGGER.info("...computing OK");
         sendMessage(String.format("...Computing ended.", computationPlugins.size()), dsiId);
-
-        esRepos.save(tenant, dataset);
-        LOGGER.info("Dataset {} updated", dataset.getId());
-        sendMessage("...Dataset indexation updated.", dsiId);
     }
 
     /**

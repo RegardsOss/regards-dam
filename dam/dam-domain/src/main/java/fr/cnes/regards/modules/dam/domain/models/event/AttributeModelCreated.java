@@ -31,11 +31,12 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 @Event(target = Target.ALL)
 public class AttributeModelCreated extends AbstractAttributeModelEvent {
 
+    @SuppressWarnings("unused")
     public AttributeModelCreated() {
         // Json constructor
     }
 
-    public AttributeModelCreated(AttributeModel pAttributeModel) {
-        super(pAttributeModel);
+    public AttributeModelCreated(AttributeModel attributeModel) {
+        super(attributeModel);
     }
 }
