@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -97,13 +97,16 @@ public class ModelServiceTest {
 
     private IPluginService mockPluginService;
 
+    private ApplicationEventPublisher mockPublisher;
+
     @Before
     public void beforeTest() {
         mockModelR = Mockito.mock(IModelRepository.class);
         mockModelAttR = Mockito.mock(IModelAttrAssocRepository.class);
         mockAttModelS = Mockito.mock(IAttributeModelService.class);
         mockPluginService = Mockito.mock(IPluginService.class);
-        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService);
+        mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
+        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService, mockPublisher);
     }
 
     @Test(expected = EntityInvalidException.class)

@@ -33,6 +33,13 @@ public interface IEntityIndexerService {
     }
 
     /**
+     * Manage computed attributes computation
+     * @param dataset concerned dataset
+     * @param dsiId can be null (in this case, no notification is sent)
+     */
+    void computeComputedAttributes(Dataset dataset, Long dsiId, String tenant);
+
+    /**
      * Update entity into Elasticsearch
      * @param tenant concerned tenant
      * @param ipId concerned entity id
