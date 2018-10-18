@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 
 /**
  * Crawler service for Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -40,6 +42,9 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
 
     @Autowired
     private IDatasetRepository datasetRepository;
+
+    @Autowired
+    private IEsRepository esRepository;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
@@ -64,11 +69,13 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
         ModelAttrAssoc modelAttrAssoc = event.getSource();
         // Only recompute if a plugin conf is set (a priori if a plugin confis removed it is to be changed soon)
         if (modelAttrAssoc.getComputationConf() != null) {
-            for (Dataset dataset : datasetRepository
-                    .findAllByModelIdIn(Collections.singleton(modelAttrAssoc.getModel().getId()))) {
+            Set<Dataset> datasets = datasetRepository
+                    .findAllByModelIdIn(Collections.singleton(modelAttrAssoc.getModel().getId()));
+            for (Dataset dataset : datasets) {
                 entityIndexerService.computeComputedAttributes(dataset, null, tenantResolver.getTenant());
-                datasetRepository.save(dataset);
             }
+            datasetRepository.save(datasets);
+            esRepository.saveBulk(tenantResolver.getTenant(),datasets);
         }
     }
 
