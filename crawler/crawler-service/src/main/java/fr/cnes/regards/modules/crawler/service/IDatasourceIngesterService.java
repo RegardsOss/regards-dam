@@ -29,11 +29,6 @@ public interface IDatasourceIngesterService {
     List<DatasourceIngestion> getDatasourceIngestions();
 
     /**
-     * Retrieve asked one
-     */
-    DatasourceIngestion load(Long id);
-
-    /**
      * Delete given {@link DatasourceIngestion}
      * @param id DatasourceIngestion id
      */

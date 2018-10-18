@@ -51,6 +51,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
@@ -134,7 +135,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private IDatasourceIngesterService datasourceIngesterService;
+    private IDatasourceIngestionRepository datasourceIngestionRepository;
 
     @Override
     @EventListener
@@ -489,7 +490,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (buf.length() > 0) {
             self.createNotificationForAdmin(tenant, buf);
             // Also add detailed message to datasource ingestion
-            DatasourceIngestion dsIngestion = datasourceIngesterService.load(Long.parseLong(datasourceId));
+            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
             bulkSaveResult
                     .setDetailedErrorMsg(String.format("Datasource '%s':\n%s", dsIngestion.getLabel(), buf.toString()));
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
@@ -593,7 +594,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (buf.length() > 0) {
             self.createNotificationForAdmin(tenant, buf);
             // Also add detailed message to datasource ingestion (with ingestion label)
-            DatasourceIngestion dsIngestion = datasourceIngesterService.load(Long.parseLong(datasourceId));
+            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
             bulkSaveResult
                     .setDetailedErrorMsg(String.format("Datasource '%s':\n%s", dsIngestion.getLabel(), buf.toString()));
         }

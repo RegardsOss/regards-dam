@@ -328,11 +328,6 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public DatasourceIngestion load(Long id) {
-        return datasourceIngestionRepo.findOne(id);
-    }
-
-    @Override
     public void deleteDatasourceIngestion(Long id) {
         datasourceIngestionRepo.delete(id);
     }
