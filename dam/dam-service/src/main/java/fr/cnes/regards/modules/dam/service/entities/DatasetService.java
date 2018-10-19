@@ -18,13 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,7 +35,6 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -159,6 +158,11 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
         return new SubsettingCoherenceVisitor(finder);
+    }
+
+    @Override
+    public Set<Dataset> findAllByModel(Long modelId) {
+        return datasetRepository.findAllByModelIdIn(Collections.singleton(modelId));
     }
 
     @Override

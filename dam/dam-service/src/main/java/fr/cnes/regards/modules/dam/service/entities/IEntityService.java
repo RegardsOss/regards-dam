@@ -93,20 +93,20 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
     /**
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
      *
-     * @param pEntityId entity source id
+     * @param entityId entity source id
      * @param toAssociates tags to be associated by source entity (may be entity URNs)
      * @throws EntityNotFoundException
      */
-    void associate(Long pEntityId, Set<String> toAssociates) throws EntityNotFoundException;
+    void associate(Long entityId, Set<String> toAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
      *
-     * @param pEntityId entity source id
+     * @param entityId entity source id
      * @param toBeDissociated tags to be dissociated from source entity (may be entity URNs)
      * @throws EntityNotFoundException
      */
-    void dissociate(Long pEntityId, Set<String> toBeDissociated) throws EntityNotFoundException;
+    void dissociate(Long entityId, Set<String> toBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity
@@ -128,14 +128,14 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
     U update(Long entityId, U entity) throws ModuleException;
 
     /**
-     * Update entity of ipId pEntityUrn according to pEntity
+     * Update entity of ipId entityUrn according to pEntity
      *
-     * @param pEntityUrn ipId of entity to update
-     * @param pEntity "content" of entity to update
+     * @param entityUrn ipId of entity to update
+     * @param entity "content" of entity to update
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
+    U update(UniformResourceName entityUrn, U entity) throws ModuleException;
 
     /**
      * Save an entity.
@@ -149,15 +149,15 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
      * is null
      *
-     * @param pEntity entity to update
+     * @param entity entity to update
      * @return updated entity from database
      * @throws ModuleException
      */
-    default U update(U pEntity) throws ModuleException {
-        if (pEntity.getId() != null) {
-            return this.update(pEntity.getId(), pEntity);
+    default U update(U entity) throws ModuleException {
+        if (entity.getId() != null) {
+            return this.update(entity.getId(), entity);
         } else {
-            return this.update(pEntity.getIpId(), pEntity);
+            return this.update(entity.getIpId(), entity);
         }
     }
 

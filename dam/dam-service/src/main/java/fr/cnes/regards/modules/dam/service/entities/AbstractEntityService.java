@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -33,8 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -311,19 +309,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     /**
      * Associate a list of {@link String} tags to the given existing entity.
-     * @param pEntityId an AbstractEntity identifier
+     * @param entityId an AbstractEntity identifier
      * @param tagList UniformResourceName Set representing AbstractEntity to be associated to pCollection
      */
     @Override
-    public void associate(Long pEntityId, Set<String> tagList) throws EntityNotFoundException {
-        final U entity = repository.findById(pEntityId);
+    public void associate(Long entityId, Set<String> tagList) throws EntityNotFoundException {
+        final U entity = repository.findById(entityId);
         if (entity == null) {
-            throw new EntityNotFoundException(pEntityId, this.getClass());
+            throw new EntityNotFoundException(entityId, this.getClass());
         }
         // Adding new tags to detached entity
         em.detach(entity);
         tagList.forEach(ipId -> entity.addTags(ipId.toString()));
-        final U entityInDb = repository.findById(pEntityId);
+        final U entityInDb = repository.findById(entityId);
         // And detach it because it is the other one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
@@ -459,15 +457,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
-        U entityInDb = repository.findOneByIpId(pEntityUrn);
+    public U update(UniformResourceName entityUrn, U entity) throws ModuleException {
+        U entityInDb = repository.findOneByIpId(entityUrn);
         if (entityInDb == null) {
-            throw new EntityNotFoundException(pEntity.getIpId().toString());
+            throw new EntityNotFoundException(entity.getIpId().toString());
         }
-        pEntity.setId(entityInDb.getId());
+        entity.setId(entityInDb.getId());
         // checks
-        entityInDb = checkUpdate(entityInDb.getId(), pEntity);
-        return updateWithoutCheck(pEntity, entityInDb);
+        entityInDb = checkUpdate(entityInDb.getId(), entity);
+        return updateWithoutCheck(entity, entityInDb);
     }
 
     /**
