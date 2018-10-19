@@ -317,6 +317,8 @@ public class EntityIndexerService implements IEntityIndexerService {
                                          saveDataObjectsCallable, dsiId);
         addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
                                            saveDataObjectsCallable, dsiId);
+        // To remove thread used by executor
+        executor.shutdown();
         computeComputedAttributes(dataset, dsiId, tenant);
 
         esRepos.save(tenant, dataset);
