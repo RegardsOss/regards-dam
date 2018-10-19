@@ -26,6 +26,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
@@ -60,6 +62,7 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
         LinkedHashSet<DatasetWithAccessRight> datasetsWithAR = Sets.newLinkedHashSet();
 
         // 1. Search for datasets
+        // NOTE : New pageRequest to avoid Sort. Sort is forced in the JPA specification to sort by label
         Page<Dataset> datasets = datasetService
                 .search(datasetLabelFilter, new PageRequest(pageRequest.getPageNumber(), pageRequest.getPageSize()));
 
@@ -68,8 +71,8 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
                 Page<AccessRight> accessRights = accessRightService
-                        .retrieveAccessRights(accessGroupName, ds.getIpId(),
-                                              new PageRequest(pageRequest.getPageNumber(), pageRequest.getPageSize()));
+                        .retrieveAccessRights(accessGroupName, ds.getIpId(), new PageRequest(
+                                pageRequest.getPageNumber(), pageRequest.getPageSize(), new Sort(Direction.ASC, "id")));
                 if (accessRights.hasContent()) {
                     datasetWithAR.setAccessRight(accessRights.getContent().get(0));
                 }
