@@ -48,7 +48,7 @@ import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
- * Implement {@link IAttributeFinder} using {@link AttributeModelCache} properly through proxyfied cacheable class.
+ * Implement {@link IAttributeFinder}.
  * @author Marc Sordi
  *
  */
@@ -100,13 +100,13 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
-        if (!attribute.isDynamic() && (attribute.getId() != null)) {
+        if (!attribute.isDynamic() && attribute.getId() != null) {
             return name;
         }
 
         for (Entry<String, AttributeModel> entry : getTenantMap().entrySet()) {
             AttributeModel att = entry.getValue();
-            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
+            if (att.isDynamic() && att.getId() != null && att.getId().equals(attribute.getId())) {
                 if (entry.getKey().length() < name.length()) {
                     name = entry.getKey();
                 }
@@ -167,7 +167,6 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      * Use the feign client to retrieve all attribute models.<br>
      * The method is private because it is not expected to be used directly, but via its cached facade
      * "getAttributeModels" method.
-     * @return the list of user's access groups
      */
     protected void computePropertyMap(String tenant) {
 
