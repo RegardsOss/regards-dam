@@ -209,6 +209,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         saveResult.append(task.get());
+        // To remove thread used by executor
+        executor.shutdown();
         sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
                                   saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
         return saveResult;
@@ -262,6 +264,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             });
         }
         saveResult.append(task.get());
+        // To remove thread used by executor
+        executor.shutdown();
         sendMessage(String.format("...Finally indexed %d distinct objects for %d availables records.",
                                   saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
         return saveResult;
