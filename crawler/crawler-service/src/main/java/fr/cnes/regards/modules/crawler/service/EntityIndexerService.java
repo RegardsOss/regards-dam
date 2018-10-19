@@ -518,30 +518,48 @@ public class EntityIndexerService implements IEntityIndexerService {
      * Validate given DataObject. If no error, add it to given set else log validation errors
      */
     private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
-        Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
+        Errors errorsObject = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
+        List<String> errors = null;
         // If some validation errors occur, don't index data object
         try {
-            dataObjectService.validate(dataObject, errors, false);
+            dataObjectService.validate(dataObject, errorsObject, false);
         } catch (EntityInvalidException e) {
-            // Don't give a shit, failed validation has added some errors, it is managed lower
+            // If such an exception has been thrown, it contains all errors ( as a List<String>) else errors are
+            // described into errorsObject
+            errors = e.getMessages();
         }
-        if (errors.getErrorCount() == 0) {
+        // No exception thrown but still validation errors
+        if ((errors == null) && (errorsObject.hasErrors())) {
+            errors = toErrors(errorsObject);
+        }
+        // No error => dataObject is valid
+        if (errors == null) {
             toSaveObjects.add(dataObject);
         } else {
-            buf.append("\n").append(errors.getErrorCount()).append(" validation errors:");
-            for (ObjectError objError : errors.getAllErrors()) {
-                if (objError instanceof FieldError) {
-                    buf.append("\nField error in object ").append(objError.getObjectName());
-                    buf.append(" on field '").append(((FieldError) objError).getField());
-                    buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
-                    buf.append("': ").append(((FieldError) objError).getField());
-                    buf.append(" ").append(objError.getDefaultMessage());
-                } else {
-                    buf.append("\n").append(objError.toString());
-                }
-            }
-            LOGGER.warn("Data object not indexed due to {}", buf.toString());
+            StringBuilder dataObjectBuffer = new StringBuilder("Data object not indexed due to ");
+            dataObjectBuffer.append("\n").append(errors.size()).append(" validation errors:\n");
+            dataObjectBuffer.append(errors.stream().collect(Collectors.joining("\n")));
+            LOGGER.warn(dataObjectBuffer.toString());
+            buf.append("\n").append(dataObjectBuffer);
         }
+    }
+
+    private static List<String> toErrors(Errors errorsObject) {
+        List<String> errors = new ArrayList<>(errorsObject.getErrorCount());
+        for (ObjectError objError : errorsObject.getAllErrors()) {
+            if (objError instanceof FieldError) {
+                StringBuilder buf = new StringBuilder();
+                buf.append("Field error in object ").append(objError.getObjectName());
+                buf.append(" on field '").append(((FieldError) objError).getField());
+                buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
+                buf.append("': ").append(((FieldError) objError).getField());
+                buf.append(" ").append(objError.getDefaultMessage());
+                errors.add(buf.toString());
+            } else {
+                errors.add(objError.toString());
+            }
+        }
+        return errors;
     }
 
     @Override
