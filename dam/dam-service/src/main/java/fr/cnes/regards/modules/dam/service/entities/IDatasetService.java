@@ -71,4 +71,6 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @throws ModuleException if the model cannot be retrieve
      */
     ICriterionVisitor<Boolean> getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
+
+    Set<Dataset> findAllByModel(Long modelId);
 }

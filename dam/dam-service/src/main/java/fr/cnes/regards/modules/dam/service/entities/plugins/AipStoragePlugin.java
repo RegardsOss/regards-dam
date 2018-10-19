@@ -30,10 +30,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import feign.FeignException;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -93,7 +95,7 @@ public class AipStoragePlugin implements IStorageService {
 
             final ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
             handleClientAIPResponse(response.getStatusCode(), toPersist, response.getBody());
-        } catch (final ModuleException e) {
+        } catch (final ModuleException | FeignException | HttpServerErrorException e) {
             LOGGER.error("The AIP entity {} can not be store by microservice storage", toPersist.getIpId(), e);
             toPersist.setStateAip(EntityAipState.AIP_STORE_ERROR);
         } catch (final HttpClientErrorException e) {
@@ -123,7 +125,18 @@ public class AipStoragePlugin implements IStorageService {
 
             response = aipClient.updateAip(toUpdate.getIpId().toString(), aip);
             handleClientAIPResponse(response.getStatusCode(), toUpdate, aip);
-        } catch (final ModuleException e) {
+        } catch (HttpClientErrorException e) {
+            HttpStatus responseStatus = e.getStatusCode();
+            if (responseStatus == HttpStatus.UNPROCESSABLE_ENTITY) {
+                TypeToken<List<RejectedAip>> bodyTypeToken = new TypeToken<List<RejectedAip>>() {
+                };
+                List<RejectedAip> rejectedAips = gson.fromJson(e.getResponseBodyAsString(), bodyTypeToken.getType());
+                handleClientAIPResponse(responseStatus, toUpdate, rejectedAips);
+            } else {
+                LOGGER.error("The AIP entity {} can not be update by microservice storage", toUpdate.getIpId(), e);
+                toUpdate.setStateAip(EntityAipState.AIP_STORE_ERROR);
+            }
+        } catch (ModuleException | FeignException | HttpServerErrorException e) {
             LOGGER.error("The AIP entity {} can not be update by microservice storage", toUpdate.getIpId(), e);
             toUpdate.setStateAip(EntityAipState.AIP_STORE_ERROR);
         } finally {
