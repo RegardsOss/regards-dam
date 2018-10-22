@@ -97,7 +97,8 @@ public interface IEntityIndexerService {
     /**
      * Create a notification for admin
      * @param tenant concerned tenant
+     * @param title notification title
      * @param buf Buffer containing message
      */
-    void createNotificationForAdmin(String tenant, CharSequence buf);
+    void createNotificationForAdmin(String tenant, String title, CharSequence buf);
 }
