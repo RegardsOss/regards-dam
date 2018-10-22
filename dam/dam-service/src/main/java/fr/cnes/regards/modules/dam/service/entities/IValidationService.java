@@ -30,5 +30,5 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
  */
 public interface IValidationService<U extends AbstractEntity<?>> {
 
-    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws EntityInvalidException;
+    void validate(U abstractEntity, Errors errors, boolean manageAlterable) throws EntityInvalidException;
 }
