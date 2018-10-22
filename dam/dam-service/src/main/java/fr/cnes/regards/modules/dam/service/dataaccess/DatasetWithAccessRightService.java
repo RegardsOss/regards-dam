@@ -18,14 +18,19 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -53,17 +58,21 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
     public Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName, Pageable pageRequest)
             throws ModuleException {
 
-        List<DatasetWithAccessRight> datasetsWithAR = new ArrayList<>();
+        // Initialize set to keep datasets order by label
+        LinkedHashSet<DatasetWithAccessRight> datasetsWithAR = Sets.newLinkedHashSet();
 
         // 1. Search for datasets
-        Page<Dataset> datasets = datasetService.search(datasetLabelFilter, pageRequest);
+        // NOTE : New pageRequest to avoid Sort. Sort is forced in the JPA specification to sort by label
+        Page<Dataset> datasets = datasetService
+                .search(datasetLabelFilter, new PageRequest(pageRequest.getPageNumber(), pageRequest.getPageSize()));
 
         // 2. For each dataset of the result page, retrieve the associated AccessRight
         for (Dataset ds : datasets.getContent()) {
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
-                Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(accessGroupName, ds.getIpId(),
-                                                                                         pageRequest);
+                Page<AccessRight> accessRights = accessRightService
+                        .retrieveAccessRights(accessGroupName, ds.getIpId(), new PageRequest(
+                                pageRequest.getPageNumber(), pageRequest.getPageSize(), new Sort(Direction.ASC, "id")));
                 if (accessRights.hasContent()) {
                     datasetWithAR.setAccessRight(accessRights.getContent().get(0));
                 }
@@ -73,7 +82,8 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
             datasetsWithAR.add(datasetWithAR);
         }
 
-        return new PageImpl<>(datasetsWithAR, pageRequest, datasets.getTotalElements());
+        return new PageImpl<>(datasetsWithAR.stream().collect(Collectors.toList()), pageRequest,
+                datasets.getTotalElements());
     }
 
 }
