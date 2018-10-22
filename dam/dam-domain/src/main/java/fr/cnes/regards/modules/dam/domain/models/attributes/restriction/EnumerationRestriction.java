@@ -18,16 +18,18 @@
  */
 package fr.cnes.regards.modules.dam.domain.models.attributes.restriction;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.Set;
 
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.schema.Enumeration;
@@ -52,7 +54,7 @@ public class EnumerationRestriction extends AbstractRestriction {
      * Acceptable values, relevant for AttributeType#ENUMERATION
      */
     @NotNull
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER) // Force loading all acceptable values
     @JoinTable(name = "ta_enum_restr_accept_values", joinColumns = @JoinColumn(name = "restriction_id",
             foreignKey = @ForeignKey(name = "fk_enum_restr_accept_values_restriction_id")))
     @Column(name = "value")
