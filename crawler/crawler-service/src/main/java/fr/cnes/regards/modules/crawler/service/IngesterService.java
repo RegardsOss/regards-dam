@@ -234,27 +234,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             dsIngestion.setNextPlannedIngestDate(null);
                             // Save ingestion status
                             dsIngestionRepos.save(dsIngestion);
-                            // Send admin notification for ingestion ends.
-                            String title = String.format("%s indexation ends.", dsIngestion.getLabel());
-                            switch (dsIngestion.getStatus()) {
-                                case ERROR:
-                                    createNotificationForAdmin(title,
-                                                               String.format("Indexation error. Cause : %s",
-                                                                             dsIngestion.getStackTrace()),
-                                                               NotificationType.ERROR);
-                                    break;
-                                case FINISHED_WITH_WARNINGS:
-                                    createNotificationForAdmin(title, String
-                                            .format("Indexation ends with %s new indexed objects and %s errors.",
-                                                    dsIngestion.getInErrorObjectsCount(),
-                                                    dsIngestion.getSavedObjectsCount()), NotificationType.WARNING);
-                                    break;
-                                default:
-                                    createNotificationForAdmin(title, String
-                                            .format("Indexation success. %s new objects indexed.",
-                                                    dsIngestion.getSavedObjectsCount()), NotificationType.INFO);
-                                    break;
-                            }
+                            sendNotificationSummary(dsIngestion);
+
                         }
                     }
                     // At least one ingestion has to be done while looping through all tenants
@@ -266,6 +247,30 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             managing.set(false);
         }
         LOGGER.info("...IngesterService.manage() ended.");
+    }
+
+    private void sendNotificationSummary(DatasourceIngestion dsIngestion) {
+        // Send admin notification for ingestion ends.
+        String title = String.format("%s indexation ends.", dsIngestion.getLabel());
+        switch (dsIngestion.getStatus()) {
+            case ERROR:
+                createNotificationForAdmin(title,
+                                           String.format("Indexation error. Cause : %s",
+                                                         dsIngestion.getStackTrace()),
+                                           NotificationType.ERROR);
+                break;
+            case FINISHED_WITH_WARNINGS:
+                createNotificationForAdmin(title, String
+                        .format("Indexation ends with %s new indexed objects and %s errors.",
+                                dsIngestion.getInErrorObjectsCount(),
+                                dsIngestion.getSavedObjectsCount()), NotificationType.WARNING);
+                break;
+            default:
+                createNotificationForAdmin(title, String
+                        .format("Indexation success. %s new objects indexed.",
+                                dsIngestion.getSavedObjectsCount()), NotificationType.INFO);
+                break;
+        }
     }
 
     @Override

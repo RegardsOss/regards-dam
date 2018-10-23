@@ -119,18 +119,7 @@ public interface IEsRepository {
     /**
      * Create or update several documents into same index. Errors are logged.
      * @param index index
-     * @param documents documents to save (docId and type are mandatory for all of them)
-     * @param <T> parameterized type to avoid array inheritance restriction type definition
-     * @return bulk save result     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
-     */
-    @SuppressWarnings("unchecked")
-    default <T extends IIndexable> BulkSaveResult saveBulk(String index, T... documents) throws IllegalArgumentException {
-        return this.saveBulk(index, null,documents);
-    }
-
-    /**
-     * Create or update several documents into same index. Errors are logged.
-     * @param index index
+     * @param bulkSaveResult bulkSaveResult to use (can be null)
      * @param errorBuffer errorBuffer filled with documents that cannot be saved
      * @param documents documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
@@ -138,28 +127,47 @@ public interface IEsRepository {
      * @throws IllegalArgumentException If at least one document hasn't its mandatory properties (docId, type, label...).
      */
     @SuppressWarnings("unchecked")
-    <T extends IIndexable> BulkSaveResult saveBulk(String index, StringBuilder errorBuffer, T... documents)
-            throws IllegalArgumentException;
+    <T extends IIndexable> BulkSaveResult saveBulk(String index, BulkSaveResult bulkSaveResult,
+            StringBuilder errorBuffer, T... documents) throws IllegalArgumentException;
 
     /**
-     * {@link #saveBulk(String, IIndexable...)}
-     * @param index index
-     * @param documents documents to save (docId and type are mandatory for all of them)
-     * @return bulk save result
-     * @throws IllegalArgumentException If at least one document hasn't its mandatory properties (docId, type, label...).
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
      */
-    default BulkSaveResult saveBulk(final String index, final Collection<? extends IIndexable> documents)
+    @SuppressWarnings("unchecked")
+    default <T extends IIndexable> BulkSaveResult saveBulk(String index, T... documents)
+            throws IllegalArgumentException {
+        return this.saveBulk(index, null, documents);
+    }
+
+
+
+    /**
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends IIndexable> BulkSaveResult saveBulk(String index, StringBuilder errorBuffer, T... documents)
+            throws IllegalArgumentException {
+        return saveBulk(index, null, errorBuffer, documents);
+    }
+
+    /**
+     * {@link #saveBulk(String, Collection, StringBuilder)}
+     */
+    default BulkSaveResult saveBulk(String index, Collection<? extends IIndexable> documents)
             throws IllegalArgumentException {
         return this.saveBulk(index, documents.toArray(new IIndexable[documents.size()]));
     }
 
     /**
-     * {@link #saveBulk(String, IIndexable...)}
-     * @param index index
-     * @param documents documents to save (docId and type are mandatory for all of them)
-     * @param errorBuffer errorBuffer filled with documents that cannot be saved
-     * @return bulk save result
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
+     */
+    default BulkSaveResult saveBulk(String index, BulkSaveResult bulkSaveResult,
+            Collection<? extends IIndexable> documents, StringBuilder errorBuffer) throws IllegalArgumentException {
+        return this.saveBulk(index, bulkSaveResult, errorBuffer, documents.toArray(new IIndexable[documents.size()]));
+    }
+
+    /**
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
      */
     default BulkSaveResult saveBulk(final String index, final Collection<? extends IIndexable> documents,
             StringBuilder errorBuffer) throws IllegalArgumentException {
