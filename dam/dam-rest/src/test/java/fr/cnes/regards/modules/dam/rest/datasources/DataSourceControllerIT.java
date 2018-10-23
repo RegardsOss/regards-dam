@@ -133,7 +133,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException, JwtException {
-        jwtService.injectToken(getDefaultTenant(), DEFAULT_ROLE, getDefaultUserEmail());
+        jwtService.injectToken(getDefaultTenant(), DEFAULT_ROLE, getDefaultUserEmail(), getDefaultUserEmail());
         try {
             // Remove the model if existing
             modelService.getModelByName(DEFAULT_MODEL_NAME);
