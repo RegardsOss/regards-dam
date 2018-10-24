@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.dam.domain.entities.criterion;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -163,6 +165,18 @@ public interface IFeatureCriterion extends ICriterion {
     }
 
     /**
+     * Criterion to test if at least one of the parameters contains the provided text
+     * @param atts list of String or String array attributes
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion contains(Set<AttributeModel> atts, String text) {
+        Set<String> attNames = new HashSet<>();
+        atts.forEach(att -> attNames.add(att.getFullJsonPath()));
+        return ICriterion.contains(attNames, text);
+    }
+
+    /**
      * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
      * element which follows given regular expression
      * @param attName String or String array attribute
@@ -171,6 +185,18 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion likes(AttributeModel att, String text) {
         return ICriterion.likes(att.getFullJsonPath(), text);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters follows given regular expression
+     * @param attNames list of String or String array attributes
+     * @param text provided regular expression
+     * @return criterion
+     */
+    static ICriterion likes(Set<AttributeModel> atts, String text) {
+        Set<String> attNames = new HashSet<>();
+        atts.forEach(att -> attNames.add(att.getFullJsonPath()));
+        return ICriterion.likes(attNames, text);
     }
 
     /**
