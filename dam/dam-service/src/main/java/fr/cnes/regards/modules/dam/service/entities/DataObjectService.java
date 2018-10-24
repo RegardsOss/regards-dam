@@ -110,13 +110,13 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
     }
 
     @Override
-    protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
+    protected List<Validator> getValidators(ModelAttrAssoc modelAttrAssoc, String attributeKey, boolean manageAlterable,
             AbstractEntity<?> entity) {
-        AttributeModel attModel = modelAttribute.getAttribute();
+        AttributeModel attModel = modelAttrAssoc.getAttribute();
 
         List<Validator> validators = new ArrayList<>();
         // Check computation mode
-        validators.add(new ComputationModeValidator(modelAttribute.getMode(), attributeKey));
+        validators.add(new ComputationModeValidator(modelAttrAssoc.getMode(), attributeKey));
         // Check attribute type
         validators.add(new AttributeTypeValidator(attModel.getType(), attributeKey));
         // Check restriction
