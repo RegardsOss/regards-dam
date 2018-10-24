@@ -182,6 +182,11 @@ public class CriterionTest {
         }
 
         @Override
+        public String visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
+            return criterion.getNames() + " " + criterion.getType().toString() + " \"" + criterion.getValue() + "\"";
+        }
+
+        @Override
         public String visitLongMatchCriterion(LongMatchCriterion criterion) {
             return criterion.getName() + " " + criterion.getType().toString() + " \"" + criterion.getValue() + "\"";
         }

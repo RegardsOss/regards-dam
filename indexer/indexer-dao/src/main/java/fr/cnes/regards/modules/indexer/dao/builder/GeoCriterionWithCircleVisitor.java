@@ -26,9 +26,9 @@ import org.opengis.referencing.operation.TransformException;
 import org.springframework.data.util.Pair;
 
 import com.google.common.base.Preconditions;
+
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -47,6 +47,8 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
  * Criterion visitor implementation to manage a criterion containing geometric criterions on other CRS (as Mars or Astro
@@ -114,6 +116,11 @@ public class GeoCriterionWithCircleVisitor implements ICriterionVisitor<Pair<ICr
 
     @Override
     public Pair<ICriterion, ICriterion> visitStringMatchCriterion(StringMatchCriterion criterion) {
+        return Pair.of(criterion.copy(), criterion.copy());
+    }
+
+    @Override
+    public Pair<ICriterion, ICriterion> visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
         return Pair.of(criterion.copy(), criterion.copy());
     }
 
@@ -195,16 +202,15 @@ public class GeoCriterionWithCircleVisitor implements ICriterionVisitor<Pair<ICr
             double maxDistanceAsDouble = FastMath.max(distanceNorthermostCenter, distanceSouthermostCenter);
             // TO BE INVESTIGATE
             // Because of error precision between Elasticsearch and Postgis, increase a little maxDistance
-//            maxDistanceAsDouble *= 1.1;
+            //            maxDistanceAsDouble *= 1.1;
             String maxDistance = Double.toString(maxDistanceAsDouble);
             // Be careful : in some cases (center on equator or on a pole), max and min distances are equal.
             // In this case, we return same CircleCriterion to make both criterion trees equals and so avoiding
             // executing two requests
             // Because of maxDistance increase due to error precision, this case should never occur
-            ICriterion betweenBothCirclesCriterion = (minDistance.equals(maxDistance)) ?
-                    inMinCircleCrit :
-                    ICriterion.and(ICriterion.not(inMinCircleCrit),
-                                   ICriterion.intersectsCircle(centerOnWgs84, maxDistance));
+            ICriterion betweenBothCirclesCriterion = minDistance.equals(maxDistance) ? inMinCircleCrit
+                    : ICriterion.and(ICriterion.not(inMinCircleCrit),
+                                     ICriterion.intersectsCircle(centerOnWgs84, maxDistance));
             return Pair.of(inMinCircleCrit, betweenBothCirclesCriterion);
         } catch (TransformException e) {
             throw new RsRuntimeException(e);

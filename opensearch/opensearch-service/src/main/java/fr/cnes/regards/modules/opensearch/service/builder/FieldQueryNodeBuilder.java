@@ -68,11 +68,11 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
         String field = fieldNode.getFieldAsString();
         String value = fieldNode.getValue().toString();
 
-        // Manage multi search
+        // Manage multisearch
         if (QueryParser.MULTISEARCH.equals(field)) {
             try {
                 Set<AttributeModel> atts = finder.findByType(AttributeType.STRING);
-                return IFeatureCriterion.contains(atts, value);
+                return IFeatureCriterion.multiMatch(atts, value);
             } catch (OpenSearchUnknownParameter e) {
                 throw new QueryNodeException(
                         new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()), e);

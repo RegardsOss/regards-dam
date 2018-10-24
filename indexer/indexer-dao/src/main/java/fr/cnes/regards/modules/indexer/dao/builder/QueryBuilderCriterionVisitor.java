@@ -20,9 +20,11 @@ package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Set;
 
 import org.elasticsearch.common.geo.builders.ShapeBuilders;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -51,6 +53,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
 
 /**
@@ -111,6 +114,16 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             default:
                 return null;
         }
+    }
+
+    @Override
+    public QueryBuilder visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
+        String searchValue = criterion.getValue();
+        Set<String> attNames = criterion.getNames();
+        MultiMatchQueryBuilder builder = QueryBuilders.multiMatchQuery(searchValue,
+                                                                       attNames.toArray(new String[attNames.size()]));
+        builder.type(criterion.getType());
+        return builder;
     }
 
     @Override
@@ -207,8 +220,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     @Override
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
         try {
-            return QueryBuilders
-                    .geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, GeoQueries.computeShapeBuilder(criterion));
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE,
+                                                      GeoQueries.computeShapeBuilder(criterion));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
@@ -221,12 +234,12 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             criterion.setMaxX(criterion.getMaxX() - 360.0);
         }
         // Manage case when minLon > MaxLon (ie crossing dateline) (if MaxLon is < 0)
-        if ((criterion.getMaxX() < 0) && (criterion.getMinX() > criterion.getMaxX())) {
+        if (criterion.getMaxX() < 0 && criterion.getMinX() > criterion.getMaxX()) {
             // Cut BoundaryBoxCriterion into 2 BoundaryBoxCriterion, dateLine west and dateLine east
             return ICriterion
                     .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMinY(), 180.0, criterion.getMaxY()),
-                        ICriterion
-                                .intersectsBbox(-180.0, criterion.getMinY(), criterion.getMaxX(), criterion.getMaxY()))
+                        ICriterion.intersectsBbox(-180.0, criterion.getMinY(), criterion.getMaxX(),
+                                                  criterion.getMaxY()))
                     .accept(this);
         }
         try {

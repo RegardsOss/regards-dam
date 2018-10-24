@@ -21,13 +21,15 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+
 /**
  * String specialized {@link AbstractMultiMatchCriterion}
  * @author Marc SORDI
  */
 public class StringMultiMatchCriterion extends AbstractMultiMatchCriterion<String> {
 
-    public StringMultiMatchCriterion(Set<String> names, MatchType type, String value) {
+    public StringMultiMatchCriterion(Set<String> names, MultiMatchQueryBuilder.Type type, String value) {
         super(names, type, value);
     }
 
@@ -38,8 +40,7 @@ public class StringMultiMatchCriterion extends AbstractMultiMatchCriterion<Strin
 
     @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
-        // TODO Auto-generated method stub
-        return null;
+        return visitor.visitStringMultiMatchCriterion(this);
     }
 
 }

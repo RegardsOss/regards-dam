@@ -25,6 +25,8 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
@@ -225,16 +227,6 @@ public interface ICriterion {
     }
 
     /**
-     * Criterion to test if at least one of the parameters contains the provided text
-     * @param attNames list of String or String array attributes
-     * @param text provided text
-     * @return criterion
-     */
-    static ICriterion contains(Set<String> attNames, String text) {
-        return new StringMultiMatchCriterion(attNames, MatchType.CONTAINS, text);
-    }
-
-    /**
      * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
      * element which follows given regular expression
      * @param attName String or String array attribute
@@ -243,16 +235,6 @@ public interface ICriterion {
      */
     static ICriterion likes(String attName, String text) {
         return new StringMatchCriterion(attName, MatchType.LIKE, text);
-    }
-
-    /**
-     * Criterion to test if at least one of the parameters follows given regular expression
-     * @param attNames list of String or String array attributes
-     * @param text provided regular expression
-     * @return criterion
-     */
-    static ICriterion likes(Set<String> attNames, String text) {
-        return new StringMultiMatchCriterion(attNames, MatchType.LIKE, text);
     }
 
     /**
@@ -511,5 +493,25 @@ public interface ICriterion {
      */
     static ICriterion attributeExists(String attName) {
         return new FieldExistsCriterion(attName);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters contains the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatch(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.BEST_FIELDS, text);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters starts with the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatchStartWith(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.PHRASE_PREFIX, text);
     }
 }

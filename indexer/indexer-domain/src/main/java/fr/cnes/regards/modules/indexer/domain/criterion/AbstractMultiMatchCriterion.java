@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.util.Set;
 
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+
 /**
  * A match criterion specifies how a value has to be matched and on which properties
  * @param <T> type of value
@@ -36,14 +38,14 @@ public abstract class AbstractMultiMatchCriterion<T> implements ICriterion {
     /**
      * Matching type
      */
-    protected MatchType type;
+    protected MultiMatchQueryBuilder.Type type;
 
     /**
      * Value to be matched
      */
     protected T value;
 
-    public AbstractMultiMatchCriterion(Set<String> names, MatchType type, T value) {
+    public AbstractMultiMatchCriterion(Set<String> names, MultiMatchQueryBuilder.Type type, T value) {
         this.names = names;
         this.type = type;
         this.value = value;
@@ -57,14 +59,6 @@ public abstract class AbstractMultiMatchCriterion<T> implements ICriterion {
         this.names = names;
     }
 
-    public MatchType getType() {
-        return type;
-    }
-
-    public void setType(MatchType type) {
-        this.type = type;
-    }
-
     public T getValue() {
         return value;
     }
@@ -73,4 +67,11 @@ public abstract class AbstractMultiMatchCriterion<T> implements ICriterion {
         this.value = value;
     }
 
+    public MultiMatchQueryBuilder.Type getType() {
+        return type;
+    }
+
+    public void setType(MultiMatchQueryBuilder.Type type) {
+        this.type = type;
+    }
 }
