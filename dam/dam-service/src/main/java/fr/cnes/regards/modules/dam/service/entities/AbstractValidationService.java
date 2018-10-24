@@ -104,14 +104,14 @@ public abstract class AbstractValidationService<U extends AbstractEntity<?>> imp
     protected void checkModelAttribute(ModelAttrAssoc modelAttribute, Errors errors, boolean manageAlterable,
             AbstractEntity<?> entity, Set<String> toCheckProperties) {
 
-        // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
-        // missing and is added during the crawling process
+        AttributeModel attModel = modelAttribute.getAttribute();
+        String attPath = attModel.getName();
+        if (!attModel.getFragment().isDefaultFragment()) {
+            attPath = attModel.getFragment().getName().concat(".").concat(attPath);
+        }
+        // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute value will most likely
+        // be missing and is added during the crawling process
         if (modelAttribute.getMode() == ComputationMode.GIVEN) {
-            AttributeModel attModel = modelAttribute.getAttribute();
-            String attPath = attModel.getName();
-            if (!attModel.getFragment().isDefaultFragment()) {
-                attPath = attModel.getFragment().getName().concat(".").concat(attPath);
-            }
             logger.debug(String.format("Computed key : \"%s\"", attPath));
 
             // Retrieve attribute
@@ -140,10 +140,9 @@ public abstract class AbstractValidationService<U extends AbstractEntity<?>> imp
                     errors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
-            // Ok, attribute has been checked
-            toCheckProperties.remove(attPath);
         }
-
+        // Ok, attribute has been checked or is a computed one
+        toCheckProperties.remove(attPath);
     }
 
     abstract protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey,

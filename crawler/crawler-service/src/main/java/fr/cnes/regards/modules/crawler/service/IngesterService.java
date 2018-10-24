@@ -250,26 +250,25 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     }
 
     private void sendNotificationSummary(DatasourceIngestion dsIngestion) {
-        // Send admin notification for ingestion ends.
-        String title = String.format("%s indexation ends.", dsIngestion.getLabel());
-        switch (dsIngestion.getStatus()) {
-            case ERROR:
-                createNotificationForAdmin(title,
-                                           String.format("Indexation error. Cause : %s",
-                                                         dsIngestion.getStackTrace()),
-                                           NotificationType.ERROR);
-                break;
-            case FINISHED_WITH_WARNINGS:
-                createNotificationForAdmin(title, String
-                        .format("Indexation ends with %s new indexed objects and %s errors.",
-                                dsIngestion.getInErrorObjectsCount(),
-                                dsIngestion.getSavedObjectsCount()), NotificationType.WARNING);
-                break;
-            default:
-                createNotificationForAdmin(title, String
-                        .format("Indexation success. %s new objects indexed.",
-                                dsIngestion.getSavedObjectsCount()), NotificationType.INFO);
-                break;
+        // Send admin notification for ingestion ends if something as been done
+        if ((dsIngestion.getSavedObjectsCount() != 0) || (dsIngestion.getInErrorObjectsCount() != 0)) {
+            String title = String.format("%s indexation ends.", dsIngestion.getLabel());
+            switch (dsIngestion.getStatus()) {
+                case ERROR:
+                    createNotificationForAdmin(title, String.format("Indexation error. Cause : %s", dsIngestion.getStackTrace()),
+                                               NotificationType.ERROR);
+                    break;
+                case FINISHED_WITH_WARNINGS:
+                    createNotificationForAdmin(title, String.format(
+                            "Indexation ends with %s new indexed objects and %s errors.", dsIngestion.getInErrorObjectsCount(),
+                            dsIngestion.getSavedObjectsCount()), NotificationType.WARNING);
+                    break;
+                default:
+                    createNotificationForAdmin(title, String.format("Indexation success. %s new objects indexed.",
+                                                                    dsIngestion.getSavedObjectsCount()),
+                                               NotificationType.INFO);
+                    break;
+            }
         }
     }
 
