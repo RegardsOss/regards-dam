@@ -168,42 +168,44 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
-        sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+        sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
         Future<BulkSaveResult> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
             BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
-                sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")), dsiId);
             }
-            sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()), dsiId);
+            sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                        dsiId);
             return bulkSaveResult;
         });
 
         while (page.hasNext()) {
-            sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+            sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE),
+                        dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-            sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+            sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
             availableRecordsCount += page.getNumberOfElements();
             saveResult.append(task.get());
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
-                sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
+                sendMessage(String.format("  Indexing %d objects...", otherList.size()), dsiId);
                 BulkSaveResult bulkSaveResult = entityIndexerService
                         .mergeDataObjects(tenant, datasourceId, now, otherList);
                 if (bulkSaveResult.getInErrorDocsCount() > 0) {
                     sendMessage(
-                            String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                            String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")), dsiId);
                 }
-                sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
                             dsiId);
                 return bulkSaveResult;
             });
@@ -211,7 +213,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         saveResult.append(task.get());
         // To remove thread used by executor
         executor.shutdown();
-        sendMessage(String.format("...Finally indexed %d objects for %d availables records.",
+        sendMessage(String.format("  ...Finally indexed %d objects for %d availables records.",
                                   saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
         return saveResult;
     }
@@ -223,42 +225,44 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
-        sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+        sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
         availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
         Future<BulkSaveResult> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
             BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
-                sendMessage(String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")), dsiId);
             }
-            sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()), dsiId);
+            sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                        dsiId);
             return bulkSaveResult;
         });
 
         while (page.hasNext()) {
-            sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+            sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE),
+                        dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-            sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+            sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
             availableRecordsCount += page.getNumberOfElements();
             saveResult.append(task.get());
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
-                sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
+                sendMessage(String.format("  Indexing %d objects...", otherList.size()), dsiId);
                 BulkSaveResult bulkSaveResult = entityIndexerService
                         .createDataObjects(tenant, datasourceId, now, otherList);
                 if (bulkSaveResult.getInErrorDocsCount() > 0) {
                     sendMessage(
-                            String.format("...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
-                                          bulkSaveResult.getDetailedErrorMsg()), dsiId);
+                            String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
+                                          bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")), dsiId);
                 }
-                sendMessage(String.format("...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
+                sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
                             dsiId);
                 return bulkSaveResult;
             });
@@ -266,7 +270,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         saveResult.append(task.get());
         // To remove thread used by executor
         executor.shutdown();
-        sendMessage(String.format("...Finally indexed %d distinct objects for %d availables records.",
+        sendMessage(String.format("  ...Finally indexed %d distinct objects for %d availables records.",
                                   saveResult.getSavedDocsCount(), availableRecordsCount), dsiId);
         return saveResult;
     }
