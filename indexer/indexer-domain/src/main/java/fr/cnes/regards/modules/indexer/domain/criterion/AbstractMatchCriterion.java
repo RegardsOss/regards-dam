@@ -65,8 +65,8 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = (prime * result) + ((type == null) ? 0 : type.hashCode());
-        result = (prime * result) + ((value == null) ? 0 : value.hashCode());
+        result = prime * result + (type == null ? 0 : type.hashCode());
+        result = prime * result + (value == null ? 0 : value.hashCode());
         return result;
     }
 
@@ -94,5 +94,4 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
         }
         return true;
     }
-
 }

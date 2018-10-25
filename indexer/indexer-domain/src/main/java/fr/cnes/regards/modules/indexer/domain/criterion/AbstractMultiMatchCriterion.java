@@ -74,4 +74,9 @@ public abstract class AbstractMultiMatchCriterion<T> implements ICriterion {
     public void setType(MultiMatchQueryBuilder.Type type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return this.getClass().getName() + " on value " + value;
+    }
 }

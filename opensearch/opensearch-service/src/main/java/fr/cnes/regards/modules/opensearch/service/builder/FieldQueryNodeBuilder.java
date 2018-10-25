@@ -29,7 +29,6 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.PointQueryNode;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
@@ -71,7 +70,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
         // Manage multisearch
         if (QueryParser.MULTISEARCH.equals(field)) {
             try {
-                Set<AttributeModel> atts = finder.findByType(AttributeType.STRING);
+                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
                 return IFeatureCriterion.multiMatch(atts, value);
             } catch (OpenSearchUnknownParameter e) {
                 throw new QueryNodeException(

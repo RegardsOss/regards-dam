@@ -29,7 +29,6 @@ import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxI
 
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
@@ -74,7 +73,7 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
         // Manage multisearch
         if (QueryParser.MULTISEARCH.equals(field)) {
             try {
-                Set<AttributeModel> atts = finder.findByType(AttributeType.STRING);
+                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
                 return IFeatureCriterion.multiMatchStartWith(atts, val);
             } catch (OpenSearchUnknownParameter e) {
                 throw new QueryNodeException(new MessageImpl(

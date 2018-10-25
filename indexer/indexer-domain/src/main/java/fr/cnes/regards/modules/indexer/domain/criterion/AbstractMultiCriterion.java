@@ -44,7 +44,7 @@ public abstract class AbstractMultiCriterion implements ICriterion {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + ((criterions == null) ? 0 : criterions.hashCode());
+        result = prime * result + (criterions == null ? 0 : criterions.hashCode());
         return result;
     }
 
@@ -68,6 +68,11 @@ public abstract class AbstractMultiCriterion implements ICriterion {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getName();
     }
 
 }
