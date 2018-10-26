@@ -340,7 +340,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
                     dataset.getId());
 
-        sendMessage(String.format("      Starting computing of %d attributes...", computationPlugins.size()), dsiId);
+        sendMessage(String.format("        Starting computing of %d attributes...", computationPlugins.size()), dsiId);
         computationPlugins.parallelStream().forEach(p -> {
             runtimeTenantResolver.forceTenant(tenant);
             p.compute(dataset);
@@ -353,7 +353,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 .forEach(comAtt -> LOGGER.info("attribute {} is computed", comAtt.getAttributeToCompute().getName()));
 
         LOGGER.info("...computing OK");
-        sendMessage(String.format("      ...Computing ended.", computationPlugins.size()), dsiId);
+        sendMessage(String.format("        ...Computing ended.", computationPlugins.size()), dsiId);
     }
 
     /**
@@ -627,8 +627,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
             String notifTitle = String.format("%s Datasource ingestion error", dsIngestion.getLabel());
             self.createNotificationForAdmin(tenant, notifTitle, buf);
-            bulkSaveResult
-                    .setDetailedErrorMsg(String.format("Datasource '%s':\n%s", dsIngestion.getLabel(), buf.toString()));
+            bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
         return bulkSaveResult;
     }
