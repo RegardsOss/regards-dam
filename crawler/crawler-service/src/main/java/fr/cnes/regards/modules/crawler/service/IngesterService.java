@@ -325,22 +325,25 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
     public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
-        switch (dsIngestion.getStatus()) {
-            case ERROR: // last ingest in error, do not launch as soon as possible, if it is the only ingestion, user
-                // may not have time to see the error
-                OffsetDateTime nextPlannedIngestDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
-                        .plus(refreshRate, ChronoUnit.SECONDS);
-                dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
-                dsIngestionRepos.save(dsIngestion);
-                break;
-            case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
-                                                                                          ChronoUnit.SECONDS));
-                dsIngestionRepos.save(dsIngestion);
-                break;
-            case STARTED: // Already in progress
-            case NEW: // dsIngestion just been created with a next planned date as now() ie launch as soon as possible
-            default:
+        // Take into account ONLY data source with null nextPlannedIngestDate
+        if (dsIngestion.getNextPlannedIngestDate() == null) {
+            switch (dsIngestion.getStatus()) {
+                case ERROR: // last ingest in error, do not launch as soon as possible, if it is the only ingestion, user
+                    // may not have time to see the error
+                    OffsetDateTime nextPlannedIngestDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
+                            .plus(refreshRate, ChronoUnit.SECONDS);
+                    dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
+                    dsIngestionRepos.save(dsIngestion);
+                    break;
+                case FINISHED: // last ingest + refreshRate
+                case FINISHED_WITH_WARNINGS: // last ingest + refreshRate
+                    dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                    dsIngestionRepos.save(dsIngestion);
+                    break;
+                case STARTED: // Already in progress
+                case NEW: // dsIngestion just been created with a next planned date as now() ie launch as soon as possible
+                default:
+            }
         }
     }
 
