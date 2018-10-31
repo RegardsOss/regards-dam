@@ -42,6 +42,7 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -462,48 +463,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
-    @Override
-    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) {
-        StringBuilder buf = new StringBuilder();
-        BulkSaveResult bulkSaveResult = new BulkSaveResult();
-        // For all objects, it is necessary to set datasourceId, creation date AND to validate them
-        OffsetDateTime creationDate = now;
-        Set<DataObject> toSaveObjects = new HashSet<>();
-        for (DataObject dataObject : objects) {
-            dataObject.setDataSourceId(datasourceId);
-            dataObject.setCreationDate(creationDate);
-            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
-                dataObject.setLabel(dataObject.getIpId().toString());
-            }
-            // Validate data object
-            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
-        }
-        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
-        if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
-            // care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
-        }
-        if (bulkSaveResult.getInErrorDocsCount() > 0) {
-            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
-            // it doesn't care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
-        }
-        // If there are errors, notify Admin
-        if (buf.length() > 0) {
-            // Also add detailed message to datasource ingestion
-            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
-            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(tenant, notifTitle, buf);
-            bulkSaveResult.setDetailedErrorMsg(buf.toString());
-        }
-
-        return bulkSaveResult;
-    }
-
     @Async
     @Override
     public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
@@ -573,6 +532,29 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
+            List<DataObject> objects) {
+        StringBuilder buf = new StringBuilder();
+        BulkSaveResult bulkSaveResult = new BulkSaveResult();
+        // For all objects, it is necessary to set datasourceId, creation date AND to validate them
+        OffsetDateTime creationDate = now;
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        for (DataObject dataObject : objects) {
+            dataObject.setDataSourceId(datasourceId);
+            dataObject.setCreationDate(creationDate);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
+            // Validate data object
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
+        }
+        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+
+        return bulkSaveResult;
+    }
+
+    @Override
     public BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now,
             List<DataObject> objects) {
         StringBuilder buf = new StringBuilder();
@@ -581,55 +563,70 @@ public class EntityIndexerService implements IEntityIndexerService {
         Set<DataObject> toSaveObjects = new HashSet<>();
 
         for (DataObject dataObject : objects) {
-            DataObject curObject = esRepos.get(tenant, dataObject);
-            // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
-            // search objects from storage only using tags so if this tag has been used
-            // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
-            // current creationDate, groups, tags and modelIds
-            if (curObject != null) {
-                dataObject.setCreationDate(curObject.getCreationDate());
-                dataObject.setMetadata(curObject.getMetadata());
-                dataObject.setGroups(dataObject.getMetadata().getGroups());
-                dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
-                // In case to ingest object has new tags
-                if (!curObject.getTags().isEmpty()) {
-                    dataObject.addTags(curObject.getTags());
-                }
-            } else { // else it must be created
-                dataObject.setCreationDate(now);
-            }
-            // Don't forget to update lastUpdate
-            dataObject.setLastUpdate(now);
-            // Don't forget to set datasourceId
-            dataObject.setDataSourceId(datasourceId);
-            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
-                dataObject.setLabel(dataObject.getIpId().toString());
-            }
+            mergeDataObject(tenant, datasourceId, now, dataObject);
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
-        // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
-        // has same size as page.getContent() or is empty
         esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        return bulkSaveResult;
+    }
+
+    /**
+     * Merge data object with current indexed one if it does exist
+     */
+    private void mergeDataObject(String tenant, String datasourceId, OffsetDateTime now, DataObject dataObject) {
+        DataObject curObject = esRepos.get(tenant, dataObject);
+        // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
+        // search objects from storage only using tags so if this tag has been used
+        // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
+        // current creationDate, groups, tags and modelIds
+        if (curObject != null) {
+            dataObject.setCreationDate(curObject.getCreationDate());
+            dataObject.setMetadata(curObject.getMetadata());
+            dataObject.setGroups(dataObject.getMetadata().getGroups());
+            dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
+            // In case to ingest object has new tags
+            if (!curObject.getTags().isEmpty()) {
+                dataObject.addTags(curObject.getTags());
+            }
+        } else { // else it must be created
+            dataObject.setCreationDate(now);
+        }
+        // Don't forget to update lastUpdate
+        dataObject.setLastUpdate(now);
+        // Don't forget to set datasourceId
+        dataObject.setDataSourceId(datasourceId);
+        if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+            dataObject.setLabel(dataObject.getIpId().toString());
+        }
+    }
+
+    /**
+     * Publish events concerning data objects indexation status (indexed or in error), notify admin and update detailed
+     * save bulk result message in case of errors
+     */
+    private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
+            BulkSaveResult bulkSaveResult) {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed
+            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
+            // care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
                     .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
         }
-        if (bulkSaveResult.getInErrorDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject cannot be indexed
+        if (bulkSaveResult.getInErrorDocsCount() > 0) {
+            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
+            // it doesn't care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getInErrorDocIdsStream()
                     .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
         }
-
-        // If there are errors, notify admin
+        // If there are errors, notify Admin
         if (buf.length() > 0) {
-            // Also add detailed message to datasource ingestion (with ingestion label)
+            // Also add detailed message to datasource ingestion
             DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
-            String notifTitle = String.format("%s Datasource ingestion error", dsIngestion.getLabel());
+            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
             self.createNotificationForAdmin(tenant, notifTitle, buf);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
-        return bulkSaveResult;
     }
 
     @Override
@@ -642,7 +639,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), message, dsId));
+            String msg = String.format("%s: %s", OffsetDateTimeAdapter.format(OffsetDateTime.now()), message);
+            eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
 
