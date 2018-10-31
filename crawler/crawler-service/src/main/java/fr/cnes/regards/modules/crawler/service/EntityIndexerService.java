@@ -462,48 +462,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
-    @Override
-    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) {
-        StringBuilder buf = new StringBuilder();
-        BulkSaveResult bulkSaveResult = new BulkSaveResult();
-        // For all objects, it is necessary to set datasourceId, creation date AND to validate them
-        OffsetDateTime creationDate = now;
-        Set<DataObject> toSaveObjects = new HashSet<>();
-        for (DataObject dataObject : objects) {
-            dataObject.setDataSourceId(datasourceId);
-            dataObject.setCreationDate(creationDate);
-            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
-                dataObject.setLabel(dataObject.getIpId().toString());
-            }
-            // Validate data object
-            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
-        }
-        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
-        if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
-            // care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
-        }
-        if (bulkSaveResult.getInErrorDocsCount() > 0) {
-            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
-            // it doesn't care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
-        }
-        // If there are errors, notify Admin
-        if (buf.length() > 0) {
-            // Also add detailed message to datasource ingestion
-            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
-            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(tenant, notifTitle, buf);
-            bulkSaveResult.setDetailedErrorMsg(buf.toString());
-        }
-
-        return bulkSaveResult;
-    }
-
     @Async
     @Override
     public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
@@ -573,6 +531,29 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
+            List<DataObject> objects) {
+        StringBuilder buf = new StringBuilder();
+        BulkSaveResult bulkSaveResult = new BulkSaveResult();
+        // For all objects, it is necessary to set datasourceId, creation date AND to validate them
+        OffsetDateTime creationDate = now;
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        for (DataObject dataObject : objects) {
+            dataObject.setDataSourceId(datasourceId);
+            dataObject.setCreationDate(creationDate);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
+            // Validate data object
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
+        }
+        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+
+        return bulkSaveResult;
+    }
+
+    @Override
     public BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now,
             List<DataObject> objects) {
         StringBuilder buf = new StringBuilder();
@@ -607,29 +588,33 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
-        // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
-        // has same size as page.getContent() or is empty
         esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        return bulkSaveResult;
+    }
+
+    private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
+            BulkSaveResult bulkSaveResult) {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed
+            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
+            // care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
                     .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
         }
-        if (bulkSaveResult.getInErrorDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject cannot be indexed
+        if (bulkSaveResult.getInErrorDocsCount() > 0) {
+            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
+            // it doesn't care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getInErrorDocIdsStream()
                     .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
         }
-
-        // If there are errors, notify admin
+        // If there are errors, notify Admin
         if (buf.length() > 0) {
-            // Also add detailed message to datasource ingestion (with ingestion label)
+            // Also add detailed message to datasource ingestion
             DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
-            String notifTitle = String.format("%s Datasource ingestion error", dsIngestion.getLabel());
+            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
             self.createNotificationForAdmin(tenant, notifTitle, buf);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
-        return bulkSaveResult;
     }
 
     @Override
