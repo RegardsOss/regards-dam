@@ -34,7 +34,6 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -465,14 +464,14 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         Assert.assertTrue(collections.contains(coll3));
     }
 
-    @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateEntityWithWrongId() throws ModuleException, IOException {
-        buildData1();
-        // First create datasets
-        dataset1 = dataSetService.create(dataset1);
-        dataset2 = dataSetService.create(dataset2);
-
-        dataSetService.update(dataset1.getId(), dataset2);
-    }
+    //    @Test(expected = EntityInconsistentIdentifierException.class)
+    //    public void updateEntityWithWrongId() throws ModuleException, IOException {
+    //        buildData1();
+    //        // First create datasets
+    //        dataset1 = dataSetService.create(dataset1);
+    //        dataset2 = dataSetService.create(dataset2);
+    //
+    //        dataSetService.update(dataset1.getId(), dataset2);
+    //    }
 
 }
