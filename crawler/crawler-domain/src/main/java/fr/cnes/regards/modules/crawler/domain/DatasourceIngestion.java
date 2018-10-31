@@ -81,6 +81,12 @@ public class DatasourceIngestion {
     private Integer inErrorObjectsCount;
 
     /**
+     * Last NOT_FINISHED ingestion error page number
+     */
+    @Column(name = "error_page_nb")
+    private Integer errorPageNumber;
+
+    /**
      * When status is ERROR, the exception stack trace
      */
     @Column
@@ -179,6 +185,14 @@ public class DatasourceIngestion {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public Integer getErrorPageNumber() {
+        return errorPageNumber;
+    }
+
+    public void setErrorPageNumber(Integer errorPageNumber) {
+        this.errorPageNumber = errorPageNumber;
     }
 
     @Override
