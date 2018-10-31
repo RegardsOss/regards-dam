@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +44,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -80,6 +81,9 @@ import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent>
         implements ICrawlerAndIngesterService {
+
+    private static final DateTimeFormatter ISO_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
+            .append(DateTimeFormatter.ISO_LOCAL_TIME).toFormatter();
 
     @Autowired
     private IModelService modelService;
@@ -352,7 +356,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
      */
     public void sendMessage(String message, Long dsId) {
-        String msg = String.format("%s: %s", OffsetDateTimeAdapter.format(OffsetDateTime.now()), message);
+        String msg = String
+                .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                        message);
         eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
     }
 }
