@@ -424,14 +424,14 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T extends IIndexable> T get(String pIndex, String pType, String pId, Class<T> pClass) {
-        GetRequest request = new GetRequest(pIndex.toLowerCase(), pType, pId);
+    public <T extends IIndexable> T get(String index, String type, String id, Class<T> clazz) {
+        GetRequest request = new GetRequest(index.toLowerCase(), type, id);
         try {
             GetResponse response = client.get(request);
             if (!response.isExists()) {
                 return null;
             }
-            return gson.fromJson(response.getSourceAsString(), pClass);
+            return gson.fromJson(response.getSourceAsString(), clazz);
         } catch (final JsonSyntaxException | IOException e) {
             throw new RsRuntimeException(e);
         }
