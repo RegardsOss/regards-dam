@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities;
 
+import java.util.Collections;
+import java.util.Map;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -30,8 +33,8 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
-import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
@@ -84,11 +87,8 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
     @Column(name = "sub_setting_clause_as_string")
     private String openSearchSubsettingClause;
 
-    /**
-     * Metadata, only used by Elasticsearch
-     */
     @Transient
-    private DatasetMetadata metadata = new DatasetMetadata();
+    private Map<String, AccessRight> accessRights = Collections.emptyMap();
 
     public Dataset() {
         // we use super and not this because at deserialization we need a ipId null at the object creation which is then
@@ -150,14 +150,6 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
         this.dataModel = dataModel;
     }
 
-    public DatasetMetadata getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(DatasetMetadata metadata) {
-        this.metadata = metadata;
-    }
-
     @Override
     public int hashCode() {
         return super.hashCode();
@@ -189,4 +181,13 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
     public void setLicence(String licence) {
         feature.setLicence(licence);
     }
+
+    public Map<String, AccessRight> getAccessRights() {
+        return accessRights;
+    }
+
+    public void setAccessRights(Map<String, AccessRight> accessRights) {
+        this.accessRights = accessRights;
+    }
+
 }
