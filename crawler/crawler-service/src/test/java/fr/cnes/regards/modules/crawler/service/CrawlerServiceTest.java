@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -43,19 +44,24 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.dam.domain.datasources.AbstractAttributeMapping;
+import fr.cnes.regards.modules.dam.domain.datasources.DynamicAttributeMapping;
+import fr.cnes.regards.modules.dam.domain.datasources.StaticAttributeMapping;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.IAipDataSourcePlugin;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.StringAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -67,10 +73,6 @@ public class CrawlerServiceTest {
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
-
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
     private static final String TENANT = "default";
 
@@ -126,20 +128,32 @@ public class CrawlerServiceTest {
 
         // Retrieve first 1000 objects
 
-        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
+        Pageable pageable = new PageRequest(0, 1000);
+        Page<DataObjectFeature> page = dsPlugin.findAll(TENANT, pageable);
 
         LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
-        Set<DataObject> set = Sets.newHashSet(page.getContent());
+        Set<DataObjectFeature> set = Sets.newHashSet(page.getContent());
         Assert.assertEquals(page.getContent().size(), set.size());
-        int savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
-        LOGGER.info("...{} entities saved", savedItemsCount);
+
+        Model model = Model.build("FAKE", "Test model", EntityType.DATA);
+        List<DataObject> dataObjects = new ArrayList<>();
+        // Wrap data object feature in data object decorator
+        for (DataObjectFeature feature : page.getContent()) {
+            // Wrap each feature into its decorator
+            DataObject wrap = DataObject.wrap(model, feature,
+                                              IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
+            dataObjects.add(wrap);
+        }
+
+        BulkSaveResult bulkSaveResult = indexerService.saveBulkEntities(TENANT, dataObjects);
+        LOGGER.info("...{} entities saved", bulkSaveResult.getSavedDocsCount());
         while (page.hasNext()) {
             page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
             LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
-            savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
-            LOGGER.info("...{} entities saved", savedItemsCount);
+            bulkSaveResult = indexerService.saveBulkEntities(TENANT, dataObjects);
+            LOGGER.info("...{} entities saved", bulkSaveResult.getSavedDocsCount());
         }
         Assert.assertTrue(true);
     }

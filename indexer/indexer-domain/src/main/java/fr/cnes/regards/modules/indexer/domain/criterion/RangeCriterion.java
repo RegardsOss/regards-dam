@@ -1,8 +1,27 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A range criterion defines a range of value comparisons for a named property.<br/>
@@ -16,14 +35,14 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     /**
      * Set of comparisons (att > 0, att <= 25.34, etc...)
      */
-    private final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
+    protected final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
 
-    protected RangeCriterion(String pName) {
-        super(pName);
+    protected RangeCriterion(String name) {
+        super(name);
     }
 
-    public void addValueComparison(ValueComparison<T> pValueComparison) {
-        valueComparisons.add(pValueComparison);
+    public void addValueComparison(ValueComparison<T> valueComparison) {
+        valueComparisons.add(valueComparison);
     }
 
     public Set<ValueComparison<T>> getValueComparisons() {
@@ -31,8 +50,16 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitRangeCriterion(this);
+    public RangeCriterion<T> copy() {
+        RangeCriterion<T> copy = new RangeCriterion<>(super.name);
+        copy.valueComparisons
+                .addAll(this.valueComparisons.stream().map(ValueComparison::copy).collect(Collectors.toSet()));
+        return copy;
+    }
+
+    @Override
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitRangeCriterion(this);
     }
 
     @Override
@@ -40,7 +67,7 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
         }
         if (!super.equals(o)) {

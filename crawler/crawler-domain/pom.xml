@@ -23,7 +23,6 @@
 
 	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-domain</artifactId>
-	<packaging>jar</packaging>
 	
 	<description>Model layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
@@ -50,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>crawler</artifactId>
-		<version>2.0.0-RELEASE</version>
+		<version>3.0.0-RELEASE</version>
 	</parent>
 	<dependencies>
 		<dependency>

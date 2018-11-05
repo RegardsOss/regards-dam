@@ -39,6 +39,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -49,22 +50,23 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.test.util.Beans;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
-import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
+import fr.cnes.regards.modules.dam.domain.datasources.AbstractAttributeMapping;
+import fr.cnes.regards.modules.dam.domain.datasources.StaticAttributeMapping;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.Collection;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.DeletedEntity;
+import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
+import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * Crawler service integration tests
@@ -79,10 +81,6 @@ public class CrawlerServiceIT {
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceIT.class);
-
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
     @Value("${regards.tenant}")
     private String tenant;
@@ -125,7 +123,7 @@ public class CrawlerServiceIT {
     private IDatasetService dsService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<EntityFeature>> entityRepos;
 
     @Autowired
     private IEsRepository esRepos;
@@ -139,6 +137,7 @@ public class CrawlerServiceIT {
     @Autowired
     private IDeletedEntityRepository deletedEntityRepository;
 
+    @SuppressWarnings("unused")
     private List<AbstractAttributeMapping> modelAttrMapping;
 
     @Before
@@ -227,36 +226,36 @@ public class CrawlerServiceIT {
         dataSourcePluginConf = getOracleDataSource(pluginConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
-        dataset1 = new Dataset(modelDataset, tenant, "labelDs1");
+        dataset1 = new Dataset(modelDataset, tenant, "DS1", "labelDs1");
         dataset1.setLicence("licence");
-        dataset1.setSipId("SipId1");
+        dataset1.setProviderId("ProviderId1");
         dataset1.setDataSource(dataSourcePluginConf);
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
-        dataset2 = new Dataset(modelDataset, tenant, "labelDs2");
+        dataset2 = new Dataset(modelDataset, tenant, "DS2", "labelDs2");
         dataset2.setLicence("licence");
-        dataset2.setSipId("SipId2");
+        dataset2.setProviderId("ProviderId2");
         dataset2.setDataSource(dataSourcePluginConf);
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
-        dataset3 = new Dataset(modelDataset, tenant, "labelDs3");
+        dataset3 = new Dataset(modelDataset, tenant, "DS3", "labelDs3");
         dataset3.setLicence("licence");
-        dataset3.setSipId("SipId3");
+        dataset3.setProviderId("ProviderId3");
         dataset3.setDataSource(dataSourcePluginConf);
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
         // No tags on Datasets, it doesn't matter
 
-        coll1 = new Collection(modelColl, tenant, "coll1");
-        coll1.setSipId("SipId4");
+        coll1 = new Collection(modelColl, tenant, "COL1", "coll1");
+        coll1.setProviderId("ProviderId4");
         // C1 -> (DS1, DS2)
         coll1.setTags(Sets.newHashSet(dataset1.getIpId().toString(), dataset2.getIpId().toString()));
-        coll2 = new Collection(modelColl, tenant, "coll2");
-        coll2.setSipId("SipId5");
+        coll2 = new Collection(modelColl, tenant, "COL2", "coll2");
+        coll2.setProviderId("ProviderId5");
         // C2 -> (C1, DS3)
         coll2.setTags(Sets.newHashSet(coll1.getIpId().toString(), dataset3.getIpId().toString()));
-        coll3 = new Collection(modelColl, tenant, "coll3");
-        coll3.setSipId("SipId6");
+        coll3 = new Collection(modelColl, tenant, "COL3", "coll3");
+        coll3.setProviderId("ProviderId6");
         // C3 -> (DS3)
         coll3.setTags(Sets.newHashSet(dataset3.getIpId().toString()));
     }

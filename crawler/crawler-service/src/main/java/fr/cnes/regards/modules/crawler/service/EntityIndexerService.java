@@ -4,6 +4,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +37,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.Validator;
 
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -43,34 +45,40 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
-import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
-import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
-import fr.cnes.regards.modules.entities.domain.event.EventType;
-import fr.cnes.regards.modules.entities.service.IEntitiesService;
-import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.Document;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
+import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
+import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
+import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
+import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
+import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
+import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.notification.domain.NotificationType;
 import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
@@ -84,6 +92,9 @@ import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 public class EntityIndexerService implements IEntityIndexerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityIndexerService.class);
+
+    private static final DateTimeFormatter ISO_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
+            .append(DateTimeFormatter.ISO_LOCAL_TIME).toFormatter();
 
     /**
      * Current tenant resolver
@@ -109,11 +120,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * Validator used to validate each DataObject creation before its indexing into ElasticSearch
-     */
     @Autowired
-    private Validator validator;
+    private DataObjectService dataObjectService;
 
     @Autowired
     @Lazy
@@ -131,6 +139,10 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private IDatasourceIngestionRepository datasourceIngestionRepository;
+
+    @Override
     @EventListener
     public void handleApplicationReady(ApplicationReadyEvent event) {
         subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
@@ -146,19 +158,19 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) {
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) throws ModuleException {
         LOGGER.info("Updating {}", ipId.toString());
         runtimeTenantResolver.forceTenant(tenant);
-        AbstractEntity entity = entitiesService.loadWithRelations(ipId);
+        AbstractEntity<?> entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
             LOGGER.debug("Entity is null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
-                sendMessage(String.format("Dataset with IP_ID %s no more exists...", ipId.toString()), dsiId);
+                sendMessage(String.format("    Dataset with IP_ID %s no more exists...", ipId.toString()), dsiId);
                 manageDatasetDelete(tenant, ipId.toString(), dsiId);
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
-            sendMessage(String.format("...Dataset with IP_ID %s de-indexed.", ipId.toString()), dsiId);
+            sendMessage(String.format("    ...Dataset with IP_ID %s de-indexed.", ipId.toString()), dsiId);
         } else { // entity has been created or updated, it must be saved into ES
             createIndexIfNeeded(tenant);
             ICriterion savedSubsettingClause = null;
@@ -168,7 +180,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHED)
                 em.detach(entity);
                 if (dataset.getDataSource() != null) {
-                    dataset.getDataSource().setParameters(null);
+                    dataset.getDataSource().getParameters().clear();
                 }
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
@@ -184,9 +196,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                 final Map<String, Pair<AccessLevel, DataAccessLevel>> map = volatileMap;
                 // Compute groups for associated data objects
                 dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
-                                                                   .filter(group -> map.containsKey(group)
-                                                                           && map.get(group).getLeft()
-                                                                           == AccessLevel.FULL_ACCESS).collect(
+                                                                   .filter(group -> map.containsKey(group) && (
+                                                                           map.get(group).getLeft()
+                                                                                   == AccessLevel.FULL_ACCESS)).collect(
                                 Collectors.toMap(Function.identity(),
                                                  g -> map.get(g).getRight() == DataAccessLevel.INHERITED_ACCESS)));
                 // update dataset groups
@@ -250,7 +262,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void manageDatasetDelete(String tenant, String ipId, Long dsiId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
-        sendMessage(String.format("Searching for all data objects tagging dataset IP_ID %s", ipId), dsiId);
+        sendMessage(String.format("      Searching for all data objects tagging dataset IP_ID %s", ipId), dsiId);
         AtomicInteger objectsCount = new AtomicInteger(0);
         ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
 
@@ -258,7 +270,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         OffsetDateTime updateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         // Function to update an object (tags, groups, lastUpdate, ...)
         Consumer<DataObject> updateDataObject = object -> {
-            object.getTags().remove(ipId);
+            object.removeTags(Arrays.asList(ipId));
             // reset datasetModelIds
             object.getDatasetModelIds().clear();
             // Remove dataset ipId from metadata.groups dans modelIds
@@ -276,15 +288,16 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
         };
         // Apply updateTag function to all tagging objects
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                                                                      DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
         esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
             objectsCount.addAndGet(toSaveObjects.size());
         }
-        sendMessage(String.format("...Removed dataset IP_ID from %d data objects tags.", objectsCount.get()), dsiId);
+        sendMessage(String.format("      ...Removed dataset IP_ID from %d data objects tags.", objectsCount.get()),
+                    dsiId);
     }
 
     /**
@@ -294,11 +307,12 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate,
             Long dsiId) {
         String tenant = runtimeTenantResolver.getTenant();
-        sendMessage(String.format("Updating dataset %s indexation and all its associated data objects...",
+        sendMessage(String.format("      Updating dataset %s indexation and all its associated data objects...",
                                   dataset.getLabel()), dsiId);
-        sendMessage(String.format("Searching for dataset %s associated data objects...", dataset.getLabel()), dsiId);
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                                                                      DataObject.class);
+        sendMessage(String.format("        Searching for dataset %s associated data objects...", dataset.getLabel()),
+                    dsiId);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -310,24 +324,41 @@ public class EntityIndexerService implements IEntityIndexerService {
                                          saveDataObjectsCallable, dsiId);
         addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
                                            saveDataObjectsCallable, dsiId);
+        // To remove thread used by executor
+        executor.shutdown();
+        computeComputedAttributes(dataset, dsiId, tenant);
 
+        esRepos.save(tenant, dataset);
+        LOGGER.info("Dataset {} updated", dataset.getId());
+        sendMessage("      ...Dataset indexation updated.", dsiId);
+    }
+
+    /**
+     * Manage computed attributes computation
+     * @param dataset concerned dataset
+     * @param dsiId can be null (in this case, no notification is sent)
+     */
+    @Override
+    public void computeComputedAttributes(Dataset dataset, Long dsiId, String tenant) {
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
                     dataset.getId());
-        sendMessage(String.format("Starting computing of %d attributes...", computationPlugins.size()), dsiId);
+
+        sendMessage(String.format("        Starting computing of %d attributes...", computationPlugins.size()), dsiId);
         computationPlugins.parallelStream().forEach(p -> {
             runtimeTenantResolver.forceTenant(tenant);
             p.compute(dataset);
         });
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
-        LOGGER.info("...computing OK");
-        sendMessage(String.format("...Computing ended.", computationPlugins.size()), dsiId);
 
-        esRepos.save(tenant, dataset);
-        LOGGER.info("Dataset {} updated", dataset.getId());
-        sendMessage("...Dataset indexation updated.", dsiId);
+        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList(computationPlugins);
+        ll.stream()
+                .forEach(comAtt -> LOGGER.info("attribute {} is computed", comAtt.getAttributeToCompute().getName()));
+
+        LOGGER.info("...computing OK");
+        sendMessage(String.format("        ...Computing ended.", computationPlugins.size()), dsiId);
     }
 
     /**
@@ -336,7 +367,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
-        sendMessage("Adding or updating dataset data objects association...", dsiId);
+        sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
                                                                     saveDataObjectsCallable, executor);
@@ -348,8 +379,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
-        sendMessage(String.format("...%d data objects dataset association saved.", dataObjectUpdater.getObjectsCount()),
-                    dsiId);
+        sendMessage(String.format("          ...%d data objects dataset association saved.",
+                                  dataObjectUpdater.getObjectsCount()), dsiId);
     }
 
     /**
@@ -358,7 +389,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
-        sendMessage("Removing old dataset data objects association...", dsiId);
+        sendMessage("          Removing old dataset data objects association...", dsiId);
         // First : remove association between dataset and data objects for data objects that are no more associated to
         // new subsetting clause so search data objects that are tagged with dataset IPID and with NOT(user subsetting
         // clause)
@@ -370,7 +401,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
-        sendMessage(String.format("...%d data objects dataset association removed.",
+        sendMessage(String.format("          ...%d data objects dataset association removed.",
                                   dataObjectAssocRemover.getObjectsCount()), dsiId);
     }
 
@@ -426,20 +457,90 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     @MultitenantTransactional
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, Long dsiId) {
+            boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
 
         for (Dataset dataset : datasets) {
-            sendMessage(String.format("Updating dataset %s...", dataset.getLabel()), dsiId);
+            sendMessage(String.format("  Updating dataset %s...", dataset.getLabel()), dsiId);
             updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
-            sendMessage(String.format("...Dataset %s updated.", dataset.getLabel()), dsiId);
+            sendMessage(String.format("  ...Dataset %s updated.", dataset.getLabel()), dsiId);
         }
     }
 
+    @Async
     @Override
-    public int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
+    public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
+        runtimeTenantResolver.forceTenant(tenant);
+        FeignSecurityManager.asSystem();
+        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
+                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
+                                                    applicationName, title, NotificationType.ERROR);
+        notifClient.createNotification(notif);
+        FeignSecurityManager.reset();
+    }
+
+    /**
+     * Validate given DataObject. If no error, add it to given set else log validation errors
+     */
+    private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, BulkSaveResult bulkSaveResult,
+            StringBuilder buf, Long datasourceId) {
+        Errors errorsObject = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
+        List<String> errors = null;
+        // If some validation errors occur, don't index data object
+        try {
+            dataObjectService.validate(dataObject, errorsObject, false);
+        } catch (EntityInvalidException e) {
+            // If such an exception has been thrown, it contains all errors ( as a List<String>) else errors are
+            // described into errorsObject
+            errors = e.getMessages();
+        }
+        // No exception thrown but still validation errors
+        if ((errors == null) && (errorsObject.hasErrors())) {
+            errors = toErrors(errorsObject);
+        }
+        // No error => dataObject is valid
+        if (errors == null) {
+            toSaveObjects.add(dataObject);
+        } else {
+            // Validation error
+            StringBuilder dataObjectBuffer = new StringBuilder("Data object with id '");
+            dataObjectBuffer.append(dataObject.getDocId()).append("' not indexed due to ");
+            dataObjectBuffer.append(errors.size()).append(" validation error(s):\n");
+            dataObjectBuffer.append(errors.stream().collect(Collectors.joining("\n")));
+            String msg = dataObjectBuffer.toString();
+            // Log error msg
+            LOGGER.warn(msg);
+            // Append error msg to buffer
+            buf.append("\n").append(msg);
+            // Add data object in error into summary result
+            bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg));
+        }
+    }
+
+    private static List<String> toErrors(Errors errorsObject) {
+        List<String> errors = new ArrayList<>(errorsObject.getErrorCount());
+        for (ObjectError objError : errorsObject.getAllErrors()) {
+            if (objError instanceof FieldError) {
+                StringBuilder buf = new StringBuilder();
+                buf.append("Field error in object ").append(objError.getObjectName());
+                buf.append(" on field '").append(((FieldError) objError).getField());
+                buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
+                buf.append("': ").append(((FieldError) objError).getField());
+                buf.append(" ").append(objError.getDefaultMessage());
+                errors.add(buf.toString());
+            } else {
+                errors.add(objError.toString());
+            }
+        }
+        return errors;
+    }
+
+    @Override
+    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
+            List<DataObject> objects) {
         StringBuilder buf = new StringBuilder();
-        // On all objects, it is necessary to set datasourceId and creation date
+        BulkSaveResult bulkSaveResult = new BulkSaveResult();
+        // For all objects, it is necessary to set datasourceId, creation date AND to validate them
         OffsetDateTime creationDate = now;
         Set<DataObject> toSaveObjects = new HashSet<>();
         for (DataObject dataObject : objects) {
@@ -448,104 +549,88 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-            validateDataObject(toSaveObjects, dataObject, buf);
+            // Validate data object
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
-        if (buf.length() > 0) {
-            self.createNotificationForAdmin(tenant, buf);
-        }
-        int createdCount = esRepos.saveBulk(tenant, toSaveObjects);
-        if (createdCount != 0) {
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
-                                                               .map(DataObject::getIpId)
-                                                               .toArray(n -> new UniformResourceName[n])));
-        }
-        return createdCount;
-    }
+        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
 
-    @Async
-    @Override
-    public void createNotificationForAdmin(String tenant, CharSequence buf) {
-        runtimeTenantResolver.forceTenant(tenant);
-        FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
-                                                    applicationName, "Datasource ingestion error",
-                                                    NotificationType.ERROR);
-        notifClient.createNotification(notif);
-        FeignSecurityManager.reset();
-    }
-
-    /**
-     * Validate given DataObject. If no error, add it to given set else log validation errors
-     */
-    private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
-        Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
-        // If some validation errors occur, don't index data object
-        validator.validate(dataObject, errors);
-        if (errors.getErrorCount() == 0) {
-            toSaveObjects.add(dataObject);
-        } else {
-            buf.append("\n").append(errors.getErrorCount()).append(" validation errors:");
-            for (ObjectError objError : errors.getAllErrors()) {
-                if (objError instanceof FieldError) {
-                    buf.append("\nField error in object ").append(objError.getObjectName());
-                    buf.append(" on field '").append(((FieldError) objError).getField());
-                    buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
-                    buf.append("': ").append(((FieldError) objError).getField());
-                    buf.append(" ").append(objError.getDefaultMessage());
-                } else {
-                    buf.append("\n").append(objError.toString());
-                }
-            }
-            LOGGER.warn("Data object not indexed due to {}", buf.toString());
-        }
+        return bulkSaveResult;
     }
 
     @Override
-    public int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
+    public BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now,
+            List<DataObject> objects) {
         StringBuilder buf = new StringBuilder();
+        BulkSaveResult bulkSaveResult = new BulkSaveResult();
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 
         for (DataObject dataObject : objects) {
-            DataObject curObject = esRepos.get(tenant, dataObject);
-            // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
-            // search objects from storage only using tags so if this tag has been used
-            // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
-            // current creationDate, groups, tags and modelIds
-            if (curObject != null) {
-                dataObject.setCreationDate(curObject.getCreationDate());
-                dataObject.setMetadata(curObject.getMetadata());
-                dataObject.setGroups(dataObject.getMetadata().getGroups());
-                dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
-                // In case to ingest object has new tags
-                dataObject.getTags().addAll(curObject.getTags());
-            } else { // else it must be created
-                dataObject.setCreationDate(now);
-            }
-            // Don't forget to update lastUpdate
-            dataObject.setLastUpdate(now);
-            // Don't forget to set datasourceId
-            dataObject.setDataSourceId(datasourceId);
-            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
-                dataObject.setLabel(dataObject.getIpId().toString());
-            }
-            validateDataObject(toSaveObjects, dataObject, buf);
+            mergeDataObject(tenant, datasourceId, now, dataObject);
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
+        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        return bulkSaveResult;
+    }
+
+    /**
+     * Merge data object with current indexed one if it does exist
+     */
+    private void mergeDataObject(String tenant, String datasourceId, OffsetDateTime now, DataObject dataObject) {
+        DataObject curObject = esRepos.get(tenant, dataObject);
+        // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
+        // search objects from storage only using tags so if this tag has been used
+        // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
+        // current creationDate, groups, tags and modelIds
+        if (curObject != null) {
+            dataObject.setCreationDate(curObject.getCreationDate());
+            dataObject.setMetadata(curObject.getMetadata());
+            dataObject.setGroups(dataObject.getMetadata().getGroups());
+            dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
+            // In case to ingest object has new tags
+            if (!curObject.getTags().isEmpty()) {
+                dataObject.addTags(curObject.getTags());
+            }
+        } else { // else it must be created
+            dataObject.setCreationDate(now);
+        }
+        // Don't forget to update lastUpdate
+        dataObject.setLastUpdate(now);
+        // Don't forget to set datasourceId
+        dataObject.setDataSourceId(datasourceId);
+        if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+            dataObject.setLabel(dataObject.getIpId().toString());
+        }
+    }
+
+    /**
+     * Publish events concerning data objects indexation status (indexed or in error), notify admin and update detailed
+     * save bulk result message in case of errors
+     */
+    private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
+            BulkSaveResult bulkSaveResult) {
+        if (bulkSaveResult.getSavedDocsCount() != 0) {
+            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
+            // care)
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
+                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
+        }
+        if (bulkSaveResult.getInErrorDocsCount() > 0) {
+            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
+            // it doesn't care)
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getInErrorDocIdsStream()
+                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
+        }
+        // If there are errors, notify Admin
         if (buf.length() > 0) {
-            self.createNotificationForAdmin(tenant, buf);
+            // Also add detailed message to datasource ingestion
+            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
+            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
+            self.createNotificationForAdmin(tenant, notifTitle, buf);
+            bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
-        // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
-        // has same size as page.getContent() or is empty
-        int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
-        if (savedCount != 0) {
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
-                                                               .map(DataObject::getIpId)
-                                                               .toArray(n -> new UniformResourceName[n])));
-        }
-        return savedCount;
     }
 
     @Override
@@ -558,7 +643,10 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), message, dsId));
+            String msg = String
+                    .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                            message);
+            eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
 
@@ -570,9 +658,9 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (event.getAipState() == AIPState.DELETED) {
                 runtimeTenantResolver.forceTenant(wrapper.getTenant());
                 try {
-                    deleteDataObject(wrapper.getTenant(), event.getIpId());
+                    deleteDataObject(wrapper.getTenant(), event.getAipId());
                 } catch (RsRuntimeException e) {
-                    String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                    String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
 

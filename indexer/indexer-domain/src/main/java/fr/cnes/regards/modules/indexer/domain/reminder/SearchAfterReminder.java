@@ -82,4 +82,9 @@ public class SearchAfterReminder extends AbstractReminder {
     public String getType() {
         return TYPE;
     }
+
+    @Override
+    public String getLabel() {
+        return "N/A";
+    }
 }

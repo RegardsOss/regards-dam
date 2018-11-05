@@ -194,8 +194,8 @@ public class EsRepositoryTest {
 
         // remove failed item
         list.remove(2);
-        int savedItemsCount = repository.saveBulk("bulktest", list);
-        Assert.assertEquals(list.size(), savedItemsCount);
+        BulkSaveResult bulkSaveResult = repository.saveBulk("bulktest", list);
+        Assert.assertEquals(1, bulkSaveResult.getSavedDocsCount());
 
         // If someone could find a case when a document save failed...Don't hesitate to talk it to me
     }
@@ -253,7 +253,8 @@ public class EsRepositoryTest {
         }
         final AtomicInteger i = new AtomicInteger(0);
         long start = System.currentTimeMillis();
-        SearchKey<Item, Item> searchKey = new SearchKey<>("loading", "item", Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>( "item", Item.class);
+        searchKey.setSearchIndex("loading");
         repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
@@ -278,8 +279,10 @@ public class EsRepositoryTest {
         facetMap.put("titi", FacetType.DATE);
         facetMap.put("tutu", FacetType.NUMERIC);
         facetMap.put("tata", FacetType.STRING);
+        SimpleSearchKey<IIndexable> searchKey = new SimpleSearchKey<>("toto", IIndexable.class);
+        searchKey.setSearchIndex(index);
         FacetPage<IIndexable> page = (FacetPage<IIndexable>) repository
-                .search(new SimpleSearchKey<>(index, "toto", IIndexable.class), 10, ICriterion.all(), facetMap);
+                .search(searchKey, 10, ICriterion.all(), facetMap);
         Assert.assertNotNull(page.getFacets());
         Assert.assertTrue(page.getFacets().isEmpty());
     }
@@ -333,6 +336,11 @@ public class EsRepositoryTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        @Override
+        public String getLabel() {
+            return name;
         }
 
         public Item getSubItem() {

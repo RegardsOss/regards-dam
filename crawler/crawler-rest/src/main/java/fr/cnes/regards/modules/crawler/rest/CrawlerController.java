@@ -33,7 +33,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
@@ -43,8 +42,6 @@ import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
  * @author Sébastien Binda
  */
 @RestController
-@ModuleInfo(name = "crawler", version = "2.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
 @RequestMapping(CrawlerController.TYPE_MAPPING)
 public class CrawlerController implements IResourceController<DatasourceIngestion> {
 
@@ -65,8 +62,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     private IResourceService resourceService;
 
     /**
-     * Retrieve all {@link DatasourceIngestion}.
-     * @return a list of {@link DatasourceIngestion}
+     * Retrieve all DatasourceIngestion.
+     * @return a list of DatasourceIngestion
      */
     @ResourceAccess(description = "List all crawler datasources.")
     @RequestMapping(method = RequestMethod.GET)
@@ -75,20 +72,32 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     }
 
     /**
-     * Delete a {@link DatasourceIngestion}.
+     * Delete a DatasourceIngestion.
      */
-    @ResourceAccess(description = "List all crawler datasources.")
+    @ResourceAccess(description = "Delete selected datasource.")
     @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
     public ResponseEntity<Void> deleteDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
         crawlerService.deleteDatasourceIngestion(ingestionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Schedule datasource ingestion to be executed as soon as possible
+     */
+    @ResourceAccess(description = "Schedule datasource to be ingested as soon as possible.")
+    @RequestMapping(method = RequestMethod.PUT, value = INGESTION_ID)
+    public ResponseEntity<Void> scheduleNowDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
+        crawlerService.scheduleNowDatasourceIngestion(ingestionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @Override
     public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
         Resource<DatasourceIngestion> resource = resourceService.toResource(element);
-        resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion",
-                                LinkRels.DELETE, MethodParamFactory.build(Long.class, element.getId()));
+        resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, element.getId()));
+        resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion", "SCHEDULE",
+                                MethodParamFactory.build(Long.class, element.getId()));
         return resource;
     }
 

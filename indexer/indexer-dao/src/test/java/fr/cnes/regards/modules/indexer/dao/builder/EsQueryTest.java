@@ -218,7 +218,8 @@ public class EsQueryTest {
         }
         System.out.println("Moyenne Get (100) : " + (cumul / 100.) + " ms");
 
-        SimpleSearchKey<Item> searchKey = new SimpleSearchKey<>(INDEX2, TYPE1, Item.class);
+        SimpleSearchKey<Item> searchKey = new SimpleSearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX2);
         cumul = 0;
         for (int i = 0; i < 100; i++) {
             String id = Integer.toString(random.nextInt(BIG_VOLUME_SIZE));
@@ -401,13 +402,15 @@ public class EsQueryTest {
         this.createData();
 
         // Without knowing type (ie on AbstractItem which is a subtype of Item)
-        SearchKey<AbstractItem, AbstractItem> abstractSearchKey = new SearchKey<>(INDEX, Collections
-                .singletonMap(TYPE1, Item.class));
+        SearchKey<AbstractItem, AbstractItem> abstractSearchKey = new SearchKey<>(
+                Collections.singletonMap(TYPE1, Item.class));
+        abstractSearchKey.setSearchIndex(INDEX);
         Assert.assertEquals(10, repository.search(abstractSearchKey, 10, ICriterion.all()).getContent().size());
 
         // On integers
         ICriterion gt5crit = ICriterion.gt("properties.size", 5);
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX);
         Assert.assertEquals(5, repository.search(searchKey, 10, gt5crit).getContent().size());
         Assert.assertEquals(5, repository.search(searchKey, 10, ICriterion.not(gt5crit)).getContent().size());
 
@@ -422,7 +425,6 @@ public class EsQueryTest {
 
         ICriterion emptyInCrit = ICriterion.in("properties.size", new int[0]);
         Assert.assertEquals(0, repository.search(searchKey, 10, emptyInCrit).getContent().size());
-
 
         ICriterion allCrit = ICriterion.ne("atributes.size", -1);
         Assert.assertEquals(10, repository.search(searchKey, 10, allCrit).getContent().size());
@@ -552,15 +554,18 @@ public class EsQueryTest {
     public void testSearchWithFacets() {
         this.createData();
 
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX);
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
         Page<Item> page = repository.search(searchKey, 10, ICriterion.all(),
-                                            facetMapBuilder.put("properties.tags", FacetType.STRING).build());
+                                            facetMapBuilder.put("properties.tags", FacetType.STRING)
+                                                    .put("properties.bool", FacetType.STRING).build());
         Assert.assertEquals(10, page.getContent().size());
         Assert.assertTrue(page instanceof FacetPage);
         Set<IFacet<?>> facets = ((FacetPage<Item>) page).getFacets();
         Assert.assertFalse(facets.isEmpty());
+        Assert.assertTrue(facets.iterator().next() instanceof StringFacet);
         Assert.assertTrue(facets.iterator().next() instanceof StringFacet);
         StringFacet strFacet = (StringFacet) facets.iterator().next();
         Assert.assertNotNull(strFacet);
@@ -607,7 +612,8 @@ public class EsQueryTest {
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
         sortMap.put("properties.text", true);
         sortMap.put("properties.size", false);
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX);
         List<Item> items = repository.search(searchKey, 10, sortMap, ICriterion.all()).getContent();
         List<Item> itemsSorted = Lists.newArrayList(items);
         Comparator<Item> comparator = Comparator.comparing(item -> item.getProperties().getText());
@@ -625,7 +631,8 @@ public class EsQueryTest {
         //                ICriterion crit = ICriterion.gt("properties.weight", -10000.0);
         ICriterion crit = ICriterion.all();
         Sort sort = new LinkedHashMapToSort().convert(sortMap);
-        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex("criterions2");
         long now = System.currentTimeMillis();
         repository.search(searchKey, new PageRequest(43, 1000, sort), crit).getContent();
         System.out.println("page n : " + (System.currentTimeMillis() - now) + " ms");
@@ -667,7 +674,8 @@ public class EsQueryTest {
     @Test
     public void testFrom0To10MNoSortNoCrit() throws InterruptedException {
         ICriterion crit = ICriterion.all();
-        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex("criterions2");
         long start = System.currentTimeMillis();
 
         int totalPageCount = 10_000_000 / 10_000;
@@ -685,7 +693,8 @@ public class EsQueryTest {
     @Test
     public void test10_000WithAggs() throws InterruptedException {
         ICriterion crit = ICriterion.all();
-        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex("criterions2");
         long start = System.currentTimeMillis();
 
         int totalPageCount = 10_000_000 / 10_000;
@@ -737,7 +746,8 @@ public class EsQueryTest {
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
         sortMap.put("docId", false);
         long start = System.currentTimeMillis();
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX2);
         Page<Item> page = repository.search(searchKey, 100, ICriterion.all(), facetMapBuilder.build(), sortMap);
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         // while (page.hasNext()) {
@@ -768,8 +778,9 @@ public class EsQueryTest {
         //        this.createData2();
         // Search with aggregations
         long start = System.currentTimeMillis();
-        SearchKey<Item, Properties> searchKey1 = new SearchKey<>(INDEX2, Collections.singletonMap(TYPE1, Item.class),
+        SearchKey<Item, Properties> searchKey1 = new SearchKey<>(Collections.singletonMap(TYPE1, Item.class),
                                                                  Properties.class);
+        searchKey1.setSearchIndex(INDEX2);
         List<Properties> propertieses = repository
                 .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
@@ -786,8 +797,9 @@ public class EsQueryTest {
         Assert.assertArrayEquals(array1, array2);
 
         // Testing with '.' into source attribute
-        SearchKey<Item, Integer> searchKey2 = new SearchKey<>(INDEX2, Collections.singletonMap(TYPE1, Item.class),
+        SearchKey<Item, Integer> searchKey2 = new SearchKey<>(Collections.singletonMap(TYPE1, Item.class),
                                                               Integer.class);
+        searchKey2.setSearchIndex(INDEX2);
         List<Integer> upperBounds = repository
                 .search(searchKey2, ICriterion.lt("properties.size", 1000), "properties.intRange.upperBound");
         Assert.assertEquals(10, upperBounds.size());
@@ -819,7 +831,8 @@ public class EsQueryTest {
         };
 
         long start = System.currentTimeMillis();
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX2);
         repository.searchAll(searchKey, updater, ICriterion.all());
         if (!items.isEmpty()) {
             long startS = System.currentTimeMillis();
@@ -844,7 +857,8 @@ public class EsQueryTest {
         // Search all items and set tags for all of them
 
         long start = System.currentTimeMillis();
-        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
+        searchKey.setSearchIndex(INDEX2);
         repository.searchAll(searchKey, this::nothing, ICriterion.all());
         System.out.println("Crossing 1 000 000 entities : " + (System.currentTimeMillis() - start) + " ms");
     }
@@ -881,6 +895,10 @@ public class EsQueryTest {
             type = pType;
         }
 
+        @Override
+        public String getLabel() {
+            return docId;
+        }
     }
 
     private static class Item extends AbstractItem implements IIndexable, Serializable {

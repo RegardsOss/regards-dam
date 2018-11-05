@@ -1,0 +1,34 @@
+{
+          "entityType": "DATA",
+          "dataSourceId": "123",
+          "datasetModelIds": [],
+          "metadata": {
+            "groups": {},
+            "modelIds": {}
+          },
+          "ipId": "URN:AIP:DATA:IAS:1f5b2b1a-4cff-3514-86b6-31e0c281269b:V1",
+          "label": "1342204922_n2023_fts_2_SLW_unapodized_supreme_cube.fits",
+          "model": {
+            "id": 52
+          },
+          "lastUpdate": "2018-01-24T16:15:44.247Z",
+          "creationDate": "2018-01-24T16:15:44.247Z",
+          "providerId": "3791",
+          "tags": [],
+          "groups": [],
+          "properties": {
+            "dec": -2.22889733,
+            "startDate": "2010-09-20T23:50:02Z",
+            "attribut_ra": 85.4012604,
+            "origin": "IAS",
+            "endDate": "2010-09-21T01:11:25Z",
+            "filesize": 104.370003,
+            "obsid": 1342204922,
+            "observer": "aabergel",
+            "cusmode": "SpireSpectroPoint",
+            "obsmode": "Single Pointing",
+            "public": true,
+            "odnumber": 495,
+            "object": "n2023_fts_2"
+          }
+        }

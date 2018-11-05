@@ -23,10 +23,9 @@
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>crawler</artifactId>
-	<version>2.0.0-RELEASE</version>
+	<version>3.0.0-RELEASE</version>
 	<packaging>pom</packaging>
 
-	<name>Crawler</name>
 	<description>Module crawling external datasources for data aspiration</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
@@ -52,7 +51,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>2.0.0-RELEASE</version>
+		<version>3.0.0-RELEASE</version>
 		<relativePath />
 	</parent>
 	

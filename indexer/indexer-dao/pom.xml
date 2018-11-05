@@ -23,7 +23,6 @@
 	<groupId>fr.cnes.regards.modules.indexer</groupId>
 	<artifactId>indexer-dao</artifactId>
 	
-	<name>Indexer DAO</name>
 	<description>DAO layer of the Indexer module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
@@ -49,7 +48,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>indexer</artifactId>
-		<version>2.0.0-RELEASE</version>
+		<version>3.0.0-RELEASE</version>
 	</parent>
 
 	<dependencies>
@@ -57,6 +56,26 @@
 			<groupId>fr.cnes.regards.framework.utils</groupId>
 			<artifactId>exception-utils</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.utils</groupId>
+			<artifactId>spring-utils</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.project</groupId>
+			<artifactId>project-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>feign-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards-starter</artifactId>
@@ -104,6 +123,19 @@
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.hipparchus</groupId>
+			<artifactId>hipparchus-geometry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-referencing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-metadata</artifactId>
+		</dependency>
+
 
 		<!-- Test dependencies -->
 		<dependency>

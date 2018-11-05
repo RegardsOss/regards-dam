@@ -1,9 +1,26 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilders;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -12,11 +29,14 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import com.google.common.base.Joiner;
 import com.vividsolutions.jts.geom.Coordinate;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoQueries;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
@@ -81,11 +101,13 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             case EQUALS:
                 return QueryBuilders.matchPhraseQuery(attName, searchValue);
             case STARTS_WITH:
-                return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue);
+                return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue).maxExpansions(10_000);
             case ENDS_WITH:
                 return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue);
             case CONTAINS:
                 return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue + ".*");
+            case LIKE:
+                return QueryBuilders.regexpQuery(attName + KEYWORD, searchValue);
             default:
                 return null;
         }
@@ -168,9 +190,9 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitCircleCriterion(CircleCriterion criterion) {
-        Double[] center = criterion.getCoordinates();
+        double[] center = criterion.getCoordinates();
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newCircleBuilder()
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders.newCircleBuilder()
                     .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
@@ -184,18 +206,36 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
-        Double[][][] coordinates = criterion.getCoordinates();
-        // Only shell can be taken into account
-        Double[][] shell = coordinates[0];
-        CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
-        for (Double[] point : shell) {
-            coordBuilder.coordinate(new Coordinate(point[0], point[1]));
-        }
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newPolygon(coordBuilder));
+            return QueryBuilders
+                    .geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, GeoQueries.computeShapeBuilder(criterion));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
-
     }
+
+    @Override
+    public QueryBuilder visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+        // Manage case when maxX > 180 => 360 - minX (this case can occur for a bbox crossing dateline)
+        if (criterion.getMaxX() > 180) {
+            criterion.setMaxX(criterion.getMaxX() - 360.0);
+        }
+        // Manage case when minLon > MaxLon (ie crossing dateline) (if MaxLon is < 0)
+        if ((criterion.getMaxX() < 0) && (criterion.getMinX() > criterion.getMaxX())) {
+            // Cut BoundaryBoxCriterion into 2 BoundaryBoxCriterion, dateLine west and dateLine east
+            return ICriterion
+                    .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMinY(), 180.0, criterion.getMaxY()),
+                        ICriterion
+                                .intersectsBbox(-180.0, criterion.getMinY(), criterion.getMaxX(), criterion.getMaxY()))
+                    .accept(this);
+        }
+        try {
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders
+                    .newEnvelope(new Coordinate(criterion.getMinX(), criterion.getMinY()),
+                                 new Coordinate(criterion.getMaxX(), criterion.getMaxY())));
+        } catch (IOException ioe) {
+            throw new RsRuntimeException(ioe);
+        }
+    }
+
 }

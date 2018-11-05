@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,25 +16,27 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
-import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
+import fr.cnes.regards.modules.dam.domain.entities.Collection;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
-import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * Multitenant crawler test
  *
  * @author oroussel
  */
+@Ignore("not testable nor in local nor on jenkins")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { MultitenantConfiguration.class })
 public class MultiTenantCrawlerIT {
@@ -74,9 +77,8 @@ public class MultiTenantCrawlerIT {
 
     @BeforeClass
     public static void toBeOrNotToBe() throws URISyntaxException {
-        Assume.assumeTrue(
-                ClassLoader.getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties")
-                        != null);
+        Assume.assumeTrue(ClassLoader
+                .getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties") != null);
     }
 
     @Before
@@ -110,10 +112,10 @@ public class MultiTenantCrawlerIT {
         Model model1 = Model.build("model1_" + TENANT1, "modele pour tenant " + TENANT1, EntityType.COLLECTION);
         model1 = modelService.createModel(model1);
 
-        final Collection coll11 = new Collection(model1, TENANT1, "collection 1 pour tenant " + TENANT1);
+        final Collection coll11 = new Collection(model1, TENANT1, "COL11", "collection 1 pour tenant " + TENANT1);
         coll11.setGroups(Sets.newHashSet("Michou", "Jojo"));
         collService.create(coll11);
-        final Collection coll12 = new Collection(model1, TENANT1, "collection 2 pour tenant " + TENANT1);
+        final Collection coll12 = new Collection(model1, TENANT1, "COL12", "collection 2 pour tenant " + TENANT1);
         collService.create(coll12);
 
         coll11.setTags(Sets.newHashSet(coll12.getIpId().toString()));
@@ -123,11 +125,11 @@ public class MultiTenantCrawlerIT {
         Model model2 = Model.build("model2_" + TENANT2, "modele pour tenant " + TENANT2, EntityType.COLLECTION);
         model2 = modelService.createModel(model2);
 
-        final Collection coll21 = new Collection(model2, TENANT2, "collection 1 pour tenant " + TENANT2);
+        final Collection coll21 = new Collection(model2, TENANT2, "COL21", "collection 1 pour tenant " + TENANT2);
         coll21.setGroups(Sets.newHashSet("Riri", "Fifi", "Loulou"));
         collService.create(coll21);
 
-        final Collection coll22 = new Collection(model2, TENANT2, "collection 2 pour tenant " + TENANT2);
+        final Collection coll22 = new Collection(model2, TENANT2, "COL22", "collection 2 pour tenant " + TENANT2);
         collService.create(coll22);
 
         coll21.setTags(Sets.newHashSet(coll22.getIpId().toString()));

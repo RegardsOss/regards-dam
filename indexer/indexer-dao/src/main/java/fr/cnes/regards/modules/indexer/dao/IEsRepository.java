@@ -1,3 +1,21 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.time.OffsetDateTime;
@@ -10,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +37,7 @@ import fr.cnes.regards.modules.indexer.dao.converter.LinkedHashMapToSort;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
@@ -63,6 +83,10 @@ public interface IEsRepository {
      */
     boolean setGeometryMapping(String index, String... types);
 
+    boolean setSettingsForBulk(String index);
+
+    boolean unsetSettingsForBulk(String index);
+
     /**
      * Delete specified index
      * @param index index
@@ -95,24 +119,59 @@ public interface IEsRepository {
     /**
      * Create or update several documents into same index. Errors are logged.
      * @param index index
+     * @param bulkSaveResult bulkSaveResult to use (can be null)
+     * @param errorBuffer errorBuffer filled with documents that cannot be saved
      * @param documents documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
-     * @return the number of effectively saved documents
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @return bulk save result
+     * @throws IllegalArgumentException If at least one document hasn't its mandatory properties (docId, type, label...).
      */
     @SuppressWarnings("unchecked")
-    <T extends IIndexable> int saveBulk(String index, T... documents) throws IllegalArgumentException;
+    <T extends IIndexable> BulkSaveResult saveBulk(String index, BulkSaveResult bulkSaveResult,
+            StringBuilder errorBuffer, T... documents) throws IllegalArgumentException;
 
     /**
-     * {@link #saveBulk(String, IIndexable...)}
-     * @param index index
-     * @param documents documents to save (docId and type are mandatory for all of them)
-     * @return the number of effectively saved documents
-     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
      */
-    default int saveBulk(final String index, final Collection<? extends IIndexable> documents)
+    @SuppressWarnings("unchecked")
+    default <T extends IIndexable> BulkSaveResult saveBulk(String index, T... documents)
+            throws IllegalArgumentException {
+        return this.saveBulk(index, null, documents);
+    }
+
+
+
+    /**
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
+     */
+    @SuppressWarnings("unchecked")
+    default <T extends IIndexable> BulkSaveResult saveBulk(String index, StringBuilder errorBuffer, T... documents)
+            throws IllegalArgumentException {
+        return saveBulk(index, null, errorBuffer, documents);
+    }
+
+    /**
+     * {@link #saveBulk(String, Collection, StringBuilder)}
+     */
+    default BulkSaveResult saveBulk(String index, Collection<? extends IIndexable> documents)
             throws IllegalArgumentException {
         return this.saveBulk(index, documents.toArray(new IIndexable[documents.size()]));
+    }
+
+    /**
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
+     */
+    default BulkSaveResult saveBulk(String index, BulkSaveResult bulkSaveResult,
+            Collection<? extends IIndexable> documents, StringBuilder errorBuffer) throws IllegalArgumentException {
+        return this.saveBulk(index, bulkSaveResult, errorBuffer, documents.toArray(new IIndexable[documents.size()]));
+    }
+
+    /**
+     * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
+     */
+    default BulkSaveResult saveBulk(final String index, final Collection<? extends IIndexable> documents,
+            StringBuilder errorBuffer) throws IllegalArgumentException {
+        return this.saveBulk(index, errorBuffer, documents.toArray(new IIndexable[documents.size()]));
     }
 
     /**
@@ -351,6 +410,16 @@ public interface IEsRepository {
     <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion crit, String attName);
 
     /**
+     * Retrieve stats for each given attribute
+     * @param searchKey the search key
+     * @param crit search criterion
+     * @param attributes non text attributes
+     * @return the stats of each attribute
+     */
+    <T extends IIndexable> Aggregations getAggregations(SearchKey<?, T> searchKey, ICriterion crit,
+            Collection<QueryableAttribute> attributes);
+
+    /**
      * Retrieve unique sorted string attribute values following given request
      * @param searchKey the search key
      * @param crit search criterion
@@ -397,13 +466,28 @@ public interface IEsRepository {
     <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion crit);
 
     /**
-     * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
-     * types
+     * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
+     * types. Only internal data files with a strictly positive size are taken into account. This size is used to count
+     * files and to compute sum.
+     * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
+     * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
-     * @return the compmuted summary
+     * @see DocFilesSummary
      */
-    <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes);
+    <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
+            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+
+    /**
+     * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
+     * types. Only external data files with an http or https uri are taken into account. This uri is used to count
+     * files. No sum is computed.
+     * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
+     * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
+     * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @see DocFilesSummary
+     */
+    <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
+            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
 
     /**
      * Close Client

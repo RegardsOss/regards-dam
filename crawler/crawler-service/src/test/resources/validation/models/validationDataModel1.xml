@@ -11,12 +11,12 @@
     </attribute>
     <attribute>
         <label>date UTC</label>
-        <name>date</name>
+        <name>vdate</name>
         <type>DATE_ISO8601</type>
     </attribute>
     <attribute optional="true">
         <label>description</label>
-        <name>description</name>
+        <name>vdescription</name>
         <type>STRING</type>
     </attribute>
     <attribute>
@@ -36,7 +36,7 @@
     </attribute>
     <attribute>
         <label>url value</label>
-        <name>url</name>
+        <name>vurl</name>
         <type>URL</type>
     </attribute>
 

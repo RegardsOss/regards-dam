@@ -23,9 +23,7 @@
 
 	<groupId>fr.cnes.regards.microservices.dam</groupId>
 	<artifactId>bootstrap-dam</artifactId>
-	<version>2.0.0-RELEASE</version>
 
-	<name>Bootstrap DAM</name>
 	<description>Boots the DAM microservice</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
@@ -51,13 +49,13 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-boot-parent</artifactId>
-		<version>2.0.0-RELEASE</version>
+		<version>3.0.0-RELEASE</version>
 		<relativePath></relativePath>
 	</parent>
 
 	<properties>
 		<fr.cnes.regards.docker.image.name>rs-dam</fr.cnes.regards.docker.image.name>
-		<docker.entryPoint>["./wait-for-it.sh", "rs_config:9031", "-t", "0", "--", "./wait-for-it.sh", "rs_registry:9032", "-t", "0", "--","./wait-for-it.sh", "rs_admin:9033", "-t", "0", "--", "./start.sh","${project.build.finalName}.${project.packaging}","-Xmx1500m"]</docker.entryPoint>
+		<docker.entryPoint>["./wait-for-it.sh", "rs-config:9031", "-t", "0", "--", "./wait-for-it.sh", "rs-registry:9032", "-t", "0", "--","./wait-for-it.sh", "rs-admin:9033", "-t", "0", "--", "./start.sh","${project.build.finalName}.${project.packaging}","-Xmx1500m"]</docker.entryPoint>
 	</properties>
 
 	<dependencies>
@@ -71,20 +69,8 @@
 		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
-			<artifactId>dataaccess-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-rest</artifactId>
+			<groupId>fr.cnes.regards.modules.dam</groupId>
+			<artifactId>dam-rest</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices.administration</groupId>

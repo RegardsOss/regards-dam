@@ -25,7 +25,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.framework.gson.adapters.MultimapAdapter;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -55,7 +57,7 @@ public class EsAggsTest {
     private static final String TYPE = "DATA";
 
     /**
-     * Befor class setting up method
+     * Before class setting up method
      * @throws Exception exception
      */
     @BeforeClass
@@ -72,8 +74,8 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                                          Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
@@ -94,7 +96,6 @@ public class EsAggsTest {
     private static final Random random = new Random();
 
     private static Set<String> randomTags() {
-        String[] randomTags = new String[random.nextInt(TAGS.length)];
         Set<String> randomSet = new HashSet<>();
         int size = random.nextInt(TAGS.length) + 1;
         if (size == TAGS.length) {
@@ -123,7 +124,6 @@ public class EsAggsTest {
             data.setDocId(file.getName());
             data.setTags(randomTags());
             data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA));
-            data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA2));
             data.getFiles().put(DataType.QUICKLOOK_HD, new DataFile(file, DataType.QUICKLOOK_HD));
             datas.add(data);
         }
@@ -133,18 +133,29 @@ public class EsAggsTest {
     @Test
     public void test() {
         createData();
-        DocFilesSummary summary = repository
-                .computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class), null, "tags", "RAWDATA",
-                                         "QUICKLOOK_HD");
+        DocFilesSummary summary = new DocFilesSummary();
+        SimpleSearchKey<Data> searchKey = new SimpleSearchKey<>(TYPE, Data.class);
+        searchKey.setSearchIndex(INDEX);
+        repository.computeInternalDataFilesSummary(searchKey, null, "tags", summary, "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
-        // 36 because 24 RAWDATA (each RAWDATA is doubled with same name and "2" at the end) and 12 QUICKLOOKS
-        Assert.assertEquals(36, summary.getFilesCount());
-        Assert.assertEquals(354107379, summary.getFilesSize()); // 3 * 118 Mb
+        // 24 because 12 RAWDATA and 12 QUICKLOOKS
+        Assert.assertEquals(24, summary.getFilesCount());
+        Assert.assertEquals(236071586, summary.getFilesSize()); // 3 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("RIRI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("LOULOU"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
+    }
+
+    private static class Feature {
+
+        private final Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+
+        public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+            return files;
+        }
+
     }
 
     private static class Data implements IIndexable, IDocFiles {
@@ -153,11 +164,12 @@ public class EsAggsTest {
 
         private Set<String> tags = new HashSet<>();
 
-        private Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
+        private final Feature feature = new Feature();
 
         public Data() {
         }
 
+        @SuppressWarnings("unused")
         public Data(String docId, Set<String> tags) {
             this.docId = docId;
             this.tags = tags;
@@ -177,6 +189,12 @@ public class EsAggsTest {
             this.docId = docId;
         }
 
+        @Override
+        public String getLabel() {
+            return docId;
+        }
+
+        @SuppressWarnings("unused")
         public Set<String> getTags() {
             return tags;
         }
@@ -187,27 +205,21 @@ public class EsAggsTest {
 
         @Override
         public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
-            return files;
-        }
-
-        public void setFiles(Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
-            this.files = files;
+            return feature.getFiles();
         }
     }
 
     private static class DataFile extends fr.cnes.regards.modules.indexer.domain.DataFile {
 
+        @SuppressWarnings("unused")
         public DataFile() {
         }
 
         public DataFile(File file, DataType type) {
-            this.setSize(file.length());
+            this.setFilesize(file.length());
             switch (type) {
                 case RAWDATA:
                     super.setUri(file.toURI());
-                    break;
-                case RAWDATA2:
-                    super.setUri(new File(file.getParentFile(), file.getName() + "_2").toURI());
                     break;
                 case QUICKLOOK_HD:
                     super.setUri(new File(file.getParentFile(), file.getName() + "_QL_HD").toURI());
@@ -218,12 +230,13 @@ public class EsAggsTest {
                 case QUICKLOOK_SD:
                     super.setUri(new File(file.getParentFile(), file.getName() + "_QL_SD").toURI());
                     break;
+                case DESCRIPTION:
+                case AIP:
+                case DOCUMENT:
+                case OTHER:
+                case THUMBNAIL:
+                    throw new IllegalArgumentException("Unsupported data type : " + type);
             }
         }
-    }
-
-    private static enum DataType {
-        RAWDATA, RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
-        QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
     }
 }

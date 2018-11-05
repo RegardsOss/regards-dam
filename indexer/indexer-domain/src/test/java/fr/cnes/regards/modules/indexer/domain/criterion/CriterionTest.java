@@ -15,7 +15,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 
 // CHECKSTYLE:OFF
 public class CriterionTest {
@@ -64,8 +66,8 @@ public class CriterionTest {
         ICriterion numericAndCriterion = ICriterion.and(numericCritList);
 
         // All theses criterions (AND)
-        ICriterion rootCrit = ICriterion
-                .and(containsCrit, endsWithCrit, startsWithCrit, equalsCrit, numericAndCriterion);
+        ICriterion rootCrit = ICriterion.and(containsCrit, endsWithCrit, startsWithCrit, equalsCrit,
+                                             numericAndCriterion);
 
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
     }
@@ -75,12 +77,12 @@ public class CriterionTest {
         final String RESULT = "(ALL) OR (attributes.alwaysTrue IS TRUE) OR (attributes.alwaysFalse IS FALSE) OR "
                 + "(attributes.creationDate ∈ { x / { x ≥ 2017-01-01T00:00:00Z, x ≤ 2017-12-31T23:59:59Z })";
 
-        ICriterion rootCrit = ICriterion.or(ICriterion.all(), ICriterion.isTrue("attributes.alwaysTrue"),
-                                            ICriterion.isFalse("attributes.alwaysFalse"), ICriterion
-                                                    .between("attributes.creationDate",
-                                                             OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
-                                                             OffsetDateTime
-                                                                     .of(2017, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)));
+        ICriterion rootCrit = ICriterion
+                .or(ICriterion.all(), ICriterion.isTrue("attributes.alwaysTrue"),
+                    ICriterion.isFalse("attributes.alwaysFalse"),
+                    ICriterion.between("attributes.creationDate",
+                                       OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                       OffsetDateTime.of(2017, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)));
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
     }
@@ -105,13 +107,13 @@ public class CriterionTest {
         final String RESULT = "((att.id == 1) OR (att.id == 2) OR (att.id == 3) OR (att.id == 4) OR (att.id == 5)) "
                 + "OR (att.ints == 3) OR (att.doubles ∈ { x / x ≥ 3.141582653589793, x ≤ 3.141602653589793 }) OR "
                 + "(att.dates ∈ { x / { x ≥ 2010-01-01T00:00:00Z, x ≤ 2020-01-01T00:00:00Z })";
-        ICriterion rootCrit = ICriterion
-                .or(Lists.newArrayList(ICriterion.in("att.id", 1, 2, 3, 4, 5), ICriterion.contains("att.ints", 3),
-                                       ICriterion.contains("att.doubles", Math.PI, 1e-5), ICriterion
-                                               .containsDateBetween("att.dates", OffsetDateTime
-                                                       .of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), OffsetDateTime
-                                                                            .of(2020, 1, 1, 0, 0, 0, 0,
-                                                                                ZoneOffset.UTC))));
+        ICriterion rootCrit = ICriterion.or(Lists
+                .newArrayList(ICriterion.in("att.id", 1, 2, 3, 4, 5), ICriterion.contains("att.ints", 3),
+                              ICriterion.contains("att.doubles", Math.PI, 1e-5),
+                              ICriterion
+                                      .containsDateBetween("att.dates",
+                                                           OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC))));
 
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
@@ -133,9 +135,10 @@ public class CriterionTest {
         final String RESULT = "((att.intRange.lowerBound ∈ { x / x ≤ 12 }) AND (att.intRange.upperBound ∈ "
                 + "{ x / x ≥ 12 })) OR ((att.dateRange.lowerBound ∈ { x / { x ≤ 2020-01-01T00:00:00Z }) AND "
                 + "(att.dateRange.upperBound ∈ { x / { x ≥ 2010-01-01T00:00:00Z }))";
-        ICriterion rootCrit = ICriterion.or(ICriterion.into("att.intRange", 12), ICriterion
-                .intersects("att.dateRange", OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
+        ICriterion rootCrit = ICriterion
+                .or(ICriterion.into("att.intRange", 12),
+                    ICriterion.intersects("att.dateRange", OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                          OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
 
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
@@ -147,54 +150,54 @@ public class CriterionTest {
     private static class TestCriterionVisitor implements ICriterionVisitor<String> {
 
         @Override
-        public String visitEmptyCriterion(EmptyCriterion pCriterion) {
+        public String visitEmptyCriterion(EmptyCriterion criterion) {
             return "ALL";
         }
 
         @Override
-        public String visitAndCriterion(AbstractMultiCriterion pCriterion) {
-            return pCriterion.getCriterions().stream().map(c -> c.accept(this))
+        public String visitAndCriterion(AbstractMultiCriterion criterion) {
+            return criterion.getCriterions().stream().map(c -> c.accept(this))
                     .collect(Collectors.joining(") AND (", "(", ")"));
         }
 
         @Override
-        public String visitOrCriterion(AbstractMultiCriterion pCriterion) {
-            return pCriterion.getCriterions().stream().map(c -> c.accept(this))
+        public String visitOrCriterion(AbstractMultiCriterion criterion) {
+            return criterion.getCriterions().stream().map(c -> c.accept(this))
                     .collect(Collectors.joining(") OR (", "(", ")"));
         }
 
         @Override
-        public String visitNotCriterion(NotCriterion pCriterion) {
-            return "NOT (" + pCriterion.getCriterion().accept(this) + ")";
+        public String visitNotCriterion(NotCriterion criterion) {
+            return "NOT (" + criterion.getCriterion().accept(this) + ")";
         }
 
         @Override
-        public String visitIntMatchCriterion(IntMatchCriterion pCriterion) {
-            return pCriterion.getName() + " == " + pCriterion.getValue().toString();
+        public String visitIntMatchCriterion(IntMatchCriterion criterion) {
+            return criterion.getName() + " == " + criterion.getValue().toString();
         }
 
         @Override
-        public String visitStringMatchCriterion(StringMatchCriterion pCriterion) {
-            return pCriterion.getName() + " " + pCriterion.getType().toString() + " \"" + pCriterion.getValue() + "\"";
+        public String visitStringMatchCriterion(StringMatchCriterion criterion) {
+            return criterion.getName() + " " + criterion.getType().toString() + " \"" + criterion.getValue() + "\"";
         }
 
         @Override
-        public String visitLongMatchCriterion(LongMatchCriterion pCriterion) {
-            return pCriterion.getName() + " " + pCriterion.getType().toString() + " \"" + pCriterion.getValue() + "\"";
+        public String visitLongMatchCriterion(LongMatchCriterion criterion) {
+            return criterion.getName() + " " + criterion.getType().toString() + " \"" + criterion.getValue() + "\"";
         }
 
         @Override
-        public String visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
-            return pCriterion.getName() + " IN " + Arrays.stream(pCriterion.getValue())
-                    .collect(Collectors.joining("\", \"", "(\"", "\")"));
+        public String visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
+            return criterion.getName() + " IN "
+                    + Arrays.stream(criterion.getValue()).collect(Collectors.joining("\", \"", "(\"", "\")"));
         }
 
         @Override
-        public <U extends Comparable<? super U>> String visitRangeCriterion(RangeCriterion<U> pCriterion) {
-            StringBuilder buf = new StringBuilder(pCriterion.getName());
+        public <U extends Comparable<? super U>> String visitRangeCriterion(RangeCriterion<U> criterion) {
+            StringBuilder buf = new StringBuilder(criterion.getName());
             buf.append(" ∈ { x / ");
             // for all comparisons
-            String ranges = pCriterion.getValueComparisons().stream().sorted().map(valueComp -> {
+            String ranges = criterion.getValueComparisons().stream().sorted().map(valueComp -> {
                 String op;
                 switch (valueComp.getOperator()) {
                     case GREATER:
@@ -219,11 +222,11 @@ public class CriterionTest {
         }
 
         @Override
-        public String visitDateRangeCriterion(DateRangeCriterion pCriterion) {
-            StringBuilder buf = new StringBuilder(pCriterion.getName());
+        public String visitDateRangeCriterion(DateRangeCriterion criterion) {
+            StringBuilder buf = new StringBuilder(criterion.getName());
             buf.append(" ∈ { x / ");
             // for all comparisons
-            String ranges = pCriterion.getValueComparisons().stream()
+            String ranges = criterion.getValueComparisons().stream()
                     .sorted(Comparator.comparing(ValueComparison::getValue)).map(valueComp -> {
                         String op;
                         switch (valueComp.getOperator()) {
@@ -249,17 +252,17 @@ public class CriterionTest {
         }
 
         @Override
-        public String visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
-            return pCriterion.getName() + " IS " + (pCriterion.getValue() ? "TRUE" : "FALSE");
+        public String visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
+            return criterion.getName() + " IS " + (criterion.getValue() ? "TRUE" : "FALSE");
         }
 
         @Override
-        public String visitPolygonCriterion(PolygonCriterion pCriterion) {
+        public String visitPolygonCriterion(PolygonCriterion criterion) {
             return null;
         }
 
         @Override
-        public String visitCircleCriterion(CircleCriterion pCriterion) {
+        public String visitCircleCriterion(CircleCriterion criterion) {
             return null;
         }
 
@@ -272,6 +275,17 @@ public class CriterionTest {
         public String visitDateMatchCriterion(DateMatchCriterion criterion) {
             return null;
         }
+
+        @Override
+        public String visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+            return null;
+        }
+    }
+
+    @Test
+    public void testGeometry() throws InvalidGeometryException {
+        BoundaryBoxCriterion crit = new BoundaryBoxCriterion("1.0,2.0,3.0,4.0");
+        System.out.printf("%f,%f,%f,%f", crit.getMinY(), crit.getMinX(), crit.getMaxX(), crit.getMaxY());
     }
 }
 //CHECKSTYLE:ON

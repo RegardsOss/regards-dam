@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
  * Data object accumulator and multi thread Elasticsearch bulk saver
@@ -35,7 +35,7 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
     public void accept(DataObject object) {
         // reset groupsMap and modelIds for this datasetIpId
         object.getMetadata().removeDatasetIpId(datasetIpId);
-        object.getTags().add(datasetIpId);
+        object.addTags(datasetIpId);
         // set current groupsMap and modelIds on metadata for this datasetIpId
         groupsMap.forEach((group, dataGranted) -> object.getMetadata().addGroup(group, datasetIpId, dataGranted));
         object.getMetadata().addModelId(datasetModelId, datasetIpId);

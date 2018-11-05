@@ -23,17 +23,13 @@ import org.springframework.core.convert.converter.Converter;
 import com.vividsolutions.jts.geom.Coordinate;
 
 /**
- *
  * @author Xavier-Alexandre Brochard
  */
-public class CoordinateToArray implements Converter<Coordinate, Double[]> {
+public class CoordinateToArray implements Converter<Coordinate, double[]> {
 
-    /* (non-Javadoc)
-     * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-     */
     @Override
-    public Double[] convert(Coordinate source) {
-        return new Double[] { source.getOrdinate(0), source.getOrdinate(1) };
+    public double[] convert(Coordinate source) {
+        return new double[] { source.getOrdinate(0), source.getOrdinate(1) };
     }
 
 }

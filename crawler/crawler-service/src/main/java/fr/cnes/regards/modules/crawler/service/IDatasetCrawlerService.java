@@ -1,8 +1,14 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+
+import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
+
 /**
- * Created by oroussel on 28/06/17.
+ * @author oroussel
  */
 public interface IDatasetCrawlerService extends ICrawlerService {
+    void onApplicationReadyEvent(ApplicationReadyEvent event);
 
+    void onComputedAttributeModelEvent(ComputedAttributeModelEvent event);
 }

@@ -25,9 +25,13 @@ import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
 import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxImpl;
 
+import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Builds a {@link StringMatchCriterion} from a {@link WildcardQueryNode} object<br>
@@ -42,6 +46,19 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
 
     private static final String WILDCARD_STRING = "*";
 
+    /**
+     * Service retrieving the up-to-date list of {@link AttributeModel}s. Autowired by Spring.
+     */
+    private final IAttributeFinder finder;
+
+    /**
+     * @param finder Service permitting to retrieve up-to-date list of {@link AttributeModel}s
+     */
+    public WildcardQueryNodeBuilder(IAttributeFinder finder) {
+        super();
+        this.finder = finder;
+    }
+
     @Override
     public ICriterion build(final QueryNode queryNode) throws QueryNodeException {
         WildcardQueryNode wildcardNode = (WildcardQueryNode) queryNode;
@@ -50,12 +67,21 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
         String value = wildcardNode.getTextAsString();
         String val = value.replaceAll("[*]", "");
 
+        AttributeModel attributeModel;
+        try {
+            attributeModel = finder.findByName(field);
+        } catch (OpenSearchUnknownParameter e) {
+            throw new QueryNodeException(new MessageImpl(
+                    fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages.FIELD_TYPE_UNDETERMINATED,
+                    e.getMessage()), e);
+        }
+
         if (value.endsWith(WILDCARD_STRING) && value.startsWith(WILDCARD_STRING)) {
-            return ICriterion.contains(field, val);
+            return IFeatureCriterion.contains(attributeModel, val);
         } else if (value.endsWith(WILDCARD_STRING)) {
-            return ICriterion.startsWith(field, val);
+            return IFeatureCriterion.startsWith(attributeModel, val);
         } else if (value.startsWith(WILDCARD_STRING)) {
-            return ICriterion.endsWith(field, val);
+            return IFeatureCriterion.endsWith(attributeModel, val);
         } else {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR,
                     queryNode.toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass().getName()));

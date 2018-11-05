@@ -21,11 +21,11 @@ package fr.cnes.regards.modules.opensearch.service.utils;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import fr.cnes.regards.modules.entities.domain.StaticProperties;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 
 /**
  * Define sample data for tests.
@@ -143,5 +143,5 @@ public class SampleDataUtils {
      * A query with double quotes and special characters
      */
     public static final String UNESCAPED_QUERY_WITH_DOUBLE_QUOTES_AND_CHARS_TO_ESCAPE = STRING_ATTRIBUTE_MODEL
-            .buildJsonPath(StaticProperties.PROPERTIES) + ":\"texte avec:des caractères+spéciaux\"";
+            .getJsonPath() + ":\"texte avec:des caractères+spéciaux\"";
 }

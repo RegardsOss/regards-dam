@@ -42,34 +42,36 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.Collection;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.BooleanAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.StringArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.StringAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
-import fr.cnes.regards.modules.models.domain.Model;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -124,7 +126,7 @@ public class IndexerServiceIT {
         model.setType(EntityType.COLLECTION);
 
         // Creating a Collection with all types of attributes
-        final Collection collection = new Collection(model, tenant, "coll1");
+        final Collection collection = new Collection(model, tenant, "COL1", "coll1");
         final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
@@ -152,8 +154,8 @@ public class IndexerServiceIT {
                                                        OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder
-                               .buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder.buildDate("dateAtt",
+                                                  OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
         attributes.add(AttributeBuilder.buildDateInterval("dateInterval",
                                                           OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
                                                           OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
@@ -183,18 +185,20 @@ public class IndexerServiceIT {
 
         attributes.add(AttributeBuilder.buildString("string", "Esope reste et se repose"));
 
-        final ObjectAttribute fragment = AttributeBuilder.buildObject("correspondance", AttributeBuilder
-                .buildStringArray("stringArrayMusset", "Quand je mets à vos pieds un éternel hommage",
-                                  "Voulez-vous qu'un instant je change de visage ?",
-                                  "Vous avez capturé les sentiments d'un coeur",
-                                  "Que pour vous adorer forma le créateur.",
-                                  "Je vous chéris, amour, et ma plume en délire",
-                                  "Couche sur le papier ce que je n'ose dire.",
-                                  "Avec soin de mes vers lisez les premiers mots,",
-                                  "Vous saurez quel remède apporter à mes maux."), AttributeBuilder
-                                                                              .buildStringArray("stringArraySand",
-                                                                                                "Cette indigne faveur que votre esprit réclame",
-                                                                                                "Nuit à mes sentiments et répugne à mon âme"));
+        final ObjectAttribute fragment = AttributeBuilder
+                .buildObject("correspondance",
+                             AttributeBuilder.buildStringArray("stringArrayMusset",
+                                                               "Quand je mets à vos pieds un éternel hommage",
+                                                               "Voulez-vous qu'un instant je change de visage ?",
+                                                               "Vous avez capturé les sentiments d'un coeur",
+                                                               "Que pour vous adorer forma le créateur.",
+                                                               "Je vous chéris, amour, et ma plume en délire",
+                                                               "Couche sur le papier ce que je n'ose dire.",
+                                                               "Avec soin de mes vers lisez les premiers mots,",
+                                                               "Vous saurez quel remède apporter à mes maux."),
+                             AttributeBuilder.buildStringArray("stringArraySand",
+                                                               "Cette indigne faveur que votre esprit réclame",
+                                                               "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
         collection.setProperties(attributes);
@@ -206,8 +210,9 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         final List<Collection> singleCollColl = searchService
-                .search(new SimpleSearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
-                        ICriterion.eq("properties.int", 42)).getContent();
+                .search(new SimpleSearchKey<>(EntityType.COLLECTION.toString(), Collection.class), 10,
+                        ICriterion.eq("feature.properties.int", 42))
+                .getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -244,13 +249,13 @@ public class IndexerServiceIT {
             collections.add(createCollection(collModel, i + 1));
         }
         final long start = System.currentTimeMillis();
-        final int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
+        final BulkSaveResult bulkSaveResult = indexerService.saveBulkEntities(SEARCH, collections);
         LOGGER.info("Bulk save ({} collections) : {} ms", collections.size(), System.currentTimeMillis() - start);
-        Assert.assertEquals(collections.size(), savedCollCount);
+        Assert.assertEquals(collections.size(), bulkSaveResult.getSavedDocsCount());
     }
 
     private Collection createCollection(final Model collModel, final int i) {
-        final Collection collection = new Collection(collModel, SEARCH, "coll" + i);
+        final Collection collection = new Collection(collModel, SEARCH, "COL" + i, "coll" + i);
         final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
@@ -266,9 +271,11 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
+        // FIXME : this criterion cannot be available
         final ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         // SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
-        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
+        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities();
+        searchKey.setSearchIndex(SEARCH);
         Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {

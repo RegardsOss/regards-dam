@@ -1,18 +1,20 @@
 package fr.cnes.regards.modules.crawler.service.consumer;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
  * Consumer removing association between dataset and data object
  * @author oroussel
  */
 public class DataObjectAssocRemover extends AbstractDataObjectBulkSaver implements Consumer<DataObject> {
+
     private final String datasetIpId;
 
     private final OffsetDateTime updateDate;
@@ -26,7 +28,7 @@ public class DataObjectAssocRemover extends AbstractDataObjectBulkSaver implemen
 
     @Override
     public void accept(DataObject object) {
-        object.getTags().remove(datasetIpId);
+        object.removeTags(Arrays.asList(datasetIpId));
         object.getMetadata().removeDatasetIpId(datasetIpId);
         object.setGroups(object.getMetadata().getGroups());
         object.setDatasetModelIds(object.getMetadata().getModelIds());

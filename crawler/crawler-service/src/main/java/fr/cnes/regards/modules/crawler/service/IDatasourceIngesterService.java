@@ -7,7 +7,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
-import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 
 /**
  * @author oroussel
@@ -33,4 +33,9 @@ public interface IDatasourceIngesterService {
      * @param id DatasourceIngestion id
      */
     void deleteDatasourceIngestion(Long id);
+
+    /**
+     * Schedule datasource ingestion to be executed as soon as possible
+     */
+    void scheduleNowDatasourceIngestion(Long id);
 }

@@ -15,12 +15,13 @@ import org.springframework.data.domain.Pageable;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.dam.domain.models.Model;
 
 /**
  * Data source from json file for tests
@@ -51,10 +52,11 @@ public class TestDataSourcePlugin implements IDataSourcePlugin {
     }
 
     @Override
-    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
-        File file = Paths.get("src", "test", "resources", "validation", "json", "validationData1.json").toFile();
-        List<DataObject> content;
-        TypeToken<List<DataObject>> typeToken = new TypeToken<List<DataObject>>() {
+    public Page<DataObjectFeature> findAll(String tenant, Pageable pageable, OffsetDateTime date)
+            throws DataSourceException {
+        File file = Paths.get("src", "test", "resources", "validation", "json", "validationData.json").toFile();
+        List<DataObjectFeature> content;
+        TypeToken<List<DataObjectFeature>> typeToken = new TypeToken<List<DataObjectFeature>>() {
 
         };
         try {
@@ -62,7 +64,6 @@ public class TestDataSourcePlugin implements IDataSourcePlugin {
         } catch (FileNotFoundException e) {
             throw new DataSourceException("Could not find the file for validation data 1", e);
         }
-        content.forEach(data->data.setModel(dataModel));
         return new PageImpl<>(content);
     }
 }

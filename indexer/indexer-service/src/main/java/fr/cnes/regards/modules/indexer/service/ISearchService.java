@@ -18,14 +18,17 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -34,12 +37,14 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 /**
- * Elasticsearch search service. This service contains all search and get methods. For other methods, check crawler-service and IndexerService class.
+ * Elasticsearch search service. This service contains all search and get methods. For other methods, check
+ * crawler-service and IndexerService class.
  * @author oroussel
  */
 public interface ISearchService {
@@ -64,7 +69,8 @@ public interface ISearchService {
 
     /**
      * Search documents as usual BUT return joined entity whom type is specified into searchKey
-     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result
+     *            class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
      * @param <S> entity class on which request is done
@@ -78,7 +84,8 @@ public interface ISearchService {
 
     /**
      * Search documents as usual BUT return joined entity whom type is specified into searchKey
-     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result
+     *            class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
      * @param searchResultFilter a result filter to be used before result pagination. Can be null.
@@ -92,34 +99,35 @@ public interface ISearchService {
     /**
      * Searching specified page of elements from index giving page size
      * @param searchKey the search key
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
-     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
-     * too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
+     * @param fields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
+     *            too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object pValue, String... fields);
 
-    default <T> Page<T> multiFieldsSearch(final SearchKey<T, T> searchKey, final int pageSize, final Object pValue,
-            final String... pFields) {
-        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), pValue, pFields);
+    default <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, int pageSize, Object value, String... fields) {
+        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), value, fields);
     }
 
-    default <S, R extends IIndexable> Page<R> search(final JoinEntitySearchKey<S, R> searchKey, final int pageSize,
-            final ICriterion pCriterion) {
-        return this.search(searchKey, new PageRequest(0, pageSize), pCriterion);
+    default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
+            ICriterion criterion) {
+        return this.search(searchKey, new PageRequest(0, pageSize), criterion);
     }
 
-    default <T extends IIndexable> Page<T> search(final SimpleSearchKey<T> searchKey, final int pPageSize,
-            final ICriterion criterion) {
-        return search(searchKey, new PageRequest(0, pPageSize), criterion);
+    default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, int pageSize, ICriterion criterion) {
+        return search(searchKey, new PageRequest(0, pageSize), criterion);
     }
 
-    default <T extends IIndexable> Page<T> search(final SimpleSearchKey<T> searchKey, final Pageable pPageRequest,
-            final ICriterion criterion) {
-        return search(searchKey, pPageRequest, criterion, null);
+    default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
+            ICriterion criterion) {
+        return search(searchKey, pageRequest, criterion, null);
     }
+
+    <T extends IIndexable> Aggregations getAggregations(SimpleSearchKey<T> searchKey, ICriterion criterion,
+            Collection<QueryableAttribute> attributes);
 
     /**
      * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
@@ -128,11 +136,11 @@ public interface ISearchService {
      * @return the compmuted summary
      */
     <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes);
+            ICriterion crit, String discriminantProperty, List<DataType> dataTypes);
 
     /**
      * Search for alphabeticly sorted top maxCount values of given attribute following given request
      */
-    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion criterion,
             String attName, int maxCount);
 }

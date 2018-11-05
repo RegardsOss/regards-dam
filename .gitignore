@@ -41,3 +41,5 @@ Thumbs.db
 ######################
 
 deliver_brutaly\.sh
+
+crawler/crawler-service/src/test/resources/toto\.json

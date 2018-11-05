@@ -1,0 +1,42 @@
+{
+          "entityType": "DATA",
+          "dataSourceId": "121",
+          "datasetModelIds": [],
+          "metadata": {
+            "groups": {},
+            "modelIds": {}
+          },
+          "files": [
+            {
+              "dataType": "THUMBNAIL",
+              "fileRef": "http://idoc-herschel.ias.u-psud.fr/sitools/datastorage/user/storageRelease/R4_spire_fts/HIPE_Fits/FTS_SPIRE/SAG-4/n7023E_fts_1/1342201204_n7023E_fts_1_SPIRE-FTS_12.0.2603_SLW_unapod_supreme_cube.png"
+            },
+            {
+              "dataType": "RAWDATA",
+              "fileRef": "http://idoc-herschel.ias.u-psud.fr/sitools/datastorage/user/storageRelease/R4_spire_fts/HIPE_Fits/FTS_SPIRE/SAG-4/n7023E_fts_1/1342201204_n7023E_fts_1_SPIRE-FTS_12.0.2603_SLW_unapod_supreme_cube.fits"
+            }
+          ],
+          "ipId": "URN:AIP:DATA:IAS:dd0ece16-1aef-3492-b1e7-dc205bcd6b37:V1",
+          "label": "1342201204_n7023E_fts_1_SPIRE-FTS_12.0.2603_SLW_unapod_supreme_cube.fits",
+          "model": {
+            "id": 52
+          },
+          "lastUpdate": "2018-01-24T16:01:44.449Z",
+          "creationDate": "2018-01-24T16:01:44.449Z",
+          "providerId": "1855",
+          "tags": [],
+          "groups": [],
+          "properties": {
+            "obsid": 1342201204,
+            "dec": 68.1408157,
+            "observer": "aabergel",
+            "attribut_ra": 315.555573,
+            "origin": "IAS",
+            "cusmode": "SpireSpectroPoint",
+            "obsmode": "Single Pointing",
+            "public": true,
+            "odnumber": 438,
+            "filesize": 101.330002,
+            "object": "n7023E_fts_1"
+          }
+        }

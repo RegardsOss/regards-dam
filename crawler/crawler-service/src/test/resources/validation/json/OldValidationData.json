@@ -1,0 +1,598 @@
+[
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "providerId": "1",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "First test data",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "providerId": "2",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 10,
+      "date": "2016-05-16T15:28:00.000",
+      "description": "Second test data",
+      "value_l1": "666",
+      "value_d1": 3.14157,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/bidule"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "3",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 140,
+      "date": "2017-04-01T10:28:40.875",
+      "description": "Third test data",
+      "value_l1": "-1",
+      "value_d1": 1.4142,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/prout"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "4",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "First test data copy",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/pouet"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "5",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-01-01T00:00:00.000",
+      "description": "Happy New Year !",
+      "value_l1": "1",
+      "value_d1": 1.0,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/peon"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "6",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Universe atoms count",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "url": "http://truc:201/orc"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "7",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "Data file one",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "8",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 10,
+      "date": "2016-05-16T15:28:00.000",
+      "description": "Data file two",
+      "value_l1": "666",
+      "value_d1": 3.14157,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "9",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 140,
+      "date": "2017-04-01T10:28:40.875",
+      "description": "Data file three",
+      "value_l1": "-1",
+      "value_d1": 1.4142,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "10",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "Data file four",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "11",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-01-01T00:00:00.000",
+      "description": "Data file five",
+      "value_l1": "1",
+      "value_d1": 1.0,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "12",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Data file six",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "13",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Data file seven",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "14",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Data file height",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "15",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Data file nine",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "16",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Data file ten",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "url": "http://truc/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "17",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "Dataset3 data number 1",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "18",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 10,
+      "date": "2016-05-16T15:28:00.000",
+      "description": "Dataset3 data number 2",
+      "value_l1": "666",
+      "value_d1": 3.14157,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "19",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 140,
+      "date": "2017-04-01T10:28:40.875",
+      "description": "Dataset3 data number 3",
+      "value_l1": "-1",
+      "value_d1": 1.4142,
+      "fragment1": {
+        "activated": "false",
+        "state": "UPDATED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "20",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 25,
+      "date": "2017-05-16T15:28:00.000",
+      "description": "Dataset3 data number 4",
+      "value_l1": "42",
+      "value_d1": 0.666,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "21",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-01-01T00:00:00.000",
+      "description": "Dataset3 data number 5",
+      "value_l1": "1",
+      "value_d1": 1.0,
+      "fragment1": {
+        "activated": "true",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "22",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 40,
+      "date": "2017-05-16T15:39:00.000",
+      "description": "Dataset3 data number 6",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "url": "http://truc:203/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "23",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 150,
+      "date": "2018-05-16T15:39:00.000",
+      "description": "Public data",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DSP",
+      "url": "http://truc:201/ppp"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "24",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 150,
+      "date": "2018-05-16T15:39:00.000",
+      "description": "Private data 1",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS4",
+      "url": "http://truc:204/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "25",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 150,
+      "date": "2019-05-16T15:39:00.000",
+      "description": "Private data 2",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS4",
+      "url": "http://truc:204/machin"
+    }
+  },
+  {
+    "entityType": "DATA",
+    "files": {},
+    "ipId": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c08ce481809d:V1",
+    "label": "C2_CT_WHI_NATURAL_EVENT__20090422_V01.cef",
+    "providerId": "26",
+    "tags": [
+    ],
+    "groups": [],
+    "properties": {
+      "weight": 150,
+      "date": "2020-05-16T15:39:00.000",
+      "description": "Private data 3",
+      "value_l1": "1",
+      "value_d1": 1.0e80,
+      "fragment1": {
+        "activated": "false",
+        "state": "STOPPED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS4",
+      "url": "http://truc:204/machin"
+    }
+  }
+]

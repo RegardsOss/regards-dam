@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>dataModel</name>
+	<description>Test data object model</description>
+	<version>1</version>
+	<type>DATA</type>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_OBJECTS_ID</name>
+		<description>id from the external datasource</description>
+		<type>INTEGER</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>START_DATE</name>
+		<description>date at which the acquisition of the data has started</description>
+		<type>DATE_ISO8601</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>STOP_DATE</name>
+		<description>date at which the acquisition of the data has ended</description>
+		<type>DATE_ISO8601</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>FILE_SIZE</name>
+		<description>file size</description>
+		<type>INTEGER</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>FILE_TYPE</name>
+		<description>file type</description>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>FILE_NAME_ORIGINE</name>
+		<description>name of the original file</description>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_SET_ID</name>
+		<description>id of the dataset</description>
+		<type>INTEGER</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_TITLE</name>
+		<description>title of the data for human</description>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_AUTHOR</name>
+		<description>name of the author</description>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_AUTHOR_COMPANY</name>
+		<description>author's company name</description>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>DATA_CREATION_DATE</name>
+		<description>date at which the data was created into the datasource</description>
+		<type>DATE_ISO8601</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>ANSA5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>ANSR5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>ANSE5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>ANSE6_STRING</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>forTests</label>
+		<name>ANSL6_2_STRING</name>
+		<type>STRING</type>
+	</attribute>
+	<fragment>
+		<name>frag3</name>
+		<attribute>
+			<label>forTests</label>
+			<name>ANSR3_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>forTests</label>
+			<name>ANSL3_1_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>forTests</label>
+			<name>ANSL3_2_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>LONGITUDE</name>
+		<description>Longitude fragment</description>
+		<attribute>
+			<label>forTests</label>
+			<name>VMIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>forTests</label>
+			<name>VMAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>LATITUDE</name>
+		<description>Latitude fragment</description>
+		<attribute>
+			<label>forTests</label>
+			<name>VMIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>forTests</label>
+			<name>VMAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>ALTITUDE</name>
+		<description>Altitude fragment</description>
+		<attribute>
+			<label>forTests</label>
+			<name>VMIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>forTests</label>
+			<name>VMAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+</model>
