@@ -146,7 +146,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         OffsetDateTime now = OffsetDateTime.now();
         String datasourceId = pluginConf.getId().toString();
         // If index doesn't exist, just create all data objects
-        if (entityIndexerService.createIndexIfNeeded(tenant)) {
+        boolean mergeNeeded = entityIndexerService.createIndexIfNeeded(tenant);
+        // If index already exist, check if index already contains data objects (if not, no need to merge)
+        if (mergeNeeded) {
+            SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+            mergeNeeded = esRepos.count(searchKey, ICriterion.all()) != 0;
+        }
+        if (mergeNeeded) {
             sendMessage("Start reading datasource and creating objects...", dsiId);
             saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
                                                             pageNumber);

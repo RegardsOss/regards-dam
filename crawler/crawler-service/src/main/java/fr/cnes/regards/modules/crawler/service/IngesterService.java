@@ -280,9 +280,9 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                     break;
                 case NOT_FINISHED:
                     createNotificationForAdmin(title, String.format(
-                            "Indexation ends with %s new indexed objects and %s errors but is not completely terminated. "
-                                    + "Something went wrong concerning datasource or Elasticsearch. Associated datasets "
-                                    + "haven't been updated, ingestion may be manualy re-scheduled to be laucnhed as "
+                            "Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
+                                    + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
+                                    + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
                                     + "soon as possible or will continue at its planned date",
                             dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
                                                NotificationType.WARNING);
