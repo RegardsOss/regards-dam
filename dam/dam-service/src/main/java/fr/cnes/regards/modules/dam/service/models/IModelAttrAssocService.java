@@ -74,6 +74,8 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     Model duplicateModelAttrAssocs(String sourceModelName, Model pTargetModel) throws ModuleException;
 
+    void addAllModelAttributes(List<ModelAttrAssoc> modelAtts) throws ModuleException;
+
     /**
      * Retrieve the computed attributes association to a model, represented by its id
      * @param pId
