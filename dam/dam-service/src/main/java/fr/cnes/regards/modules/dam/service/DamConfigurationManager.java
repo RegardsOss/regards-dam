@@ -61,24 +61,8 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
     @Override
     protected Set<String> importConfiguration(ModuleConfiguration configuration) {
         Set<String> importErrors = new HashSet<>();
-        // First lets import models and data source and connection plugin configurations
-        // and populate a ModelAttrAssoc list to be imported after this for loop
-        List<ModelAttrAssoc> assocs = new ArrayList<>();
         for (ModuleConfigurationItem<?> item : configuration.getConfiguration()) {
-            // First lets import models
-            if (Model.class.isAssignableFrom(item.getKey())) {
-                Model model = item.getTypedValue();
-                try {
-                    modelService.createModel(model);
-                } catch (ModuleException e) {
-                    importErrors.add(String.format("Skipping import of Model %s: %s", model.getName(), e.getMessage()));
-                    logger.error(e.getMessage(), e);
-                }
-            }
-            if (ModelAttrAssoc.class.isAssignableFrom(item.getKey())) {
-                assocs.add((ModelAttrAssoc) item.getValue());
-            }
-            // Now lets import connection and data sources
+            // Lets import connection and data sources
             if (PluginConfiguration.class.isAssignableFrom(item.getKey())) {
                 PluginConfiguration plgConf = item.getTypedValue();
                 if (pluginService.findPluginConfigurationByLabel(plgConf.getLabel()).isPresent()) {
@@ -118,33 +102,12 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                 }
             }
         }
-        try {
-            modelAttrAssocService.addAllModelAttributes(assocs);
-        } catch (ModuleException e) {
-            String msg = "Skipping import of model attributes and associations";
-            importErrors.add(msg);
-            logger.error(msg);
-        }
         return importErrors;
     }
 
     @Override
     public ModuleConfiguration exportConfiguration() throws ModuleException {
         List<ModuleConfigurationItem<?>> configurations = new ArrayList<>();
-        // exporting dam configuration must be done in a particular order because of import constraints:
-        // models->attributes->modelAttrAssocs->connection conf->data source conf
-        // export models
-        for (Model model : modelService.getModels(null)) {
-            configurations.add(ModuleConfigurationItem.build(model));
-        }
-        // export attributes
-        for (AttributeModel attr : attributeModelService.getAttributes(null, null, null)) {
-            configurations.add(ModuleConfigurationItem.build(attr));
-        }
-        //export modelAttrAssocs
-        for (ModelAttrAssoc modelAttrAssoc : modelAttrAssocService.getModelAttrAssocsFor(null)) {
-            configurations.add(ModuleConfigurationItem.build(modelAttrAssoc));
-        }
         // export connections
         for (PluginConfiguration connection : pluginService.getPluginConfigurationsByType(IConnectionPlugin.class)) {
             configurations.add(ModuleConfigurationItem.build(connection));
