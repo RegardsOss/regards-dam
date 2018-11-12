@@ -40,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -193,8 +194,9 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
-        dataset1.setNormalizedGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
-                                                  IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
+        dataset1.setNormalizedGeometry(IGeometry
+                .multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
+                            IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));
         dataset1.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusHours(15)));
@@ -220,7 +222,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
                                                              new Long(5698L), new Long(5522336689L), new Long(7748578L),
                                                              new Long(22000014L), new Long(9850012565556565L)));
 
-        dataset1.setOpenSearchSubsettingClause("the open search subsetting claise");
+        dataset1.setOpenSearchSubsettingClause("label:TheSubsettingClause");
     }
 
 }
