@@ -164,7 +164,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         if (computationConf != null) {
             Computation computation = new Computation();
             computation.setLabel(computationConf.getLabel());
-            // Cyclic dependency between entities plugin and models-domain
+            // Cyclic dependency between dam-plugin and dam-domain
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
             String pluginClassName = computationConf.getPluginClassName();
@@ -196,10 +196,10 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                         computation.setSumCompute(paramPluginType);
                         break;
                     case "fr.cnes.regards.modules.dam.plugin.entities.MaxDateComputePlugin":
-                        computation.setMinCompute(paramPluginType);
+                        computation.setMaxCompute(paramPluginType);
                         break;
                     case "fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin":
-                        computation.setMaxCompute(paramPluginType);
+                        computation.setMinCompute(paramPluginType);
                         break;
                     default:
                         break;

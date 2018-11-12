@@ -136,13 +136,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Model createModel(Model model) throws ModuleException {
         if (model.isIdentifiable()) {
-            throw new EntityInvalidException(
-                    String.format("Model with name \"%s\" cannot have an identifier!", model.getName()));
+            throw new EntityInvalidException(String.format("Model with name \"%s\" cannot have an identifier!",
+                                                           model.getName()));
         }
         Model modelFromDb = modelRepository.findByName(model.getName());
         if (modelFromDb != null) {
-            throw new EntityAlreadyExistsException(
-                    String.format("Model with name \"%s\" already exists!", model.getName()));
+            throw new EntityAlreadyExistsException(String.format("Model with name \"%s\" already exists!",
+                                                                 model.getName()));
         }
         return modelRepository.save(model);
     }
@@ -243,15 +243,15 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (existingModelAtts != null) {
             for (ModelAttrAssoc modAtt : existingModelAtts) {
                 if (modAtt.equals(modelAttrAssoc)) {
-                    throw new EntityAlreadyExistsException(
-                            String.format("Attribute %s already exists in model %s!", modAtt.getAttribute().getName(),
-                                          model.getName()));
+                    throw new EntityAlreadyExistsException(String.format("Attribute %s already exists in model %s!",
+                                                                         modAtt.getAttribute().getName(),
+                                                                         model.getName()));
                 }
             }
         }
 
         if (modelAttrAssoc.getComputationConf() != null) {
-            eventualyCreatePluginConfiguration(modelAttrAssoc.getComputationConf());
+            eventualyCreateComputationConfiguration(modelAttrAssoc.getComputationConf());
         }
 
         modelAttrAssoc.setModel(model);
@@ -279,8 +279,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     public ModelAttrAssoc updateModelAttribute(String modelName, Long attributeId, ModelAttrAssoc modelAttrAssoc)
             throws ModuleException {
         if (!modelAttrAssoc.isIdentifiable()) {
-            throw new EntityNotFoundException(
-                    String.format("Unknown identifier for model attribute \"%s\"", modelAttrAssoc.getId()));
+            throw new EntityNotFoundException(String.format("Unknown identifier for model attribute \"%s\"",
+                                                            modelAttrAssoc.getId()));
         }
         if (!modelAttrAssoc.getId().equals(attributeId)) {
             throw new EntityInconsistentIdentifierException(attributeId, modelAttrAssoc.getId(), ModelAttrAssoc.class);
@@ -422,9 +422,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Import model from input stream
         final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, plgConfigurations);
         // Create/update PluginConfigurations if there are some
-        if (!plgConfigurations.isEmpty()) {
-            this.eventualyCreatePluginConfigurations(plgConfigurations);
-        }
+        //        if (!plgConfigurations.isEmpty()) {
+        //            this.eventualyCreateComputationConfigurations(plgConfigurations);
+        //        }
 
         // Create model once
         Model newModel = createModel(modelAtts.get(0).getModel()); // List of model attributes cannot be empty here
@@ -435,45 +435,59 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         return newModel;
     }
 
-    private void eventualyCreatePluginConfigurations(List<PluginConfiguration> plgConfigurations)
-            throws ModuleException {
-        for (PluginConfiguration plgConf : plgConfigurations) {
-            eventualyCreatePluginConfiguration(plgConf);
-        }
-    }
+    //    private void eventualyCreateComputationConfigurations(List<PluginConfiguration> plgConfigurations)
+    //            throws ModuleException {
+    //        for (PluginConfiguration plgConf : plgConfigurations) {
+    //            eventualyCreateComputationConfiguration(plgConf);
+    //        }
+    //    }
 
-    private void eventualyCreatePluginConfiguration(PluginConfiguration plgConf) throws ModuleException {
+    private PluginConfiguration eventualyCreateComputationConfiguration(PluginConfiguration plgConf)
+            throws ModuleException {
         // If plugin configuration already exists
         if (pluginService.existsByLabel(plgConf.getLabel())) {
             // New one must be consistent with existing one
             PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
-            // Most of plugin configuration attributes come from plugin DataObjectMetadata which have been retrieved
-            // from database
-            // so only plugin parameters should be consistently checked
+            // Lets check that we are talking about same plugin implementation
+            if (!Objects.equals(plgConf, currentPlgConf)) {
+                String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
+                                                   + "existing plugin configuration points to %s plugin implementation "
+                                                   + "while importing one points to %s plugin implementation.",
+                                           plgConf.getLabel(),
+                                           currentPlgConf.getPluginId(),
+                                           plgConf.getPluginId());
+                LOGGER.error(msg);
+                throw new ImportException(msg);
+            }
+            // Now lets check that parameters are consistent
             for (PluginParameter param : plgConf.getParameters()) {
                 String curValue = currentPlgConf.getStripParameterValue(param.getName());
                 // Plugin parameter found
                 if (curValue != null) {
                     if (!Objects.equals(param.getStripParameterValue(), curValue)) {
-                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one : "
+                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
                                                            + "plugin parameter %s with value %s differs from existing value (%s)",
-                                                   plgConf.getLabel(), param.getName(), curValue,
+                                                   plgConf.getLabel(),
+                                                   param.getName(),
+                                                   curValue,
                                                    param.getStripParameterValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }
                 } else { // Plugin parameter not found
-                    String msg = String.format("Compute plugin with label %s is inconsistent with existing one : "
-                                                       + "no plugin parameter %s found", plgConf.getLabel(),
+                    String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
+                                                       + "no plugin parameter %s found",
+                                               plgConf.getLabel(),
                                                param.getName());
                     LOGGER.error(msg);
                     throw new ImportException(msg);
                 }
             }
             // No need to save new one
+            return currentPlgConf;
         } else {
             // Plugin is ok (new or consistent with previous one
-            pluginService.savePluginConfiguration(plgConf);
+            return pluginService.savePluginConfiguration(plgConf);
         }
     }
 
@@ -482,7 +496,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      * @param modelAtts list of {@link ModelAttrAssoc}
      * @throws ModuleException if error occurs!
      */
-    private void addAllModelAttributes(List<ModelAttrAssoc> modelAtts) throws ModuleException {
+    @Override
+    public void addAllModelAttributes(List<ModelAttrAssoc> modelAtts) throws ModuleException {
 
         // Keep fragment content to check fragment consistence
         Map<String, List<AttributeModel>> fragmentAttMap = new HashMap<>();
@@ -519,8 +534,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     modelAtt.setComputationConf(null);
                     break;
                 case COMPUTED:
-                    modelAtt.setComputationConf(
-                            pluginService.getPluginConfigurationByLabel(modelAtt.getComputationConf().getLabel()));
+                    modelAtt.setComputationConf(eventualyCreateComputationConfiguration(modelAtt.getComputationConf()));
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -590,22 +604,26 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Check size
         if (attModels.size() != existingAttModels.size()) {
             LOGGER.error(String.format("Existing fragment \"%s\" contains exactly %s unique attributes (not %s).",
-                                       fragmentName, existingAttModels.size(), attModels.size()));
+                                       fragmentName,
+                                       existingAttModels.size(),
+                                       attModels.size()));
             return false;
         }
 
         // Check attributes
         for (AttributeModel attMod : attModels) {
             if (!fragmentName.equals(attMod.getFragment().getName())) {
-                LOGGER.error(
-                        String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)", attMod.getName(),
-                                      fragmentName, attMod.getFragment().getName()));
+                LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
+                                           attMod.getName(),
+                                           fragmentName,
+                                           attMod.getFragment().getName()));
                 return false;
             }
 
             if (!existingAttModels.contains(attMod)) {
-                LOGGER.error(
-                        String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(), fragmentName));
+                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".",
+                                           attMod.getName(),
+                                           fragmentName));
                 return false;
             }
         }
