@@ -130,11 +130,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
         List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds);
-        long now = System.currentTimeMillis();
         noLink = (noLink == null) ? Boolean.FALSE : noLink;
         List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
-        long duration = System.currentTimeMillis() - now;
-        System.out.println(duration);
         return ResponseEntity.ok(resources);
     }
 
