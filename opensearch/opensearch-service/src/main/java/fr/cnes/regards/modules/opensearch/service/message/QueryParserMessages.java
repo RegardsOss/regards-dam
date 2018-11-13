@@ -26,6 +26,8 @@ public final class QueryParserMessages extends NLS {
 
     public static String RANGE_NUMERIC_CANNOT_BE_EMPTY; // NOSONAR
 
+    public static String INDETERMINATED_RELATIONSHIP; // NOSONAR
+
     private QueryParserMessages() {
         // Do not instantiate
     }

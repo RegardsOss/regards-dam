@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.dam.domain.entities.criterion;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -364,5 +366,29 @@ public interface IFeatureCriterion extends ICriterion {
      */
     static ICriterion attributeExists(AttributeModel att) {
         return ICriterion.attributeExists(att.getFullJsonPath());
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters contains the provided text
+     * @param atts list of attributes
+     * @param text provided regular expression
+     * @return criterion
+     */
+    static ICriterion multiMatch(Set<AttributeModel> atts, String text) {
+        Set<String> attNames = new HashSet<>();
+        atts.forEach(att -> attNames.add(att.getFullJsonPath()));
+        return ICriterion.multiMatch(attNames, text);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters starts with the provided text
+     * @param atts list of attributes
+     * @param text provided regular expression
+     * @return criterion
+     */
+    static ICriterion multiMatchStartWith(Set<AttributeModel> atts, String text) {
+        Set<String> attNames = new HashSet<>();
+        atts.forEach(att -> attNames.add(att.getFullJsonPath()));
+        return ICriterion.multiMatchStartWith(attNames, text);
     }
 }

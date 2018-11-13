@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.opensearch.service.builder;
 
+import java.util.Set;
+
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.messages.QueryParserMessages;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
@@ -32,6 +34,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
+import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 
 /**
  * Builds a {@link StringMatchCriterion} from a {@link WildcardQueryNode} object<br>
@@ -66,6 +69,18 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
         String field = wildcardNode.getFieldAsString();
         String value = wildcardNode.getTextAsString();
         String val = value.replaceAll("[*]", "");
+
+        // Manage multisearch
+        if (QueryParser.MULTISEARCH.equals(field)) {
+            try {
+                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
+                return IFeatureCriterion.multiMatchStartWith(atts, val);
+            } catch (OpenSearchUnknownParameter e) {
+                throw new QueryNodeException(new MessageImpl(
+                        fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages.FIELD_TYPE_UNDETERMINATED,
+                        e.getMessage()), e);
+            }
+        }
 
         AttributeModel attributeModel;
         try {

@@ -244,7 +244,7 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
         int iteration = 0;
         boolean testOK = false;
         AbstractEntity<?> loadedEntity = null;
-        while ((iteration <= 20) && !testOK) {
+        while (iteration <= 20 && !testOK) {
             switch (entity.getFeature().getEntityType()) {
                 case COLLECTION:
                     loadedEntity = colRepository.findOne(entity.getId());
@@ -361,7 +361,7 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
                                                              new Long(5698L), new Long(5522336689L), new Long(7748578L),
                                                              new Long(22000014L), new Long(9850012565556565L)));
 
-        dataset1.setOpenSearchSubsettingClause("the open search subsetting clause");
+        dataset1.setOpenSearchSubsettingClause("label:TheSubsettingClause");
 
         // Create dataset
         dsService.create(dataset1);
