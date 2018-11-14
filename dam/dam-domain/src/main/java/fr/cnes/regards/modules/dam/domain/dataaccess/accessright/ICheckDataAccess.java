@@ -24,6 +24,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 /**
  * Plugin used to check if a {@link DataFile} from a {@link Dataset} is accessible, or not, for an {@link AccessGroup} or a
@@ -36,6 +37,6 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
         description = "plugin used to check if a data from a dataset is accessible, or not, for an access group or a user")
 public interface ICheckDataAccess extends IIdentifiable<Long> {
 
-    boolean isAccessible(DataFile pData);
+    ICriterion getSearchFilter();
 
 }

@@ -19,21 +19,55 @@ import java.util.Set;
  */
 public class DatasetMetadata {
 
+    public class DataObjectGroup {
+
+        private final String groupName;
+
+        private final Boolean dataObjectAccess;
+
+        private final Long dataObjectAccessFilterPlugin;
+
+        public DataObjectGroup(String groupName, Boolean dataObjectAccess, Long dataObjectAccessFilterPlugin) {
+            super();
+            this.groupName = groupName;
+            this.dataObjectAccess = dataObjectAccess;
+            this.dataObjectAccessFilterPlugin = dataObjectAccessFilterPlugin;
+        }
+
+        public String getGroupName() {
+            return groupName;
+        }
+
+        public Boolean getDataObjectAccess() {
+            return dataObjectAccess;
+        }
+
+        public Long getDataObjectAccessFilterPlugin() {
+            return dataObjectAccessFilterPlugin;
+        }
+
+    }
+
     /**
      * Associated data objects groups.
      * Same groups as dataset ones except some if rights don't permit access to data objects
      */
-    private Map<String, Boolean> dataObjectsGroups = new HashMap<>();
+    private Map<String, DataObjectGroup> dataObjectsGroups = new HashMap<>();
 
     public Set<String> getDataObjectsGroups() {
         return dataObjectsGroups.keySet();
     }
 
-    public void setDataObjectsGroups(Map<String, Boolean> dataObjectsGroups) {
+    public void setDataObjectsGroups(Map<String, DataObjectGroup> dataObjectsGroups) {
         this.dataObjectsGroups = dataObjectsGroups;
     }
 
-    public Map<String, Boolean> getDataObjectsGroupsMap() {
+    public void addDataObjectGroup(String groupName, Boolean dataObjectAccess, Long dataObjectAccessFilterPlugin) {
+        this.dataObjectsGroups.put(groupName,
+                                   new DataObjectGroup(groupName, dataObjectAccess, dataObjectAccessFilterPlugin));
+    }
+
+    public Map<String, DataObjectGroup> getDataObjectsGroupsMap() {
         return dataObjectsGroups;
     }
 }

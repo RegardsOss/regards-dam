@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import fr.cnes.regards.framework.encryption.exception.EncryptionException;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -25,10 +27,13 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityFilter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -77,9 +82,15 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
 
     private PluginConfiguration datasource;
 
+    private PluginConfiguration dataAccessPlugin;
+
     private Model model;
 
     private AccessGroup group1;
+
+    private AccessGroup group2;
+
+    private AccessGroup group3;
 
     @Autowired
     private IPluginService pluginService;
@@ -104,6 +115,20 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                     e.printStackTrace();
                 }
             });
+            rightsService.retrieveAccessRight("group2", dataset.getIpId()).ifPresent(ar -> {
+                try {
+                    rightsService.deleteAccessRight(ar.getId());
+                } catch (ModuleException e) {
+                    e.printStackTrace();
+                }
+            });
+            rightsService.retrieveAccessRight("group3", dataset.getIpId()).ifPresent(ar -> {
+                try {
+                    rightsService.deleteAccessRight(ar.getId());
+                } catch (ModuleException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (ModuleException e) {
             // Nothing to do
             e.printStackTrace();
@@ -111,6 +136,8 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
 
         try {
             groupService.deleteAccessGroup("group1");
+            groupService.deleteAccessGroup("group2");
+            groupService.deleteAccessGroup("group3");
         } catch (EntityOperationForbiddenException | EntityNotFoundException e) {
             // Nothing to do
             e.printStackTrace();
@@ -132,6 +159,14 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             }
         }
 
+        if (dataAccessPlugin != null) {
+            try {
+                pluginService.deletePluginConfiguration(dataAccessPlugin.getId());
+            } catch (ModuleException e) {
+                //Nothing to do
+            }
+        }
+
         try {
             modelService.deleteModel("DS_MODEL");
             modelService.deleteModel("DO_MODEL");
@@ -147,6 +182,9 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         initIndex(TENANT);
         dataset = createDataset();
         group1 = createGroup("group1");
+        group2 = createGroup("group2");
+        group3 = createGroup("group3");
+        dataAccessPlugin = createDataAccessPlugin();
         List<DataObject> objects = Lists.newArrayList();
         objects.add(createObject("DO1", "DataObject 1"));
         objects.add(createObject("DO2", "DataObject 2"));
@@ -189,6 +227,13 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                 .createDataSource(PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class));
     }
 
+    private PluginConfiguration createDataAccessPlugin()
+            throws EntityInvalidException, EntityNotFoundException, EncryptionException {
+        Set<PluginParameter> param = PluginParametersFactory.build().getParameters();
+        return pluginService
+                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class));
+    }
+
     private DataObject createObject(String id, String label) {
         return new DataObject(model, TENANT, id, label);
     }
@@ -199,8 +244,27 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // Create an accessGroup
         AccessRight ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
                 dataset, group1);
-        rightsService.createAccessRight(ar);
+        ar.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar = rightsService.createAccessRight(ar);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        // TODO : All data should be in group1
+        AccessRight ar2 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
+                dataset, group2);
+        ar2.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        rightsService.createAccessRight(ar2);
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        // TODO : All data should be in group1 && group2
+        rightsService.deleteAccessRight(ar.getId());
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        // TODO : all data sould be only in group2
+        AccessRight ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
+                dataset, group3);
+        DataAccessRight dataright = new DataAccessRight(DataAccessLevel.CUSTOM_ACCESS);
+        dataright.setPluginConfiguration(dataAccessPlugin);
+        ar3.setDataAccessRight(dataright);
+        rightsService.createAccessRight(ar3);
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        // TODO : all data sould be group2 && group3
 
     }
 

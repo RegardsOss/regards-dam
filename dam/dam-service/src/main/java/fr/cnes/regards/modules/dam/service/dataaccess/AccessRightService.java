@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +45,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -111,13 +112,20 @@ public class AccessRightService implements IAccessRightService {
     }
 
     @Override
-    public Map<String, AccessRight> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
-            throws ModuleException {
+    public Map<String, Triple<AccessLevel, DataAccessLevel, Long>> retrieveGroupAccessLevelMap(
+            UniformResourceName datasetIpId) throws ModuleException {
         if (datasetIpId == null) {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
         return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
-                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), Function.identity()));
+                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), accessRight -> {
+                    Long pluginId = null;
+                    if (accessRight.getDataAccessRight().getPluginConfiguration() != null) {
+                        pluginId = accessRight.getDataAccessRight().getPluginConfiguration().getId();
+                    }
+                    return Triple.of(accessRight.getAccessLevel(),
+                                     accessRight.getDataAccessRight().getDataAccessLevel(), pluginId);
+                }));
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,

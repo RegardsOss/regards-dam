@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -56,11 +58,14 @@ import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.ICheckDataAccess;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -69,6 +74,7 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
@@ -107,6 +113,9 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     protected IEsRepository esRepos;
+
+    @Autowired
+    protected IPluginService pluginService;
 
     @Autowired
     private IAccessRightService accessRightService;
@@ -185,16 +194,26 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
+                // Retrieve map of { group, AccessLevel }
+                Map<String, Triple<AccessLevel, DataAccessLevel, Long>> volatileMap;
                 try {
-                    dataset.setAccessRights(accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId()));
+                    volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
                 } catch (EntityNotFoundException e) {
-                    LOGGER.warn(e.getMessage(), e);
+                    volatileMap = Collections.emptyMap();
                 }
-
+                // Need to be final to be used into following lambda
+                final Map<String, Triple<AccessLevel, DataAccessLevel, Long>> map = volatileMap;
+                // Compute groups for associated data objects
+                dataset.getGroups().stream()
+                        .filter(group -> map.containsKey(group)
+                                && (map.get(group).getLeft() == AccessLevel.FULL_ACCESS))
+                        .forEach(g -> dataset.getMetadata()
+                                .addDataObjectGroup(g, !DataAccessLevel.NO_ACCESS.equals(map.get(g).getMiddle()),
+                                                    map.get(g).getRight()));
                 // update dataset groups
-                for (Map.Entry<String, AccessRight> entry : dataset.getAccessRights().entrySet()) {
+                for (Map.Entry<String, Triple<AccessLevel, DataAccessLevel, Long>> entry : map.entrySet()) {
                     // remove group if no access
-                    if (entry.getValue().getAccessLevel() == AccessLevel.NO_ACCESS) {
+                    if (entry.getValue().getLeft() == AccessLevel.NO_ACCESS) {
                         dataset.getGroups().remove(entry.getKey());
                     } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
                         dataset.getGroups().add(entry.getKey());
@@ -239,10 +258,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (curDataset == null) {
             return true;
         }
-
-        // TODO : Implements equals in AcceessRight
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getAccessRights().equals(curDataset.getAccessRights());
+                || !newDataset.getMetadata().getDataObjectsGroupsMap()
+                        .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
     }
 
     /**
@@ -312,10 +330,35 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Create a callable which bulk save into ES a set of data objects
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
                 tenant, dataset.getId());
+        // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
         removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
                                          saveDataObjectsCallable, dsiId);
+
+        // Associate dataset to all dataobjets. Associate groups of dataset to the dataobjets through metadata
         addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
                                            saveDataObjectsCallable, dsiId);
+
+        // handle association between dataobjects and groups for all access rights set by plugin
+        for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
+            if (group.getDataObjectAccessFilterPlugin() != null) {
+                try {
+                    ICheckDataAccess plugin = pluginService.getPlugin(group.getDataObjectAccessFilterPlugin());
+                    ICriterion searchFilter = plugin.getSearchFilter();
+                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
+                                                   saveDataObjectsCallable, dsiId, group.getGroupName(), searchFilter);
+                    // Handle specific dataobjet groups by access filter plugin
+                    addOrUpdateDataObectGroupAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects,
+                                                   executor, saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                   searchFilter);
+                } catch (ModuleException e) {
+                    // Plugin conf doesn't exists anymore, so remove all group assoc
+                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
+                                                   saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                   ICriterion.all());
+                    // TODO : Remove association between dataset metadata and plugin conf ?
+                }
+            }
+        }
         // To remove thread used by executor
         executor.shutdown();
         computeComputedAttributes(dataset, dsiId, tenant);
@@ -376,6 +419,30 @@ public class EntityIndexerService implements IEntityIndexerService {
                     dsiId);
     }
 
+    private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
+            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
+            ICriterion groupSubsettingClause) {
+        sendMessage(String.format("          Adding or Updating data objects group <%s> association...", groupName),
+                    dsiId);
+        ICriterion subsettingCrit = dataset.getSubsettingClause();
+        // Add lastUpdate restriction if a date is provided
+        if (lastUpdateDate != null) {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
+        }
+        // First : Retrieve objects associated  matching the groupSubsettingClause
+        subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
+        // For each objet remove group if not associated throught an other dataset
+        DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+        esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
+        // Saving remaining objects...
+        dataObjectAssocUpdater.finalSave();
+        sendMessage(String.format("          ...%d data objects group <%s> association saved.",
+                                  dataObjectAssocUpdater.getObjectsCount(), groupName),
+                    dsiId);
+    }
+
     /**
      * Remove association between dataset and data objects that are no more into subsetting clause
      */
@@ -396,6 +463,27 @@ public class EntityIndexerService implements IEntityIndexerService {
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association removed.",
                                   dataObjectAssocRemover.getObjectsCount()),
+                    dsiId);
+    }
+
+    private void removeOldDataObjectsGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
+            SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
+            ICriterion groupSubsettingClause) {
+
+        sendMessage(String.format("          Removing old data objects group <%s> association...", groupName), dsiId);
+        // First : Retrieve objects associated to given group and not matching the groupSubsettingClause
+        ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
+                                                             ICriterion.contains("groups", groupName),
+                                                             ICriterion.not(groupSubsettingClause));
+        // For each objet remove group if not associated throught an other dataset
+        DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+        esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+        // Saving remaining objects...
+        dataObjectAssocRemover.finalSave();
+        sendMessage(String.format("          ...%d data objects group <%s> association removed.",
+                                  dataObjectAssocRemover.getObjectsCount(), groupName),
                     dsiId);
     }
 
@@ -638,9 +726,9 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            String msg = String
-                    .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
-                            message);
+            String msg = String.format("%s: %s",
+                                       ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                                       message);
             eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }

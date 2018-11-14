@@ -38,7 +38,6 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
@@ -48,8 +47,8 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
  * @author Sylvain Vissiere-Guerinet
  */
 @Entity
-@Table(name = "t_access_right", uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" },
-        name = "uk_access_right_access_group_id_dataset_id"))
+@Table(name = "t_access_right",
+        uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" }, name = "uk_access_right_access_group_id_dataset_id"))
 @NamedEntityGraph(name = "graph.accessright.dataset.and.accesgroup",
         attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
 public class AccessRight implements IIdentifiable<Long> {
@@ -100,11 +99,6 @@ public class AccessRight implements IIdentifiable<Long> {
     @JoinColumn(name = "access_group_id", foreignKey = @ForeignKey(name = "fk_access_right_access_group_id"),
             updatable = false)
     private AccessGroup accessGroup;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "access_group_filter_plugin_conf_id",
-            foreignKey = @ForeignKey(name = "fk_access_group_filter_plugin_conf_id"), updatable = false)
-    private PluginConfiguration accessGroupFilter;
 
     /**
      * Default constructor
@@ -197,14 +191,6 @@ public class AccessRight implements IIdentifiable<Long> {
 
     public void setAccessGroup(final AccessGroup pAccessGroup) {
         accessGroup = pAccessGroup;
-    }
-
-    public PluginConfiguration getAccessGroupFilter() {
-        return accessGroupFilter;
-    }
-
-    public void setAccessGroupFilter(PluginConfiguration accessGroupFilter) {
-        this.accessGroupFilter = accessGroupFilter;
     }
 
 }
