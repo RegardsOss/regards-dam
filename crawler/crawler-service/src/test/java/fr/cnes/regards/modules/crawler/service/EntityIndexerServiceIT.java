@@ -89,17 +89,31 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
 
     private Dataset dataset;
 
+    private Dataset dataset2;
+
     private PluginConfiguration datasource;
 
     private PluginConfiguration dataAccessPlugin;
 
     private Model model;
 
+    private Model dsModel;
+
     private AccessGroup group1;
 
     private AccessGroup group2;
 
     private AccessGroup group3;
+
+    private AccessGroup group4;
+
+    private AccessRight ar;
+
+    private AccessRight ar2;
+
+    private AccessRight ar3;
+
+    private AccessRight ar4;
 
     private final List<DataObject> objects = Lists.newArrayList();
 
@@ -119,27 +133,12 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     @After
     public void clear() {
         try {
-            rightsService.retrieveAccessRight("group1", dataset.getIpId()).ifPresent(ar -> {
-                try {
-                    rightsService.deleteAccessRight(ar.getId());
-                } catch (ModuleException e) {
-                    e.printStackTrace();
-                }
-            });
-            rightsService.retrieveAccessRight("group2", dataset.getIpId()).ifPresent(ar -> {
-                try {
-                    rightsService.deleteAccessRight(ar.getId());
-                } catch (ModuleException e) {
-                    e.printStackTrace();
-                }
-            });
-            rightsService.retrieveAccessRight("group3", dataset.getIpId()).ifPresent(ar -> {
-                try {
-                    rightsService.deleteAccessRight(ar.getId());
-                } catch (ModuleException e) {
-                    e.printStackTrace();
-                }
-            });
+            if (ar != null) {
+                rightsService.deleteAccessRight(ar.getId());
+            }
+            rightsService.deleteAccessRight(ar2.getId());
+            rightsService.deleteAccessRight(ar3.getId());
+            rightsService.deleteAccessRight(ar4.getId());
         } catch (ModuleException e) {
             // Nothing to do
             e.printStackTrace();
@@ -149,6 +148,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             groupService.deleteAccessGroup("group1");
             groupService.deleteAccessGroup("group2");
             groupService.deleteAccessGroup("group3");
+            groupService.deleteAccessGroup("group4");
         } catch (EntityOperationForbiddenException | EntityNotFoundException e) {
             // Nothing to do
             e.printStackTrace();
@@ -158,7 +158,15 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             try {
                 datasetService.delete(dataset.getId());
             } catch (ModuleException e) {
-                // Nothing to do
+                e.printStackTrace();
+            }
+        }
+
+        if (dataset2 != null) {
+            try {
+                datasetService.delete(dataset2.getId());
+            } catch (ModuleException e) {
+                e.printStackTrace();
             }
         }
 
@@ -166,7 +174,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             try {
                 pluginService.deletePluginConfiguration(datasource.getId());
             } catch (ModuleException e) {
-                //Nothing to do
+                e.printStackTrace();
             }
         }
 
@@ -174,7 +182,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             try {
                 pluginService.deletePluginConfiguration(dataAccessPlugin.getId());
             } catch (ModuleException e) {
-                //Nothing to do
+                e.printStackTrace();
             }
         }
 
@@ -182,7 +190,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             modelService.deleteModel("DS_MODEL");
             modelService.deleteModel("DO_MODEL");
         } catch (ModuleException e) {
-            // Nothing to do
+            e.printStackTrace();
         }
 
     }
@@ -191,10 +199,13 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     public void init() throws ModuleException {
         runtimeTenantResolver.forceTenant(TENANT);
         initIndex(TENANT);
-        dataset = createDataset();
+        createModels();
+        datasource = createDataSource();
+        dataset = createDataset("dataset1", datasource);
         group1 = createGroup("group1");
         group2 = createGroup("group2");
         group3 = createGroup("group3");
+        group4 = createGroup("group4");
         objects.add(createObject("DO1", "DataObject 1"));
         objects.add(createObject("DO2", "DataObject 2"));
         objects.add(createObject("DO3", "DataObject 3"));
@@ -210,11 +221,14 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         return groupService.createAccessGroup(new AccessGroup(name));
     }
 
-    private Dataset createDataset() throws ModuleException {
+    private void createModels() throws ModuleException {
         model = createModel(EntityType.DATA, "DO_MODEL");
-        dataset = new Dataset(createModel(EntityType.DATASET, "DS_MODEL"), TENANT, "dataset1", "Dataset 1");
+        dsModel = createModel(EntityType.DATASET, "DS_MODEL");
+    }
+
+    private Dataset createDataset(String label, PluginConfiguration datasource) throws ModuleException {
+        Dataset dataset = new Dataset(dsModel, TENANT, label, label);
         dataset.setSubsettingClause(ICriterion.all());
-        datasource = createDataSource();
         dataset.setDataSource(datasource);
         dataset.setOpenSearchSubsettingClause("");
         // Create dataset
@@ -254,11 +268,12 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         runtimeTenantResolver.forceTenant(TENANT);
         final SimpleSearchKey<AbstractEntity> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setSearchIndex(TENANT);
-        Page<AbstractEntity> results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));
+        Page<AbstractEntity> results = searchService.search(searchKey, 100, ICriterion.all());
+        Assert.assertEquals(objects.size(), results.getTotalElements());
+        results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));
         Assert.assertEquals(0, results.getTotalElements());
         // Create an accessGroup
-        AccessRight ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
-                dataset, group1);
+        ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group1);
         ar.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
         ar = rightsService.createAccessRight(ar);
         // All data should be only in group1
@@ -266,8 +281,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));
         Assert.assertEquals(objects.size(), results.getTotalElements());
 
-        AccessRight ar2 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
-                dataset, group2);
+        ar2 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group2);
         ar2.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
         rightsService.createAccessRight(ar2);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
@@ -276,13 +290,13 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                                                                       ICriterion.contains("groups", "group2")));
         Assert.assertEquals(objects.size(), results.getTotalElements());
         rightsService.deleteAccessRight(ar.getId());
+        ar = null;
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         // All data should be only in group2
         results = searchService.search(searchKey, 100, ICriterion
                 .and(ICriterion.not(ICriterion.contains("groups", "group1")), ICriterion.contains("groups", "group2")));
         Assert.assertEquals(objects.size(), results.getTotalElements());
-        AccessRight ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS,
-                dataset, group3);
+        ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group3);
         DataAccessRight dataright = new DataAccessRight(DataAccessLevel.CUSTOM_ACCESS);
         ar3.setDataAccessPlugin(dataAccessPlugin);
         ar3.setDataAccessRight(dataright);
@@ -294,9 +308,15 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                                                       ICriterion.contains("groups", "group2"),
                                                       ICriterion.contains("groups", "group3")));
         Assert.assertEquals(1, results.getTotalElements());
+        results = searchService.search(searchKey, 100,
+                                       ICriterion.and(ICriterion.not(ICriterion.contains("groups", "group1")),
+                                                      ICriterion.contains("groups", "group2"),
+                                                      ICriterion.not(ICriterion.contains("groups", "group3"))));
+        Assert.assertEquals(objects.size() - 1, results.getTotalElements());
         // Update plugin to change label to unknown label
         dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).setValue("unknown");
-        pluginService.updatePluginConfiguration(dataAccessPlugin);
+        dataAccessPlugin = pluginService.updatePluginConfiguration(dataAccessPlugin);
+        pluginService.cleanPluginCache();
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         // All data should be in group2 and only one (DO1) in group3
         results = searchService.search(searchKey, 100,
@@ -304,12 +324,41 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                                                       ICriterion.contains("groups", "group2"),
                                                       ICriterion.not(ICriterion.contains("groups", "group3"))));
         Assert.assertEquals(objects.size(), results.getTotalElements());
+        // No data should be in group3 as "unkown" label is not a valid label of existing objects
+        results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group3"));
+        Assert.assertEquals(0, results.getTotalElements());
 
-        // TODO delete plugin
+        // Set again a dataobject in group3
+        dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).setValue("\"DataObject 2\"");
+        dataAccessPlugin = pluginService.updatePluginConfiguration(dataAccessPlugin);
+        pluginService.cleanPluginCache();
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group3"));
+        Assert.assertEquals(1, results.getTotalElements());
 
-        // TODO update accessright to no_access
+        // Create another dataset with same objects
+        dataset2 = createDataset("dataset2", datasource);
+        indexerService.updateEntityIntoEs(TENANT, dataset2.getIpId(), OffsetDateTime.now(), false);
+        ar4 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset2,
+                group4);
+        ar4.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar4 = rightsService.createAccessRight(ar4);
+        indexerService.updateEntityIntoEs(TENANT, dataset2.getIpId(), OffsetDateTime.now(), false);
+        results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group4"));
+        Assert.assertEquals(objects.size(), results.getTotalElements());
 
-        // TODO create another dataset with same objects
+        results = searchService.search(searchKey, 100,
+                                       ICriterion.and(ICriterion.contains("groups", "group4"),
+                                                      ICriterion.contains("groups", "group3"),
+                                                      ICriterion.contains("groups", "group2")));
+        Assert.assertEquals(1, results.getTotalElements());
+
+        // Update access right to no access and check that objects are no longer in the group3
+        ar3.setAccessLevel(AccessLevel.NO_ACCESS);
+        rightsService.updateAccessRight(ar3.getId(), ar3);
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+        results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group3"));
+        Assert.assertEquals(0, results.getTotalElements());
 
     }
 

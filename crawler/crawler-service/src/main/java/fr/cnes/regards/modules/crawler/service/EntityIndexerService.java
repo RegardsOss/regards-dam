@@ -61,6 +61,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpda
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilter;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -323,7 +324,8 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
-            if (group.getMetaDataObjectAccessFilterPluginId() != null) {
+            // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
+            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
                 try {
                     IDataObjectAccessFilter plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
@@ -381,7 +383,21 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Add or update association between dataset and data objects that are into subsetting clause
+     * Associates all DATA entities matching the subsetting clause to the given DATASET entity and dataset groups.<br/>
+     * Only groups with no {@link AccessLevel#CUSTOM_ACCESS} are associated the the dataobjects in this method.<br/>
+     * The association is done by the {@link DataObjectUpdater} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#addOrUpdateDataObectGroupAssoc}.<br/>
+     * <b>NOTE</b> : The subsetting clause to find DATA entities is computed by adding dataset subsetting clause and "lastUpdate > lastUpdateDate parameter".<br/>
+     *
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
@@ -403,6 +419,22 @@ public class EntityIndexerService implements IEntityIndexerService {
                     dsiId);
     }
 
+    /**
+     * Associates all DATA entities matching the subsetting clause to the given DATASET groups with {@link AccessLevel#CUSTOM_ACCESS}.<br/>
+     * The association is done by the {@link DataObjectGroupAssocUpdater} consumer.<br/>
+     *
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
+     * @param groupName Name of the group to associate to DATA entities.
+     * @param groupSubsettingClause {@link ICriterion} group subsetting clause. Caculate by {@link IDataObjectAccessFilter} plugin.
+     */
     private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
@@ -428,7 +460,19 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Remove association between dataset and data objects that are no more into subsetting clause
+     * Remove association between DATASET entity and DATA entities that are no more into the subsetting clause.<br/>
+     * Only groups with no {@link AccessLevel#CUSTOM_ACCESS} are dissociated the the dataobjects in this method.<br/>
+     * The dissociation is done by the {@link DataObjectAssocRemover} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
@@ -450,6 +494,21 @@ public class EntityIndexerService implements IEntityIndexerService {
                     dsiId);
     }
 
+    /**
+     * Remove association between DATASET entity and DATA entities that are no more into the subsetting clause.<br/>
+     * Only groups with {@link AccessLevel#CUSTOM_ACCESS} are dissociated the the dataobjects in this method.<br/>
+     * The dissociation is done by the {@link DataObjectGroupAssocRemover} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
+     */
     private void removeOldDataObjectsGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
@@ -613,6 +672,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         for (DataObject dataObject : objects) {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
+            dataObject.setLastUpdate(creationDate);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
