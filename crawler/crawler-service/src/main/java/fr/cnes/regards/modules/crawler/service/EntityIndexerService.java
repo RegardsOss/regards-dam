@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,6 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -63,9 +61,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpda
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.ICheckDataAccess;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilter;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -194,26 +190,13 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
-                // Retrieve map of { group, AccessLevel }
-                Map<String, Triple<AccessLevel, DataAccessLevel, Long>> volatileMap;
-                try {
-                    volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
-                } catch (EntityNotFoundException e) {
-                    volatileMap = Collections.emptyMap();
-                }
-                // Need to be final to be used into following lambda
-                final Map<String, Triple<AccessLevel, DataAccessLevel, Long>> map = volatileMap;
-                // Compute groups for associated data objects
-                dataset.getGroups().stream()
-                        .filter(group -> map.containsKey(group)
-                                && (map.get(group).getLeft() == AccessLevel.FULL_ACCESS))
-                        .forEach(g -> dataset.getMetadata()
-                                .addDataObjectGroup(g, !DataAccessLevel.NO_ACCESS.equals(map.get(g).getMiddle()),
-                                                    map.get(g).getRight()));
+                // Retrieve dataset metadata information for indexer
+                dataset.setMetadata(accessRightService.retrieveDatasetMetadata(dataset.getIpId()));
                 // update dataset groups
-                for (Map.Entry<String, Triple<AccessLevel, DataAccessLevel, Long>> entry : map.entrySet()) {
+                for (Entry<String, DataObjectGroup> entry : dataset.getMetadata().getDataObjectsGroupsMap()
+                        .entrySet()) {
                     // remove group if no access
-                    if (entry.getValue().getLeft() == AccessLevel.NO_ACCESS) {
+                    if (!entry.getValue().getDatasetAccess()) {
                         dataset.getGroups().remove(entry.getKey());
                     } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
                         dataset.getGroups().add(entry.getKey());
@@ -340,9 +323,10 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
-            if (group.getDataObjectAccessFilterPlugin() != null) {
+            if (group.getMetaDataObjectAccessFilterPluginId() != null) {
                 try {
-                    ICheckDataAccess plugin = pluginService.getPlugin(group.getDataObjectAccessFilterPlugin());
+                    IDataObjectAccessFilter plugin = pluginService
+                            .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
                     ICriterion searchFilter = plugin.getSearchFilter();
                     removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
                                                    saveDataObjectsCallable, dsiId, group.getGroupName(), searchFilter);

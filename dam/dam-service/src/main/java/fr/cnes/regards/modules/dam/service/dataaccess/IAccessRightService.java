@@ -18,10 +18,8 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -29,9 +27,8 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 
 /**
  * Access right service
@@ -71,12 +68,11 @@ public interface IAccessRightService {
     /**
      * Retrieve groups access levels of a specified dataset
      * @param datasetIpId concerned datasetIpId, must not be null
-     * @return a map { groupName, Pair(accessLevel, dataAccessLevel) }
+     * @return a set of {@link DatasetMetadata}
      * @throws ModuleException
      * @throws EntityNotFoundException if dataset doesn't exist
      */
-    Map<String, Triple<AccessLevel, DataAccessLevel, Long>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
-            throws ModuleException;
+    DatasetMetadata retrieveDatasetMetadata(UniformResourceName datasetIpId) throws ModuleException;
 
     AccessRight createAccessRight(AccessRight accessRight) throws ModuleException;
 

@@ -25,13 +25,20 @@ public class DatasetMetadata {
 
         private final Boolean dataObjectAccess;
 
-        private final Long dataObjectAccessFilterPlugin;
+        private final Boolean datasetAccess;
 
-        public DataObjectGroup(String groupName, Boolean dataObjectAccess, Long dataObjectAccessFilterPlugin) {
+        private final Long metaDataObjectAccessFilterPluginId;
+
+        private final Long dataObjectAccessFilterPluginId;
+
+        public DataObjectGroup(String groupName, Boolean datasetAccess, Boolean dataObjectAccess,
+                Long metaDataObjectAccessFilterPlugin, Long dataObjectAccessFilterPlugin) {
             super();
             this.groupName = groupName;
             this.dataObjectAccess = dataObjectAccess;
-            this.dataObjectAccessFilterPlugin = dataObjectAccessFilterPlugin;
+            this.datasetAccess = datasetAccess;
+            this.metaDataObjectAccessFilterPluginId = metaDataObjectAccessFilterPlugin;
+            this.dataObjectAccessFilterPluginId = dataObjectAccessFilterPlugin;
         }
 
         public String getGroupName() {
@@ -42,8 +49,16 @@ public class DatasetMetadata {
             return dataObjectAccess;
         }
 
-        public Long getDataObjectAccessFilterPlugin() {
-            return dataObjectAccessFilterPlugin;
+        public Long getDataObjectAccessFilterPluginId() {
+            return dataObjectAccessFilterPluginId;
+        }
+
+        public Boolean getDatasetAccess() {
+            return datasetAccess;
+        }
+
+        public Long getMetaDataObjectAccessFilterPluginId() {
+            return metaDataObjectAccessFilterPluginId;
         }
 
     }
@@ -62,9 +77,10 @@ public class DatasetMetadata {
         this.dataObjectsGroups = dataObjectsGroups;
     }
 
-    public void addDataObjectGroup(String groupName, Boolean dataObjectAccess, Long dataObjectAccessFilterPlugin) {
-        this.dataObjectsGroups.put(groupName,
-                                   new DataObjectGroup(groupName, dataObjectAccess, dataObjectAccessFilterPlugin));
+    public void addDataObjectGroup(String groupName, Boolean datasetAccess, Boolean dataObjectAccess,
+            Long metaDataObjectAccessFilterPlugin, Long dataObjectAccessFilterPlugin) {
+        this.dataObjectsGroups.put(groupName, new DataObjectGroup(groupName, datasetAccess, dataObjectAccess,
+                metaDataObjectAccessFilterPlugin, dataObjectAccessFilterPlugin));
     }
 
     public Map<String, DataObjectGroup> getDataObjectsGroupsMap() {
