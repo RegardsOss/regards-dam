@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -33,10 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -47,7 +44,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -98,8 +94,6 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  */
 public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
         implements IEntityService<U> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
     /**
      * {@link IModelService} instance
@@ -658,7 +652,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                     ref.setDigestAlgorithm(LocalStorageService.DIGEST_ALGORITHM);
                 } catch (NoSuchAlgorithmException | IOException e) {
                     final String message = String.format("Error while computing checksum");
-                    LOGGER.error(message, e);
+                    logger.error(message, e);
                     throw new ModuleException(message, e);
                 }
                 if (entity.getFiles().get(dataType) != null) {
@@ -686,7 +680,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
         final String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
                                              urn.toString());
-        LOGGER.error(message);
+        logger.error(message);
         throw new EntityNotFoundException(message);
     }
 
