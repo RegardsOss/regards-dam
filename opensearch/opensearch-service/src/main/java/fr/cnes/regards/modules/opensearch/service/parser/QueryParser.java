@@ -75,7 +75,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
               new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(finder));
         setEnablePositionIncrements(true);
         setAllowLeadingWildcard(true);
-        setLowercaseExpandedTerms(false);
+//        setLowercaseExpandedTerms(false);
     }
 
     @Override
@@ -115,9 +115,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * Enable or disable lowercase regexp transformation
      */
-    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
-        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
-    }
+//    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+//        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
+//    }
 
     /**
      * Set to <code>true</code> to enable position increments in result query.

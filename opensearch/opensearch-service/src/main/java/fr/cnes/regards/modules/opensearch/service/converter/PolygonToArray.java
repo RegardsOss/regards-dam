@@ -18,10 +18,9 @@
  */
 package fr.cnes.regards.modules.opensearch.service.converter;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Polygon;
 import org.springframework.core.convert.converter.Converter;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Polygon;
 
 /**
  *
@@ -31,9 +30,6 @@ public class PolygonToArray implements Converter<Polygon, double[][][]> {
 
     private static final CoordinateArrayToArray COORDINATE_ARRAY_TO_ARRAY = new CoordinateArrayToArray();
 
-    /* (non-Javadoc)
-     * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-     */
     @Override
     public double[][][] convert(Polygon polygon) {
         double[][][] result = new double[polygon.getNumInteriorRing() + 1][][];

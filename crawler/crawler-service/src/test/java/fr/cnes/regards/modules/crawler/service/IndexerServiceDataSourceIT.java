@@ -34,6 +34,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -410,14 +411,13 @@ public class IndexerServiceDataSourceIT {
 
     private void checkDatasetComputedAttribute(final Dataset pDataset,
             final SimpleSearchKey<DataObject> pObjectSearchKey, final long objectsCreationCount) throws IOException {
-        RestClient restClient;
+        RestClientBuilder restClientBuilder;
         RestHighLevelClient client;
         try {
-            restClient = RestClient
+            restClientBuilder = RestClient
                     .builder(new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress),
-                            esPort))
-                    .build();
-            client = new RestHighLevelClient(restClient);
+                            esPort));
+            client = new RestHighLevelClient(restClientBuilder);
 
         } catch (final UnknownHostException e) {
             LOGGER.error("could not get a connection to ES in the middle of the test where we know ES is available", e);
@@ -460,7 +460,7 @@ public class IndexerServiceDataSourceIT {
                             ((OffsetDateTime) getDatasetProperty(pDataset, "start_date").getValue()).toInstant());
         Assert.assertEquals(Instant.parse(((ParsedMax) aggregations.get("max_stop_date")).getValueAsString()),
                             ((OffsetDateTime) getDatasetProperty(pDataset, "end_date").getValue()).toInstant());
-        restClient.close();
+        client.close();
     }
 
     private AbstractAttribute<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {

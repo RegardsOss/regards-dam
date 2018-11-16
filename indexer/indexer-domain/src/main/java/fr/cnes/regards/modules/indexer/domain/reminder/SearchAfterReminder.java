@@ -50,7 +50,7 @@ public class SearchAfterReminder extends AbstractReminder {
         String unique = GsonUtil.toString(crit) + "__" + GsonUtil.toString(nextPage) + "__" + GsonUtil
                 .toString(searchKey.getSearchIndex()) + "__" + GsonUtil.toString(searchKey.getSearchTypes()) + "__"
                 + GsonUtil.toString(sort);
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) { // Does not occur

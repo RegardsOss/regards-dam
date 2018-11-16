@@ -72,7 +72,9 @@ public interface IEsRepository {
      * @param index index
      * @param types all types needing automatic double mapping
      * @return true if acknowledged by Elasticsearch, false otherwise
+     * @deprecated useless, everything is done by {@link #createIndex(String)}
      */
+    @Deprecated
     boolean setAutomaticDoubleMapping(String index, String... types);
 
     /**
@@ -80,7 +82,9 @@ public interface IEsRepository {
      * @param index index
      * @param types all types with geometry mapping
      * @return true if acknowledged by Elasticsearch, false otherwise.
+     * @deprecated useless everything is done by {@link #createIndex(String)}
      */
+    @Deprecated
     boolean setGeometryMapping(String index, String... types);
 
     boolean setSettingsForBulk(String index);
@@ -138,8 +142,6 @@ public interface IEsRepository {
             throws IllegalArgumentException {
         return this.saveBulk(index, null, documents);
     }
-
-
 
     /**
      * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
@@ -238,20 +240,25 @@ public interface IEsRepository {
      * @param pageSize page size
      * @param <T> document type
      * @return first result page containing max page size documents
+     * @deprecated {@link #searchAllLimited(String, Class, Pageable)}
      */
+    @Deprecated
     default <T> Page<T> searchAllLimited(final String index, final Class<T> clazz, final int pageSize) {
         return this.searchAllLimited(index, clazz, new PageRequest(0, pageSize));
     }
 
     /**
-     * Searching specified page of all elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) <b>This method fails if asked for offset greater than 10000
+     * Searching specified page of all elements from index (for first call use {@link #searchAllLimited(String, Class, int)}
+     * method) <b>This method fails if asked for offset greater than 10000
      * (Elasticsearch limitation)</b>
      * @param index index
      * @param clazz class of document type
      * @param pageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param <T> class of document type
      * @return specified result page
+     * @deprecated indices are all single type from ES6
      */
+    @Deprecated
     <T> Page<T> searchAllLimited(String index, Class<T> clazz, Pageable pageRequest);
 
     /**
