@@ -489,6 +489,11 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    private void upgradeIndex4SingleType(String index) {
+        String index6 = index.toLowerCase() + "6";
+
+    }
+
     @Override
     public void refresh(String index) {
         // To make just saved documents searchable, the associated index must be refreshed
