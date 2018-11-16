@@ -19,8 +19,8 @@ import fr.cnes.regards.framework.encryption.exception.EncryptionException;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -31,6 +31,10 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
+import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
+import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
@@ -87,6 +91,21 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     @Autowired
     private ISearchService searchService;
 
+    @Autowired
+    private IAccessRightRepository arRepo;
+
+    @Autowired
+    private IAccessGroupRepository agRepo;
+
+    @Autowired
+    private IDatasetRepository dsRepo;
+
+    @Autowired
+    private IModelRepository modelRepo;
+
+    @Autowired
+    private IPluginConfigurationRepository pluginRepo;
+
     private Dataset dataset;
 
     private Dataset dataset2;
@@ -132,67 +151,11 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
 
     @After
     public void clear() {
-        try {
-            if (ar != null) {
-                rightsService.deleteAccessRight(ar.getId());
-            }
-            rightsService.deleteAccessRight(ar2.getId());
-            rightsService.deleteAccessRight(ar3.getId());
-            rightsService.deleteAccessRight(ar4.getId());
-        } catch (ModuleException e) {
-            // Nothing to do
-            e.printStackTrace();
-        }
-
-        try {
-            groupService.deleteAccessGroup("group1");
-            groupService.deleteAccessGroup("group2");
-            groupService.deleteAccessGroup("group3");
-            groupService.deleteAccessGroup("group4");
-        } catch (EntityOperationForbiddenException | EntityNotFoundException e) {
-            // Nothing to do
-            e.printStackTrace();
-        }
-
-        if (dataset != null) {
-            try {
-                datasetService.delete(dataset.getId());
-            } catch (ModuleException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (dataset2 != null) {
-            try {
-                datasetService.delete(dataset2.getId());
-            } catch (ModuleException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (datasource != null) {
-            try {
-                pluginService.deletePluginConfiguration(datasource.getId());
-            } catch (ModuleException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (dataAccessPlugin != null) {
-            try {
-                pluginService.deletePluginConfiguration(dataAccessPlugin.getId());
-            } catch (ModuleException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            modelService.deleteModel("DS_MODEL");
-            modelService.deleteModel("DO_MODEL");
-        } catch (ModuleException e) {
-            e.printStackTrace();
-        }
-
+        arRepo.deleteAll();
+        agRepo.deleteAll();
+        dsRepo.deleteAll();
+        modelRepo.deleteAll();
+        pluginRepo.deleteAll();
     }
 
     @Before
