@@ -19,16 +19,37 @@ import java.util.Set;
  */
 public class DatasetMetadata {
 
+    /**
+     * Information about a group access to a specific dataset for data objects.
+     * @author Sébastien Binda
+     *
+     */
     public class DataObjectGroup {
 
+        /**
+         * Group name
+         */
         private final String groupName;
 
+        /**
+         * Does the group have access to data files ?
+         */
         private final Boolean dataObjectAccess;
 
+        /**
+         * Does the group have access to the dataset ?
+         */
         private final Boolean datasetAccess;
 
+        /**
+         * Does the group have access to the dataobjects metadatas ?
+         */
         private final Long metaDataObjectAccessFilterPluginId;
 
+        /**
+         * Identifier of the plugin configuration used to define specific access to data objects metadatas.<br/>
+         * Can be null, in this case all dataobjects of the dataset are available for the group.
+         */
         private final Long dataObjectAccessFilterPluginId;
 
         public DataObjectGroup(String groupName, Boolean datasetAccess, Boolean dataObjectAccess,

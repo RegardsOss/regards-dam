@@ -16,25 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.crawler.plugins;
+package fr.cnes.regards.modules.dam.plugin.dataaccess.accessright;
+
+import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilter;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
-@Plugin(id = "TestDataAccessRightPlugin", version = "4.0.0-SNAPSHOT", description = "test", author = "REGARDS Team",
-        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
-public class TestDataAccessRightPlugin implements IDataObjectAccessFilter {
+/**
+ * Plugin to allow access to dataobjects newly created.
+ * @author Sébastien Binda
+ */
+@Plugin(id = "NewDataObjectsAccess", version = "4.0.0-SNAPSHOT",
+        description = "Allow access only to new data objects. New data objects are thoses created at most X days ago. X is a parameter to configure.",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss")
+public class NewDataObjectsAccess implements IDataObjectAccessFilter {
 
-    public static final String LABEL_PARAM = "label";
+    public static final String NB_DAYS_PARAM = "numberOfDays";
 
-    @PluginParameter(label = LABEL_PARAM)
-    private String label;
+    @PluginParameter(label = NB_DAYS_PARAM, description = "Number of days")
+    private long numberOfDays;
 
     @Override
     public ICriterion getSearchFilter() {
-        return ICriterion.eq("feature.label", this.label);
+        OffsetDateTime time = OffsetDateTime.now().minusDays(numberOfDays);
+        return ICriterion.and(ICriterion.gt("creationDate", time), ICriterion.eq("creationDate", time));
     }
 
 }
