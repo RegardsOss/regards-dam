@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
- * Plugin to allow access to old dataobjects.
+ * Plugin to allow access to dataobjects with an opensearch request.
  * @author Sébastien Binda
  */
 @Plugin(id = "OldDataObjectsAccess", version = "4.0.0-SNAPSHOT",
