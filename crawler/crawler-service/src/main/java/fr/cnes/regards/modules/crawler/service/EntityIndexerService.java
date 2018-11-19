@@ -339,7 +339,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                                            saveDataObjectsCallable, dsiId);
 
         // Update dataset access groups for dynamic plugin access rights
-        manageDatasetUpdateDynamicGroups(tenant, dataset, updateDate, executor, saveDataObjectsCallable, dsiId);
+        manageDatasetUpdateFilteredAccessrights(tenant, dataset, updateDate, executor, saveDataObjectsCallable, dsiId);
 
         // To remove thread used by executor
         executor.shutdown();
@@ -350,7 +350,16 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage("      ...Dataset indexation updated.", dsiId);
     }
 
-    private void manageDatasetUpdateDynamicGroups(String tenant, Dataset dataset, OffsetDateTime updateDate,
+    /**
+     * Handle Access rights filter for the given dataset. An Access right filter is an accessRight with a {@link IDataObjectAccessFilterPlugin}.
+     * @param tenant {@link Strin} current tenant
+     * @param dataset {@link Dataset}
+     * @param updateDate {@link OffsetDateTime} update date
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable}
+     * @param dsiId {@link DatasourceIngestion} id
+     */
+    private void manageDatasetUpdateFilteredAccessrights(String tenant, Dataset dataset, OffsetDateTime updateDate,
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenant);
@@ -362,11 +371,15 @@ public class EntityIndexerService implements IEntityIndexerService {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
                     ICriterion searchFilter = plugin.getSearchFilter();
-                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
-                                                   dsiId, group.getGroupName(), searchFilter);
-                    // Handle specific dataobjet groups by access filter plugin
-                    addOrUpdateDataObectGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
-                                                   dsiId, group.getGroupName(), searchFilter);
+                    if (searchFilter != null) {
+                        removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor,
+                                                       saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                       searchFilter);
+                        // Handle specific dataobjet groups by access filter plugin
+                        addOrUpdateDataObectGroupAssoc(dataset, updateDate, searchKey, executor,
+                                                       saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                       searchFilter);
+                    }
                 } catch (ModuleException e) {
                     // Plugin conf doesn't exists anymore, so remove all group assoc
                     removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
@@ -396,7 +409,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
 
-        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList(computationPlugins);
+        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList<>(computationPlugins);
         ll.stream()
                 .forEach(comAtt -> LOGGER.info("attribute {} is computed", comAtt.getAttributeToCompute().getName()));
 
@@ -790,6 +803,8 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
+     * @param message
+     * @param dsId {@link DatasourceIngestion} id
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
