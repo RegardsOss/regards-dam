@@ -49,7 +49,7 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = (prime * result) + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (name == null ? 0 : name.hashCode());
         return result;
     }
 
@@ -75,4 +75,8 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return this.getClass().getName() + " on property " + name;
+    }
 }

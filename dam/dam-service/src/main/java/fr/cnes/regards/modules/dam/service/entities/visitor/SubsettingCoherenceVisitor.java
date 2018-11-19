@@ -45,6 +45,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
@@ -60,12 +61,6 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     private final IAttributeFinder attributeFinder;
 
-    /**
-     * Constructor
-     * @param pModel the model
-     * @param pAttributeService the attribute service
-     * @param pModelAttributeService the model attribute service
-     */
     public SubsettingCoherenceVisitor(IAttributeFinder attributeFinder) {
         this.attributeFinder = attributeFinder;
     }
@@ -98,33 +93,38 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchCriterion(StringMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
+        return attribute != null && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
+    }
+
+    @Override
+    public Boolean visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
+        return false;
     }
 
     @Override
     public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
+        return attribute != null && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
 
     @Override
     public Boolean visitIntMatchCriterion(IntMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER));
+        return attribute != null && attribute.getType().equals(AttributeType.INTEGER);
     }
 
     @Override
     public Boolean visitLongMatchCriterion(LongMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.LONG));
+        return attribute != null && attribute.getType().equals(AttributeType.LONG);
     }
 
     @Override
     public Boolean visitDateMatchCriterion(DateMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
+        return attribute != null && attribute.getType().equals(AttributeType.DATE_ISO8601);
     }
 
     @Override
@@ -146,13 +146,13 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitDateRangeCriterion(DateRangeCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
+        return attribute != null && attribute.getType().equals(AttributeType.DATE_ISO8601);
     }
 
     @Override
     public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null) && attribute.getType().equals(AttributeType.BOOLEAN);
+        return attribute != null && attribute.getType().equals(AttributeType.BOOLEAN);
     }
 
     /**
@@ -199,7 +199,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitFieldExistsCriterion(FieldExistsCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return (attribute != null);
+        return attribute != null;
     }
 
 }

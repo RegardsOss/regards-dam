@@ -19,10 +19,13 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
@@ -490,5 +493,25 @@ public interface ICriterion {
      */
     static ICriterion attributeExists(String attName) {
         return new FieldExistsCriterion(attName);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters contains the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatch(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.BEST_FIELDS, text);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters starts with the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatchStartWith(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.PHRASE_PREFIX, text);
     }
 }

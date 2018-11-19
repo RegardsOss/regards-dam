@@ -19,10 +19,13 @@
 package fr.cnes.regards.modules.opensearch.service.cache.attributemodel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -72,6 +78,11 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      */
     private final Map<String, Map<String, AttributeModel>> propertyMap = new HashMap<>();
 
+    /**
+     * Store dynamic and static properties by tenant and type for full text search
+     */
+    private final Map<String, Multimap<AttributeType, AttributeModel>> typedPropertyMap = new HashMap<>();
+
     public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {
         this.attributeModelClient = attributeModelClient;
@@ -92,6 +103,19 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         }
 
         return attModel;
+    }
+
+    @Override
+    public Set<AttributeModel> findByType(AttributeType type) throws OpenSearchUnknownParameter {
+
+        Collection<AttributeModel> ppties = getTenantTypedMap().get(type);
+        if (ppties == null) {
+            String errorMessage = String.format("No parameter found with type %s for tenant %s", type,
+                                                runtimeTenantResolver.getTenant());
+            LOGGER.error(errorMessage);
+            throw new OpenSearchUnknownParameter(errorMessage);
+        }
+        return new HashSet<>(ppties);
     }
 
     @Override
@@ -128,10 +152,19 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         return propertyMap.get(tenant);
     }
 
+    private Multimap<AttributeType, AttributeModel> getTenantTypedMap() {
+        String tenant = runtimeTenantResolver.getTenant();
+        if (!typedPropertyMap.containsKey(tenant)) {
+            computePropertyMap(tenant);
+        }
+        return typedPropertyMap.get(tenant);
+    }
+
     /**
      * Initialize queryable static properties
      */
-    private final void initStaticProperties(Map<String, AttributeModel> tenantMap) {
+    private final void initStaticProperties(Map<String, AttributeModel> tenantMap,
+            Multimap<AttributeType, AttributeModel> tenantTypeMap) {
 
         // Unique identifier
         tenantMap.put(StaticProperties.FEATURE_ID, AttributeModelBuilder
@@ -161,6 +194,8 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         tenantMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
                 .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.LONG, null).isInternal().get());
 
+        // Register static properties by types
+        tenantMap.values().forEach(attModel -> tenantTypeMap.put(attModel.getType(), attModel));
     }
 
     /**
@@ -180,18 +215,25 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
             attModels = HateoasUtils.unwrapCollection(response.getBody());
         }
 
-        // Build or rebuild the map
+        // Build or rebuild the maps
         Map<String, AttributeModel> tenantMap = new HashMap<>();
+        Multimap<AttributeType, AttributeModel> tenantTypeMap = ArrayListMultimap.create();
+
         // Add static properties
-        initStaticProperties(tenantMap);
-        // Reference tenant map (override current if any)
+        initStaticProperties(tenantMap, tenantTypeMap);
+
+        // Reference tenant maps (override maybe)
         propertyMap.put(tenant, tenantMap);
+        typedPropertyMap.put(tenant, tenantTypeMap);
 
         // Conflictual dynamic keys to be removed
         List<String> conflictualKeys = new ArrayList<>();
 
         // Build intelligent map preventing conflicts
         for (AttributeModel attModel : attModels) {
+
+            // Register properties by types
+            tenantTypeMap.put(attModel.getType(), attModel);
 
             // - Add mapping between short property name and attribute if no conflict detected
             String key = attModel.getName();

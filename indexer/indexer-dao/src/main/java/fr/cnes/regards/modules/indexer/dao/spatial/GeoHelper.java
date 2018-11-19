@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Table;
+
 import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
@@ -76,6 +77,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
@@ -320,7 +322,7 @@ public class GeoHelper {
         positions.add(firstPos);
         for (int n = 1; n < 9; n++) {
             positions.add(new Position(firstPos.getLongitude() + n * longitudeStep,
-                                       firstPos.getLatitude() + n * latitudeStep));
+                    firstPos.getLatitude() + n * latitudeStep));
         }
         positions.add(lastPos);
         return positions;
@@ -357,15 +359,15 @@ public class GeoHelper {
         double lonN = next[0];
         LOGGER.trace("IN ({}, {})", lonP, lonN);
         // Previous longitude < 180
-        if ((lonP >= 0) && (lonP < 180.0)) {
+        if (lonP >= 0 && lonP < 180.0) {
             // -180 <= next.longitude < 0
-            if ((lonN < 0) && (lonN >= -180.0)) {
+            if (lonN < 0 && lonN >= -180.0) {
                 // Minimum distance through dateline ?
                 if (distTo0(lonP) + distTo0(lonN) > distToDateline(lonP) + distToDateline(lonN)) {
                     // In this case, use longitude > 180 numeric
                     next[0] += 360.0;
                 }
-            } else if ((lonN > 180) && (lonN < 360.0)) { // 180 <= next.longitude < 360
+            } else if (lonN > 180 && lonN < 360.0) { // 180 <= next.longitude < 360
                 // Minimum distance through 0 ?
                 if (distTo0(lonP) + distTo0(lonN) < distToDateline(lonP) + distToDateline(lonN)) {
                     // In this case, use longitude < -180 numeric
@@ -374,7 +376,7 @@ public class GeoHelper {
             }
         } else if (lonP >= 180.0) { // Previous longitude >= 180
             // -180 <= next.longitude < 0
-            if ((lonN < 0) && (lonN >= -180.0)) {
+            if (lonN < 0 && lonN >= -180.0) {
                 // Continue to use longitude > 180 numeric
                 next[0] += 360.0;
             } else if (lonN == 0.0) {
@@ -391,7 +393,7 @@ public class GeoHelper {
                 // (helpful for recursivity)
                 previous[0] += 360.0;
                 updatePrevious = true;
-            } else if ((lonN >= 0) && (lonN < 180)) { // 0 <= next longitude < 180
+            } else if (lonN >= 0 && lonN < 180) { // 0 <= next longitude < 180
                 // Minimum distance through dateline ?
                 if (distToDateline(lonP) + distToDateline(lonN) < distTo0(lonP) + distTo0(lonN)) {
                     // THIS TIME UPDATE previous !!!!
@@ -471,19 +473,19 @@ public class GeoHelper {
                     // Shortest distance is through date line => cut LineString => MultiLineString
                     // Compute intersection with date line point latitude
                     // Using longitudes > 0
-                    double prevLon_360 = (prevLon < 0) ? prevLon + 360 : prevLon;
-                    double curLon_360 = (curLon < 0) ? curLon + 360 : curLon;
+                    double prevLon_360 = prevLon < 0 ? prevLon + 360 : prevLon;
+                    double curLon_360 = curLon < 0 ? curLon + 360 : curLon;
                     double prevLat = previous.getLatitude();
                     double curLat = current.getLatitude();
                     double cutLat = (180 - prevLon_360) * (curLat - prevLat) / (curLon_360 - prevLon_360) + prevLat;
                     // Create last position of current positions (ie current line string)
-                    curPositions.add(new Position((prevLon < 0) ? -180.0 : 180.0, cutLat));
+                    curPositions.add(new Position(prevLon < 0 ? -180.0 : 180.0, cutLat));
                     // Add current positions to positions list (=> MultiLineString)
                     positionsList.add(curPositions);
                     // Create a new current positions
                     curPositions = new Positions();
                     // And create first position of new current Positions (ie new line string)
-                    curPositions.add(new Position((prevLon < 0) ? 180.0 : -180.0, cutLat));
+                    curPositions.add(new Position(prevLon < 0 ? 180.0 : -180.0, cutLat));
                 }
                 curPositions.add(current);
             } else { // Just add current position to current positions
@@ -517,7 +519,7 @@ public class GeoHelper {
      */
     public static MultiPolygon normalizeMultiPolygon(MultiPolygon multiPolygon) {
         List<PolygonPositions> poss = multiPolygon.getCoordinates();
-        for (ListIterator<PolygonPositions> li = poss.listIterator(); li.hasNext(); ) {
+        for (ListIterator<PolygonPositions> li = poss.listIterator(); li.hasNext();) {
             PolygonPositions positions = li.next();
             // Doesn't manage polygons with holes
             if (positions.getHoles().isEmpty()) {
@@ -536,7 +538,7 @@ public class GeoHelper {
         double[][] exteriorRing = Arrays.copyOf(inExteriorRing, inExteriorRing.length);
         // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
         // cross dateline better than 0 line)
-        if ((exteriorRing[0][0] > -180) && (exteriorRing[0][0] <= -90)) {
+        if (exteriorRing[0][0] > -180 && exteriorRing[0][0] <= -90) {
             exteriorRing[0][0] += 360;
         }
         // First: manage Dateline: passing from longitude < 180 to longitude > -180 makes most of frameworks
@@ -582,8 +584,7 @@ public class GeoHelper {
                             return getSymetricPolygon(normalizeExteriorRing(getSymetricPolygon(inExteriorRing)));
                         } else { // Both poles...ouch, this will be tricky...but who knows...
                             // Work with ecuadorian symetric polygon as if north pole is south pole
-                            exteriorRing = getSymetricPolygon(
-                                    normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
+                            exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
                         }
                     }
                 }
@@ -626,7 +627,7 @@ public class GeoHelper {
         // same point BUT index 0 has the longitude in [-180, 0] whereas index idxMaxLon has the longitude
         // in [180, 360]: in this case MAX_LONGITUDE is 180 (not 359.99999.... because Elasticsearch doesn't love it and
         // it isn't a big problem) and MIN_LONGITIUDE is -180
-        boolean sameRightAndLeftBorderPoint = (idxMaxLon == exteriorRing.length - 1);
+        boolean sameRightAndLeftBorderPoint = idxMaxLon == exteriorRing.length - 1;
 
         double rightBorderLon = exteriorRing[idxMaxLon][0];
         double leftBorderLon = exteriorRing[idxLeftBorderAfterMaxLon][0];
@@ -645,7 +646,8 @@ public class GeoHelper {
             // Add rightCutPoint, (rightCutPoint longitude, 90°), (leftCutPoint longitude, 90°), leftCutPoint
             double[][] arrayAroundPole = new double[][] { rightCutPoint, { rightCutPoint[0], 90.0 },
                     { leftCutPoint[0], 90.0 }, leftCutPoint };
-            exteriorRing = ObjectArrays.concat(ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon),
+            exteriorRing = ObjectArrays.concat(
+                                               ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon),
                                                                    arrayAroundPole, double[].class),
                                                Arrays.copyOfRange(exteriorRing, idxMaxLon, exteriorRing.length),
                                                double[].class);
@@ -657,26 +659,25 @@ public class GeoHelper {
                 rightCutPoint[0] = MAX_CHEATED_LONGITUDE;
                 leftCutPoint[0] = 0.0;
                 // If both latitude are equals, median latitude is same else use Thales theorem
-                double medianLatitude = (rightBorderLat == leftBorderLat) ?
-                        rightBorderLat :
-                        leftBorderLon * (rightBorderLat - leftBorderLat) / (leftBorderLon + MAX_CHEATED_LONGITUDE
-                                - rightBorderLon) + leftBorderLat;
+                double medianLatitude = rightBorderLat == leftBorderLat ? rightBorderLat
+                        : leftBorderLon * (rightBorderLat - leftBorderLat)
+                                / (leftBorderLon + MAX_CHEATED_LONGITUDE - rightBorderLon) + leftBorderLat;
                 rightCutPoint[1] = leftCutPoint[1] = medianLatitude;
             } else { // Cut meridian is dateline => max longitude is 180
                 rightCutPoint[0] = 180.0;
                 leftCutPoint[0] = -180.0;
                 // If both latitude are equals, median latitude is same else use Thales theorem
-                double medianLatitude = (rightBorderLat == leftBorderLat) ?
-                        rightBorderLat :
-                        (180.0 - leftBorderLon) * (rightBorderLat - leftBorderLat) / ((180.0 - leftBorderLon)
-                                + rightBorderLon + 180.0) + leftBorderLat;
+                double medianLatitude = rightBorderLat == leftBorderLat ? rightBorderLat
+                        : (180.0 - leftBorderLon) * (rightBorderLat - leftBorderLat)
+                                / (180.0 - leftBorderLon + rightBorderLon + 180.0) + leftBorderLat;
                 rightCutPoint[1] = leftCutPoint[1] = medianLatitude;
             }
 
             // Add rightCutPoint, (rightCutPoint longitude, 90°), (leftCutPoint longitude, 90°), leftCutPoint
             double[][] arrayAroundPole = new double[][] { rightCutPoint, { rightCutPoint[0], 90.0 },
                     { leftCutPoint[0], 90.0 }, leftCutPoint };
-            exteriorRing = ObjectArrays.concat(ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon + 1),
+            exteriorRing = ObjectArrays.concat(
+                                               ObjectArrays.concat(Arrays.copyOfRange(exteriorRing, 0, idxMaxLon + 1),
                                                                    arrayAroundPole, double[].class),
                                                Arrays.copyOfRange(exteriorRing, idxMaxLon + 1, exteriorRing.length),
                                                double[].class);
@@ -704,7 +705,7 @@ public class GeoHelper {
     private static int northernIndex(double[][] lineString) {
         int idxMaxLon = 0;
         for (int i = 0; i < lineString.length; i++) {
-            if ((lineString[i][0] > 0.0) && (lineString[i][1] > lineString[idxMaxLon][1])) {
+            if (lineString[i][0] > 0.0 && lineString[i][1] > lineString[idxMaxLon][1]) {
                 idxMaxLon = i;
             }
         }
@@ -721,8 +722,8 @@ public class GeoHelper {
         for (int i = startIdx; i < lineString.length; i++) {
             // Take the "eastmost" max (except if it is at index 0 which means it is already the rightest, think as
             // cycle array)
-            if ((lineString[i][1] > 0.0) && ((lineString[i][0] > lineString[idxMaxLon][0])
-                    || ((lineString[i][0] == lineString[idxMaxLon][0])) && (i != 0))) {
+            if (lineString[i][1] > 0.0 && (lineString[i][0] > lineString[idxMaxLon][0]
+                    || lineString[i][0] == lineString[idxMaxLon][0] && i != 0)) {
                 idxMaxLon = i;
             }
         }
@@ -804,6 +805,11 @@ public class GeoHelper {
         }
 
         @Override
+        public Boolean visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
+            return predicate.test(criterion);
+        }
+
+        @Override
         public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
             return predicate.test(criterion);
         }
@@ -864,6 +870,7 @@ public class GeoHelper {
      * example)
      * @param <T> type of Icriterion to find
      */
+    @SuppressWarnings("unchecked")
     private static class FinderCriterionVisitor<T extends ICriterion> implements ICriterionVisitor<T> {
 
         private Class<T> clazz;
@@ -874,7 +881,7 @@ public class GeoHelper {
 
         @Override
         public T visitEmptyCriterion(EmptyCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         private T visitMultiCriterion(AbstractMultiCriterion criterion) {
@@ -909,62 +916,67 @@ public class GeoHelper {
 
         @Override
         public T visitStringMatchCriterion(StringMatchCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
+        }
+
+        @Override
+        public T visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitIntMatchCriterion(IntMatchCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitLongMatchCriterion(LongMatchCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitDateMatchCriterion(DateMatchCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public <U extends Comparable<? super U>> T visitRangeCriterion(RangeCriterion<U> criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitDateRangeCriterion(DateRangeCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitPolygonCriterion(PolygonCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitCircleCriterion(CircleCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
 
         @Override
         public T visitFieldExistsCriterion(FieldExistsCriterion criterion) {
-            return (this.clazz.isInstance(criterion)) ? (T) criterion : null;
+            return this.clazz.isInstance(criterion) ? (T) criterion : null;
         }
     }
 
@@ -1012,8 +1024,8 @@ public class GeoHelper {
 
         @Override
         public Boolean visitPoint(Point geometry) {
-            return (GeoHelper.getDistance(point[0], point[1], geometry.getCoordinates().getLongitude(),
-                                          geometry.getCoordinates().getLatitude(), crs) < distance);
+            return GeoHelper.getDistance(point[0], point[1], geometry.getCoordinates().getLongitude(),
+                                         geometry.getCoordinates().getLatitude(), crs) < distance;
         }
 
         @Override
@@ -1023,9 +1035,8 @@ public class GeoHelper {
             Position lastPosition = null;
             for (Position position : positions) {
                 if (lastPosition != null) {
-                    boolean found = createIntermediatePositions(lastPosition, position).stream().anyMatch(
-                            p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)
-                                    < distance);
+                    boolean found = createIntermediatePositions(lastPosition, position).stream().anyMatch(p -> GeoHelper
+                            .getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs) < distance);
                     if (found) {
                         return found;
                     }
@@ -1095,10 +1106,12 @@ public class GeoHelper {
             double distance = Double.POSITIVE_INFINITY;
             for (Position position : positions) {
                 if (lastPosition != null) {
-                    distance = FastMath.min(distance, createIntermediatePositions(lastPosition, position).stream()
-                            .mapToDouble(p -> GeoHelper
-                                    .getDistance(point[0], point[1], p.getLongitude(), p.getLatitude(), crs)).min()
-                            .getAsDouble());
+                    distance = FastMath
+                            .min(distance,
+                                 createIntermediatePositions(lastPosition, position).stream()
+                                         .mapToDouble(p -> GeoHelper.getDistance(point[0], point[1], p.getLongitude(),
+                                                                                 p.getLatitude(), crs))
+                                         .min().getAsDouble());
                 }
                 lastPosition = position;
             }

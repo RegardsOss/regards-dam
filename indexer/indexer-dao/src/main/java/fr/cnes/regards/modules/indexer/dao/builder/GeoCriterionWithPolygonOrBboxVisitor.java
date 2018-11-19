@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import com.google.common.base.Preconditions;
+
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -37,6 +38,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 
 /**
@@ -85,6 +87,11 @@ public class GeoCriterionWithPolygonOrBboxVisitor implements ICriterionVisitor<I
 
     @Override
     public ICriterion visitStringMatchCriterion(StringMatchCriterion criterion) {
+        return criterion.copy();
+    }
+
+    @Override
+    public ICriterion visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
         return criterion.copy();
     }
 

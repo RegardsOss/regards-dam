@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.opensearch.service.builder;
 
+import java.util.Set;
+
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.FieldQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
@@ -34,6 +36,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
+import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 
 /**
  * Builds a {@link StringMatchCriterion} from a {@link FieldQueryNode} object when the value is a String.<br>
@@ -59,10 +62,21 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
 
     @Override
     public ICriterion build(final QueryNode queryNode) throws QueryNodeException { // NOSONAR
-        final FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
+        FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
 
-        final String field = fieldNode.getFieldAsString();
-        final String value = fieldNode.getValue().toString();
+        String field = fieldNode.getFieldAsString();
+        String value = fieldNode.getValue().toString();
+
+        // Manage multisearch
+        if (QueryParser.MULTISEARCH.equals(field)) {
+            try {
+                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
+                return IFeatureCriterion.multiMatch(atts, value);
+            } catch (OpenSearchUnknownParameter e) {
+                throw new QueryNodeException(
+                        new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()), e);
+            }
+        }
 
         AttributeModel attributeModel;
         try {
@@ -119,5 +133,4 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }
     }
-
 }
