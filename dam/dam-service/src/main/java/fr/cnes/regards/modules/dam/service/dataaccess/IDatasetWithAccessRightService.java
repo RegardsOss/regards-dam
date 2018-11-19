@@ -38,6 +38,7 @@ public interface IDatasetWithAccessRightService {
      * @param accessGroupName search {@link AccessRight}s of the given access group.
      * @param pageRequest
      * @return {@link DatasetWithAccessRight}
+     * @throws ModuleException
      */
     Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName, Pageable pageRequest)
             throws ModuleException;

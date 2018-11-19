@@ -64,6 +64,7 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.dam.plugin.dataaccess.accessright.NewDataObjectsAccessPlugin;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
@@ -194,11 +195,16 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         objects.add(createObject("DO1", "DataObject 1"));
         objects.add(createObject("DO2", "DataObject 2"));
         objects.add(createObject("DO3", "DataObject 3"));
-        objects.add(createObject("DO4", "DataObject 4"));
-        objects.add(createObject("DO5", "DataObject 5"));
-        objects.add(createObject("DO6", "DataObject 6"));
         dataAccessPlugin = createDataAccessPlugin();
-        indexerService.createDataObjects(TENANT, datasource.getId().toString(), OffsetDateTime.now(), objects);
+        indexerService.createDataObjects(TENANT, datasource.getId().toString(), OffsetDateTime.now().minusDays(1),
+                                         objects);
+        List<DataObject> otherObj = Lists.newArrayList();
+        otherObj.add(createObject("DO4", "DataObject 4"));
+        otherObj.add(createObject("DO5", "DataObject 5"));
+        otherObj.add(createObject("DO6", "DataObject 6"));
+        indexerService.createDataObjects(TENANT, datasource.getId().toString(), OffsetDateTime.now().minusDays(10),
+                                         otherObj);
+        objects.addAll(otherObj);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
     }
 
@@ -244,8 +250,47 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
                 .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class));
     }
 
+    private PluginConfiguration createNewDataAccessPlugin()
+            throws EntityInvalidException, EntityNotFoundException, EncryptionException {
+        Set<PluginParameter> param = PluginParametersFactory.build()
+                .addParameter(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5).getParameters();
+        return pluginService
+                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
+    }
+
+    private PluginConfiguration createOldDataAccessPlugin()
+            throws EntityInvalidException, EntityNotFoundException, EncryptionException {
+        Set<PluginParameter> param = PluginParametersFactory.build()
+                .addParameter(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5).getParameters();
+        return pluginService
+                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
+    }
+
     private DataObject createObject(String id, String label) {
         return new DataObject(model, TENANT, id, label);
+    }
+
+    @Test
+    public void checkDataObjectsDynamicUpdate() throws ModuleException {
+        // 1. Init method has created 1xDATASET and 6xDATA
+        runtimeTenantResolver.forceTenant(TENANT);
+
+        // Create an accessRight to the dataset with dynamic date parameter filter
+        PluginConfiguration newPluginConf = createNewDataAccessPlugin();
+        createOldDataAccessPlugin();
+
+        AccessRight ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.CUSTOM_ACCESS,
+                dataset, group1);
+        ar.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar.setDataAccessPlugin(newPluginConf);
+        ar = rightsService.createAccessRight(ar);
+        indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
+
+        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onSingleEntity(EntityType.DATA);
+        searchKey.setSearchIndex(TENANT);
+        Page<AbstractEntity> results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));
+        Assert.assertEquals(3, results.getTotalElements());
+
     }
 
     @Test
@@ -302,8 +347,9 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // -------------------------------------------------------------------------------
         // 6. Create a third accessRight with filter and check that only one dataObject is associated to the new GROUP3
         // -------------------------------------------------------------------------------
-        ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group3);
-        DataAccessRight dataright = new DataAccessRight(DataAccessLevel.CUSTOM_ACCESS);
+        ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.CUSTOM_ACCESS, dataset,
+                group3);
+        DataAccessRight dataright = new DataAccessRight(DataAccessLevel.INHERITED_ACCESS);
         ar3.setDataAccessPlugin(dataAccessPlugin);
         ar3.setDataAccessRight(dataright);
         rightsService.createAccessRight(ar3);

@@ -80,6 +80,11 @@ public interface IAccessRightService {
 
     AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException;
 
+    /**
+     * Allow to send an update event for all {@link AccessRight}s with a dynamic plugin filter
+     */
+    public void updateDynamicAccessRights();
+
     void deleteAccessRight(Long id) throws ModuleException;
 
     boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail) throws ModuleException;

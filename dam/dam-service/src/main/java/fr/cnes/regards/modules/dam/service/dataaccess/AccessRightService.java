@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +32,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
@@ -45,6 +49,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEventType;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
@@ -57,6 +62,8 @@ import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 @MultitenantTransactional
 public class AccessRightService implements IAccessRightService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightService.class);
+
     @Autowired
     private IAccessRightRepository repository;
 
@@ -68,6 +75,9 @@ public class AccessRightService implements IAccessRightService {
 
     @Autowired
     private IPublisher eventPublisher;
+
+    @Autowired
+    private IPluginService pluginService;
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
@@ -128,7 +138,7 @@ public class AccessRightService implements IAccessRightService {
                         metadataPluginId = accessRight.getDataAccessPlugin().getId();
                     }
 
-                    boolean datasetAccess = accessRight.getAccessLevel() == AccessLevel.FULL_ACCESS;
+                    boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
                     boolean dataAccess = datasetAccess
                             && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
@@ -259,6 +269,32 @@ public class AccessRightService implements IAccessRightService {
             }
         }
         return isAutorised;
+    }
+
+    /**
+     * Allow to send an update event for all {@link AccessRight}s with a dynamic plugin filter
+     */
+
+    @Override
+    public void updateDynamicAccessRights() {
+        Set<UniformResourceName> datasetsToUpdate = Sets.newHashSet();
+        repository.findByDataAccessPluginNotNull().forEach(ar -> {
+            try {
+                if (!datasetsToUpdate.contains(ar.getDataset().getIpId())) {
+                    IDataObjectAccessFilterPlugin plugin = pluginService.getPlugin(ar.getDataAccessPlugin().getId());
+                    if (plugin.isDynamic()) {
+                        LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
+                                    ar.getDataset().getIpId());
+                        datasetsToUpdate.add(ar.getDataset().getIpId());
+                    }
+                }
+            } catch (ModuleException e) {
+                LOGGER.error("updateDynamicAccessRights - Error getting plugin {} for accessRight {} of dataset {} and group {}. Does plugin exists anymore ?",
+                             ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
+                             ar.getAccessGroup().getName());
+            }
+        });
+        datasetsToUpdate.forEach(ds -> eventPublisher.publish(new AccessRightEvent(ds, AccessRightEventType.UPDATE)));
     }
 
 }

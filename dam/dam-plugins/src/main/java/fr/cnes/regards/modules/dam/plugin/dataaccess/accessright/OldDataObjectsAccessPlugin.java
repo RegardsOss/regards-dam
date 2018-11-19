@@ -22,7 +22,7 @@ import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilter;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 /**
@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
         description = "Allow access only to old data objects. Old data objects are thoses created at least X days ago. X is a parameter to configure.",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class OldDataObjectsAccess implements IDataObjectAccessFilter {
+public class OldDataObjectsAccessPlugin implements IDataObjectAccessFilterPlugin {
 
     public static final String NB_DAYS_PARAM = "numberOfDays";
 
@@ -43,7 +43,12 @@ public class OldDataObjectsAccess implements IDataObjectAccessFilter {
     @Override
     public ICriterion getSearchFilter() {
         OffsetDateTime time = OffsetDateTime.now().minusDays(numberOfDays);
-        return ICriterion.and(ICriterion.lt("creationDate", time), ICriterion.eq("creationDate", time));
+        return ICriterion.or(ICriterion.lt("creationDate", time), ICriterion.eq("creationDate", time));
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
     }
 
 }

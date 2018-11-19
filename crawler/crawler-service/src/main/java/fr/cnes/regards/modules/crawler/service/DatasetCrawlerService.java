@@ -25,7 +25,6 @@ import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 
 /**
  * Crawler service for Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -45,9 +44,6 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
 
     @Autowired
     private IDatasetRepository datasetRepository;
-
-    @Autowired
-    private IEsRepository esRepository;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
@@ -76,9 +72,8 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
             for (Dataset dataset : datasets) {
                 try {
                     datasetRepository.save(dataset);
-                    entityIndexerService
-                            .updateEntityIntoEs(tenantResolver.getTenant(), dataset.getIpId(), OffsetDateTime.now(),
-                                                true);
+                    entityIndexerService.updateEntityIntoEs(tenantResolver.getTenant(), dataset.getIpId(),
+                                                            OffsetDateTime.now(), true);
                 } catch (ModuleException e) {
                     LOGGER.error("Cannot update dataset", e);
                 }
@@ -97,8 +92,8 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
         if (wrapper.getContent() != null) {
             AccessRightEvent event = wrapper.getContent();
             try {
-                entityIndexerService
-                        .updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(), OffsetDateTime.now(), false);
+                entityIndexerService.updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(),
+                                                        OffsetDateTime.now(), false);
             } catch (ModuleException e) {
                 LOGGER.error("Cannot handle access right event", e);
                 // FIXME notify

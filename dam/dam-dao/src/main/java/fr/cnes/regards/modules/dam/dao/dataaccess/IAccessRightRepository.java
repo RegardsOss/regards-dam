@@ -61,4 +61,10 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      */
     Optional<AccessRight> findAccessRightByAccessGroupAndDataset(AccessGroup accessGroup, Dataset dataset);
 
+    /**
+     * Find all {@link AccessRight}s associated a dataAccess plugin.
+     * @return
+     */
+    List<AccessRight> findByDataAccessPluginNotNull();
+
 }

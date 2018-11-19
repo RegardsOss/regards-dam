@@ -80,7 +80,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilter;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -325,44 +325,22 @@ public class EntityIndexerService implements IEntityIndexerService {
                     dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenant);
-        // A set used to accumulate data objects to save into ES
-        HashSet<DataObject> toSaveObjects = new HashSet<>();
+
         ExecutorService executor = Executors.newFixedThreadPool(1);
 
         // Create a callable which bulk save into ES a set of data objects
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
                 tenant, dataset.getId());
         // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
-        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
-                                         saveDataObjectsCallable, dsiId);
+        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
 
         // Associate dataset to all dataobjets. Associate groups of dataset to the dataobjets through metadata
-        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
+        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, executor,
                                            saveDataObjectsCallable, dsiId);
 
-        // handle association between dataobjects and groups for all access rights set by plugin
-        for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
-            // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
-            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
-                try {
-                    IDataObjectAccessFilter plugin = pluginService
-                            .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
-                    ICriterion searchFilter = plugin.getSearchFilter();
-                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
-                                                   saveDataObjectsCallable, dsiId, group.getGroupName(), searchFilter);
-                    // Handle specific dataobjet groups by access filter plugin
-                    addOrUpdateDataObectGroupAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects,
-                                                   executor, saveDataObjectsCallable, dsiId, group.getGroupName(),
-                                                   searchFilter);
-                } catch (ModuleException e) {
-                    // Plugin conf doesn't exists anymore, so remove all group assoc
-                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
-                                                   saveDataObjectsCallable, dsiId, group.getGroupName(),
-                                                   ICriterion.all());
-                    // TODO : Remove association between dataset metadata and plugin conf ?
-                }
-            }
-        }
+        // Update dataset access groups for dynamic plugin access rights
+        manageDatasetUpdateDynamicGroups(tenant, dataset, updateDate, executor, saveDataObjectsCallable, dsiId);
+
         // To remove thread used by executor
         executor.shutdown();
         computeComputedAttributes(dataset, dsiId, tenant);
@@ -370,6 +348,32 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.save(tenant, dataset);
         LOGGER.info("Dataset {} updated", dataset.getId());
         sendMessage("      ...Dataset indexation updated.", dsiId);
+    }
+
+    private void manageDatasetUpdateDynamicGroups(String tenant, Dataset dataset, OffsetDateTime updateDate,
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
+        // handle association between dataobjects and groups for all access rights set by plugin
+        for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
+            // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
+            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
+                try {
+                    IDataObjectAccessFilterPlugin plugin = pluginService
+                            .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
+                    ICriterion searchFilter = plugin.getSearchFilter();
+                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
+                                                   dsiId, group.getGroupName(), searchFilter);
+                    // Handle specific dataobjet groups by access filter plugin
+                    addOrUpdateDataObectGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
+                                                   dsiId, group.getGroupName(), searchFilter);
+                } catch (ModuleException e) {
+                    // Plugin conf doesn't exists anymore, so remove all group assoc
+                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
+                                                   dsiId, group.getGroupName(), ICriterion.all());
+                }
+            }
+        }
     }
 
     /**
@@ -418,8 +422,10 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
-            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
@@ -442,8 +448,6 @@ public class EntityIndexerService implements IEntityIndexerService {
      * The association is done by the {@link DataObjectGroupAssocUpdater} consumer.<br/>
      *
      * @param dataset {@link Dataset} to associate to DATA entities
-     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
-     * to find only DATA with a lastUpdateDate greter than this parameter
      * @param updateDate {@link OffsetDateTime} of the current update process
      * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
      * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
@@ -451,19 +455,17 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId {@link DatasourceIngestion} identifier
      * @param groupName Name of the group to associate to DATA entities.
-     * @param groupSubsettingClause {@link ICriterion} group subsetting clause. Caculate by {@link IDataObjectAccessFilter} plugin.
+     * @param groupSubsettingClause {@link ICriterion} group subsetting clause. Caculate by {@link IDataObjectAccessFilterPlugin} plugin.
      */
-    private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
-            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
+    private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
             ICriterion groupSubsettingClause) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage(String.format("          Adding or Updating data objects group <%s> association...", groupName),
                     dsiId);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
-        // Add lastUpdate restriction if a date is provided
-        if (lastUpdateDate != null) {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
-        }
         // First : Retrieve objects associated  matching the groupSubsettingClause
         subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
         // For each objet remove group if not associated throught an other dataset
@@ -493,8 +495,10 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
-            SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage("          Removing old dataset data objects association...", dsiId);
         // First : remove association between dataset and data objects for data objects that are no more associated to
         // new subsetting clause so search data objects that are tagged with dataset IPID and with NOT(user subsetting
@@ -528,10 +532,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void removeOldDataObjectsGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
-            SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
             ICriterion groupSubsettingClause) {
-
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage(String.format("          Removing old data objects group <%s> association...", groupName), dsiId);
         // First : Retrieve objects associated to given group and not matching the groupSubsettingClause
         ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
