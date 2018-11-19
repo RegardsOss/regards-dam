@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.crawler.service;
+package fr.cnes.regards.modules.crawler.test;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -30,6 +30,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -49,6 +51,7 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
+import fr.cnes.regards.modules.crawler.service.IEntityIndexerService;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
@@ -80,7 +83,8 @@ import fr.cnes.regards.modules.indexer.service.Searches;
  * Test class.
  * @author Sébastien Binda
  */
-@ActiveProfiles("indexer-service")
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE)
+@ActiveProfiles({ "indexer-service", "noschedule" })
 @TestPropertySource(locations = { "classpath:test-indexer.properties" }, properties = { "regards.tenant=entity_indexer",
         "spring.jpa.properties.hibernate.default_schema=entity_indexer" })
 public class EntityIndexerServiceIT extends AbstractRegardsIT {

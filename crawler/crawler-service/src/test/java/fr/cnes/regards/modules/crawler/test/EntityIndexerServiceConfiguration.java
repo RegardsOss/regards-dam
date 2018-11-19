@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.crawler.service;
+package fr.cnes.regards.modules.crawler.test;
 
 import java.util.ArrayList;
 
@@ -48,8 +48,7 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 /**
  * Module-wide configuration for integration tests.
  *
- * @author Sylvain Vissiere-Guerinet
- * @author Xavier-Alexandre Brochard
+ * @author Sébastien Binda
  */
 @Profile("indexer-service")
 @Configuration
