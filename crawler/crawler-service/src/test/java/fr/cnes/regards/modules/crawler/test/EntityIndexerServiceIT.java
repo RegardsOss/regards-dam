@@ -250,16 +250,14 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()).getParameters();
-        return pluginService
-                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class));
+        return PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class);
     }
 
     private PluginConfiguration createNewDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5).getParameters();
-        return pluginService
-                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
+        return PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class);
     }
 
     private PluginConfiguration createOldDataAccessPlugin()
