@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,9 @@ public class AccessRightService implements IAccessRightService {
 
     @Autowired
     private IPluginService pluginService;
+
+    @Autowired
+    private EntityManager em;
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
@@ -185,8 +190,9 @@ public class AccessRightService implements IAccessRightService {
         accessRight.setDataset(dataset);
 
         // If a new plugin conf is provided, create it
-        if ((accessRight.getDataAccessPlugin() != null) && (accessRight.getDataAccessPlugin().getId() == null)) {
+        if ((accessRight.getDataAccessPlugin() != null)) {
             accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
+            em.flush();
         }
 
         AccessRight created = repository.save(accessRight);
@@ -230,9 +236,11 @@ public class AccessRightService implements IAccessRightService {
         // If a plugin conf is provided, save it
         if ((accessRight.getDataAccessPlugin() != null)) {
             accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
+            em.flush();
         } else if (accessRightFromDb.getDataAccessPlugin() != null) {
             // Else if a plugin conf is removed, delete it
             pluginService.deletePluginConfiguration(accessRightFromDb.getDataAccessPlugin().getId());
+            em.flush();
         }
 
         AccessRight updated = repository.save(accessRight);
@@ -254,6 +262,7 @@ public class AccessRightService implements IAccessRightService {
 
         if ((accessRight.getDataAccessPlugin() != null)) {
             pluginService.deletePluginConfiguration(accessRight.getDataAccessPlugin().getId());
+            em.flush();
         }
 
         repository.delete(id);
