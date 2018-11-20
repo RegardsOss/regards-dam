@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,7 +94,10 @@ import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.Data
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
+import fr.cnes.regards.modules.dam.service.entities.CollectionService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
+import fr.cnes.regards.modules.dam.service.entities.DatasetService;
+import fr.cnes.regards.modules.dam.service.entities.DocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -146,6 +150,15 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private DataObjectService dataObjectService;
+
+    @Autowired
+    private DatasetService datasetService;
+
+    @Autowired
+    private DocumentService documentService;
+
+    @Autowired
+    private CollectionService collectionService;
 
     @Autowired
     @Lazy
@@ -617,8 +630,17 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public boolean deleteIndex(String tenant) {
+        if (esRepos.indexExists(tenant)) {
+            return false;
+        }
+        esRepos.deleteIndex(tenant);
+        return true;
+    }
+
+    @Override
     @MultitenantTransactional
-    public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
+    public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -799,6 +821,25 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     public boolean deleteDataObject(String tenant, String ipId) {
         return esRepos.delete(tenant, EntityType.DATA.toString(), ipId);
+    }
+
+    @Override
+    public void updateAllDatasets(String tenant) throws ModuleException {
+        updateDatasets(tenant, datasetService.findAll(), null, true, null);
+    }
+
+    public void updateAllDocuments(String tenant) throws ModuleException {
+        OffsetDateTime now = OffsetDateTime.now();
+        for (Document doc : documentService.findAll()) {
+            updateEntityIntoEs(tenant, doc.getIpId(), null, now, false, null);
+        }
+    }
+
+    public void updateAllCollections(String tenant) throws ModuleException {
+        OffsetDateTime now = OffsetDateTime.now();
+        for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
+            updateEntityIntoEs(tenant, col.getIpId(), null, now, false, null);
+        }
     }
 
     /**
