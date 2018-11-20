@@ -32,6 +32,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -51,8 +52,12 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 @Entity
 @Table(name = "t_access_right", uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" },
         name = "uk_access_right_access_group_id_dataset_id"))
-@NamedEntityGraph(name = "graph.accessright.dataset.and.accesgroup",
-        attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
+@NamedEntityGraphs({
+        @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup",
+                attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup"),
+                        @NamedAttributeNode(value = "dataAccessRight") }),
+        @NamedEntityGraph(name = "graph.accessright.plugins",
+                attributeNodes = { @NamedAttributeNode(value = "dataAccessRight") }) })
 public class AccessRight implements IIdentifiable<Long> {
 
     /**
