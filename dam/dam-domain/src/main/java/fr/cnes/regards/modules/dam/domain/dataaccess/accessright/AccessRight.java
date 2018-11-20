@@ -55,9 +55,9 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 @NamedEntityGraphs({
         @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup",
                 attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup"),
-                        @NamedAttributeNode(value = "dataAccessRight") }),
+                        @NamedAttributeNode(value = "dataAccessPlugin") }),
         @NamedEntityGraph(name = "graph.accessright.plugins",
-                attributeNodes = { @NamedAttributeNode(value = "dataAccessRight") }) })
+                attributeNodes = { @NamedAttributeNode(value = "dataAccessPlugin") }) })
 public class AccessRight implements IIdentifiable<Long> {
 
     /**
