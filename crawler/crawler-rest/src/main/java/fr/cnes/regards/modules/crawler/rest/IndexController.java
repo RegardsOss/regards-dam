@@ -32,7 +32,7 @@ import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.crawler.service.IEntityIndexerService;
 
 @RestController
-@RequestMapping(CrawlerController.TYPE_MAPPING)
+@RequestMapping(IndexController.TYPE_MAPPING)
 public class IndexController {
 
     public static final String TYPE_MAPPING = "index";
