@@ -421,7 +421,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // 10. Update third access right to no access and check that objects are no longer in GROUP3
         // -------------------------------------------------------------------------------
         ar3.setAccessLevel(AccessLevel.NO_ACCESS);
-        rightsService.updateAccessRight(ar3.getId(), ar3);
+        ar3 = rightsService.updateAccessRight(ar3.getId(), ar3);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group3"));
         Assert.assertEquals(0, results.getTotalElements());

@@ -22,8 +22,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,9 +79,6 @@ public class AccessRightService implements IAccessRightService {
 
     @Autowired
     private IPluginService pluginService;
-
-    @Autowired
-    private EntityManager em;
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
