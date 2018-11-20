@@ -184,6 +184,11 @@ public class AccessRightService implements IAccessRightService {
         // re-set updated dataset on accessRight to make its state correct on accessRight object
         accessRight.setDataset(dataset);
 
+        // If a new plugin conf is provided, create it
+        if ((accessRight.getDataAccessPlugin() != null) && (accessRight.getDataAccessPlugin().getId() == null)) {
+            accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
+        }
+
         AccessRight created = repository.save(accessRight);
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
@@ -221,6 +226,15 @@ public class AccessRightService implements IAccessRightService {
             }
 
         }
+
+        // If a plugin conf is provided, save it
+        if ((accessRight.getDataAccessPlugin() != null)) {
+            accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
+        } else if (accessRightFromDb.getDataAccessPlugin() != null) {
+            // Else if a plugin conf is removed, delete it
+            pluginService.deletePluginConfiguration(accessRightFromDb.getDataAccessPlugin().getId());
+        }
+
         AccessRight updated = repository.save(accessRight);
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
@@ -237,6 +251,11 @@ public class AccessRightService implements IAccessRightService {
             dataset.getGroups().remove(accessRight.getAccessGroup().getName());
             datasetService.update(dataset);
         }
+
+        if ((accessRight.getDataAccessPlugin() != null)) {
+            pluginService.deletePluginConfiguration(accessRight.getDataAccessPlugin().getId());
+        }
+
         repository.delete(id);
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
