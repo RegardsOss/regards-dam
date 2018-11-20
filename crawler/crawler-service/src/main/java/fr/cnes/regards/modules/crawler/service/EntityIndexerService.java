@@ -631,7 +631,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     public boolean deleteIndex(String tenant) {
-        if (esRepos.indexExists(tenant)) {
+        if (!esRepos.indexExists(tenant)) {
             return false;
         }
         esRepos.deleteIndex(tenant);
