@@ -94,10 +94,10 @@ import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.Data
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
-import fr.cnes.regards.modules.dam.service.entities.CollectionService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
-import fr.cnes.regards.modules.dam.service.entities.DatasetService;
-import fr.cnes.regards.modules.dam.service.entities.DocumentService;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -152,13 +152,13 @@ public class EntityIndexerService implements IEntityIndexerService {
     private DataObjectService dataObjectService;
 
     @Autowired
-    private DatasetService datasetService;
+    private IDatasetService datasetService;
 
     @Autowired
-    private DocumentService documentService;
+    private IDocumentService documentService;
 
     @Autowired
-    private CollectionService collectionService;
+    private ICollectionService collectionService;
 
     @Autowired
     @Lazy
@@ -828,6 +828,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         updateDatasets(tenant, datasetService.findAll(), null, true, null);
     }
 
+    @Override
     public void updateAllDocuments(String tenant) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
         for (Document doc : documentService.findAll()) {
@@ -835,6 +836,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
+    @Override
     public void updateAllCollections(String tenant) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
         for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
