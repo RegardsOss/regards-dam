@@ -37,6 +37,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -185,15 +186,12 @@ public class AccessRightService implements IAccessRightService {
         // re-set updated dataset on accessRight to make its state correct on accessRight object
         accessRight.setDataset(dataset);
 
-        PluginConfiguration confToSave = accessRight.getDataAccessPlugin();
-        accessRight.setDataAccessPlugin(null);
-        AccessRight created = repository.save(accessRight);
-
         // If a new plugin conf is provided, create it
-        if ((confToSave != null)) {
-            created.setDataAccessPlugin(pluginService.savePluginConfiguration(confToSave));
-            created = repository.save(accessRight);
+        if ((accessRight.getDataAccessPlugin() != null)) {
+            createPluginConfiguration(accessRight.getDataAccessPlugin());
         }
+
+        AccessRight created = repository.save(accessRight);
 
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
@@ -232,18 +230,16 @@ public class AccessRightService implements IAccessRightService {
 
         }
 
-        PluginConfiguration pluginToSave = accessRight.getDataAccessPlugin();
-        accessRight.setDataAccessPlugin(null);
+        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(Optional.ofNullable(accessRight
+                .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
+
         AccessRight updated = repository.save(accessRight);
 
-        // If a plugin conf is provided, save it
-        if ((pluginToSave != null)) {
-            updated.setDataAccessPlugin(pluginService.savePluginConfiguration(pluginToSave));
-            updated = repository.save(accessRight);
-        } else if (accessRightFromDb.getDataAccessPlugin() != null) {
-            // Else if a plugin conf is removed, delete it
-            pluginService.deletePluginConfiguration(accessRightFromDb.getDataAccessPlugin().getId());
+        // Remove unused plugin conf id any
+        if (toRemove.isPresent()) {
+            pluginService.deletePluginConfiguration(toRemove.get().getId());
         }
+
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
         }
@@ -324,6 +320,49 @@ public class AccessRightService implements IAccessRightService {
             }
         });
         datasetsToUpdate.forEach(ds -> eventPublisher.publish(new AccessRightEvent(ds, AccessRightEventType.UPDATE)));
+    }
+
+    private PluginConfiguration createPluginConfiguration(PluginConfiguration pluginConfiguration)
+            throws ModuleException {
+        // Check no identifier. For each new chain, we force plugin configuration creation. A configuration cannot be
+        // reused.
+        if (pluginConfiguration.getId() != null) {
+            throw new EntityInvalidException(
+                    String.format("Plugin configuration %s must not already have an identifier.",
+                                  pluginConfiguration.getLabel()));
+        }
+        return pluginService.savePluginConfiguration(pluginConfiguration);
+    }
+
+    /**
+     * Create or update a plugin configuration cleaning old one if necessary
+     * @param pluginConfiguration new plugin configuration or update
+     * @param existing existing plugin configuration
+     * @return configuration to remove because it is no longer used
+     * @throws ModuleException if error occurs!
+     */
+    private Optional<PluginConfiguration> updatePluginConfiguration(Optional<PluginConfiguration> pluginConfiguration,
+            Optional<PluginConfiguration> existing) throws ModuleException {
+
+        Optional<PluginConfiguration> confToRemove = Optional.empty();
+
+        if (pluginConfiguration.isPresent()) {
+            PluginConfiguration conf = pluginConfiguration.get();
+            if (conf.getId() == null) {
+                // Delete previous configuration if exists
+                confToRemove = existing;
+                // Save new configuration
+                pluginService.savePluginConfiguration(conf);
+            } else {
+                // Update configuration
+                pluginService.updatePluginConfiguration(conf);
+            }
+        } else {
+            // Delete previous configuration if exists
+            confToRemove = existing;
+        }
+
+        return confToRemove;
     }
 
 }
