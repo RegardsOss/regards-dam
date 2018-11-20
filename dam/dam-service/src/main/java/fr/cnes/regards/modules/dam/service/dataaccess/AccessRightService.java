@@ -41,6 +41,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
@@ -189,13 +190,16 @@ public class AccessRightService implements IAccessRightService {
         // re-set updated dataset on accessRight to make its state correct on accessRight object
         accessRight.setDataset(dataset);
 
+        PluginConfiguration confToSave = accessRight.getDataAccessPlugin();
+        accessRight.setDataAccessPlugin(null);
+        AccessRight created = repository.save(accessRight);
+
         // If a new plugin conf is provided, create it
-        if ((accessRight.getDataAccessPlugin() != null)) {
-            accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
-            em.flush();
+        if ((confToSave != null)) {
+            created.setDataAccessPlugin(pluginService.savePluginConfiguration(confToSave));
+            created = repository.save(accessRight);
         }
 
-        AccessRight created = repository.save(accessRight);
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
     }
@@ -233,17 +237,18 @@ public class AccessRightService implements IAccessRightService {
 
         }
 
+        PluginConfiguration pluginToSave = accessRight.getDataAccessPlugin();
+        accessRight.setDataAccessPlugin(null);
+        AccessRight updated = repository.save(accessRight);
+
         // If a plugin conf is provided, save it
-        if ((accessRight.getDataAccessPlugin() != null)) {
-            accessRight.setDataAccessPlugin(pluginService.savePluginConfiguration(accessRight.getDataAccessPlugin()));
-            em.flush();
+        if ((pluginToSave != null)) {
+            updated.setDataAccessPlugin(pluginService.savePluginConfiguration(pluginToSave));
+            updated = repository.save(accessRight);
         } else if (accessRightFromDb.getDataAccessPlugin() != null) {
             // Else if a plugin conf is removed, delete it
             pluginService.deletePluginConfiguration(accessRightFromDb.getDataAccessPlugin().getId());
-            em.flush();
         }
-
-        AccessRight updated = repository.save(accessRight);
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
         }
@@ -260,12 +265,13 @@ public class AccessRightService implements IAccessRightService {
             datasetService.update(dataset);
         }
 
-        if ((accessRight.getDataAccessPlugin() != null)) {
-            pluginService.deletePluginConfiguration(accessRight.getDataAccessPlugin().getId());
-            em.flush();
+        PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
+        repository.delete(id);
+
+        if (((confToDelete != null) && (confToDelete.getId() != null))) {
+            pluginService.deletePluginConfiguration(confToDelete.getId());
         }
 
-        repository.delete(id);
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
         }
