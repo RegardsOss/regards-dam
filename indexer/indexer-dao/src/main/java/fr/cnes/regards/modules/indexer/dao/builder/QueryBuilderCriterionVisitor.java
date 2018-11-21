@@ -239,15 +239,17 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         if (criterion.getMaxX() < 0 && criterion.getMinX() > criterion.getMaxX()) {
             // Cut BoundaryBoxCriterion into 2 BoundaryBoxCriterion, dateLine west and dateLine east
             return ICriterion
-                    .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMinY(), 180.0, criterion.getMaxY()),
-                        ICriterion.intersectsBbox(-180.0, criterion.getMinY(), criterion.getMaxX(),
-                                                  criterion.getMaxY()))
+                    .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMaxY(), 180.0, criterion.getMinY()),
+                        ICriterion.intersectsBbox(-180.0, criterion.getMaxY(), criterion.getMaxX(),
+                                                  criterion.getMinY()))
                     .accept(this);
         }
         try {
+            // upper left, lower right
+            // (minX, maxY), (maxX, minY)
             EnvelopeBuilder envelopeBuilder = new EnvelopeBuilder(
-                    new Coordinate(criterion.getMinX(), criterion.getMinY()),
-                    new Coordinate(criterion.getMaxX(), criterion.getMaxY()));
+                    new Coordinate(criterion.getMinX(), criterion.getMaxY()),
+                    new Coordinate(criterion.getMaxX(), criterion.getMinY()));
             return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, envelopeBuilder);
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
