@@ -76,7 +76,7 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      * Find all {@link AccessRight}s associated a dataAccess plugin.
      * @return {@link AccessRight}s
      */
-    @EntityGraph(value = "graph.accessright.plugins")
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     List<AccessRight> findByDataAccessPluginNotNull();
 
 }

@@ -56,7 +56,7 @@ public class AccessRightUpdateScheduler {
     /**
      * Scheduled to be executed once a day
      */
-    @Scheduled(initialDelay = 30000, fixedDelayString = "86400000")
+    @Scheduled(cron = "${regards.access.rights.update.cron:0 0 1 ? * *}")
     public void updateDynamicRights() {
         LOGGER.info("AccessRightUpdateScheduler.updateDynamicRights() called...");
         for (String tenant : tenantResolver.getAllActiveTenants()) {

@@ -37,13 +37,20 @@ public class NewDataObjectsAccessPlugin implements IDataObjectAccessFilterPlugin
 
     public static final String NB_DAYS_PARAM = "numberOfDays";
 
-    @PluginParameter(label = NB_DAYS_PARAM, description = "Number of days")
+    public static final String DATE_ATTR_PARAM = "dateAttribute";
+
+    @PluginParameter(name = NB_DAYS_PARAM, label = "Number of days", optional = false)
     private long numberOfDays;
+
+    @PluginParameter(name = DATE_ATTR_PARAM, label = "Date attribute",
+            description = "In order to use an attribute from the meta of your datas, use the prefix \"feature.properties\" like \"feature.properties.myDateProperty\". Without this prefix you can access regards internal meta attributes like default selected date attribute \"creationDate\"",
+            defaultValue = "creationDate", optional = true)
+    private String dateAttribute;
 
     @Override
     public ICriterion getSearchFilter() {
         OffsetDateTime time = OffsetDateTime.now().minusDays(numberOfDays);
-        return ICriterion.or(ICriterion.gt("creationDate", time), ICriterion.eq("creationDate", time));
+        return ICriterion.or(ICriterion.gt(dateAttribute, time), ICriterion.eq(dateAttribute, time));
     }
 
     @Override
