@@ -22,16 +22,16 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-import org.elasticsearch.common.geo.builders.ShapeBuilders;
+import org.elasticsearch.common.geo.builders.CircleBuilder;
+import org.elasticsearch.common.geo.builders.EnvelopeBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.locationtech.jts.geom.Coordinate;
 
 import com.google.common.base.Joiner;
-import com.vividsolutions.jts.geom.Coordinate;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoQueries;
@@ -205,8 +205,10 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitCircleCriterion(CircleCriterion criterion) {
         double[] center = criterion.getCoordinates();
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders.newCircleBuilder()
-                    .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
+            CircleBuilder circleBuilder = new CircleBuilder();
+            circleBuilder.center(center[0], center[1]);
+            circleBuilder.radius(criterion.getRadius());
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, circleBuilder);
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
@@ -243,9 +245,10 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
                     .accept(this);
         }
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders
-                    .newEnvelope(new Coordinate(criterion.getMinX(), criterion.getMinY()),
-                                 new Coordinate(criterion.getMaxX(), criterion.getMaxY())));
+            EnvelopeBuilder envelopeBuilder = new EnvelopeBuilder(
+                    new Coordinate(criterion.getMinX(), criterion.getMinY()),
+                    new Coordinate(criterion.getMaxX(), criterion.getMaxY()));
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, envelopeBuilder);
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
         }

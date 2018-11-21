@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -62,9 +63,17 @@ public interface IEsRepository {
     /**
      * Create specified index
      * @param index index
-     * @return true if acknowledged by Elasticsearch, false otherwise. returns
+     * @return true if acknowledged by Elasticsearch, false otherwise.
      */
     boolean createIndex(String index);
+
+    /**
+     * Create an alias for an index
+     * @param index index name
+     * @param alias alias name
+     * @return true if acknowledged by Elasticsearch, false otherwise.
+     */
+    boolean createAlias(String index, String alias);
 
     /**
      * Put dynamic mapping on specified types of specified index for floating point values (force "double" mapping
@@ -72,7 +81,9 @@ public interface IEsRepository {
      * @param index index
      * @param types all types needing automatic double mapping
      * @return true if acknowledged by Elasticsearch, false otherwise
+     * @deprecated useless, everything is done by {@link #createIndex(String)}
      */
+    @Deprecated
     boolean setAutomaticDoubleMapping(String index, String... types);
 
     /**
@@ -80,7 +91,9 @@ public interface IEsRepository {
      * @param index index
      * @param types all types with geometry mapping
      * @return true if acknowledged by Elasticsearch, false otherwise.
+     * @deprecated useless everything is done by {@link #createIndex(String)}
      */
+    @Deprecated
     boolean setGeometryMapping(String index, String... types);
 
     boolean setSettingsForBulk(String index);
@@ -88,15 +101,15 @@ public interface IEsRepository {
     boolean unsetSettingsForBulk(String index);
 
     /**
-     * Delete specified index
-     * @param index index
+     * Delete specified index <b>or associated index if an alias is specified</b>
+     * @param index index or alias
      * @return true if acknowledged by Elasticsearch, false otherwise.
      */
     boolean deleteIndex(String index);
 
     /**
-     * Does specified index exist ?
-     * @param name index name
+     * Does specified index <b>or alias</b>exist ?
+     * @param name index or alias name
      * @return true or false
      */
     boolean indexExists(String name);
@@ -108,6 +121,16 @@ public interface IEsRepository {
      * @return true if created, false otherwise
      */
     boolean save(String index, IIndexable document);
+
+    Collection<String> upgradeAllIndices4SingleType();
+
+    /**
+     * Reindex given index to conform to current Elasticsearch version. Index is not deleted, a new one is created
+     * containing same data, its name is returned by the method.
+     * @param index index to be reindexed
+     * @return new index name (usually "&lt;index>_&lt;Elasticsearch major version>")
+     */
+    String reindex(String index) throws IOException;
 
     /**
      * Method only used for tests. Elasticsearch performs refreshes every second. So, il a search is called just after a save, the document will not be available. A manual refresh is necessary (on
@@ -138,8 +161,6 @@ public interface IEsRepository {
             throws IllegalArgumentException {
         return this.saveBulk(index, null, documents);
     }
-
-
 
     /**
      * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
@@ -238,20 +259,25 @@ public interface IEsRepository {
      * @param pageSize page size
      * @param <T> document type
      * @return first result page containing max page size documents
+     * @deprecated {@link #searchAllLimited(String, Class, Pageable)}
      */
+    @Deprecated
     default <T> Page<T> searchAllLimited(final String index, final Class<T> clazz, final int pageSize) {
         return this.searchAllLimited(index, clazz, new PageRequest(0, pageSize));
     }
 
     /**
-     * Searching specified page of all elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) <b>This method fails if asked for offset greater than 10000
+     * Searching specified page of all elements from index (for first call use {@link #searchAllLimited(String, Class, int)}
+     * method) <b>This method fails if asked for offset greater than 10000
      * (Elasticsearch limitation)</b>
      * @param index index
      * @param clazz class of document type
      * @param pageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param <T> class of document type
      * @return specified result page
+     * @deprecated indices are all single type from ES6
      */
+    @Deprecated
     <T> Page<T> searchAllLimited(String index, Class<T> clazz, Pageable pageRequest);
 
     /**
@@ -463,7 +489,7 @@ public interface IEsRepository {
      * @param pAction action to be executed for each search result element
      * @param crit search criterion
      */
-    <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion crit);
+    <T extends IIndexable> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion crit);
 
     /**
      * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file

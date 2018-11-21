@@ -23,6 +23,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+
 /**
  * Crawler initializer.
  * This component is used to launch crawler services as daemons.
@@ -37,13 +39,32 @@ public class CrawlerInitializer {
     @Autowired
     private ICrawlerAndIngesterService crawlerAndIngesterService;
 
+    @Autowired
+    private IEsRepository repository;
+
+    private static Object lock = new Object();
+
+    private boolean elasticSearchUpgradeDone = false;
+
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
+        synchronized (lock) {
+            if (!elasticSearchUpgradeDone) {
+                repository.upgradeAllIndices4SingleType();
+                elasticSearchUpgradeDone = true;
+            }
+        }
         datasetCrawlerService.crawl();
     }
 
     @EventListener
     public void onApplicationEvent2(ContextRefreshedEvent event) {
+        synchronized (lock) {
+            if (!elasticSearchUpgradeDone) {
+                repository.upgradeAllIndices4SingleType();
+                elasticSearchUpgradeDone = true;
+            }
+        }
         crawlerAndIngesterService.crawl();
     }
 }

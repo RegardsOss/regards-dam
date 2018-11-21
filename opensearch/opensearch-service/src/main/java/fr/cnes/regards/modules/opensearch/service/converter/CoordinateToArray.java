@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.opensearch.service.converter;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.springframework.core.convert.converter.Converter;
-
-import com.vividsolutions.jts.geom.Coordinate;
 
 /**
  * @author Xavier-Alexandre Brochard

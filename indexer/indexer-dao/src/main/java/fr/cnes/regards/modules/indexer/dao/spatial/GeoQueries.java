@@ -19,10 +19,10 @@
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
 import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.PolygonBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilder;
-import org.elasticsearch.common.geo.builders.ShapeBuilders;
+import org.locationtech.jts.geom.Coordinate;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 
 /**
@@ -30,6 +30,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
  * @author oroussel
  */
 public final class GeoQueries {
+
     /**
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
@@ -42,8 +43,7 @@ public final class GeoQueries {
             coordBuilder.coordinate(new Coordinate(point[0], point[1]));
         }
 
-        return ShapeBuilders.newPolygon(coordBuilder);
+        return new PolygonBuilder(coordBuilder);
     }
-
 
 }
