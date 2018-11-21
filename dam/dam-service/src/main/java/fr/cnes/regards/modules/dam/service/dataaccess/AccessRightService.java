@@ -30,11 +30,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -43,6 +46,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
@@ -55,6 +59,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
+import fr.cnes.regards.modules.notification.domain.NotificationType;
 
 /**
  * Access right service implementation
@@ -80,6 +86,9 @@ public class AccessRightService implements IAccessRightService {
 
     @Autowired
     private IPluginService pluginService;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
@@ -319,7 +328,21 @@ public class AccessRightService implements IAccessRightService {
                              ar.getAccessGroup().getName());
             }
         });
-        datasetsToUpdate.forEach(ds -> eventPublisher.publish(new AccessRightEvent(ds, AccessRightEventType.UPDATE)));
+
+        if (!datasetsToUpdate.isEmpty()) {
+            String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
+            try {
+                FeignSecurityManager.asSystem();
+                notificationClient.notifyRoles(message, "Dynamic access right update", "Data-management",
+                                               NotificationType.INFO, DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                FeignSecurityManager.reset();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                LOGGER.error(String.format("Error sending notification : %s", message), e);
+            }
+
+            datasetsToUpdate
+                    .forEach(ds -> eventPublisher.publish(new AccessRightEvent(ds, AccessRightEventType.UPDATE)));
+        }
     }
 
     private PluginConfiguration createPluginConfiguration(PluginConfiguration pluginConfiguration)
