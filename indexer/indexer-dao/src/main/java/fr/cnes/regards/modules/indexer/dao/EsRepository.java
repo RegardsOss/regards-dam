@@ -51,11 +51,16 @@ import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -71,6 +76,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
@@ -80,6 +86,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.settings.Settings;
@@ -123,6 +130,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -167,6 +175,7 @@ import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
+import static org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions.Type;
 
 /**
  * Elasticsearch repository implementation
@@ -234,14 +243,14 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Constructor
-     * @param pGson JSon mapper bean
+     * @param gson JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
+    public EsRepository(@Autowired Gson gson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
             AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) {
 
-        gson = pGson;
+        this.gson = gson;
         String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
@@ -281,32 +290,47 @@ public class EsRepository implements IEsRepository {
     public boolean createIndex(String index) {
         try {
             CreateIndexRequest request = Requests.createIndexRequest(index.toLowerCase());
-            // Automatic double mapping
-            request.mapping(TYPE,
-                            XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates").startObject()
-                                    .startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
-                                    .field("type", "double").endObject().endObject().endObject().endArray()
-                                    .endObject());
-            // Geometry mapping
-            request.mapping(TYPE,
-                            XContentFactory.jsonBuilder().startObject().startObject("properties").startObject("wgs84")
-                                    .field("type", "geo_shape")
-                                    // With geohash
-                                    .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
-                                    // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
-                                    // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
-                                    // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
-                                    // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
+            // mapping (properties)
+            request.mapping(TYPE, XContentFactory.jsonBuilder().startObject()
+                    // Automatic double mapping (dynamic_templates)
+                    .startArray("dynamic_templates").startObject().startObject("doubles")
+                    .field("match_mapping_type", "double").startObject("mapping").field("type", "double").endObject()
+                    .endObject().endObject().endArray()
+                    // Properties mapping for geometry and type
+                    .startObject("properties")
+                    // _doc is now this unique type => add a "type" property containing previous type
+                    .startObject("type").field("type", "keyword").endObject()
+                    // Geometry mapping (field is wgs84 even if two over fields contain geometry, they
+                    // are not mapped as geo_shape, they only bring informations)
+                    .startObject("wgs84").field("type", "geo_shape") // default
+                    // With geohash
+                    .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
+                    // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
+                    // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
+                    // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
+                    // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
 
-                                    // With quadtree
-//                                    .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
-                                    // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
-                                    // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
+                    // With quadtree
+                    //                                    .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
+                    // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
+                    // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
 
-                                    .endObject().endObject().endObject());
-            // ES6 Single type
-            request.settings(Settings.builder().put("index.mapping.single_type", true));
+                    .endObject().endObject().endObject());
             CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean createAlias(String index, String alias) {
+        try {
+            IndicesAliasesRequest request = new IndicesAliasesRequest();
+            AliasActions createAliasAction = new AliasActions(Type.ADD).index(index.toLowerCase())
+                    .alias(alias.toLowerCase());
+            request.addAliasAction(createAliasAction);
+            AcknowledgedResponse response = client.indices().updateAliases(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -339,6 +363,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    @Deprecated
     public boolean setGeometryMapping(String index, String... types) {
         //        try {
         //            for (String type : types) {
@@ -444,9 +469,45 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean deleteIndex(String index) throws IndexNotFoundException {
+    public boolean deleteIndex(String inIndex) throws IndexNotFoundException {
+        String index = inIndex.toLowerCase();
         try {
-            DeleteIndexRequest request = Requests.deleteIndexRequest(index.toLowerCase());
+            return deleteIndex0(index);
+        } catch (RsRuntimeException e) {
+            if (Throwables.getRootCause(e) instanceof ElasticsearchException) {
+                ElasticsearchException ee = (ElasticsearchException) Throwables.getRootCause(e);
+                // It's probably because index is an alias
+                if (ee.status() == RestStatus.BAD_REQUEST) {
+                    try {
+                        GetAliasesRequest request = new GetAliasesRequest(index);
+                        GetAliasesResponse response = client.indices().getAlias(request, RequestOptions.DEFAULT);
+                        // There should be only one index (an alias cannot be multi-index...i assume it)
+                        if (response.getAliases().size() == 1) {
+                            Map.Entry<String, Set<AliasMetaData>> entry = response.getAliases().entrySet().iterator()
+                                    .next();
+                            // Given alias must be the only one for this index
+                            if (entry.getValue().size() == 1) {
+                                // Now it is ok to delete index (concerned alias is necessarily asked one)
+                                return deleteIndex0(entry.getKey());
+                            }
+                        }
+                        return false;
+                    } catch (Exception e1) {
+                        // Ok, let it go, go back to orginal exception
+                        throw e;
+                    }
+                } else {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private boolean deleteIndex0(String index) throws IndexNotFoundException {
+        try {
+            DeleteIndexRequest request = Requests.deleteIndexRequest(index);
             AcknowledgedResponse response = client.indices().delete(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
 
@@ -489,9 +550,80 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    private void upgradeIndex4SingleType(String index) {
-        String index6 = index.toLowerCase() + "6";
+    @Override
+    public Collection<String> upgradeAllIndices4SingleType() {
+        List<String> newIndices = new ArrayList<>();
+        try {
+            GetIndexRequest request = new GetIndexRequest();
+            request.indices("*");
+            GetIndexResponse response = client.indices().get(request, RequestOptions.DEFAULT);
+            for (ObjectObjectCursor<String, Settings> settings : response.getSettings()) {
+                //                if (settings.key.endsWith("_6")) {
+                //                    this.deleteIndex(settings.key);
+                //                }
+                // index starting with . are kibana ones (don't give a shit)
+                if (!settings.key.startsWith(".")) {
+                    String ver = settings.value.getAsSettings("index").getAsSettings("version").get("created");
+                    Version version = Version.fromId(Integer.parseInt(ver));
+                    if (version.before(Version.V_6_0_0)) {
+                        long start = System.currentTimeMillis();
+                        LOGGER.info("Upgrading index {}:v{}...", settings.key, version);
+                        try {
+                            // Reindex
+                            LOGGER.info("Reindexing...");
+                            String newIndex = reindex(settings.key);
+                            if (newIndex != null) {
+                                LOGGER.info("...Reindexing from {} to {} OK", settings.key, newIndex);
+                                newIndices.add(newIndex);
+                                // Delete old index
+                                LOGGER.info("Deleting old index {}...", settings.key);
+                                if (deleteIndex(settings.key)) {
+                                    LOGGER.info("...Deletion OK");
+                                } else {
+                                    LOGGER.warn("...Deletion NOK, still try to create alias");
+                                }
+                                // Create alias with old name for new index
+                                LOGGER.error("Creating alias {} for {}...", newIndex, settings.key);
+                                if (createAlias(newIndex, settings.key)) {
+                                    LOGGER.info("...Alias created");
+                                } else {
+                                    LOGGER.warn("...Alias not created, please analyze the problem and try by hand");
+                                }
+                            }
+                            LOGGER.info("...Upgrade OK ({} ms)", (System.currentTimeMillis() - start));
+                        } catch (Exception e) {
+                            LOGGER.error(String.format("Cannot upgrade %s", settings.key), e);
+                        }
+                    }
+                }
+            }
 
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+        return newIndices;
+    }
+
+    @Override
+    public String reindex(String index) throws IOException {
+        String newIndex = index.toLowerCase() + "_" + Version.CURRENT.major;
+        if (this.createIndex(newIndex)) {
+            // Reindex
+            String requestStr = String.format("{  \"source\": {    \"index\": \"%s\"  },  \"dest\": {"
+                                                      + "    \"index\": \"%s\"  },  \"script\": {"
+                                                      + "    \"source\": \"      ctx._source.type = ctx._type;"
+                                                      + "      ctx._type = '_doc';    \"  }}", index, newIndex);
+            HttpEntity entity = new NStringEntity(requestStr, ContentType.APPLICATION_JSON);
+            Request request = new Request("POST", "_reindex");
+            request.setEntity(entity);
+            Response response = client.getLowLevelClient().performRequest(request);
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                return newIndex;
+            } else {
+                LOGGER.error(response.getStatusLine().toString());
+            }
+        }
+        return null;
     }
 
     @Override
@@ -616,6 +748,9 @@ public class EsRepository implements IEsRepository {
      * Add document type (Elasticsearch prior to version 6 type) into criterion
      */
     private static ICriterion addTypes(ICriterion criterion, String... types) {
+        // Beware if crit is null
+        criterion = (criterion == null) ? ICriterion.all() : criterion;
+        // Then add type
         switch (types.length) {
             case 0:
                 return criterion;
@@ -630,7 +765,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
+    public <T extends IIndexable> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
         try {
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex());
             //            request.types(searchKey.getSearchTypes());
@@ -645,7 +780,8 @@ public class EsRepository implements IEsRepository {
             // Scroll until no hits are returned
             do {
                 for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                    action.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+//                    action.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                    action.accept(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
                 }
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollResp.getScrollId());
@@ -704,8 +840,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion crit,
             Map<String, FacetType> facetsMap) {
-        ICriterion criterion = (crit == null) ? ICriterion.all() : crit;
-        addTypes(criterion, searchKey.getSearchTypes());
+        ICriterion criterion = addTypes(crit, searchKey.getSearchTypes());
         // Search context is different from Earth search context, check if it's a geo-search
         if (searchKey.getCrs() != Crs.WGS_84) {
             // Does criterion tree contain a BoundaryBox or Polygon criterion, if so => make a projection on WGS84
@@ -914,7 +1049,8 @@ public class EsRepository implements IEsRepository {
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
-                    results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+//                    results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                    results.add(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
                 } catch (JsonParseException e) {
                     LOGGER.error("Unable to jsonify entity with id {}, source: \"{}\"", hit.getId(),
                                  hit.getSourceAsString());
@@ -1051,9 +1187,8 @@ public class EsRepository implements IEsRepository {
      */
     private <T> SearchSourceBuilder createSourceBuilder4Agg(ICriterion criterion) {
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
-        ICriterion crit = (criterion == null) ? ICriterion.all() : criterion;
         QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                .filter(crit.accept(CRITERION_VISITOR));
+                .filter(criterion.accept(CRITERION_VISITOR));
         // Only return hits information
         return new SearchSourceBuilder().query(critBuilder).size(0);
     }

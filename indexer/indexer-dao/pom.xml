@@ -89,6 +89,10 @@
 			<artifactId>jts-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.locationtech.spatial4j</groupId>
+			<artifactId>spatial4j</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-client</artifactId>
 		</dependency>
