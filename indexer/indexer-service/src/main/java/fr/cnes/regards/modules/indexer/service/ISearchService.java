@@ -48,7 +48,15 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
  * @author oroussel
  */
 public interface ISearchService {
+    /**
+     * Maximum page size (Elasticsearch constraint)
+     * (only used by CatalogSearchService)
+     */
+    int MAX_PAGE_SIZE = IEsRepository.MAX_RESULT_WINDOW;
 
+    /**
+     * Get document by its id (urn)
+     */
     <T extends IIndexable> T get(UniformResourceName urn);
 
     /**
