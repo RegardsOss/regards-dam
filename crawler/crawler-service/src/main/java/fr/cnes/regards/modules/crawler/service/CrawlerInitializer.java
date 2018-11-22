@@ -18,6 +18,13 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -33,6 +40,8 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 @Component
 public class CrawlerInitializer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerInitializer.class);
+
     @Autowired
     private ICrawlerService datasetCrawlerService;
 
@@ -42,29 +51,38 @@ public class CrawlerInitializer {
     @Autowired
     private IEsRepository repository;
 
-    private static Object lock = new Object();
+    private static ExecutorService singlePool = Executors.newSingleThreadExecutor();
 
-    private boolean elasticSearchUpgradeDone = false;
+    private AtomicBoolean elasticSearchUpgradeDone = new AtomicBoolean(false);
 
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        synchronized (lock) {
-            if (!elasticSearchUpgradeDone) {
-                repository.upgradeAllIndices4SingleType();
-                elasticSearchUpgradeDone = true;
-            }
-        }
+        upgradeElasticsearchIndices();
         datasetCrawlerService.crawl();
     }
 
     @EventListener
     public void onApplicationEvent2(ContextRefreshedEvent event) {
-        synchronized (lock) {
-            if (!elasticSearchUpgradeDone) {
-                repository.upgradeAllIndices4SingleType();
-                elasticSearchUpgradeDone = true;
-            }
-        }
+        upgradeElasticsearchIndices();
         crawlerAndIngesterService.crawl();
     }
+
+    /**
+     * Upgrade Elasticsearch indices.
+     * This method garanties upgrade is done only one time
+     */
+    private void upgradeElasticsearchIndices() {
+        try {
+            singlePool.submit(() -> {
+                if (!elasticSearchUpgradeDone.getAndSet(true)) {
+                    repository.upgradeAllIndices4SingleType();
+                }
+                return null;
+            }).get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOGGER.error("Unable to upgrade Elasticsearch indices", e);
+            System.exit(0);
+        }
+    }
+
 }

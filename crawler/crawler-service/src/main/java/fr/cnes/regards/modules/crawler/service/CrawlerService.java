@@ -215,7 +215,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     throw e;
                 }
                 throw new NotFinishedException(e, saveResult, page.getNumber());
-            } finally { // Don't forget current indexation task...(from previous page)
+            } finally { // Don't forget current indexation task...(from previous page) if it does exist of course
                 if (task != null) {
                     saveResult.append(task.get());
                 }
