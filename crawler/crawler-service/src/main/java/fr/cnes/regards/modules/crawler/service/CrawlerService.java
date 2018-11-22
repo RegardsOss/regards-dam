@@ -375,9 +375,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                         throw new RsRuntimeException(
                                 String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
                     }
-                } else { // Even if Crs is WGS84, don't forget to copy geometry (no need to normalized, it has already
-                    // be done
-                    dataObject.setWgs84(geometry);
+                } else { // Even if Crs is WGS84, don't forget to normalize and copy geometry
+                    dataObject.setWgs84(GeoHelper.normalize(geometry));
                 }
                 // Don't forget to set normalized geometry
                 feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
