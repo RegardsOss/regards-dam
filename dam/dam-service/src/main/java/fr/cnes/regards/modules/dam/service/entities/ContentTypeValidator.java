@@ -18,14 +18,16 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+import org.springframework.http.MediaType;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidContentTypeException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidFilenameException;
-import java.util.Arrays;
-import java.util.Collection;
-import org.springframework.http.MediaType;
 
 /**
  * Utility class to validate supported content type for a file data type.
@@ -38,7 +40,7 @@ public final class ContentTypeValidator {
     /**
      * Before the RFC7763 (March 2016), some browser were using a different MediaType.
      */
-    public static String TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE = "text/x-markdown";
+    public final static String TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE = "text/x-markdown";
 
     private ContentTypeValidator() {
         // Nothing to do

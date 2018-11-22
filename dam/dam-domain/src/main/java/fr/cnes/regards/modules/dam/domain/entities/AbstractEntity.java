@@ -192,7 +192,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     @Override
     public String getType() {
-        return feature.getEntityType().toString();
+        return this.feature.getEntityType().toString();
     }
 
     @Override

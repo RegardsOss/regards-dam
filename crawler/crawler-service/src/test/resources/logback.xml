@@ -33,6 +33,7 @@
  -->
 	<logger name="fr.cnes.regards.modules.dam" level="debug" />
 	<logger name="fr.cnes.regards.modules.crawler.service" level="INFO"/>
+	<logger name="fr.cnes.regards.modules.indexer" level="trace" />
 
 	<root level="error">
 		<appender-ref ref="STDOUT" />

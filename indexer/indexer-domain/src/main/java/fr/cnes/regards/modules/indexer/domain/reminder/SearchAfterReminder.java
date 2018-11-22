@@ -34,7 +34,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
  */
 public class SearchAfterReminder extends AbstractReminder {
 
-    private static final String TYPE = "SEARCH_AFTER";
+    public static final String TYPE = "SEARCH_AFTER";
 
     private String searchAfterSortValues;
 
@@ -50,7 +50,7 @@ public class SearchAfterReminder extends AbstractReminder {
         String unique = GsonUtil.toString(crit) + "__" + GsonUtil.toString(nextPage) + "__" + GsonUtil
                 .toString(searchKey.getSearchIndex()) + "__" + GsonUtil.toString(searchKey.getSearchTypes()) + "__"
                 + GsonUtil.toString(sort);
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) { // Does not occur

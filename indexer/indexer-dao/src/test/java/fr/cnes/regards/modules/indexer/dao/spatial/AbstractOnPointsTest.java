@@ -30,9 +30,11 @@ public class AbstractOnPointsTest {
         Point
     }
 
-    protected static class Item<T> implements IIndexable {
+    protected static class Item implements IIndexable {
 
         private String id;
+
+        private String type = TYPE;
 
         private Geometry wgs84;
 

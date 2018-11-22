@@ -16,12 +16,11 @@ services:
       - regards_IT_network
 
   rs-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.0
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.5.0
     environment:
       - cluster.name=regards
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms2500m -Xmx2500m"
-      - xpack.security.enabled=false
     ulimits:
       memlock:
         soft: -1
