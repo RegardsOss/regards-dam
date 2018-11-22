@@ -30,7 +30,6 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
@@ -39,8 +38,6 @@ import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.entities.CollectionService;
-import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 
@@ -61,8 +58,6 @@ public class CollectionServiceTest {
     private Collection collection3;
 
     private Collection collection4;
-
-    private UniformResourceName collection2URN;
 
     private ICollectionRepository collectionRepositoryMocked;
 

@@ -117,6 +117,7 @@ public class AttributeModelServiceTest {
                 mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_060")
     @Purpose("Retrieve list of project attributes")
@@ -131,6 +132,7 @@ public class AttributeModelServiceTest {
         Assert.assertEquals(2, attModels.size());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     @Requirement("REGARDS_DSL_DAM_MOD_060")

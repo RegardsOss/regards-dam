@@ -44,6 +44,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -132,7 +133,7 @@ public class AttributeSerializationDebugger extends AbstractDaoTest {
 
         // Update gson factory
         for (ModelAttrAssoc assoc : assocs) {
-            gsonFactory.registerAttribute(DEFAULT_TENANT, assoc.getAttribute());
+            gsonFactory.registerAttribute(getDefaultTenant(), assoc.getAttribute());
         }
 
         // Define JSON file
@@ -159,7 +160,7 @@ public class AttributeSerializationDebugger extends AbstractDaoTest {
 
         // Update gson factory
         for (ModelAttrAssoc assoc : assocs) {
-            gsonFactory.registerAttribute(DEFAULT_TENANT, assoc.getAttribute());
+            gsonFactory.registerAttribute(getDefaultTenant(), assoc.getAttribute());
         }
 
         // Define JSON file

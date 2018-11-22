@@ -70,6 +70,7 @@ public class DeleteAttributeTest extends AbstractMultitenantServiceTest {
 
     /**
      * An attribute not linked to any model nor entity can be deleted
+     * @throws ModuleException
      */
     @Test
     public void deleteUnlinked() throws ModuleException {
@@ -78,6 +79,7 @@ public class DeleteAttributeTest extends AbstractMultitenantServiceTest {
 
     /**
      * An attribute linked to a non used model can be deleted
+     * @throws ModuleException
      */
     @Test
     public void deleteWithLinkToModel() throws ModuleException {
@@ -89,6 +91,7 @@ public class DeleteAttributeTest extends AbstractMultitenantServiceTest {
 
     /**
      * An attribute linked to a used model cannot be deleted
+     * @throws ModuleException
      */
     @Test(expected = EntityOperationForbiddenException.class)
     public void deleteWithLinkToUsedModel() throws ModuleException {
@@ -104,6 +107,7 @@ public class DeleteAttributeTest extends AbstractMultitenantServiceTest {
 
     /**
      * An attribute linked to a datasource cannot be deleted
+     * @throws ModuleException
      */
     @Test(expected = EntityOperationForbiddenException.class)
     public void deleteWithLinkToDatasource() throws ModuleException {

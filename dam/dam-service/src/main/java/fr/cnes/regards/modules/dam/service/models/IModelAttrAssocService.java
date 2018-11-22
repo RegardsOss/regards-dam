@@ -60,6 +60,7 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     /**
      * Propagate a fragment update
+     * @param added  {@link AttributeModel}
      */
     void updateNSBind(AttributeModel added);
 
@@ -88,6 +89,7 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @param pModelNames
      * @param pPageable
      * @return a page of attribute which are associated to at least one of the models
+     * @throws ModuleException
      */
     Page<AttributeModel> getAttributeModelsByName(List<String> pModelNames, Pageable pPageable) throws ModuleException;
 

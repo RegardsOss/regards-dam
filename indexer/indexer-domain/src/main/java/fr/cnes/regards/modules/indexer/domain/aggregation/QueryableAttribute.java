@@ -24,7 +24,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
  * Information about queryable attribute from index with :<ul>
  * <li>attributeName : Name of the attribute in the index</li>
  * <li>aggregation : {@link Aggregation} statistic information about the attribute. Depends on the attribute type.</li>
- * <li>textAttribute : {@link boolean} does the attribute is a text attribute ?</li>
+ * <li>textAttribute : {@link Boolean} does the attribute is a text attribute ?</li>
  * </ul>
  *
  * @author Sébastien Binda
