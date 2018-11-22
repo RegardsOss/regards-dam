@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities;
 
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -80,6 +81,9 @@ public class CollectionController implements IResourceController<Collection> {
 
     /**
      * Entry point to retrieve {@link Collection}s
+     * @param label
+     * @param pageable
+     * @param assembler
      * @return all {@link Collection}s
      */
     @RequestMapping(method = RequestMethod.GET)
@@ -97,6 +101,7 @@ public class CollectionController implements IResourceController<Collection> {
      * Entry point to retrieve a collection using its id
      * @param id {@link Collection} id
      * @return {@link Collection} as a {@link Resource}
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "Retrieve a collection")
@@ -114,6 +119,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @param result for validation of entites' properties
      * @return update {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs! @
+     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "Update a collection")
@@ -132,6 +138,7 @@ public class CollectionController implements IResourceController<Collection> {
      * Entry point to delete a collection using its id
      * @param id {@link Collection} id
      * @return nothing
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_MAPPING)
     @ResourceAccess(description = "delete the collection of collection_id")
@@ -146,7 +153,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @param result validation errors
      * @return {@link Collection} as a {@link Resource}
      * @throws ModuleException if validation fails
-     * @
+     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")

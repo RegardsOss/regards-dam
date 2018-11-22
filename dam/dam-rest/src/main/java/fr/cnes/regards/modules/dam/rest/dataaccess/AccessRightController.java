@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.dataaccess;
 
-import javax.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import java.util.Optional;
+
+import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @param pageable page information
      * @param assembler page assembler
      * @return page of access rights
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
@@ -111,13 +113,17 @@ public class AccessRightController implements IResourceController<AccessRight> {
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             PagedResourcesAssembler<AccessRight> assembler) throws ModuleException {
-        Page<AccessRight> accessRights = accessRightService
-                .retrieveAccessRights(accessGroupName, datasetIpId, pageable);
+        Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(accessGroupName, datasetIpId,
+                                                                                 pageable);
         return new ResponseEntity<>(toPagedResources(accessRights, assembler), HttpStatus.OK);
     }
 
     /**
      * Retrieve access group and dataset pair access right or nothing
+     * @param accessGroupName
+     * @param datasetIpId
+     * @return {@link AccessRight}
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, path = ACCESS_RIGHT)
     @ResourceAccess(description = "Retrieve access right of given access group / dataset if there is one",
@@ -137,7 +143,9 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
     /**
      * Create an access right
+     * @param accessRight
      * @return created access right
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create an accessRight according to the argument")
@@ -149,7 +157,9 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
     /**
      * Retrieve an access right by its id
+     * @param id
      * @return retrieved access right
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResourceAccess(description = "send the access right of id requested")
@@ -161,7 +171,10 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
     /**
      * Update an access right.
+     * @param id
+     * @param toBe
      * @return updated access right
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
@@ -205,6 +218,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
     /**
      * Data binder to recognize {@link UniformResourceName}
+     * @param dataBinder
      */
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {

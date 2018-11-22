@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.datasources;
 
-import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -35,7 +36,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.representation.GenericResponseBody;
@@ -52,8 +52,6 @@ import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
  * @author Christophe Mertz
  */
 @RestController
-@ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
 @RequestMapping(DBConnectionController.TYPE_MAPPING)
 public class DBConnectionController implements IResourceController<PluginConfiguration> {
 
@@ -123,7 +121,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
             @Valid @RequestBody PluginConfiguration dbConnection) throws ModuleException {
         if (!connectionId.equals(dbConnection.getId())) {
             throw new EntityInconsistentIdentifierException(connectionId, dbConnection.getId(),
-                                                            PluginConfiguration.class);
+                    PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dbConnectionService.updateDBConnection(dbConnection)));
     }

@@ -101,6 +101,7 @@ public enum AttributeType {
 
     /**
      * Tell whether or not specified type correspond to an interval
+     * @return {@link Boolean}
      */
     public boolean isInterval() {
         return false;
@@ -108,6 +109,7 @@ public enum AttributeType {
 
     /**
      * Tell whether or not specified type correspond to an array
+     * @return {@link Boolean}
      */
     public boolean isArray() {
         return false;

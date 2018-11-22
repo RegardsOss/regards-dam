@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
  * Common requests on entities
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
+ * @param <T> {@link AbstractEntity}
  */
 public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
         extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {

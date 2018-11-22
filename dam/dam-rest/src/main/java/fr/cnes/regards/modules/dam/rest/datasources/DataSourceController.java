@@ -129,6 +129,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
      * @param pluginConfId {@link PluginConfiguration} identifier
      * @return nothing
+     * @throws AssociatedDatasetExistsException
      * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")

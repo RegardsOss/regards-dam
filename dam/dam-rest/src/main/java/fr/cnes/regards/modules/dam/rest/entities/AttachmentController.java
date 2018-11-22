@@ -140,8 +140,11 @@ public class AttachmentController {
 
     /**
      * Entry point to delete a file from a document
-     * @param id {@link Document} id
+     * @param urn
+     * @param checksum
      * @return the deleted document
+     * @throws ModuleException
+     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = ATTACHMENT_MAPPING)
     @ResourceAccess(description = "delete the document file using its id")

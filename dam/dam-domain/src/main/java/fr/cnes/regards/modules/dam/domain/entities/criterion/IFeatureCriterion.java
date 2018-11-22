@@ -113,6 +113,7 @@ public interface IFeatureCriterion extends ICriterion {
     /**
      * Criterion to test if a parameter is exactly the provided text or if a String array parameter contains an element
      * which is exactly the provided text
+     * @param att {@link AttributeModel}
      * @param attName String or String array attribute
      * @param text provided text
      * @return criterion
@@ -123,7 +124,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a parameter is exactly the provided date
-     * @param attName Date attribute
+     * @param att {@link AttributeModel}
      * @param date provided text
      * @return criterion
      */
@@ -134,7 +135,7 @@ public interface IFeatureCriterion extends ICriterion {
     /**
      * Criterion to test if a parameter starts with the provided text or if a String array parameter contains an element
      * that starts with the provided text
-     * @param attName String or String array attribute
+     * @param att {@link AttributeModel}
      * @param text provided text
      * @return criterion
      */
@@ -145,6 +146,7 @@ public interface IFeatureCriterion extends ICriterion {
     /**
      * Criterion to test if a parameter ends with the provided text or if a String array parameter contains an element
      * that ends with the provided text
+     * @param att {@link AttributeModel}
      * @param attName String or String array attribute
      * @param text provided text
      * @return criterion
@@ -156,7 +158,7 @@ public interface IFeatureCriterion extends ICriterion {
     /**
      * Criterion to test if a parameter contain the provided text or if a String array parameter contains an element
      * that contains the provided text
-     * @param attName String or String array attribute
+     * @param att {@link AttributeModel}
      * @param text provided text
      * @return criterion
      */
@@ -167,7 +169,7 @@ public interface IFeatureCriterion extends ICriterion {
     /**
      * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
      * element which follows given regular expression
-     * @param attName String or String array attribute
+     * @param att {@link AttributeModel}
      * @param text provided regular expression
      * @return criterion
      */
@@ -177,7 +179,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if an array parameter contains specified value
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param value value to search
      * @return criterion
      */
@@ -187,7 +189,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if an array parameter contains specified value
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param value value to search
      * @return criterion
      */
@@ -197,7 +199,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a double array parameter contains specified double value specifying precision
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param value value to search
      * @param precision wanted precision
      * @return criterion
@@ -208,7 +210,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a date array parameter contains a date between given lower and upper dates
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lowerDate inclusive lower bound
      * @param upperDate inclusive upper bound
      * @return criterion
@@ -219,7 +221,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a string parameter has one of the provided values
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param texts text array to test
      * @return criterion
      */
@@ -229,7 +231,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if an int parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param upper inclusive upper bound
      * @return criterion
@@ -240,7 +242,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a long parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param upper inclusive upper bound
      * @return criterion
@@ -251,7 +253,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a date parameter is into given range period
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param upper inclusive upper bound
      * @return criterion
@@ -262,7 +264,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a double parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param upper inclusive upper bound
      * @return criterion
@@ -273,7 +275,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if an int parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower lower bound
      * @param lowerInclusive inclusive lower bound or not
      * @param upper upper bound
@@ -287,7 +289,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a long parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param lowerInclusive inclusive lower bound or not
      * @param upper inclusive upper bound
@@ -301,7 +303,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a date parameter is into given range period
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param lowerInclusive inclusive lower bound or not
      * @param upper inclusive upper bound
@@ -315,7 +317,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a double parameter has a value into given range
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @param lower inclusive lower bound
      * @param lowerInclusive inclusive lower bound or not
      * @param upper inclusive upper bound
@@ -329,7 +331,8 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if a numeric value (int or double) is into (inclusive) given interval attribute name
-     * @param attName interval attribute name
+     * @param <T> extends {@link Number}
+     * @param att {@link AttributeModel}
      * @param value value to test inclusion
      * @return criterion
      */
@@ -339,7 +342,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if given date range intersects given interval attribute name
-     * @param attName interval attribute name
+     * @param att {@link AttributeModel}
      * @param lowerBound lower bound
      * @param upperBound upper bound
      * @return criterion
@@ -350,7 +353,8 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if given number range intersects given interval attribute name
-     * @param attName interval attribute name
+     * @param <T> extends {@link Number}
+     * @param att {@link AttributeModel}
      * @param lowerBound lower bound
      * @param upperBound upper bound
      * @return criterion
@@ -361,7 +365,7 @@ public interface IFeatureCriterion extends ICriterion {
 
     /**
      * Criterion to test if given attribute exists
-     * @param attName attribute name
+     * @param att {@link AttributeModel}
      * @return criterion
      */
     static ICriterion attributeExists(AttributeModel att) {

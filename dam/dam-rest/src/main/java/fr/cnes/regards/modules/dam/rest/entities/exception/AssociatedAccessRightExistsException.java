@@ -23,6 +23,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 /**
  * @author oroussel
  */
+@SuppressWarnings("serial")
 public class AssociatedAccessRightExistsException extends ModuleException {
 
     public AssociatedAccessRightExistsException() {
