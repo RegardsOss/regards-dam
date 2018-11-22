@@ -55,8 +55,9 @@ public final class ContentTypeValidator {
 
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
-                        TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
+                checkFileSupported(contentType,
+                                   Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
+                                                 TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
                 break;
             default:
                 // No restriction
@@ -74,7 +75,8 @@ public final class ContentTypeValidator {
 
         switch (dataType) {
             case DESCRIPTION:
-                checkFileSupported(contentType, Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
+                checkFileSupported(contentType,
+                                   Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
                                                  MediaType.TEXT_HTML_VALUE, TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
                 break;
             default:
@@ -100,14 +102,6 @@ public final class ContentTypeValidator {
         if (contentType != null) {
             int charsetIdx = contentType.indexOf(";charset");
             return (charsetIdx == -1) ? contentType.trim() : contentType.substring(0, charsetIdx).trim();
-        }
-        return null;
-    }
-
-    private static String getCharset(String contentType) {
-        if (contentType != null) {
-            int charsetIdx = contentType.indexOf("charset=");
-            return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).trim().toUpperCase();
         }
         return null;
     }

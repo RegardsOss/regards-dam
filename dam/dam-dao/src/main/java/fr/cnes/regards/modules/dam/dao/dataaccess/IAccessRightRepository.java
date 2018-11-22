@@ -41,24 +41,42 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      * @return {@link AccessRight} with {@link Dataset} associated.
      * @since 1.0-SNAPSHOT
      */
-    @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     AccessRight findById(Long pId);
 
+    @EntityGraph(value = "graph.accessright.plugins")
     Page<AccessRight> findAllByDataset(Dataset dataset, Pageable pageable);
 
+    @EntityGraph(value = "graph.accessright.plugins")
     List<AccessRight> findAllByDataset(Dataset dataset);
 
-    @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     Page<AccessRight> findAllByAccessGroup(AccessGroup accessGroup, Pageable pageable);
 
     /**
      * This method returns zero or one AccessRight
+     * @param accessGroup
+     * @param dataset
+     * @param pageable
+     * @return {@link AccessRight}s by page
      */
+    @EntityGraph(value = "graph.accessright.plugins")
     Page<AccessRight> findAllByAccessGroupAndDataset(AccessGroup accessGroup, Dataset dataset, Pageable pageable);
 
     /**
      * This methods return only zero or one AccessRight
+     * @param accessGroup
+     * @param dataset
+     * @return {@link AccessRight}
      */
+    @EntityGraph(value = "graph.accessright.plugins")
     Optional<AccessRight> findAccessRightByAccessGroupAndDataset(AccessGroup accessGroup, Dataset dataset);
+
+    /**
+     * Find all {@link AccessRight}s associated a dataAccess plugin.
+     * @return {@link AccessRight}s
+     */
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
+    List<AccessRight> findByDataAccessPluginNotNull();
 
 }

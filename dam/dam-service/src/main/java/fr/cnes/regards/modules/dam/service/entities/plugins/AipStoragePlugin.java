@@ -115,6 +115,7 @@ public class AipStoragePlugin implements IStorageService {
         return toPersist;
     }
 
+    @SuppressWarnings("serial")
     @Override
     public <T extends AbstractEntity<?>> T updateAIP(T toUpdate) {
         ResponseEntity<Void> response;

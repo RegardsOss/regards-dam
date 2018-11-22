@@ -43,7 +43,7 @@ public final class AttributeModelSpecifications {
      * @param type
      * @param fragmentName
      * @param modelIds
-     * @return
+     * @return {@link Specification}
      */
     public static Specification<AttributeModel> search(AttributeType type, String fragmentName, Set<Long> modelIds) {
         return (root, query, cb) -> {

@@ -491,7 +491,6 @@ public class IndexerServiceDataSourceIT {
     /**
      * Import model definition file from resources directory
      * @param pFilename filename
-     * @return list of created model attributes
      * @throws ModuleException if error occurs
      */
     private void importModel(final String pFilename) throws ModuleException {

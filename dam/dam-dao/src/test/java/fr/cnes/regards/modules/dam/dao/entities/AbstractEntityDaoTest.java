@@ -32,7 +32,6 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
@@ -69,7 +68,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
     @Before
     public void init() {
-        // runtimeTenantResolver.forceTenant(DEFAULT_TENANT);
+        // runtimeTenantResolver.forceTenant(getDefaultTenant());
 
         collectionModel = Model.build("name", "desc", EntityType.COLLECTION);
         modelRepository.save(collectionModel);
@@ -78,7 +77,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
     @Test
     public void testfindByTagsValue() {
 
-        Collection entity1 = createEntity(collectionModel, DEFAULT_TENANT, "entity1");
+        Collection entity1 = createEntity(collectionModel, getDefaultTenant(), "entity1");
         Set<String> entity1Tags = new HashSet<>();
         entity1Tags.add(TAG_TO_SEARCH);
         entity1Tags.add(TAG_TEST);
@@ -86,7 +85,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity1.setTags(entity1Tags);
         entity1 = entityRepository.save(entity1);
 
-        Collection entity2 = createEntity(collectionModel, DEFAULT_TENANT, "entity2");
+        Collection entity2 = createEntity(collectionModel, getDefaultTenant(), "entity2");
         Set<String> entity2Tags = new HashSet<>();
         entity2Tags.add(TAG_TEST);
         entity2Tags.add(TAG_LAST);
@@ -94,7 +93,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity2.setTags(entity2Tags);
         entity2 = entityRepository.save(entity2);
 
-        Collection entity3 = createEntity(collectionModel, DEFAULT_TENANT, "entity3");
+        Collection entity3 = createEntity(collectionModel, getDefaultTenant(), "entity3");
         Set<String> entity3Tags = new HashSet<>();
         entity3Tags.add(TAG_TEST);
         entity3Tags.add(TAG_TO_SEARCH);
@@ -102,7 +101,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity3.setTags(entity3Tags);
         entity3 = entityRepository.save(entity3);
 
-        Collection entity4 = createEntity(collectionModel, DEFAULT_TENANT, "entity4");
+        Collection entity4 = createEntity(collectionModel, getDefaultTenant(), "entity4");
         Set<String> entity4Tags = new HashSet<>();
         entity4Tags.add(TAG_TEST);
         entity4Tags.add(TAG_LAST);
@@ -119,16 +118,16 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
     @Test
     public void testFindByIpIdIn() {
-        Collection entity1 = createEntity(collectionModel, DEFAULT_TENANT, "entity1");
+        Collection entity1 = createEntity(collectionModel, getDefaultTenant(), "entity1");
         entity1 = entityRepository.save(entity1);
 
-        Collection entity2 = createEntity(collectionModel, DEFAULT_TENANT, "entity2");
+        Collection entity2 = createEntity(collectionModel, getDefaultTenant(), "entity2");
         entity2 = entityRepository.save(entity2);
 
-        Collection entity3 = createEntity(collectionModel, DEFAULT_TENANT, "entity3");
+        Collection entity3 = createEntity(collectionModel, getDefaultTenant(), "entity3");
         entity3 = entityRepository.save(entity3);
 
-        Collection entity4 = createEntity(collectionModel, DEFAULT_TENANT, "entity4");
+        Collection entity4 = createEntity(collectionModel, getDefaultTenant(), "entity4");
         entity4 = entityRepository.save(entity4);
 
         Set<UniformResourceName> ipIds = new HashSet<>();
@@ -146,16 +145,16 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
     @Test
     public void testFindByIpIdInEmptySet() {
 
-        Collection entity1 = createEntity(collectionModel, DEFAULT_TENANT, "entity1");
+        Collection entity1 = createEntity(collectionModel, getDefaultTenant(), "entity1");
         entity1 = entityRepository.save(entity1);
 
-        Collection entity2 = createEntity(collectionModel, DEFAULT_TENANT, "entity2");
+        Collection entity2 = createEntity(collectionModel, getDefaultTenant(), "entity2");
         entity2 = entityRepository.save(entity2);
 
-        Collection entity3 = createEntity(collectionModel, DEFAULT_TENANT, "entity3");
+        Collection entity3 = createEntity(collectionModel, getDefaultTenant(), "entity3");
         entity3 = entityRepository.save(entity3);
 
-        Collection entity4 = createEntity(collectionModel, DEFAULT_TENANT, "entity4");
+        Collection entity4 = createEntity(collectionModel, getDefaultTenant(), "entity4");
         entity4 = entityRepository.save(entity4);
 
         Set<UniformResourceName> ipIds = new HashSet<>();
@@ -167,7 +166,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
     @Test
     public void findByProviderid() {
         String providerId = "SIPID";
-        Collection entity1 = createEntity(collectionModel, DEFAULT_TENANT, "entity1");
+        Collection entity1 = createEntity(collectionModel, getDefaultTenant(), "entity1");
         entity1.setProviderId(providerId);
         entity1 = entityRepository.save(entity1);
 

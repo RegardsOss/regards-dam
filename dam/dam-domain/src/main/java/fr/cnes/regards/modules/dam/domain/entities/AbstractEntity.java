@@ -18,6 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -40,11 +46,6 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -53,6 +54,7 @@ import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -233,6 +235,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Set the feature id
+     * @param ipId
      */
     public void setIpId(UniformResourceName ipId) {
         this.ipId = ipId;
@@ -243,6 +246,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
      * {@link #removeTags(Collection)}
+     * @return tags
      */
     public ImmutableSet<String> getTags() {
         return ImmutableSet.copyOf(tags);
@@ -269,7 +273,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.addTags(tags);
     }
 
-
     public void addTags(String... tags) {
         Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags.addAll(Arrays.asList(tags));
@@ -293,6 +296,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of feature properties.
      * If this set should be modified, please use addProperty or removeProperty
+     * @return {@link AbstractAttribute}s
      */
     public ImmutableSet<AbstractAttribute<?>> getProperties() {
         return ImmutableSet.copyOf(feature.getProperties());
@@ -300,6 +304,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Get a mutable copy of property paths.
+     * @return properties path
      */
     public Set<String> getMutableCopyOfPropertiesPaths() {
         Set<String> propertiesPaths = new HashSet<>();
@@ -319,6 +324,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Add feature property
+     * @param property {@link AbstractAttribute}
      */
     public void addProperty(AbstractAttribute<?> property) {
         feature.addProperty(property);
@@ -334,6 +340,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Set the properties
+     * @param attributes
      */
     public void setProperties(Set<AbstractAttribute<?>> attributes) {
         feature.setProperties(attributes);
@@ -355,6 +362,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setProviderId(providerId);
     }
 
+    @Override
     public String getLabel() {
         return feature.getLabel();
     }
@@ -381,6 +389,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setNormalizedGeometry(geometry);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getGeometry() {
         return (T) feature.getGeometry();
     }
@@ -388,8 +397,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     public void setGeometry(IGeometry geometry) {
         feature.setGeometry(geometry);
     }
-
-
 
     @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getWgs84() {

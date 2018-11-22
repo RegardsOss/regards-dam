@@ -39,6 +39,7 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
+ * @param <U> extends {@link AbstractEntity}
  */
 @MultitenantTransactional
 public interface IEntityService<U extends AbstractEntity<?>> extends IValidationService<U> {
@@ -48,6 +49,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      *
      * @param ipId business id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     * @throws ModuleException
      */
     U load(UniformResourceName ipId) throws ModuleException;
 
@@ -56,6 +58,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      *
      * @param id Database id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     * @throws ModuleException
      */
     U load(Long id) throws ModuleException;
 
@@ -64,6 +67,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      *
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     * @throws ModuleException
      */
     U loadWithRelations(UniformResourceName ipId) throws ModuleException;
 
@@ -72,6 +76,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      *
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
+     * @throws ModuleException
      */
     List<U> loadAllWithRelations(UniformResourceName... ipIds) throws ModuleException;
 
@@ -163,11 +168,21 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
 
     /**
      * Delete entity identified by its id. A deleted entity is "logged" into "deleted_entity" table
+     * @param pEntityId
+     * @return <U>
+     * @throws ModuleException
      */
     U delete(Long pEntityId) throws ModuleException;
 
     /**
      * Attach files to given entity
+     * @param urn  {@link UniformResourceName}
+     * @param dataType  {@link DataType}
+     * @param attachments {@link MultipartFile}
+     * @param refs
+     * @param fileUriTemplate
+     * @return  {@link AbstractEntity}
+     * @throws ModuleException
      *
      */
     AbstractEntity<?> attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
@@ -175,17 +190,29 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
 
     /**
      * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum
+     * @param urn {@link UniformResourceName}
+     * @param checksum
+     * @return {@link DataFile}
+     * @throws ModuleException
      */
     DataFile getFile(UniformResourceName urn, String checksum) throws ModuleException;
 
     /**
      * Write related file content to output stream.<br/>
      * {@link OutputStream} has to be flush after this method completes.
+     * @param urn  {@link UniformResourceName}
+     * @param checksum
+     * @param output {@link OutputStream}
+     * @throws ModuleException
      */
     void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException;
 
     /**
      * Remove file
+     * @param urn {@link UniformResourceName}
+     * @param checksum
+     * @return {@link AbstractEntity}
+     * @throws ModuleException
      */
     AbstractEntity<?> removeFile(UniformResourceName urn, String checksum) throws ModuleException;
 }

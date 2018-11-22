@@ -31,6 +31,7 @@ public interface IDBDataSourcePlugin extends IDataSourcePlugin {
 
     /**
      * Retrieve DB connection plugin used by the datasource plugin
+     * @return {@link IDBConnectionPlugin}
      * @throws SQLException {@link java.sql.Connection} is not available
      */
     IDBConnectionPlugin getDBConnection() throws SQLException;

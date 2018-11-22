@@ -72,6 +72,7 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
     /**
      * Find all public or non public group
      * @param isPublic whether we have to select public or non public groups
+     * @param pPageable {@link Pageable}
      * @return list of public or non public groups
      */
     Page<AccessGroup> findAllByIsPublic(Boolean isPublic, Pageable pPageable);

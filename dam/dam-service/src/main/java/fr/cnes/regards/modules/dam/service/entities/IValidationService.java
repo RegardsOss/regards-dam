@@ -27,6 +27,7 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
  * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
  * AbstractValidationService and DataObjectService
  * @author oroussel
+ * @param <U> {@link AbstractEntity}
  */
 public interface IValidationService<U extends AbstractEntity<?>> {
 

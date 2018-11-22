@@ -48,6 +48,10 @@ public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
 
     /**
      * Constructor
+     * @param attributeKey
+     * @param attribute  {@link AttributeModel}
+     * @param oldValue
+     * @param newValue
      */
     public NotAlterableAttributeValidator(String attributeKey, AttributeModel attribute, AbstractAttribute<?> oldValue,
             AbstractAttribute<?> newValue) {

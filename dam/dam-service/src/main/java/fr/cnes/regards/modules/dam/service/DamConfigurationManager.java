@@ -19,14 +19,8 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IConnectionPlugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 
 /**
  * DAM configuration manager. Exports model & connection plugin configurations & datasource plugin configurations.
@@ -39,15 +33,6 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
     public static final String PLUGIN_CONFIGURATION_ALREADY_EXISTS = "A plugin configuration already exists with same label, skipping import of %s.";
 
     public static final String VALIDATION_ISSUES = "Skipping import of %s for these reasons: %s";
-
-    @Autowired
-    private IModelService modelService;
-
-    @Autowired
-    private IAttributeModelService attributeModelService;
-
-    @Autowired
-    private IModelAttrAssocService modelAttrAssocService;
 
     @Autowired
     private IPluginService pluginService;
@@ -76,8 +61,7 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                                 connectionService.createDBConnection(plgConf);
                             } catch (ModuleException e) {
                                 importErrors.add(String.format("Skipping import of Data Storage %s: %s",
-                                                               plgConf.getLabel(),
-                                                               e.getMessage()));
+                                                               plgConf.getLabel(), e.getMessage()));
                                 logger.error(e.getMessage(), e);
                             }
                         } else {
@@ -87,17 +71,14 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                                 } catch (ModuleException e) {
                                     // This should not occurs, but we never know
                                     importErrors.add(String.format("Skipping import of PluginConfiguration %s: %s",
-                                                                   plgConf.getLabel(),
-                                                                   e.getMessage()));
+                                                                   plgConf.getLabel(), e.getMessage()));
                                     logger.error(e.getMessage(), e);
                                 }
                             }
                         }
                     } else {
-                        importErrors.add(String.format(VALIDATION_ISSUES,
-                                                       plgConf.getLabel(),
-                                                       validationIssues.getMessages().stream()
-                                                               .collect(Collectors.joining(",", "", "."))));
+                        importErrors.add(String.format(VALIDATION_ISSUES, plgConf.getLabel(), validationIssues
+                                .getMessages().stream().collect(Collectors.joining(",", "", "."))));
                     }
                 }
             }

@@ -101,6 +101,10 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     /**
      * Constructor
+     * @param pAttributeModel {@link Model}
+     * @param pModel
+     * @param pPosition
+     * @param pIsCalculated
      */
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
@@ -228,6 +232,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     /**
      * Set the computation plugin configuration
+     * @param pComputationConf  {@link PluginConfiguration}
      */
     public void setComputationConf(PluginConfiguration pComputationConf) {
         computationConf = pComputationConf;
@@ -238,7 +243,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
         }
 
@@ -253,7 +258,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     @Override
     public int hashCode() {
         int result = attribute != null ? attribute.hashCode() : 0;
-        result = 31 * result + (model != null ? model.hashCode() : 0);
+        result = (31 * result) + (model != null ? model.hashCode() : 0);
         return result;
     }
 

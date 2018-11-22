@@ -73,6 +73,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
 
     /**
      * Delete a DatasourceIngestion.
+     * @param ingestionId {@link DatasourceIngestion} id
+     * @return {@link Void}
      */
     @ResourceAccess(description = "Delete selected datasource.")
     @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
@@ -83,6 +85,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
 
     /**
      * Schedule datasource ingestion to be executed as soon as possible
+     * @param ingestionId {@link DatasourceIngestion} id
+     * @return {@link Void}
      */
     @ResourceAccess(description = "Schedule datasource to be ingested as soon as possible.")
     @RequestMapping(method = RequestMethod.PUT, value = INGESTION_ID)

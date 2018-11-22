@@ -18,11 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,9 @@ public class FragmentController implements IResourceController<Fragment> {
 
     /**
      * Constructor setting the parameters as attributes
+     * @param fragmentService  {@link IFragmentService}
+     * @param resourceService  {@link IResourceService}
+     * @param attributeModelService  {@link IAttributeModelService}
      */
     public FragmentController(IFragmentService fragmentService, IResourceService resourceService,
             IAttributeModelService attributeModelService) {
@@ -135,7 +139,8 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Get a fragment")
     @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}")
-    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
+    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id)
+            throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.getFragment(id)));
     }
 
@@ -175,8 +180,8 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Export a fragment")
     @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}/export")
-    public void exportFragment(HttpServletRequest request, HttpServletResponse response, @PathVariable(name = "fragmentId") Long fragmentId)
-            throws ModuleException {
+    public void exportFragment(HttpServletRequest request, HttpServletResponse response,
+            @PathVariable(name = "fragmentId") Long fragmentId) throws ModuleException {
 
         Fragment fragment = fragmentService.getFragment(fragmentId);
         String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + FRAGMENT_EXTENSION;
@@ -189,8 +194,8 @@ public class FragmentController implements IResourceController<Fragment> {
             fragmentService.exportFragment(fragmentId, response.getOutputStream());
             response.getOutputStream().flush();
         } catch (IOException e) {
-            final String message = String
-                    .format("Error with servlet output stream while exporting fragment %s.", fragment.getName());
+            final String message = String.format("Error with servlet output stream while exporting fragment %s.",
+                                                 fragment.getName());
             LOGGER.error(message, e);
             throw new ModuleException(e);
         }

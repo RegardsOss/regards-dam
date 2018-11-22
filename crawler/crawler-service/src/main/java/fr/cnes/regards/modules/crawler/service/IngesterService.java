@@ -219,16 +219,16 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException | DataSourceException | ModuleException e) {
+                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
+                                    | DataSourceException | ModuleException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
                                 e.printStackTrace(new PrintWriter(sw));
-                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
-                                        sw.toString() :
-                                        dsIngestion.getStackTrace() + "\n" + sw.toString();
+                                String stackTrace = (dsIngestion.getStackTrace() == null) ? sw.toString()
+                                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
                                 dsIngestion.setStackTrace(stackTrace);
                             } catch (NotFinishedException e) {
                                 dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
@@ -237,9 +237,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
                                 e.getCause().printStackTrace(new PrintWriter(sw));
-                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
-                                        sw.toString() :
-                                        dsIngestion.getStackTrace() + "\n" + sw.toString();
+                                String stackTrace = (dsIngestion.getStackTrace() == null) ? sw.toString()
+                                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
                                 dsIngestion.setStackTrace(stackTrace);
                                 dsIngestion.setSavedObjectsCount(e.getSaveResult().getSavedDocsCount());
                                 dsIngestion.setInErrorObjectsCount(e.getSaveResult().getInErrorDocsCount());
@@ -273,23 +272,24 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                                NotificationType.ERROR);
                     break;
                 case FINISHED_WITH_WARNINGS:
-                    createNotificationForAdmin(title, String.format(
-                            "Indexation ends with %s new indexed objects and %s errors.",
-                            dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
+                    createNotificationForAdmin(title, String
+                            .format("Indexation ends with %s new indexed objects and %s errors.",
+                                    dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
                                                NotificationType.WARNING);
                     break;
                 case NOT_FINISHED:
-                    createNotificationForAdmin(title, String.format(
-                            "Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
+                    createNotificationForAdmin(title, String
+                            .format("Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
                                     + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
                                     + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
                                     + "soon as possible or will continue at its planned date",
-                            dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
+                                    dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
                                                NotificationType.WARNING);
                     break;
                 default:
-                    createNotificationForAdmin(title, String.format("Indexation success. %s new objects indexed.",
-                                                                    dsIngestion.getSavedObjectsCount()),
+                    createNotificationForAdmin(title,
+                                               String.format("Indexation success. %s new objects indexed.",
+                                                             dsIngestion.getSavedObjectsCount()),
                                                NotificationType.INFO);
                     break;
             }
@@ -311,10 +311,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                                                                                 OffsetDateTime.now()
-                                                                                         .withOffsetSameInstant(
-                                                                                                 ZoneOffset.UTC),
-                                                                                 pluginConf.getLabel())))
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -331,6 +328,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
 
     /**
      * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
+     * @param tenant
+     * @param dataSourceId
      */
     public void planDatasourceDataObjectsDeletion(String tenant, Long dataSourceId) {
         threadPoolExecutor.submit(() -> {
@@ -366,8 +365,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                     break;
                 case FINISHED: // last ingest + refreshRate
                 case FINISHED_WITH_WARNINGS: // last ingest + refreshRate
-                    dsIngestion.setNextPlannedIngestDate(
-                            dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                    dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                              ChronoUnit.SECONDS));
                     dsIngestionRepos.save(dsIngestion);
                     break;
                 case STARTED: // Already in progress
@@ -400,8 +399,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     private void createNotificationForAdmin(String title, String message, NotificationType nType) {
         FeignSecurityManager.asSystem();
         NotificationDTO notif = new NotificationDTO(message, Collections.emptySet(),
-                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
-                                                    applicationName, title, nType);
+                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title, nType);
         notifClient.createNotification(notif);
         FeignSecurityManager.reset();
     }

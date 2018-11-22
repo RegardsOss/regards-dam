@@ -1,28 +1,46 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +57,7 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -46,8 +65,8 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -56,11 +75,13 @@ import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -69,10 +90,14 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -109,6 +134,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     protected IEsRepository esRepos;
 
     @Autowired
+    protected IPluginService pluginService;
+
+    @Autowired
     private IAccessRightService accessRightService;
 
     @Autowired
@@ -122,6 +150,15 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private DataObjectService dataObjectService;
+
+    @Autowired
+    private IDatasetService datasetService;
+
+    @Autowired
+    private IDocumentService documentService;
+
+    @Autowired
+    private ICollectionService collectionService;
 
     @Autowired
     @Lazy
@@ -185,26 +222,13 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
-                // Retrieve map of { group, AccessLevel }
-                Map<String, Pair<AccessLevel, DataAccessLevel>> volatileMap;
-                try {
-                    volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
-                } catch (EntityNotFoundException e) {
-                    volatileMap = Collections.emptyMap();
-                }
-                // Need to be final to be used into following lambda
-                final Map<String, Pair<AccessLevel, DataAccessLevel>> map = volatileMap;
-                // Compute groups for associated data objects
-                dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
-                                                                   .filter(group -> map.containsKey(group) && (
-                                                                           map.get(group).getLeft()
-                                                                                   == AccessLevel.FULL_ACCESS)).collect(
-                                Collectors.toMap(Function.identity(),
-                                                 g -> map.get(g).getRight() == DataAccessLevel.INHERITED_ACCESS)));
+                // Retrieve dataset metadata information for indexer
+                dataset.setMetadata(accessRightService.retrieveDatasetMetadata(dataset.getIpId()));
                 // update dataset groups
-                for (Map.Entry<String, Pair<AccessLevel, DataAccessLevel>> entry : map.entrySet()) {
+                for (Entry<String, DataObjectGroup> entry : dataset.getMetadata().getDataObjectsGroupsMap()
+                        .entrySet()) {
                     // remove group if no access
-                    if (entry.getValue().getLeft() == AccessLevel.NO_ACCESS) {
+                    if (!entry.getValue().getDatasetAccess()) {
                         dataset.getGroups().remove(entry.getKey());
                     } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
                         dataset.getGroups().add(entry.getKey());
@@ -251,7 +275,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
                 || !newDataset.getMetadata().getDataObjectsGroupsMap()
-                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
+                        .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
     }
 
     /**
@@ -308,22 +332,28 @@ public class EntityIndexerService implements IEntityIndexerService {
             Long dsiId) {
         String tenant = runtimeTenantResolver.getTenant();
         sendMessage(String.format("      Updating dataset %s indexation and all its associated data objects...",
-                                  dataset.getLabel()), dsiId);
+                                  dataset.getLabel()),
+                    dsiId);
         sendMessage(String.format("        Searching for dataset %s associated data objects...", dataset.getLabel()),
                     dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenant);
-        // A set used to accumulate data objects to save into ES
-        HashSet<DataObject> toSaveObjects = new HashSet<>();
+
         ExecutorService executor = Executors.newFixedThreadPool(1);
 
         // Create a callable which bulk save into ES a set of data objects
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
-                                                                                      tenant, dataset.getId());
-        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
-                                         saveDataObjectsCallable, dsiId);
-        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
+                tenant, dataset.getId());
+        // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
+        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
+
+        // Associate dataset to all dataobjets. Associate groups of dataset to the dataobjets through metadata
+        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, executor,
                                            saveDataObjectsCallable, dsiId);
+
+        // Update dataset access groups for dynamic plugin access rights
+        manageDatasetUpdateFilteredAccessrights(tenant, dataset, updateDate, executor, saveDataObjectsCallable, dsiId);
+
         // To remove thread used by executor
         executor.shutdown();
         computeComputedAttributes(dataset, dsiId, tenant);
@@ -331,6 +361,45 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.save(tenant, dataset);
         LOGGER.info("Dataset {} updated", dataset.getId());
         sendMessage("      ...Dataset indexation updated.", dsiId);
+    }
+
+    /**
+     * Handle Access rights filter for the given dataset. An Access right filter is an accessRight with a {@link IDataObjectAccessFilterPlugin}.
+     * @param tenant {@link Strin} current tenant
+     * @param dataset {@link Dataset}
+     * @param updateDate {@link OffsetDateTime} update date
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable}
+     * @param dsiId {@link DatasourceIngestion} id
+     */
+    private void manageDatasetUpdateFilteredAccessrights(String tenant, Dataset dataset, OffsetDateTime updateDate,
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
+        // handle association between dataobjects and groups for all access rights set by plugin
+        for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
+            // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
+            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
+                try {
+                    IDataObjectAccessFilterPlugin plugin = pluginService
+                            .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
+                    ICriterion searchFilter = plugin.getSearchFilter();
+                    if (searchFilter != null) {
+                        removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor,
+                                                       saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                       searchFilter);
+                        // Handle specific dataobjet groups by access filter plugin
+                        addOrUpdateDataObectGroupAssoc(dataset, updateDate, searchKey, executor,
+                                                       saveDataObjectsCallable, dsiId, group.getGroupName(),
+                                                       searchFilter);
+                    }
+                } catch (ModuleException e) {
+                    // Plugin conf doesn't exists anymore, so remove all group assoc
+                    removeOldDataObjectsGroupAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable,
+                                                   dsiId, group.getGroupName(), ICriterion.all());
+                }
+            }
+        }
     }
 
     /**
@@ -353,7 +422,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
 
-        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList(computationPlugins);
+        List<IComputedAttribute<Dataset, ?>> ll = new ArrayList<>(computationPlugins);
         ll.stream()
                 .forEach(comAtt -> LOGGER.info("attribute {} is computed", comAtt.getAttributeToCompute().getName()));
 
@@ -362,15 +431,31 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Add or update association between dataset and data objects that are into subsetting clause
+     * Associates all DATA entities matching the subsetting clause to the given DATASET entity and dataset groups.<br/>
+     * Only groups with no {@link AccessLevel#CUSTOM_ACCESS} are associated the the dataobjects in this method.<br/>
+     * The association is done by the {@link DataObjectUpdater} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#addOrUpdateDataObectGroupAssoc}.<br/>
+     * <b>NOTE</b> : The subsetting clause to find DATA entities is computed by adding dataset subsetting clause and "lastUpdate > lastUpdateDate parameter".<br/>
+     *
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
-            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                                                                    saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -380,15 +465,66 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association saved.",
-                                  dataObjectUpdater.getObjectsCount()), dsiId);
+                                  dataObjectUpdater.getObjectsCount()),
+                    dsiId);
     }
 
     /**
-     * Remove association between dataset and data objects that are no more into subsetting clause
+     * Associates all DATA entities matching the subsetting clause to the given DATASET groups with {@link AccessLevel#CUSTOM_ACCESS}.<br/>
+     * The association is done by the {@link DataObjectGroupAssocUpdater} consumer.<br/>
+     *
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
+     * @param groupName Name of the group to associate to DATA entities.
+     * @param groupSubsettingClause {@link ICriterion} group subsetting clause. Caculate by {@link IDataObjectAccessFilterPlugin} plugin.
+     */
+    private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
+            ICriterion groupSubsettingClause) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
+        sendMessage(String.format("          Adding or Updating data objects group <%s> association...", groupName),
+                    dsiId);
+        ICriterion subsettingCrit = dataset.getSubsettingClause();
+        // First : Retrieve objects associated  matching the groupSubsettingClause
+        subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
+        // For each objet remove group if not associated throught an other dataset
+        DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+        esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
+        // Saving remaining objects...
+        dataObjectAssocUpdater.finalSave();
+        sendMessage(String.format("          ...%d data objects group <%s> association saved.",
+                                  dataObjectAssocUpdater.getObjectsCount(), groupName),
+                    dsiId);
+    }
+
+    /**
+     * Remove association between DATASET entity and DATA entities that are no more into the subsetting clause.<br/>
+     * Only groups with no {@link AccessLevel#CUSTOM_ACCESS} are dissociated the the dataobjects in this method.<br/>
+     * The dissociation is done by the {@link DataObjectAssocRemover} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
      */
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
-            SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage("          Removing old dataset data objects association...", dsiId);
         // First : remove association between dataset and data objects for data objects that are no more associated to
         // new subsetting clause so search data objects that are tagged with dataset IPID and with NOT(user subsetting
@@ -397,12 +533,50 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                              ICriterion.not(dataset.getUserSubsettingClause()));
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
-                                                                                   saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association removed.",
-                                  dataObjectAssocRemover.getObjectsCount()), dsiId);
+                                  dataObjectAssocRemover.getObjectsCount()),
+                    dsiId);
+    }
+
+    /**
+     * Remove association between DATASET entity and DATA entities that are no more into the subsetting clause.<br/>
+     * Only groups with {@link AccessLevel#CUSTOM_ACCESS} are dissociated the the dataobjects in this method.<br/>
+     * The dissociation is done by the {@link DataObjectGroupAssocRemover} consumer.<br/>
+     * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
+     * @param dataset {@link Dataset} to associate to DATA entities
+     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
+     * to find only DATA with a lastUpdateDate greter than this parameter
+     * @param updateDate {@link OffsetDateTime} of the current update process
+     * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
+     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
+     * @param executor {@link ExecutorService}
+     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
+     * @param dsiId {@link DatasourceIngestion} identifier
+     */
+    private void removeOldDataObjectsGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
+            SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId, String groupName,
+            ICriterion groupSubsettingClause) {
+        // A set used to accumulate data objects to save into ES
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
+        sendMessage(String.format("          Removing old data objects group <%s> association...", groupName), dsiId);
+        // First : Retrieve objects associated to given group and not matching the groupSubsettingClause
+        ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
+                                                             ICriterion.contains("groups", groupName),
+                                                             ICriterion.not(groupSubsettingClause));
+        // For each objet remove group if not associated throught an other dataset
+        DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+        esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+        // Saving remaining objects...
+        dataObjectAssocRemover.finalSave();
+        sendMessage(String.format("          ...%d data objects group <%s> association removed.",
+                                  dataObjectAssocRemover.getObjectsCount(), groupName),
+                    dsiId);
     }
 
     /**
@@ -416,8 +590,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute) && attr.getName()
-                                .equals(attrInFragment.getName())).findFirst();
+                        .filter(attr -> (attr instanceof ObjectAttribute)
+                                && attr.getName().equals(attrInFragment.getName()))
+                        .findFirst();
                 if (candidate.isPresent()) {
                     Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
@@ -455,8 +630,17 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public boolean deleteIndex(String tenant) {
+        if (!esRepos.indexExists(tenant)) {
+            return false;
+        }
+        esRepos.deleteIndex(tenant);
+        return true;
+    }
+
+    @Override
     @MultitenantTransactional
-    public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
+    public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -473,8 +657,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         runtimeTenantResolver.forceTenant(tenant);
         FeignSecurityManager.asSystem();
         NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
-                                                    applicationName, title, NotificationType.ERROR);
+                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title,
+                NotificationType.ERROR);
         notifClient.createNotification(notif);
         FeignSecurityManager.reset();
     }
@@ -546,6 +730,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         for (DataObject dataObject : objects) {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
+            dataObject.setLastUpdate(creationDate);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
@@ -638,14 +823,37 @@ public class EntityIndexerService implements IEntityIndexerService {
         return esRepos.delete(tenant, EntityType.DATA.toString(), ipId);
     }
 
+    @Override
+    public void updateAllDatasets(String tenant) throws ModuleException {
+        updateDatasets(tenant, datasetService.findAll(), null, true, null);
+    }
+
+    @Override
+    public void updateAllDocuments(String tenant) throws ModuleException {
+        OffsetDateTime now = OffsetDateTime.now();
+        for (Document doc : documentService.findAll()) {
+            updateEntityIntoEs(tenant, doc.getIpId(), null, now, false, null);
+        }
+    }
+
+    @Override
+    public void updateAllCollections(String tenant) throws ModuleException {
+        OffsetDateTime now = OffsetDateTime.now();
+        for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
+            updateEntityIntoEs(tenant, col.getIpId(), null, now, false, null);
+        }
+    }
+
     /**
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
+     * @param message
+     * @param dsId {@link DatasourceIngestion} id
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            String msg = String
-                    .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
-                            message);
+            String msg = String.format("%s: %s",
+                                       ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                                       message);
             eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }

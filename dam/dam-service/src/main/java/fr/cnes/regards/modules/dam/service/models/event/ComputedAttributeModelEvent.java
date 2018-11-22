@@ -26,6 +26,7 @@ import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
  * Event sent when a plugin configuration is updated on a computed attribute
  * @author oroussel
  */
+@SuppressWarnings("serial")
 public class ComputedAttributeModelEvent extends ApplicationEvent {
 
     public ComputedAttributeModelEvent(ModelAttrAssoc source) {

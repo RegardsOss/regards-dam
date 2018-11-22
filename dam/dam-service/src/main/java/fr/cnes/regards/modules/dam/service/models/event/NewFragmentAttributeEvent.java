@@ -10,6 +10,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
  *
  * @author Sylvain VISSIERE-GUERINET
  */
+@SuppressWarnings("serial")
 public class NewFragmentAttributeEvent extends ApplicationEvent {
 
     /**

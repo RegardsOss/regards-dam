@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
 /**
  * @author oroussel
+ * @param <U> {@link AbstractEntity}
  */
 public abstract class AbstractValidationService<U extends AbstractEntity<?>> implements IValidationService<U> {
 

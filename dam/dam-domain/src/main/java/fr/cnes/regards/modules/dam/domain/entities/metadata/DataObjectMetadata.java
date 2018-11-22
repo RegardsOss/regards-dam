@@ -26,6 +26,8 @@ public class DataObjectMetadata {
     private final Multimap<Long, String> modelIds = HashMultimap.create();
 
     /**
+     * @param groupName
+     * @param datasetIpId
      * @param dataAccessGranted true if data access is granted for (group, dataset ip id)
      */
     public void addGroup(String groupName, String datasetIpId, boolean dataAccessGranted) {
@@ -39,6 +41,7 @@ public class DataObjectMetadata {
 
     /**
      * Remove given ipId from all values (groups multimap AND modelIds multimap)
+     * @param datasetIpId
      */
     public void removeDatasetIpId(String datasetIpId) {
         for (Iterator<DatasetAccessRight> i = groups.values().iterator(); i.hasNext();) {
@@ -62,6 +65,7 @@ public class DataObjectMetadata {
      * Retrieve a map of { group -> data access}. data access is a true boolean if at least one associated dataset
      * grants
      * data access, false otherwise
+     * @return {@link Map} bteween group name and associated Access
      */
     public Map<String, Boolean> getGroupsAccessRightsMap() {
         return Maps.transformValues(groups

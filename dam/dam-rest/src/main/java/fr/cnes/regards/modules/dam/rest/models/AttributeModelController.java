@@ -103,9 +103,10 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Constructor
-     * @param attributeModelService Attribute service
-     * @param pResourceService Resource service
-     * @param restrictionService Restriction service
+     * @param attributeModelService Attribute service {@link IAttributeModelService}
+     * @param pResourceService Resource service {@link IResourceService}
+     * @param modelAttrAssocService  {@link IModelAttrAssocService}
+     * @param restrictionService Restriction service {@link RestrictionService}
      */
     public AttributeModelController(final IAttributeModelService attributeModelService,
             final IResourceService pResourceService, IModelAttrAssocService modelAttrAssocService,
@@ -120,6 +121,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * Retrieve all attributes. The request can be filtered by {@link AttributeType}
      * @param type filter by type
      * @param fragmentName filter by fragment
+     * @param modelIds
+     * @param noLink
      * @return list of {@link AttributeModel}
      */
     @ResourceAccess(description = "List all attributes", role = DefaultRole.PUBLIC)
@@ -196,6 +199,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * Delete an attribute
      * @param id attribute identifier
      * @return nothing
+     * @throws ModuleException
      */
     @ResourceAccess(description = "Delete an attribute")
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)

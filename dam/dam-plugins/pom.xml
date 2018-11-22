@@ -76,5 +76,9 @@
 			<artifactId>regards-integration-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.opensearch</groupId>
+			<artifactId>opensearch-service</artifactId>
+		</dependency>
 	</dependencies>
 </project>

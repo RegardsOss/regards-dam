@@ -1,15 +1,35 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 
 /**
@@ -26,6 +46,7 @@ public interface IEntityIndexerService {
      * @param ipId concerned entity id
      * @param updateDate current update date (usually now)
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
+     * @throws ModuleException
      */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
             boolean forceAssociatedEntitiesUpdate) throws ModuleException {
@@ -35,7 +56,8 @@ public interface IEntityIndexerService {
     /**
      * Manage computed attributes computation
      * @param dataset concerned dataset
-     * @param dsiId can be null (in this case, no notification is sent)
+     * @param dsiId {@link DatasourceIngestion} id. can be null (in this case, no notification is sent)
+     * @param tenant
      */
     void computeComputedAttributes(Dataset dataset, Long dsiId, String tenant);
 
@@ -46,6 +68,8 @@ public interface IEntityIndexerService {
      * @param lastUpdateDate last ingestion update date
      * @param updateDate current update date (usually now)
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
+     * @param dsiId {@link DatasourceIngestion} id
+     * @throws ModuleException
      */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) throws ModuleException;
@@ -58,13 +82,44 @@ public interface IEntityIndexerService {
     boolean createIndexIfNeeded(String tenant);
 
     /**
+     * CreDeleteate index if exist
+     * @param tenant concerned tenant
+     * @return true if a deletion has been done
+     */
+    boolean deleteIndex(String tenant);
+
+    /**
      * Transactional method updating a set of datasets
+     * @param tenant
+     * @param datasets
      * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
      * @param forceDataObjectsUpdate true to force all associated data objects update
      * @param dsiId datasetIngestion id
+     * @throws ModuleException
      */
-    void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
+    void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException;
+
+    /**
+     * Force update of all {@link Dataset}s
+     * @param tenant
+     * @throws ModuleException
+     */
+    void updateAllDatasets(String tenant) throws ModuleException;
+
+    /**
+     * Force update of all {@link Document}s
+     * @param tenant
+     * @throws ModuleException
+     */
+    void updateAllDocuments(String tenant) throws ModuleException;
+
+    /**
+     * Force update of all {@link fr.cnes.regards.modules.dam.domain.entities.Collection}s
+     * @param tenant
+     * @throws ModuleException
+     */
+    void updateAllCollections(String tenant) throws ModuleException;
 
     /**
      * Create given data objects into Elasticsearch

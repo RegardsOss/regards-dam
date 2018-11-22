@@ -39,6 +39,7 @@ public interface IDataSourcePlugin {
 
     /**
      * The model name
+     * @return model name
      */
     String getModelName();
 
@@ -54,6 +55,7 @@ public interface IDataSourcePlugin {
      * @param pageable the pagination information
      * @param date Allows to filter the new entities created after this date parameter (can be null)
      * @return a page of entities
+     * @throws DataSourceException
      */
     Page<DataObjectFeature> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException;
 
@@ -62,6 +64,7 @@ public interface IDataSourcePlugin {
      * @param tenant tenant to build URN
      * @param pageable the pagination information
      * @return a page of entities
+     * @throws DataSourceException
      */
     default Page<DataObjectFeature> findAll(String tenant, Pageable pageable) throws DataSourceException {
         return this.findAll(tenant, pageable, null);

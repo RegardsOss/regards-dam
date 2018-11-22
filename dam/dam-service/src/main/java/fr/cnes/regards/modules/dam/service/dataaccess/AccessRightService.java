@@ -18,28 +18,35 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
@@ -48,8 +55,12 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEventType;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
+import fr.cnes.regards.modules.notification.domain.NotificationType;
 
 /**
  * Access right service implementation
@@ -58,6 +69,8 @@ import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 @Service
 @MultitenantTransactional
 public class AccessRightService implements IAccessRightService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightService.class);
 
     @Autowired
     private IAccessRightRepository repository;
@@ -70,6 +83,12 @@ public class AccessRightService implements IAccessRightService {
 
     @Autowired
     private IPublisher eventPublisher;
+
+    @Autowired
+    private IPluginService pluginService;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
@@ -112,14 +131,32 @@ public class AccessRightService implements IAccessRightService {
     }
 
     @Override
-    public Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
-            throws ModuleException {
+    public DatasetMetadata retrieveDatasetMetadata(UniformResourceName datasetIpId) throws ModuleException {
+
         if (datasetIpId == null) {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
-        return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
-                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), accessRight -> Pair
-                        .of(accessRight.getAccessLevel(), accessRight.getDataAccessRight().getDataAccessLevel())));
+        DatasetMetadata metadata = new DatasetMetadata();
+
+        retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
+                .forEach(accessRight -> {
+                    Long metadataPluginId = null;
+                    Long pluginId = null;
+                    if (accessRight.getDataAccessRight().getPluginConfiguration() != null) {
+                        pluginId = accessRight.getDataAccessRight().getPluginConfiguration().getId();
+                    }
+                    if (accessRight.getDataAccessPlugin() != null) {
+                        metadataPluginId = accessRight.getDataAccessPlugin().getId();
+                    }
+
+                    boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
+                    boolean dataAccess = datasetAccess
+                            && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
+                    metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
+                                                metadataPluginId, pluginId);
+                });
+        return metadata;
+
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
@@ -158,7 +195,13 @@ public class AccessRightService implements IAccessRightService {
         // re-set updated dataset on accessRight to make its state correct on accessRight object
         accessRight.setDataset(dataset);
 
+        // If a new plugin conf is provided, create it
+        if ((accessRight.getDataAccessPlugin() != null)) {
+            createPluginConfiguration(accessRight.getDataAccessPlugin());
+        }
+
         AccessRight created = repository.save(accessRight);
+
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
     }
@@ -195,7 +238,17 @@ public class AccessRightService implements IAccessRightService {
             }
 
         }
+
+        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(Optional.ofNullable(accessRight
+                .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
+
         AccessRight updated = repository.save(accessRight);
+
+        // Remove unused plugin conf id any
+        if (toRemove.isPresent()) {
+            pluginService.deletePluginConfiguration(toRemove.get().getId());
+        }
+
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
         }
@@ -211,7 +264,14 @@ public class AccessRightService implements IAccessRightService {
             dataset.getGroups().remove(accessRight.getAccessGroup().getName());
             datasetService.update(dataset);
         }
+
+        PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
         repository.delete(id);
+
+        if (((confToDelete != null) && (confToDelete.getId() != null))) {
+            pluginService.deletePluginConfiguration(confToDelete.getId());
+        }
+
         if (dataset != null) {
             eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
         }
@@ -243,6 +303,89 @@ public class AccessRightService implements IAccessRightService {
             }
         }
         return isAutorised;
+    }
+
+    /**
+     * Allow to send an update event for all {@link AccessRight}s with a dynamic plugin filter
+     */
+
+    @Override
+    public void updateDynamicAccessRights() {
+        Set<UniformResourceName> datasetsToUpdate = Sets.newHashSet();
+        repository.findByDataAccessPluginNotNull().forEach(ar -> {
+            try {
+                if (!datasetsToUpdate.contains(ar.getDataset().getIpId())) {
+                    IDataObjectAccessFilterPlugin plugin = pluginService.getPlugin(ar.getDataAccessPlugin().getId());
+                    if (plugin.isDynamic()) {
+                        LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
+                                    ar.getDataset().getIpId());
+                        datasetsToUpdate.add(ar.getDataset().getIpId());
+                    }
+                }
+            } catch (ModuleException e) {
+                LOGGER.error("updateDynamicAccessRights - Error getting plugin {} for accessRight {} of dataset {} and group {}. Does plugin exists anymore ?",
+                             ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
+                             ar.getAccessGroup().getName());
+            }
+        });
+
+        if (!datasetsToUpdate.isEmpty()) {
+            String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
+            try {
+                FeignSecurityManager.asSystem();
+                notificationClient.notifyRoles(message, "Dynamic access right update", "Data-management",
+                                               NotificationType.INFO, DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                FeignSecurityManager.reset();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                LOGGER.error(String.format("Error sending notification : %s", message), e);
+            }
+
+            datasetsToUpdate
+                    .forEach(ds -> eventPublisher.publish(new AccessRightEvent(ds, AccessRightEventType.UPDATE)));
+        }
+    }
+
+    private PluginConfiguration createPluginConfiguration(PluginConfiguration pluginConfiguration)
+            throws ModuleException {
+        // Check no identifier. For each new chain, we force plugin configuration creation. A configuration cannot be
+        // reused.
+        if (pluginConfiguration.getId() != null) {
+            throw new EntityInvalidException(
+                    String.format("Plugin configuration %s must not already have an identifier.",
+                                  pluginConfiguration.getLabel()));
+        }
+        return pluginService.savePluginConfiguration(pluginConfiguration);
+    }
+
+    /**
+     * Create or update a plugin configuration cleaning old one if necessary
+     * @param pluginConfiguration new plugin configuration or update
+     * @param existing existing plugin configuration
+     * @return configuration to remove because it is no longer used
+     * @throws ModuleException if error occurs!
+     */
+    private Optional<PluginConfiguration> updatePluginConfiguration(Optional<PluginConfiguration> pluginConfiguration,
+            Optional<PluginConfiguration> existing) throws ModuleException {
+
+        Optional<PluginConfiguration> confToRemove = Optional.empty();
+
+        if (pluginConfiguration.isPresent()) {
+            PluginConfiguration conf = pluginConfiguration.get();
+            if (conf.getId() == null) {
+                // Delete previous configuration if exists
+                confToRemove = existing;
+                // Save new configuration
+                pluginService.savePluginConfiguration(conf);
+            } else {
+                // Update configuration
+                pluginService.updatePluginConfiguration(conf);
+            }
+        } else {
+            // Delete previous configuration if exists
+            confToRemove = existing;
+        }
+
+        return confToRemove;
     }
 
 }

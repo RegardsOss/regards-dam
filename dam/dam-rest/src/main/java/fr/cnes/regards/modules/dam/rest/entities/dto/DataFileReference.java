@@ -105,6 +105,8 @@ public class DataFileReference {
 
     /**
      * Transform DTO in data file
+     * @param dataType
+     * @return {@link DataFile}
      */
     public DataFile toDataFile(DataType dataType) {
         DataFile dataFile = DataFile.build(dataType, filename, uri, mimeType, Boolean.TRUE, Boolean.TRUE);

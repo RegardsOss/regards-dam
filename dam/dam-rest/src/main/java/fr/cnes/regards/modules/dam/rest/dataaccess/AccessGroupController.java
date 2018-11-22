@@ -105,7 +105,9 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
 
     /**
      * Retrieve an access group by its name
+     * @param groupName
      * @return retrieved access group
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
     @ResourceAccess(description = "send the access group of name requested")
@@ -133,7 +135,10 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
 
     /**
      * Associate a user, represented by its email, to an access group, represented by its name
+     * @param groupName
+     * @param userEmail
      * @return the updated access group
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResourceAccess(description = "associated the user of email specified to the access group of name requested")
@@ -146,7 +151,10 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
 
     /**
      * dissociate a user, represented by its email, from an access group, represented by its name.
+     * @param groupName
+     * @param userEmail
      * @return the updated access group
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResourceAccess(description = "dissociated the user of email specified from the access group of name requested")

@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 
 /**
  * Data object accumulator and multi thread Elasticsearch bulk saver
@@ -16,7 +17,7 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
 
     private final String datasetIpId;
 
-    private final Map<String, Boolean> groupsMap;
+    private final Map<String, DataObjectGroup> groupsMap;
 
     private final OffsetDateTime updateDate;
 
@@ -36,8 +37,15 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
         // reset groupsMap and modelIds for this datasetIpId
         object.getMetadata().removeDatasetIpId(datasetIpId);
         object.addTags(datasetIpId);
-        // set current groupsMap and modelIds on metadata for this datasetIpId
-        groupsMap.forEach((group, dataGranted) -> object.getMetadata().addGroup(group, datasetIpId, dataGranted));
+        // set current groups with no plugin access filter from groupsMap on metadata for this datasetIpId
+        // Calcul of group access with plugins are done in an other step.
+        // This step only associate group to dataobjets of dataset with no filter. All objets of the dataset have the same groups.
+        for (DataObjectGroup group : groupsMap.values()) {
+            if ((group.getMetaDataObjectAccessFilterPluginId() == null) && group.getDataObjectAccess()) {
+                object.getMetadata().addGroup(group.getGroupName(), datasetIpId, group.getDataObjectAccess());
+            }
+        }
+        // set current modelIds on metadata for this datasetIpId
         object.getMetadata().addModelId(datasetModelId, datasetIpId);
         // update groupsMap from metadata
         object.setGroups(object.getMetadata().getGroups());
