@@ -51,12 +51,12 @@ public class ProjectGeoSettings {
     private IRuntimeTenantResolver tenantResolver;
 
     /**
-     * Using a cache to manage projects values and to be refreshed every 5 minutes in case project properties have
+     * Using a cache to manage projects values and to be refreshed every 1 minute in case project properties have
      * changed.
      * This cache contains Crs and shouldManagePolsOnGeometries values associated to projects
      */
     private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
+            .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
                 @Override
                 public Pair<Boolean, Crs> load(String key) {

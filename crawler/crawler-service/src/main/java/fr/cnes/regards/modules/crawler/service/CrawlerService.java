@@ -70,6 +70,7 @@ import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
@@ -95,6 +96,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     @Autowired
     private IEsRepository esRepos;
+
+    @Autowired
+    private ProjectGeoSettings projectGeoSettings;
 
     /**
      * Self proxy
@@ -364,22 +368,26 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             if (feature.getGeometry() != null) {
                 // This geometry has been set by plugin, IT IS NOT NORMALIZED
                 IGeometry geometry = feature.getGeometry();
-                if (feature.getCrs().isPresent() && (!feature.getCrs().get().equals(Crs.WGS_84.toString()))) {
+                // The crs is brought by project so it must be set on feature and taken into account for geometry
+                // normalization
+                feature.setCrs(projectGeoSettings.getCrs().toString());
+                // Always normalize geometry in its origin CRS
+                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
+                // Then manage projected (or not) geometry into WGS84
+                if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
                     try {
-                        // Transform to Wgs84...
+                        // Transform to Wgs84...(not normalized one from its origin CRS)
                         IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
                                                                       Crs.WGS_84);
-                        // ...and save it onto DataObject after havinf normalized it
+                        // ...and save it onto DataObject after having normalized it
                         dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
                     } catch (IllegalArgumentException e) {
                         throw new RsRuntimeException(
                                 String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
                     }
-                } else { // Even if Crs is WGS84, don't forget to normalize and copy geometry
-                    dataObject.setWgs84(GeoHelper.normalize(geometry));
+                } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
+                    dataObject.setWgs84(feature.getNormalizedGeometry());
                 }
-                // Don't forget to set normalized geometry
-                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
             }
 
             dataObjects.add(dataObject);
