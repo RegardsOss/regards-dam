@@ -99,11 +99,11 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
         List<ModuleConfigurationItem<?>> configurations = new ArrayList<>();
         // export connections
         for (PluginConfiguration connection : pluginService.getPluginConfigurationsByType(IConnectionPlugin.class)) {
-            configurations.add(ModuleConfigurationItem.build(connection));
+            configurations.add(ModuleConfigurationItem.build(connection.export()));
         }
         // export datasources
         for (PluginConfiguration connection : pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)) {
-            configurations.add(ModuleConfigurationItem.build(connection));
+            configurations.add(ModuleConfigurationItem.build(connection.export()));
         }
         return ModuleConfiguration.build(info, configurations);
     }
