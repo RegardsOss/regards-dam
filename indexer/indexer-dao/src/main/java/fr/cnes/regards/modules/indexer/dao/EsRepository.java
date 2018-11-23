@@ -906,7 +906,7 @@ public class EsRepository implements IEsRepository {
             // Launch the request
             long start = System.currentTimeMillis();
             LOGGER.trace("ElasticsearchRequest: {}", request.toString());
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
 
             start = System.currentTimeMillis();
