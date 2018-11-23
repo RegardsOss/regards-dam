@@ -92,8 +92,6 @@ public class PepsTest {
 
         if (!repos.indexExists(TENANT)) {
             repos.createIndex(TENANT);
-            repos.setGeometryMapping(TENANT, EntityType.DATA.toString());
-            repos.setAutomaticDoubleMapping(TENANT, EntityType.DATA.toString());
             repos.setSettingsForBulk(TENANT);
             try {
                 createDataFromPeps();

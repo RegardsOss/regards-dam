@@ -99,7 +99,6 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
             repository.deleteIndex(INDEX);
         }
         repository.createIndex(INDEX);
-        repository.setGeometryMapping(INDEX, TYPE);
 
         PointItem northPole = new PointItem("NORTH_POLE", 0.0, 90.0);
         PointItem southPole = new PointItem("SOUTH_POLE", 0.0, -90.0);

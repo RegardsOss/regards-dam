@@ -75,27 +75,6 @@ public interface IEsRepository {
      */
     boolean createAlias(String index, String alias);
 
-    /**
-     * Put dynamic mapping on specified types of specified index for floating point values (force "double" mapping
-     * type instead of float)
-     * @param index index
-     * @param types all types needing automatic double mapping
-     * @return true if acknowledged by Elasticsearch, false otherwise
-     * @deprecated useless, everything is done by {@link #createIndex(String)}
-     */
-    @Deprecated
-    boolean setAutomaticDoubleMapping(String index, String... types);
-
-    /**
-     * Put geometry mapping on specified types of specified index (ie a "geo_shape" type "geometry" property)
-     * @param index index
-     * @param types all types with geometry mapping
-     * @return true if acknowledged by Elasticsearch, false otherwise.
-     * @deprecated useless everything is done by {@link #createIndex(String)}
-     */
-    @Deprecated
-    boolean setGeometryMapping(String index, String... types);
-
     boolean setSettingsForBulk(String index);
 
     boolean unsetSettingsForBulk(String index);

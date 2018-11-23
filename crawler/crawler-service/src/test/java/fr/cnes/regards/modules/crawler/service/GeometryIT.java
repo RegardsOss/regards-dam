@@ -2,7 +2,6 @@ package fr.cnes.regards.modules.crawler.service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,9 +99,6 @@ public class GeometryIT {
         } else {
             esRepos.createIndex(TENANT);
         }
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
-
         crawlerService.setConsumeOnlyMode(true);
     }
 

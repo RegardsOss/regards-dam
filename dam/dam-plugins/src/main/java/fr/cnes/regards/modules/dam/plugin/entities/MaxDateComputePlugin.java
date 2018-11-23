@@ -22,21 +22,16 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
 import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 
 /**
@@ -52,15 +47,6 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 @ComputationPlugin(supportedType = AttributeType.DATE_ISO8601)
 public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {
 
-    @Autowired
-    private IEsRepository esRepo;
-
-    @Autowired
-    private IRuntimeTenantResolver tenantResolver;
-
-    @Autowired
-    private IAttributeModelRepository attModelRepos;
-
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
             description = "Name of parameter attribute used to compute result attribute.")
     private String parameterAttributeName;
@@ -75,7 +61,6 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
      */
     @PluginInit
     public void init() {
-        super.initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);
     }
@@ -90,6 +75,7 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
+        searchKey.setCrs(projectGeoSettings.getCrs());
         result = esRepo.maxDate(searchKey, dataset.getSubsettingClause(), parameterAttribute.getFullJsonPath());
         log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getFullJsonPath(),
                   dataset.getIpId().toString(), result);

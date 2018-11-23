@@ -170,6 +170,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // objects which have a lastUpdate date >= now)
         SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(EntityType.DATASET.toString(), Dataset.class);
         searchKey.setSearchIndex(tenant);
+        searchKey.setCrs(projectGeoSettings.getCrs());
         Set<Dataset> datasetsToUpdate = new HashSet<>();
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {

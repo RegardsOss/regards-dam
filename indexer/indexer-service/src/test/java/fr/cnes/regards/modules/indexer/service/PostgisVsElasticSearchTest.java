@@ -122,8 +122,6 @@ public class PostgisVsElasticSearchTest {
     public void fillEs() throws SQLException, TransformException, InterruptedException {
         if (!repos.indexExists(TENANT)) {
             repos.createIndex(TENANT);
-            repos.setGeometryMapping(TENANT, EntityType.DATA.toString());
-            repos.setAutomaticDoubleMapping(TENANT, EntityType.DATA.toString());
             repos.setSettingsForBulk(TENANT);
 
             Model model = new Model();

@@ -53,7 +53,7 @@ public class ProjectGeoSettings {
     /**
      * Using a cache to manage projects values and to be refreshed every 1 minute in case project properties have
      * changed.
-     * This cache contains Crs and shouldManagePolsOnGeometries values associated to projects
+     * This cache contains Crs and shouldManagePolesOnGeometries values associated to projects
      */
     private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
@@ -70,8 +70,9 @@ public class ProjectGeoSettings {
                             return Pair.of(currentProject.getPoleToBeManaged(), Crs.valueOf(currentProject.getCrs()));
                         } else { // Must throw something
                             throw new RsRuntimeException(new Exception(
-                                    String.format("Error while asking project client: Error %d",
-                                                  response.getStatusCode())));
+                                    String.format("Error while asking project client: Error %d - %s",
+                                                  response.getStatusCode().value(),
+                                                  response.getStatusCode().getReasonPhrase())));
                         }
                     } finally {
                         FeignSecurityManager.reset();

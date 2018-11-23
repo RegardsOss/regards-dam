@@ -130,9 +130,6 @@ public class EsRepositoryTest {
     public void testCreateIndexWithSpecialMappings() {
         Assert.assertTrue(repository.createIndex("test"));
         String[] types = { "pipo", "bimbo" };
-        repository.setAutomaticDoubleMapping("test", types);
-        repository.setGeometryMapping("test", types);
-
     }
 
     @Test

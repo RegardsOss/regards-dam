@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -39,6 +40,7 @@ import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 
 /**
@@ -60,11 +62,17 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    private IEsRepository esRepo;
+    @Autowired
+    protected IEsRepository esRepo;
 
+    @Autowired
+    protected IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
     protected IAttributeModelRepository attModelRepos;
 
-    private IRuntimeTenantResolver tenantResolver;
+    @Autowired
+    protected ProjectGeoSettings projectGeoSettings;
 
     protected AttributeModel parameterAttribute;
 
@@ -86,24 +94,10 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         return result;
     }
 
-    /**
-     * Each of those beans cannot be wired into the abstract so they have to be autowired into plugin implementation and
-     * given thanks to this method. Doing so fully initialize the abstraction.
-     */
-    protected void initAbstract(IEsRepository esRepo, IAttributeModelRepository attModelRepos,
-            IRuntimeTenantResolver tenantResolver) {
-        this.esRepo = esRepo;
-        this.attModelRepos = attModelRepos;
-        this.tenantResolver = tenantResolver;
-    }
-
     protected void init(String attributeToComputeName, String attributeToComputeFragmentName,
             String parameterAttributeName, String parameterAttributeFragmentName) {
-        attributeToCompute = attModelRepos
-                .findByNameAndFragmentName(attributeToComputeName,
-                                           (Strings.isNullOrEmpty(attributeToComputeFragmentName)
-                                                   ? Fragment.getDefaultName()
-                                                   : attributeToComputeFragmentName));
+        attributeToCompute = attModelRepos.findByNameAndFragmentName(attributeToComputeName, (Strings.isNullOrEmpty(
+                attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName));
         if (attributeToCompute == null) {
             if (!Strings.isNullOrEmpty(attributeToComputeFragmentName)) {
                 throw new IllegalArgumentException(
@@ -114,11 +108,8 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find computed attribute '%s'", attributeToComputeName));
             }
         }
-        parameterAttribute = attModelRepos
-                .findByNameAndFragmentName(parameterAttributeName,
-                                           (Strings.isNullOrEmpty(parameterAttributeFragmentName)
-                                                   ? Fragment.getDefaultName()
-                                                   : parameterAttributeFragmentName));
+        parameterAttribute = attModelRepos.findByNameAndFragmentName(parameterAttributeName, (Strings.isNullOrEmpty(
+                parameterAttributeFragmentName) ? Fragment.getDefaultName() : parameterAttributeFragmentName));
         if (parameterAttribute == null) {
             if (!Strings.isNullOrEmpty(parameterAttributeFragmentName)) {
                 throw new IllegalArgumentException(
@@ -134,7 +125,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
 
     /**
      * @param dataset dataset on which the attribute, once computed, will be added. This allows us to know which
-     *            DataObject should be used.
+     * DataObject should be used.
      */
     @Override
     public void compute(Dataset dataset) {
@@ -142,6 +133,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
+        searchKey.setCrs(projectGeoSettings.getCrs());
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
         log.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getFullJsonPath(),
                   dataset.getIpId().toString(), result);
@@ -166,10 +158,10 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         // filter the fragment property then filter the right property on fragment properties
         com.google.common.base.Optional<ObjectAttribute> fragmentOpt = com.google.common.base.Optional
                 .fromNullable((ObjectAttribute) object.getProperty(parameterAttribute.getFragment().getName()));
-        return (fragmentOpt.isPresent()
-                ? Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName()))
-                        .toJavaUtil()
-                : Optional.empty());
+        return (fragmentOpt.isPresent() ?
+                Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName()))
+                        .toJavaUtil() :
+                Optional.empty());
 
     }
 

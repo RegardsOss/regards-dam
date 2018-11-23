@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -38,9 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +56,6 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -102,6 +100,7 @@ import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
@@ -178,6 +177,9 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private IDatasourceIngestionRepository datasourceIngestionRepository;
+
+    @Autowired
+    private ProjectGeoSettings projectGeoSettings;
 
     @Override
     @EventListener
@@ -275,7 +277,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
                 || !newDataset.getMetadata().getDataObjectsGroupsMap()
-                        .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
+                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
     }
 
     /**
@@ -313,7 +315,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         };
         // Apply updateTag function to all tagging objects
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
-        searchKey.setSearchIndex(tenant);
+        addProjectInfos(tenant, searchKey);
         esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
@@ -332,18 +334,17 @@ public class EntityIndexerService implements IEntityIndexerService {
             Long dsiId) {
         String tenant = runtimeTenantResolver.getTenant();
         sendMessage(String.format("      Updating dataset %s indexation and all its associated data objects...",
-                                  dataset.getLabel()),
-                    dsiId);
+                                  dataset.getLabel()), dsiId);
         sendMessage(String.format("        Searching for dataset %s associated data objects...", dataset.getLabel()),
                     dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
-        searchKey.setSearchIndex(tenant);
+        addProjectInfos(tenant, searchKey);
 
         ExecutorService executor = Executors.newFixedThreadPool(1);
 
         // Create a callable which bulk save into ES a set of data objects
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
-                tenant, dataset.getId());
+                                                                                      tenant, dataset.getId());
         // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
         removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
 
@@ -363,19 +364,18 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage("      ...Dataset indexation updated.", dsiId);
     }
 
+    private void addProjectInfos(String tenant, SimpleSearchKey<DataObject> searchKey) {
+        searchKey.setSearchIndex(tenant);
+        searchKey.setCrs(projectGeoSettings.getCrs());
+    }
+
     /**
      * Handle Access rights filter for the given dataset. An Access right filter is an accessRight with a {@link IDataObjectAccessFilterPlugin}.
-     * @param tenant {@link Strin} current tenant
-     * @param dataset {@link Dataset}
-     * @param updateDate {@link OffsetDateTime} update date
-     * @param executor {@link ExecutorService}
-     * @param saveDataObjectsCallable {@link SaveDataObjectsCallable}
-     * @param dsiId {@link DatasourceIngestion} id
      */
     private void manageDatasetUpdateFilteredAccessrights(String tenant, Dataset dataset, OffsetDateTime updateDate,
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
-        searchKey.setSearchIndex(tenant);
+        addProjectInfos(tenant, searchKey);
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
             // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
@@ -431,18 +431,16 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Associates all DATA entities matching the subsetting clause to the given DATASET entity and dataset groups.<br/>
+     * Associate all DATA entities matching the subsetting clause to the given DATASET entity and dataset groups.<br/>
      * Only groups with no {@link AccessLevel#CUSTOM_ACCESS} are associated the the dataobjects in this method.<br/>
      * The association is done by the {@link DataObjectUpdater} consumer.<br/>
      * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#addOrUpdateDataObectGroupAssoc}.<br/>
      * <b>NOTE</b> : The subsetting clause to find DATA entities is computed by adding dataset subsetting clause and "lastUpdate > lastUpdateDate parameter".<br/>
-     *
      * @param dataset {@link Dataset} to associate to DATA entities
      * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
      * to find only DATA with a lastUpdateDate greter than this parameter
      * @param updateDate {@link OffsetDateTime} of the current update process
      * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
-     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
      * @param executor {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId {@link DatasourceIngestion} identifier
@@ -455,7 +453,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                saveDataObjectsCallable, executor);
+                                                                    saveDataObjectsCallable, executor);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -465,18 +463,15 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association saved.",
-                                  dataObjectUpdater.getObjectsCount()),
-                    dsiId);
+                                  dataObjectUpdater.getObjectsCount()), dsiId);
     }
 
     /**
      * Associates all DATA entities matching the subsetting clause to the given DATASET groups with {@link AccessLevel#CUSTOM_ACCESS}.<br/>
      * The association is done by the {@link DataObjectGroupAssocUpdater} consumer.<br/>
-     *
      * @param dataset {@link Dataset} to associate to DATA entities
      * @param updateDate {@link OffsetDateTime} of the current update process
      * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
-     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
      * @param executor {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId {@link DatasourceIngestion} identifier
@@ -496,13 +491,14 @@ public class EntityIndexerService implements IEntityIndexerService {
         subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
-                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+                                                                                             toSaveObjects,
+                                                                                             saveDataObjectsCallable,
+                                                                                             executor, groupName);
         esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
         // Saving remaining objects...
         dataObjectAssocUpdater.finalSave();
         sendMessage(String.format("          ...%d data objects group <%s> association saved.",
-                                  dataObjectAssocUpdater.getObjectsCount(), groupName),
-                    dsiId);
+                                  dataObjectAssocUpdater.getObjectsCount(), groupName), dsiId);
     }
 
     /**
@@ -511,11 +507,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      * The dissociation is done by the {@link DataObjectAssocRemover} consumer.<br/>
      * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
      * @param dataset {@link Dataset} to associate to DATA entities
-     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
-     * to find only DATA with a lastUpdateDate greter than this parameter
      * @param updateDate {@link OffsetDateTime} of the current update process
      * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
-     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
      * @param executor {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId {@link DatasourceIngestion} identifier
@@ -533,13 +526,12 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                              ICriterion.not(dataset.getUserSubsettingClause()));
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
-                saveDataObjectsCallable, executor);
+                                                                                   saveDataObjectsCallable, executor);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association removed.",
-                                  dataObjectAssocRemover.getObjectsCount()),
-                    dsiId);
+                                  dataObjectAssocRemover.getObjectsCount()), dsiId);
     }
 
     /**
@@ -548,11 +540,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      * The dissociation is done by the {@link DataObjectGroupAssocRemover} consumer.<br/>
      * To handle the groups with {@link AccessLevel#CUSTOM_ACCESS} see {@link EntityIndexerService#removeOldDataObjectsGroupAssoc}.<br/>
      * @param dataset {@link Dataset} to associate to DATA entities
-     * @param lastUpdateDate {@link OffsetDateTime}. If not null, add a datatime criterion in the subsesstin clause
-     * to find only DATA with a lastUpdateDate greter than this parameter
      * @param updateDate {@link OffsetDateTime} of the current update process
      * @param searchKey {@link SimpleSearchKey} used to run elasticsearch searh of DATA entities to update
-     * @param toSaveObjects Set of {@link DataObject}s containing all unsaved and updated entities of the current update process.
      * @param executor {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId {@link DatasourceIngestion} identifier
@@ -565,18 +554,19 @@ public class EntityIndexerService implements IEntityIndexerService {
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage(String.format("          Removing old data objects group <%s> association...", groupName), dsiId);
         // First : Retrieve objects associated to given group and not matching the groupSubsettingClause
-        ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
-                                                             ICriterion.contains("groups", groupName),
-                                                             ICriterion.not(groupSubsettingClause));
+        ICriterion oldAssociatedObjectsCrit = ICriterion
+                .and(ICriterion.eq("tags", dataset.getIpId().toString()), ICriterion.contains("groups", groupName),
+                     ICriterion.not(groupSubsettingClause));
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
-                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+                                                                                             toSaveObjects,
+                                                                                             saveDataObjectsCallable,
+                                                                                             executor, groupName);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects group <%s> association removed.",
-                                  dataObjectAssocRemover.getObjectsCount(), groupName),
-                    dsiId);
+                                  dataObjectAssocRemover.getObjectsCount(), groupName), dsiId);
     }
 
     /**
@@ -590,9 +580,8 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute)
-                                && attr.getName().equals(attrInFragment.getName()))
-                        .findFirst();
+                        .filter(attr -> (attr instanceof ObjectAttribute) && attr.getName()
+                                .equals(attrInFragment.getName())).findFirst();
                 if (candidate.isPresent()) {
                     Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
@@ -624,8 +613,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.createIndex(tenant);
         String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
                 .toArray(length -> new String[length]);
-        esRepos.setAutomaticDoubleMapping(tenant, types);
-        esRepos.setGeometryMapping(tenant, types);
         return true;
     }
 
@@ -657,8 +644,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         runtimeTenantResolver.forceTenant(tenant);
         FeignSecurityManager.asSystem();
         NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title,
-                NotificationType.ERROR);
+                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
+                                                    applicationName, title, NotificationType.ERROR);
         notifClient.createNotification(notif);
         FeignSecurityManager.reset();
     }
@@ -846,14 +833,13 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
-     * @param message
      * @param dsId {@link DatasourceIngestion} id
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            String msg = String.format("%s: %s",
-                                       ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
-                                       message);
+            String msg = String
+                    .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                            message);
             eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }

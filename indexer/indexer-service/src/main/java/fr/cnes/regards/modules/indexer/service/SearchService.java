@@ -43,6 +43,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
@@ -61,6 +62,9 @@ public class SearchService implements ISearchService {
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
+    private ProjectGeoSettings projectGeoSettings;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -85,20 +89,29 @@ public class SearchService implements ISearchService {
         return (T) repository.get(urn.getTenant(), urn.getEntityType().toString(), urn.toString(), clazz);
     }
 
+    /**
+     * Add project informations as index or associated CRS into searchKey
+     */
+    private void addProjectInfos(SearchKey<?, ?> searchKey) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
+        searchKey.setCrs(projectGeoSettings.getCrs());
+    }
+
+
     @Override
     public <T extends IIndexable> FacetPage<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
             ICriterion criterion, Map<String, FacetType> facetsMap) {
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         return repository.search(searchKey, pageRequest, criterion, facetsMap);
     }
 
     @Override
     public <S, T extends IIndexable> FacetPage<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
             ICriterion criterion, Predicate<T> searchResultFilter) {
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchTypeMap(), String[].class);
-        tagSearchKey.setSearchIndex(searchKey.getSearchIndex());
+        addProjectInfos(tagSearchKey);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
         Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
                 .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
@@ -121,7 +134,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object value,
             String... fields) {
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         return repository.multiFieldsSearch(searchKey, pageRequest, value, fields);
     }
 
@@ -134,7 +147,7 @@ public class SearchService implements ISearchService {
             fileTypes[i] = dataTypes.get(i).toString();
         }
 
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         DocFilesSummary summary = new DocFilesSummary();
         // Adjust criterion to search for internal data
         ICriterion internalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", true));
@@ -153,7 +166,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion criterion,
             String attName, int maxCount) {
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, criterion, attName, maxCount);
         return values.stream().limit(maxCount).collect(Collectors.toList());
     }
@@ -161,7 +174,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> Aggregations getAggregations(SimpleSearchKey<T> searchKey, ICriterion criterion,
             Collection<QueryableAttribute> attributes) {
-        searchKey.setSearchIndex(tenantResolver.getTenant());
+        addProjectInfos(searchKey);
         return repository.getAggregations(searchKey, criterion, attributes);
     }
 }

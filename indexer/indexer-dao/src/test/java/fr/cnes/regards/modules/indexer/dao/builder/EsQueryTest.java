@@ -121,7 +121,6 @@ public class EsQueryTest {
             repository.deleteAll(INDEX);
         } else {
             repository.createIndex(INDEX);
-            repository.setAutomaticDoubleMapping(INDEX, TYPE1);
         }
 
         final String[] STRINGS = { "Le", "petit", "chat", "est", "mort", "de", "sa", "belle", "mort",

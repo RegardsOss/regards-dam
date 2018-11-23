@@ -208,7 +208,10 @@ public class EsRepository implements IEsRepository {
      */
     private static final QueryBuilderCriterionVisitor CRITERION_VISITOR = new QueryBuilderCriterionVisitor();
 
-    public static final String REMINDER_IDX = "reminder";
+    /**
+     * Index used to store search after cursors
+     */
+    private static final String REMINDER_IDX = "reminder";
 
     /**
      * Suffix for text attributes
@@ -258,17 +261,16 @@ public class EsRepository implements IEsRepository {
                 .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
+        // Timeouts are set to 20 minutes particulary for bulk save containing geo_shape
         RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(esHost, esPort))
-                // .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(60_000))
-                // .setMaxRetryTimeoutMillis(60_000).build();
-                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1200_000))
-                .setMaxRetryTimeoutMillis(1200_000);
+                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1_200_000))
+                .setMaxRetryTimeoutMillis(1_200_000);
 
         client = new RestHighLevelClient(restClientBuilder);
 
         try {
             // Testing availability of ES
-            if (!client.ping()) {
+            if (!client.ping(RequestOptions.DEFAULT)) {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
         } catch (IOException | RuntimeException e) {
@@ -338,68 +340,6 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    @Deprecated
-    public boolean setAutomaticDoubleMapping(String index, String... types) {
-        //        try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-        //            String mapping = builder.startObject().startArray("dynamic_templates").startObject().startObject("doubles")
-        //                    .field("match_mapping_type", "double").startObject("mapping").field("type", "double").endObject()
-        //                    .endObject().endObject().endArray().endObject().string();
-        //
-        //            try (NStringEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON)) {
-        //
-        //                for (String type : types) {
-        //                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
-        //                                                                  Collections.emptyMap(), entity);
-        //                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        //                        return false;
-        //                    }
-        //                }
-        //                return true;
-        //            }
-        //        } catch (IOException ioe) {
-        //            throw new RsRuntimeException(ioe);
-        //        }
-        return true;
-    }
-
-    @Override
-    @Deprecated
-    public boolean setGeometryMapping(String index, String... types) {
-        //        try {
-        //            for (String type : types) {
-        //                try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-        //                    String mapping = builder.startObject().startObject(type).startObject("properties")
-        //                            .startObject("wgs84").field("type", "geo_shape")
-        //                            // With geohash
-        //                            .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
-        //                            // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
-        //                            // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
-        //                            // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
-        //                            // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
-        //
-        //                            // With quadtree
-        //                            .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
-        //                            // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
-        //                            // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
-        //
-        //                            .endObject().endObject().endObject().endObject().string();
-        //
-        //                    HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-        //                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
-        //                                                                  Collections.emptyMap(), entity);
-        //                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        //                        return false;
-        //                    }
-        //                }
-        //            }
-        //            return true;
-        //        } catch (IOException e) {
-        //            throw new RsRuntimeException(e);
-        //        }
-        return true;
-    }
-
-    @Override
     public boolean setSettingsForBulk(String index) {
         try {
             UpdateSettingsRequest request = Requests.updateSettingsRequest(index.toLowerCase());
@@ -408,19 +348,6 @@ public class EsRepository implements IEsRepository {
             request.settings(builder);
             AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
-
-            //            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-            //                String mapping = builder.startObject().startObject("index").field("refresh_interval", "-1")
-            //                        .field("number_of_replicas", "0").endObject().endObject().string();
-            //
-            //                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-            //                Response response = restClient
-            //                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
-            //                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            //                    return false;
-            //                }
-            //            }
-            //            return true;
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -436,19 +363,6 @@ public class EsRepository implements IEsRepository {
             request.settings(builder);
             AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
-
-            //            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-            //                String mapping = builder.startObject().startObject("index").field("refresh_interval", "1s")
-            //                        .field("number_of_replicas", "1").endObject().endObject().string();
-            //
-            //                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-            //                Response response = restClient
-            //                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
-            //                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            //                    return false;
-            //                }
-            //            }
-            //            return true;
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -461,8 +375,6 @@ public class EsRepository implements IEsRepository {
             GetIndexRequest request = new GetIndexRequest();
             request.indices(name.toLowerCase());
             return client.indices().exists(request, RequestOptions.DEFAULT);
-            //            Response response = restClient.performRequest("HEAD", name.toLowerCase());
-            //            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -510,11 +422,8 @@ public class EsRepository implements IEsRepository {
             DeleteIndexRequest request = Requests.deleteIndexRequest(index);
             AcknowledgedResponse response = client.indices().delete(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
-
-            //            Response response = restClient.performRequest("DELETE", index.toLowerCase());
-            //            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
         } catch (ElasticsearchException e) {
-            if (e.status() == RestStatus.OK.NOT_FOUND) {
+            if (e.status() == RestStatus.NOT_FOUND) {
                 throw new IndexNotFoundException(index.toLowerCase());
             }
             throw new RsRuntimeException(e);
@@ -536,11 +445,6 @@ public class EsRepository implements IEsRepository {
             Request request = new Request("POST", "/" + index.toLowerCase() + "/_delete_by_query");
             request.setEntity(entity);
             Response response = client.getLowLevelClient().performRequest(request);
-
-            //            Response response = restClient
-            //                    .performRequest("POST", "/" + index.toLowerCase() + "/_delete_by_query", Collections.emptyMap(),
-            //                                    entity);
-
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
                 return ((Number) map.get("deleted")).longValue();
@@ -558,9 +462,6 @@ public class EsRepository implements IEsRepository {
             request.indices("*");
             GetIndexResponse response = client.indices().get(request, RequestOptions.DEFAULT);
             for (ObjectObjectCursor<String, Settings> settings : response.getSettings()) {
-                //                if (settings.key.endsWith("_6")) {
-                //                    this.deleteIndex(settings.key);
-                //                }
                 // index starting with . are kibana ones (don't give a shit)
                 if (!settings.key.startsWith(".")) {
                     String ver = settings.value.getAsSettings("index").getAsSettings("version").get("created");
@@ -632,7 +533,6 @@ public class EsRepository implements IEsRepository {
         try {
             RefreshRequest request = Requests.refreshRequest(index.toLowerCase());
             client.indices().refresh(request, RequestOptions.DEFAULT);
-            //            restClient.performRequest("GET", index.toLowerCase() + "/_refresh");
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -676,9 +576,6 @@ public class EsRepository implements IEsRepository {
             IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), TYPE, doc.getDocId())
                                                           .source(gson.toJson(doc), XContentType.JSON),
                                                   RequestOptions.DEFAULT);
-
-            //            IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
-            //                                                          .source(gson.toJson(doc), XContentType.JSON));
             return (response.getResult() == Result.CREATED); // Else UPDATED
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -780,7 +677,6 @@ public class EsRepository implements IEsRepository {
             // Scroll until no hits are returned
             do {
                 for (final SearchHit hit : scrollResp.getHits().getHits()) {
-//                    action.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
                     action.accept(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
                 }
 
@@ -864,85 +760,93 @@ public class EsRepository implements IEsRepository {
                             FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
                                     * AUTHALIC_SPHERE_RADIUS);
                 }
-                // If criterion contains a Circle criterion, it is more complicated :
-                // Mars and Earth flattenings are different (and so astro, it's a perfect sphere)
-                // So we obtain a max radius cricle and a min radius circle for earth projected coordinates
-                // Every shapes into min radius circle are guaranted to be ok
-                // Every shapes outo max radius circle are guaranted to not be ok
-                // Other ones must be unitary tested one by one
-                GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(searchKey.getCrs());
-                Pair<ICriterion, ICriterion> critOnWgs84Pair = criterion.accept(visitor);
-                // In case of symetry (=> same radius for inner and outer circles) same criterion is returned into pair
-                if (critOnWgs84Pair.getFirst().equals(critOnWgs84Pair.getSecond())) {
-                    long start = System.currentTimeMillis();
-                    FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
-                    LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
-                                 GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
-                                 System.currentTimeMillis() - start);
-                    return page;
-                }
-                // Criterion permiting to retrieve shapes betwwen both circles
-                ICriterion betweenInnerAndOuterCirclesCriterionOnWgs84 = critOnWgs84Pair.getSecond();
-
-                // FIRST: retrieve all data into inner circle
-                ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
-                long start = System.currentTimeMillis();
-                FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion,
-                                                           facetsMap);
-                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
-                if (!intoInnerCirclePage.isLast()) {
-                    throw new RsRuntimeException(
-                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
-                }
-                CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
-                LOGGER.debug(
-                        "Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
-                        intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
-                        Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
-                // SECOND: retrieve all data between inner and outer circles
-                start = System.currentTimeMillis();
-                FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
-                                                                       betweenInnerAndOuterCirclesCriterionOnWgs84,
-                                                                       facetsMap);
-                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
-                if (!intoInnerCirclePage.isLast()) {
-                    throw new RsRuntimeException(
-                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
-                }
-                LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
-                             betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
-
-                // THIRD: keep only entities with a shape nearer than specified radius from specified center
-                // Retrieve radius of specified circle on given Crs
-                CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
-                double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
-                double[] center = circleCriterionOnCrs.getCoordinates();
-
-                // Test all data one by one
-                List<T> inOuterCircleEntities = new ArrayList<>();
-                for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
-                    if (entity instanceof ILocalizable) {
-                        IGeometry shape = ((ILocalizable) entity).getNormalizedGeometry();
-                        if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
-                            inOuterCircleEntities.add(entity);
-                        } else {
-                            System.err.println("Remove " + entity);
-                        }
-                    }
-                }
-                // Merge data
-                if (!inOuterCircleEntities.isEmpty()) {
-                    LOGGER.debug("Keep {} points between inner and outer circles", inOuterCircleEntities.size());
-                    List<T> resultList = new ImmutableList.Builder<T>().addAll(intoInnerCirclePage.getContent())
-                            .addAll(inOuterCircleEntities).build();
-                    return new FacetPage<>(resultList, null, intoInnerCirclePage.getPageable(), resultList.size());
-                } else {
-                    LOGGER.debug("Keep no points between inner and outer circles");
-                }
-                return intoInnerCirclePage;
+                return searchWithCircleCriterionInProjectedCrs(searchKey, pageRequest, facetsMap, criterion);
             }
         }
         return search0(searchKey, pageRequest, criterion, facetsMap);
+    }
+
+    /**
+     * Particular case when search is asked with a circle criterion into a CRS which is not WGS84.
+     */
+    private <T extends IIndexable> FacetPage<T> searchWithCircleCriterionInProjectedCrs(SearchKey<T, T> searchKey,
+            Pageable pageRequest, Map<String, FacetType> facetsMap, ICriterion criterion) {
+        // If criterion contains a Circle criterion, it is more complicated :
+        // Mars and Earth flattenings are different (and so astro, it's a perfect sphere)
+        // So we obtain a max radius cricle and a min radius circle for earth projected coordinates
+        // Every shapes into min radius circle are guaranted to be ok
+        // Every shapes outo max radius circle are guaranted to not be ok
+        // Other ones must be unitary tested one by one
+        GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(searchKey.getCrs());
+        Pair<ICriterion, ICriterion> critOnWgs84Pair = criterion.accept(visitor);
+        // In case of symetry (=> same radius for inner and outer circles) same criterion is returned into pair
+        if (critOnWgs84Pair.getFirst().equals(critOnWgs84Pair.getSecond())) {
+            long start = System.currentTimeMillis();
+            FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
+            LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
+                         GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
+                         System.currentTimeMillis() - start);
+            return page;
+        }
+        // Criterion permiting to retrieve shapes betwwen both circles
+        ICriterion betweenInnerAndOuterCirclesCriterionOnWgs84 = critOnWgs84Pair.getSecond();
+
+        // FIRST: retrieve all data into inner circle
+        ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
+        long start = System.currentTimeMillis();
+        FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion,
+                                                   facetsMap);
+        // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+        if (!intoInnerCirclePage.isLast()) {
+            throw new RsRuntimeException(
+                    new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+        }
+        CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
+        LOGGER.debug(
+                "Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
+                intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
+                Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
+        // SECOND: retrieve all data between inner and outer circles
+        start = System.currentTimeMillis();
+        FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
+                                                               betweenInnerAndOuterCirclesCriterionOnWgs84,
+                                                               facetsMap);
+        // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+        if (!intoInnerCirclePage.isLast()) {
+            throw new RsRuntimeException(
+                    new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+        }
+        LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
+                     betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
+
+        // THIRD: keep only entities with a shape nearer than specified radius from specified center
+        // Retrieve radius of specified circle on given Crs
+        CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
+        double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
+        double[] center = circleCriterionOnCrs.getCoordinates();
+
+        // Test all data one by one
+        List<T> inOuterCircleEntities = new ArrayList<>();
+        for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
+            if (entity instanceof ILocalizable) {
+                IGeometry shape = ((ILocalizable) entity).getNormalizedGeometry();
+                if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
+                    inOuterCircleEntities.add(entity);
+                } else {
+                    System.err.println("Remove " + entity);
+                }
+            }
+        }
+        // Merge data
+        if (!inOuterCircleEntities.isEmpty()) {
+            LOGGER.debug("Keep {} points between inner and outer circles", inOuterCircleEntities.size());
+            List<T> resultList = new ImmutableList.Builder<T>().addAll(intoInnerCirclePage.getContent())
+                    .addAll(inOuterCircleEntities).build();
+            return new FacetPage<>(resultList, null, intoInnerCirclePage.getPageable(), resultList.size());
+        } else {
+            LOGGER.debug("Keep no points between inner and outer circles");
+        }
+        return intoInnerCirclePage;
     }
 
     /**

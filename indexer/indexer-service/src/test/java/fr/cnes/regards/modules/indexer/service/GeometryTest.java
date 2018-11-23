@@ -84,8 +84,6 @@ public class GeometryTest {
         }
 
         repos.createIndex(TENANT);
-        repos.setGeometryMapping(TENANT, EntityType.DATA.toString());
-        repos.setAutomaticDoubleMapping(TENANT, EntityType.DATA.toString());
     }
 
     private DataObject createDataObject(String label, IGeometry shape) {

@@ -69,8 +69,6 @@ public class IndexerEventsListener {
             if (created) {
                 String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
                         .toArray(length -> new String[length]);
-                repository.setAutomaticDoubleMapping(tenant, types);
-                repository.setGeometryMapping(tenant, types);
             }
         }
     }

@@ -173,7 +173,6 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         esRepository.createIndex(index);
         String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
                 .toArray(length -> new String[length]);
-        esRepository.setGeometryMapping(index, types);
     }
 
     @After

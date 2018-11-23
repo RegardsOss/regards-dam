@@ -35,6 +35,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 
 /**
@@ -55,7 +56,10 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    protected IAttributeModelRepository attModelRepos;
+    private IAttributeModelRepository attModelRepos;
+
+    @Autowired
+    private ProjectGeoSettings projectGeoSettings;
 
     @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
             description = "Name of attribute to compute (ie result attribute).", unconfigurable = true)
@@ -89,6 +93,7 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         searchKey.setSearchIndex(tenantResolver.getTenant());
+        searchKey.setCrs(projectGeoSettings.getCrs());
         count = esRepo.count(searchKey, dataset.getSubsettingClause());
     }
 
