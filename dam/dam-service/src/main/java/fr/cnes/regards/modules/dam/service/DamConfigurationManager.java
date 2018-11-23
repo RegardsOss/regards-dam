@@ -99,7 +99,10 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
         List<ModuleConfigurationItem<?>> configurations = new ArrayList<>();
         // export connections
         for (PluginConfiguration connection : pluginService.getPluginConfigurationsByType(IConnectionPlugin.class)) {
-            configurations.add(ModuleConfigurationItem.build(pluginService.exportConfiguration(connection)));
+            // All connection should be active
+            PluginConfiguration exportedConnection = pluginService.exportConfiguration(connection);
+            exportedConnection.setIsActive(true);
+            configurations.add(ModuleConfigurationItem.build(exportedConnection));
         }
         // export datasources
         for (PluginConfiguration dataSource : pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)) {
@@ -116,6 +119,8 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
             EntityInvalidException validationIssues = PluginUtils.validate(plgConf);
             if (validationIssues == null) {
                 try {
+                    // Force activation of all connections.
+                    plgConf.setIsActive(true);
                     connectionService.createDBConnection(plgConf);
                 } catch (ModuleException e) {
                     importErrors.add(String.format("Skipping import of Data Storage %s: %s", plgConf.getLabel(),
