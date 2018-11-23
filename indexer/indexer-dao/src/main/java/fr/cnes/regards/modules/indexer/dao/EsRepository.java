@@ -293,7 +293,8 @@ public class EsRepository implements IEsRepository {
         try {
             CreateIndexRequest request = Requests.createIndexRequest(index.toLowerCase());
             // mapping (properties)
-            request.mapping(TYPE, XContentFactory.jsonBuilder().startObject()
+            request.mapping(TYPE, XContentFactory.jsonBuilder().startObject() // NOSONAR
+                    // XContentFactory.jsonBuilder() of type XContentBuilder is closed by request.mapping()
                     // Automatic double mapping (dynamic_templates)
                     .startArray("dynamic_templates").startObject().startObject("doubles")
                     .field("match_mapping_type", "double").startObject("mapping").field("type", "double").endObject()
@@ -404,8 +405,8 @@ public class EsRepository implements IEsRepository {
                             }
                         }
                         return false;
-                    } catch (Exception e1) {
-                        // Ok, let it go, go back to orginal exception
+                    } catch (Exception e1) { // NOSONAR (let's focus on first exception)
+                        // Ok, let it go, go back to first exception
                         throw e;
                     }
                 } else {
@@ -442,12 +443,16 @@ public class EsRepository implements IEsRepository {
         try {
             HttpEntity entity = new NStringEntity("{ \"query\":" + criterion.accept(CRITERION_VISITOR).toString() + "}",
                                                   ContentType.APPLICATION_JSON);
-            Request request = new Request("POST", "/" + index.toLowerCase() + "/_delete_by_query");
-            request.setEntity(entity);
-            Response response = client.getLowLevelClient().performRequest(request);
-            try (InputStream is = response.getEntity().getContent()) {
-                Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-                return ((Number) map.get("deleted")).longValue();
+            try {
+                Request request = new Request("POST", "/" + index.toLowerCase() + "/_delete_by_query");
+                request.setEntity(entity);
+                Response response = client.getLowLevelClient().performRequest(request);
+                try (InputStream is = response.getEntity().getContent()) {
+                    Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+                    return ((Number) map.get("deleted")).longValue();
+                }
+            } finally {
+                ((NStringEntity) entity).close();
             }
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -492,7 +497,7 @@ public class EsRepository implements IEsRepository {
                                 }
                             }
                             LOGGER.info("...Upgrade OK ({} ms)", (System.currentTimeMillis() - start));
-                        } catch (Exception e) {
+                        } catch (Exception e) { // NOSONAR (let's continue on next index whatever problem occured)
                             LOGGER.error(String.format("Cannot upgrade %s", settings.key), e);
                         }
                     }
@@ -515,13 +520,17 @@ public class EsRepository implements IEsRepository {
                                                       + "    \"source\": \"      ctx._source.type = ctx._type;"
                                                       + "      ctx._type = '_doc';    \"  }}", index, newIndex);
             HttpEntity entity = new NStringEntity(requestStr, ContentType.APPLICATION_JSON);
-            Request request = new Request("POST", "_reindex");
-            request.setEntity(entity);
-            Response response = client.getLowLevelClient().performRequest(request);
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                return newIndex;
-            } else {
-                LOGGER.error(response.getStatusLine().toString());
+            try {
+                Request request = new Request("POST", "_reindex");
+                request.setEntity(entity);
+                Response response = client.getLowLevelClient().performRequest(request);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    return newIndex;
+                } else {
+                    LOGGER.error(response.getStatusLine().toString());
+                }
+            } finally {
+                ((NStringEntity) entity).close();
             }
         }
         return null;
@@ -602,9 +611,6 @@ public class EsRepository implements IEsRepository {
             for (T doc : documents) {
                 bulkRequest
                         .add(new IndexRequest(index, TYPE, doc.getDocId()).source(gson.toJson(doc), XContentType.JSON));
-
-                //                bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId())
-                //                                        .source(gson.toJson(doc), XContentType.JSON));
                 map.put(doc.getDocId(), doc.getLabel());
             }
             // Bulk save
@@ -953,7 +959,6 @@ public class EsRepository implements IEsRepository {
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
-//                    results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
                     results.add(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
                 } catch (JsonParseException e) {
                     LOGGER.error("Unable to jsonify entity with id {}, source: \"{}\"", hit.getId(),
@@ -1026,7 +1031,6 @@ public class EsRepository implements IEsRepository {
             }
 
             // No reminder found (first request or last one is too old) => advance to next to last page
-            //            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
             SearchRequest request = new SearchRequest(index).types(TYPE);
             // By default, launch request from 0 to 10_000 (without aggregations)...
             int offset = 0;
@@ -1343,8 +1347,6 @@ public class EsRepository implements IEsRepository {
     private boolean isTextMapping(String inIndex, String attribute) throws IOException {
         String index = inIndex.toLowerCase();
         try {
-            //            Response response = client.getLowLevelClient()
-            //                    .performRequest("GET", index + "/_mapping/" + TYPE + "/field/" + attribute, Collections.emptyMap());
             Response response = client.getLowLevelClient()
                     .performRequest(new Request("GET", index + "/_mapping/" + TYPE + "/field/" + attribute));
             try (InputStream is = response.getEntity().getContent()) {
@@ -1416,15 +1418,11 @@ public class EsRepository implements IEsRepository {
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
         Response response = client.getLowLevelClient()
-                //                .performRequest("GET", index + "/_mapping" + "/field/" + Joiner.on(",").join(ascSortMap.keySet()),
-                //                                Collections.emptyMap());
                 .performRequest(
-                        new Request("GET", index + "/_mapping" + "/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+                        new Request("GET", index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
         try (InputStream is = response.getEntity().getContent()) {
             Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
             if ((map != null) && !map.isEmpty()) {
-                // All types mappings are retrieved.
-                // TODO simplify ! since ES6 : single type
                 // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
                 // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
                 LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());

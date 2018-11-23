@@ -150,8 +150,8 @@ public class AccessRightService implements IAccessRightService {
                     }
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
-                    boolean dataAccess = datasetAccess
-                            && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
+                    boolean dataAccess = datasetAccess && (accessRight.getDataAccessRight().getDataAccessLevel()
+                            != DataAccessLevel.NO_ACCESS);
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });
@@ -239,8 +239,9 @@ public class AccessRightService implements IAccessRightService {
 
         }
 
-        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(Optional.ofNullable(accessRight
-                .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
+        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(
+                Optional.ofNullable(accessRight.getDataAccessPlugin()),
+                Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
 
         AccessRight updated = repository.save(accessRight);
 
@@ -294,8 +295,8 @@ public class AccessRightService implements IAccessRightService {
                 Optional<AccessRight> accessRightOptional = repository
                         .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
                 // Check if the accessRight allows to access to that dataset
-                if (accessRightOptional.isPresent()
-                        && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
+                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS
+                        .equals(accessRightOptional.get().getAccessLevel())) {
                     isAutorised = true;
                     // Stop loop iteration
                     break;
@@ -323,9 +324,10 @@ public class AccessRightService implements IAccessRightService {
                     }
                 }
             } catch (ModuleException e) {
-                LOGGER.error("updateDynamicAccessRights - Error getting plugin {} for accessRight {} of dataset {} and group {}. Does plugin exists anymore ?",
-                             ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
-                             ar.getAccessGroup().getName());
+                LOGGER.error(String.format("updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
+                                                   + "dataset %s and group %s. Does plugin exist anymore ?",
+                                           ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
+                                           ar.getAccessGroup().getName()), e);
             }
         });
 
@@ -333,8 +335,9 @@ public class AccessRightService implements IAccessRightService {
             String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
             try {
                 FeignSecurityManager.asSystem();
-                notificationClient.notifyRoles(message, "Dynamic access right update", "Data-management",
-                                               NotificationType.INFO, DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                notificationClient
+                        .notifyRoles(message, "Dynamic access right update", "Data-management", NotificationType.INFO,
+                                     DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
                 FeignSecurityManager.reset();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 LOGGER.error(String.format("Error sending notification : %s", message), e);

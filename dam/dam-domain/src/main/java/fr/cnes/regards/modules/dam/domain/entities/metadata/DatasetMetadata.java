@@ -24,7 +24,7 @@ public class DatasetMetadata {
      * @author Sébastien Binda
      *
      */
-    public class DataObjectGroup {
+    public static class DataObjectGroup {
 
         /**
          * Group name
