@@ -179,7 +179,7 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                 PluginConfiguration linked = pluginService.savePluginConfiguration(p.getPluginConfiguration());
                 p.setPluginConfiguration(linked);
             } catch (EntityInvalidException | EntityNotFoundException | EncryptionException e1) {
-                LOGGER.error("Error creating pluging parameter.", e);
+                LOGGER.error("Error creating pluging parameter.", e1);
             }
         }
     }
