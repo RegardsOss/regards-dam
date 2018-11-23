@@ -91,14 +91,9 @@ public class GeometryIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
-            try {
-                esRepos.deleteAll(TENANT);
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        } else {
-            esRepos.createIndex(TENANT);
+            esRepos.deleteIndex(TENANT);
         }
+        esRepos.createIndex(TENANT);
         crawlerService.setConsumeOnlyMode(true);
     }
 

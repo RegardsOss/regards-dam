@@ -67,6 +67,10 @@ public class ProjectGeoSettings {
                                 .retrieveProject(tenantResolver.getTenant());
                         if (response.getStatusCode() == HttpStatus.OK) {
                             Project currentProject = response.getBody().getContent();
+                            // To avoid problems later...No CRS => WGS84
+                            if (currentProject.getCrs() == null) {
+                                currentProject.setCrs(Crs.WGS_84.toString());
+                            }
                             return Pair.of(currentProject.getPoleToBeManaged(), Crs.valueOf(currentProject.getCrs()));
                         } else { // Must throw something
                             throw new RsRuntimeException(new Exception(
