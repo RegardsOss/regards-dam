@@ -1358,8 +1358,12 @@ public class EsRepository implements IEsRepository {
                     String lastPathAtt = (attribute.contains(".") ?
                             attribute.substring(attribute.lastIndexOf('.') + 1) :
                             attribute);
+                    // BEWARE : instead of map.get(index) on the innermost map value retrieval, we use directly
+                    // map.values().iterator().next() to get value associated to singleton element whatever the key is
+                    // Indeed, because of Elasticsearch version 6 single type update, some indices are retrieved through
+                    // an alias. Asking an alias mapping returned a block with index name, not alias name
                     return toMap(
-                            toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(TYPE)).get(attribute))
+                            toMap(toMap(toMap(toMap(toMap(map.values().iterator().next()).get("mappings")).get(TYPE)).get(attribute))
                                           .get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
                 }
@@ -1385,7 +1389,7 @@ public class EsRepository implements IEsRepository {
                 attribute;
         try {
             // Mapping map contain only one value, the concerned index mapping BUT in case index is an alias, map key
-            // is true index name, not alias one so DON'T retrieve mappinh from its name !!!
+            // is true index name, not alias one so DON'T retrieve mapping from its name !!!
             Iterator<Object> i = map.values().iterator();
             if (i.hasNext()) {
                 Map<String, Object> allTypesMapping = toMap(toMap(i.next()).get("mappings"));
