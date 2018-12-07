@@ -142,9 +142,12 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         runtimeTenantResolver.forceTenant(event.getTenant());
         Long dsId = event.getEntityId();
         String msg = event.getMessage();
-        DatasourceIngestion dsi = dsIngestionRepos.findOne(dsId);
-        dsi.setStackTrace((dsi.getStackTrace() == null) ? msg : dsi.getStackTrace() + "\n" + msg);
-        dsIngestionRepos.save(dsi);
+        Optional<DatasourceIngestion> dsiOpt = dsIngestionRepos.findById(dsId);
+        if (dsiOpt.isPresent()) {
+            DatasourceIngestion dsi = dsiOpt.get();
+            dsi.setStackTrace((dsi.getStackTrace() == null) ? msg : dsi.getStackTrace() + "\n" + msg);
+            dsIngestionRepos.save(dsi);
+        }
     }
 
     @Override
@@ -206,7 +209,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                         .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
                                                 dsIngestion);
                                 // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
-                                dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
+                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
                                 if (summary.getInErrorObjectsCount() > 0) {
                                     dsIngestion.setStatus(IngestionStatus.FINISHED_WITH_WARNINGS);
                                 } else {
@@ -222,7 +225,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
                                     | DataSourceException | ModuleException e) {
                                 // Set Status to Error... (and status date)
-                                dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
+                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
@@ -231,7 +234,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                         : dsIngestion.getStackTrace() + "\n" + sw.toString();
                                 dsIngestion.setStackTrace(stackTrace);
                             } catch (NotFinishedException e) {
-                                dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
+                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
                                 dsIngestion.setStatus(IngestionStatus.NOT_FINISHED);
                                 dsIngestion.setErrorPageNumber(e.getPageNumber());
                                 // and log stack trace into database
@@ -309,13 +312,13 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                 .stream().filter(PluginConfiguration::isActive).collect(Collectors.toList());
 
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
-        pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
+        pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.existsById(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
                         OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
-                .peek(id -> this.planDatasourceDataObjectsDeletion(tenant, id)).forEach(dsIngestionRepos::delete);
+                .peek(id -> this.planDatasourceDataObjectsDeletion(tenant, id)).forEach(dsIngestionRepos::deleteById);
         // For previously ingested datasources, compute next planned ingestion date
         pluginConfs.forEach(pluginConf -> {
             try {

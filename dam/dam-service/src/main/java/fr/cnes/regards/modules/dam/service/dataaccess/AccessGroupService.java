@@ -193,7 +193,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
                 throw new EntityOperationForbiddenException(toDelete.getName(), AccessGroup.class,
                         "Cannot remove the public access group used by Documents");
             }
-            accessGroupDao.delete(toDelete.getId());
+            accessGroupDao.deleteById(toDelete.getId());
             // Publish attribute deletion
             publisher.publish(new AccessGroupEvent(toDelete));
             // Publish public group event
@@ -273,7 +273,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
     @Override
     public boolean existGroup(final Long pId) {
-        return accessGroupDao.exists(pId);
+        return accessGroupDao.existsById(pId);
     }
 
     @Override

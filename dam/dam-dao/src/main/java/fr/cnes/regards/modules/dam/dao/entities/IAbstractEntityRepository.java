@@ -18,10 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.dao.entities;
 
-import java.util.List;
-import java.util.Set;
-
 import javax.persistence.LockModeType;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -48,7 +48,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      * @return entity
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    T findById(Long pId);
+    Optional<T> findById(Long pId);
 
     /**
      * Find all entities of which ipId belongs to given set (eagerly loading all relations)

@@ -112,16 +112,16 @@ public interface ISearchService {
     <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object pValue, String... fields);
 
     default <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, int pageSize, Object value, String... fields) {
-        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), value, fields);
+        return multiFieldsSearch(searchKey, PageRequest.of(0, pageSize), value, fields);
     }
 
     default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
             ICriterion criterion) {
-        return this.search(searchKey, new PageRequest(0, pageSize), criterion);
+        return this.search(searchKey, PageRequest.of(0, pageSize), criterion);
     }
 
     default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, int pageSize, ICriterion criterion) {
-        return search(searchKey, new PageRequest(0, pageSize), criterion);
+        return search(searchKey, PageRequest.of(0, pageSize), criterion);
     }
 
     default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,

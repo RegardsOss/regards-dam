@@ -18,11 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -159,8 +158,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "List all model attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName)
-            throws ModuleException {
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName) {
         return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(modelName), modelName));
     }
 

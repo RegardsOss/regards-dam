@@ -19,7 +19,6 @@
 package fr.cnes.regards.modules.dam.service.entities;
 
 import javax.persistence.EntityManager;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +45,6 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
@@ -106,7 +104,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * If any DataSource is associated, sets the default DataSource.
      * @throws ModuleException if error occurs!
      */
-    private Dataset checkDataSource(final Dataset dataset) throws ModuleException {
+    private Dataset checkDataSource(Dataset dataset) throws ModuleException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
             IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
@@ -116,9 +114,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setDataModel(model.getName());
             } catch (ModuleException e) {
                 logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
-                throw new EntityNotFoundException(String
-                        .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
-                        PluginConfiguration.class);
+                throw new EntityNotFoundException(
+                        String.format("Unable to dejsonify model parameter from PluginConfiguration (%s)",
+                                      e.getMessage()), PluginConfiguration.class);
             }
         }
         return dataset;
@@ -130,23 +128,18 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * @param dataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
      */
-    private Dataset checkSubsettingCriterion(final Dataset dataset) throws ModuleException {
+    private Dataset checkSubsettingCriterion(Dataset dataset) throws ModuleException {
         // getUserSubsettingClause() cannot be null
-        try {
-            String stringClause = dataset.getOpenSearchSubsettingClause();
-            if (Strings.isNullOrEmpty(stringClause)) {
-                dataset.setSubsettingClause(ICriterion.all());
-            } else {
-                dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
-            }
-        } catch (UnsupportedEncodingException e) {
-            // if this exception happens it's really an issue as the whole system relys on the fact UTF-8 is handled
-            throw new RsRuntimeException(e);
+        String stringClause = dataset.getOpenSearchSubsettingClause();
+        if (Strings.isNullOrEmpty(stringClause)) {
+            dataset.setSubsettingClause(ICriterion.all());
+        } else {
+            dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
         }
-        final ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
+        ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
-            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(dataset.getDataModel());
+            SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(dataset.getDataModel());
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
                         "Given subsettingCriterion cannot be accepted for the Dataset : " + dataset.getLabel());
@@ -166,7 +159,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    protected void doCheck(final Dataset entity, final Dataset entityInDB) throws ModuleException {
+    protected void doCheck(Dataset entity, Dataset entityInDB) throws ModuleException {
         Dataset ds = checkDataSource(entity);
         checkSubsettingCriterion(ds);
         // check for updates on data model or datasource
@@ -182,17 +175,17 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    public Page<AttributeModel> getDataAttributeModels(final Set<UniformResourceName> urns, final Set<Long> modelIds,
-            final Pageable pageable) throws ModuleException {
+    public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds,
+            Pageable pageable) throws ModuleException {
         if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
-            final List<Dataset> datasets = datasetRepository.findAll();
+            List<Dataset> datasets = datasetRepository.findAll();
             return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
             if ((modelIds == null) || modelIds.isEmpty()) {
-                final List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
+                List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
-                final Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
+                Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             }
         }
@@ -225,9 +218,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     /**
      * extract all the AttributeModel of {@link DataObject} that can be contained into the datasets
      */
-    private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
-            final Pageable pageable) throws ModuleException {
-        final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
+    private Page<AttributeModel> getDataAttributeModelsFromDatasets(Collection<Dataset> datasets, Pageable pageable)
+            throws ModuleException {
+        List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
         Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         return attModelPage;
     }

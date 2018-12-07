@@ -45,7 +45,7 @@ import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.rest.entities.CollectionController;
+import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 
 /**
  * @author lmieulet
@@ -53,7 +53,7 @@ import fr.cnes.regards.modules.dam.rest.entities.CollectionController;
  */
 @TestPropertySource(locations = { "classpath:test.properties" })
 @MultitenantTransactional
-@ContextConfiguration(classes = { ControllerITConfig.class })
+@ContextConfiguration(classes = { DamRestConfiguration.class })
 public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CollectionControllerIT.class);

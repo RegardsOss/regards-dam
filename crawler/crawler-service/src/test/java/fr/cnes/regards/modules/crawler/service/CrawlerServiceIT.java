@@ -154,12 +154,12 @@ public class CrawlerServiceIT {
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
-        Utils.execute(entityRepos::delete, dataset1.getId());
-        Utils.execute(entityRepos::delete, dataset2.getId());
-        Utils.execute(entityRepos::delete, dataset3.getId());
-        Utils.execute(entityRepos::delete, coll1.getId());
-        Utils.execute(entityRepos::delete, coll2.getId());
-        Utils.execute(entityRepos::delete, coll3.getId());
+        Utils.execute(entityRepos::deleteById, dataset1.getId());
+        Utils.execute(entityRepos::deleteById, dataset2.getId());
+        Utils.execute(entityRepos::deleteById, dataset3.getId());
+        Utils.execute(entityRepos::deleteById, coll1.getId());
+        Utils.execute(entityRepos::deleteById, coll2.getId());
+        Utils.execute(entityRepos::deleteById, coll3.getId());
 
         Utils.execute(modelService::deleteModel, modelColl.getName());
         Utils.execute(modelService::deleteModel, modelDataset.getName());

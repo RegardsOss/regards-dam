@@ -128,7 +128,7 @@ public class CrawlerServiceTest {
 
         // Retrieve first 1000 objects
 
-        Pageable pageable = new PageRequest(0, 1000);
+        Pageable pageable = PageRequest.of(0, 1000);
         Page<DataObjectFeature> page = dsPlugin.findAll(TENANT, pageable);
 
         LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());

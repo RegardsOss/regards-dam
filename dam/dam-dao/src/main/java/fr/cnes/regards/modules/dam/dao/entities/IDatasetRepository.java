@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dam.dao.entities;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -45,7 +46,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
-    Dataset findById(Long pId);
+    Optional<Dataset> findById(Long pId);
 
     /**
      * Find all datasets of which ipId belongs to given set (eagerly loading all relations)

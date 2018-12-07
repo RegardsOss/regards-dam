@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBu
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.rest.entities.CollectionController;
+import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 import fr.cnes.regards.modules.dam.rest.models.ModelController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
@@ -55,7 +55,7 @@ import fr.cnes.regards.modules.dam.service.models.IModelService;
  */
 @DirtiesContext
 @MultitenantTransactional
-@ContextConfiguration(classes = { ControllerITConfig.class })
+@ContextConfiguration(classes = { DamRestConfiguration.class })
 public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
     /**

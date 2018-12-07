@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +47,7 @@ import fr.cnes.regards.modules.dam.service.models.xml.XmlImportHelper;
 
 /**
  * Fragment service
- *
  * @author Marc Sordi
- *
  */
 @Service
 @MultitenantTransactional
@@ -80,11 +79,11 @@ public class FragmentService implements IFragmentService {
      */
     private final IPublisher publisher;
 
-    public FragmentService(IFragmentRepository pFragmentRepository, IAttributeModelRepository pAttributeModelRepository,
-            IAttributeModelService pAttributeModelService, IPublisher publisher) {
-        this.fragmentRepository = pFragmentRepository;
-        this.attributeModelRepository = pAttributeModelRepository;
-        this.attributeModelService = pAttributeModelService;
+    public FragmentService(IFragmentRepository fragmentRepository, IAttributeModelRepository attributeModelRepository,
+            IAttributeModelService attributeModelService, IPublisher publisher) {
+        this.fragmentRepository = fragmentRepository;
+        this.attributeModelRepository = attributeModelRepository;
+        this.attributeModelService = attributeModelService;
         this.publisher = publisher;
     }
 
@@ -96,71 +95,71 @@ public class FragmentService implements IFragmentService {
 
     @Override
     public Fragment addFragment(Fragment pFragment) throws ModuleException {
-        final Fragment existing = fragmentRepository.findByName(pFragment.getName());
+        Fragment existing = fragmentRepository.findByName(pFragment.getName());
         if (existing != null) {
             throw new EntityAlreadyExistsException(
                     String.format("Fragment with name \"%s\" already exists!", pFragment.getName()));
         }
         if (!attributeModelService.isFragmentCreatable(pFragment.getName())) {
-            throw new EntityAlreadyExistsException(
-                    String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                                  pFragment.getName()));
+            throw new EntityAlreadyExistsException(String.format(
+                    "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                    pFragment.getName()));
         }
         return fragmentRepository.save(pFragment);
     }
 
     @Override
     public Fragment getFragment(Long pFragmentId) throws ModuleException {
-        final Fragment fragment = fragmentRepository.findOne(pFragmentId);
-        if (fragment == null) {
+        Optional<Fragment> fragmentOpt = fragmentRepository.findById(pFragmentId);
+        if (!fragmentOpt.isPresent()) {
             throw new EntityNotFoundException(pFragmentId, Fragment.class);
         }
-        return fragment;
+        return fragmentOpt.get();
     }
 
     @Override
-    public Fragment updateFragment(Long pFragmentId, Fragment pFragment) throws ModuleException {
-        if (!pFragment.isIdentifiable()) {
+    public Fragment updateFragment(Long fragmentId, Fragment fragment) throws ModuleException {
+        if (!fragment.isIdentifiable()) {
             throw new EntityNotFoundException(
-                    String.format("Unknown identifier for fragment \"%s\"", pFragment.getName()));
+                    String.format("Unknown identifier for fragment \"%s\"", fragment.getName()));
         }
-        if (!pFragmentId.equals(pFragment.getId())) {
-            throw new EntityInconsistentIdentifierException(pFragmentId, pFragment.getId(), Fragment.class);
+        if (!fragmentId.equals(fragment.getId())) {
+            throw new EntityInconsistentIdentifierException(fragmentId, fragment.getId(), Fragment.class);
         }
-        if (!fragmentRepository.exists(pFragmentId)) {
-            throw new EntityNotFoundException(pFragmentId, Fragment.class);
+        if (!fragmentRepository.existsById(fragmentId)) {
+            throw new EntityNotFoundException(fragmentId, Fragment.class);
         }
-        return fragmentRepository.save(pFragment);
+        return fragmentRepository.save(fragment);
     }
 
     @Override
-    public void deleteFragment(Long pFragmentId) throws ModuleException {
+    public void deleteFragment(Long fragmentId) throws ModuleException {
         // Check if fragment is empty
-        final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
+        Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(fragmentId);
         if ((attModels != null) && !Iterables.isEmpty(attModels)) {
-            throw new EntityNotEmptyException(pFragmentId, Fragment.class);
+            throw new EntityNotEmptyException(fragmentId, Fragment.class);
         }
-        if (fragmentRepository.exists(pFragmentId)) {
-            Fragment toDelete = fragmentRepository.findOne(pFragmentId);
-            fragmentRepository.delete(toDelete);
-            publisher.publish(new FragmentDeletedEvent(toDelete.getName()));
+        Optional<Fragment> fragmentOpt = fragmentRepository.findById(fragmentId);
+        if (fragmentOpt.isPresent()) {
+            fragmentRepository.delete(fragmentOpt.get());
+            publisher.publish(new FragmentDeletedEvent(fragmentOpt.get().getName()));
         }
     }
 
     @Override
-    public void exportFragment(Long pFragmentId, OutputStream pOutputStream) throws ModuleException {
+    public void exportFragment(Long fragmentId, OutputStream os) throws ModuleException {
         // Get fragment
-        final Fragment fragment = getFragment(pFragmentId);
+        Fragment fragment = getFragment(fragmentId);
         // Get all related attributes
-        final List<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
+        List<AttributeModel> attModels = attributeModelRepository.findByFragmentId(fragmentId);
         // Export fragment to output stream
-        XmlExportHelper.exportFragment(pOutputStream, fragment, attModels);
+        XmlExportHelper.exportFragment(os, fragment, attModels);
     }
 
     @Override
-    public Fragment importFragment(InputStream pInputStream) throws ModuleException {
+    public Fragment importFragment(InputStream is) throws ModuleException {
         // Import fragment from input stream
-        final List<AttributeModel> attModels = XmlImportHelper.importFragment(pInputStream);
+        List<AttributeModel> attModels = XmlImportHelper.importFragment(is);
         // Insert attributes
         attributeModelService.addAllAttributes(attModels);
         return attModels.get(0).getFragment();

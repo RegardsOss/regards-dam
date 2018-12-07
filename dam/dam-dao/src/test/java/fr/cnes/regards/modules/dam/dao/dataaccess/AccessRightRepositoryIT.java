@@ -110,25 +110,25 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Test
     public void testfindAllByAccessGroupName() {
-        Page<AccessRight> response = repo.findAllByAccessGroup(ag1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByAccessGroup(ag1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByDataset() {
-        Page<AccessRight> response = repo.findAllByDataset(ds1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByDataset(ds1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByAccessGroupNameByDataset() {
-        Page<AccessRight> response = repo.findAllByAccessGroupAndDataset(ag1, ds1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByAccessGroupAndDataset(ag1, ds1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
 
-        response = repo.findAllByAccessGroupAndDataset(ag1, ds2, new PageRequest(0, 10));
+        response = repo.findAllByAccessGroupAndDataset(ag1, ds2, PageRequest.of(0, 10));
         Assert.assertFalse(response.hasContent());
     }
 

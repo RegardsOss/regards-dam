@@ -661,7 +661,7 @@ public class EsRepository implements IEsRepository {
                 return ICriterion.and(ICriterion.eq("type", types[0]), criterion);
             default:
                 ICriterion orCrit = ICriterion.or(Arrays.stream(types).map(type -> ICriterion.eq("type", type))
-                                                          .toArray(n -> new ICriterion[n]));
+                                                          .toArray(ICriterion[]::new));
                 return ICriterion.and(orCrit, criterion);
         }
 
@@ -683,7 +683,7 @@ public class EsRepository implements IEsRepository {
             // Scroll until no hits are returned
             do {
                 for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                    action.accept(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
+                    action.accept(gson.fromJson(hit.getSourceAsString(), (Class<T>) IIndexable.class));
                 }
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollResp.getScrollId());
@@ -724,7 +724,7 @@ public class EsRepository implements IEsRepository {
             final List<T> results = new ArrayList<>();
             SearchRequest request = new SearchRequest(index.toLowerCase());
 
-            SearchSourceBuilder builder = new SearchSourceBuilder().from(pageRequest.getOffset())
+            SearchSourceBuilder builder = new SearchSourceBuilder().from((int) pageRequest.getOffset())
                     .size(pageRequest.getPageSize());
             request.source(builder);
 
@@ -800,8 +800,7 @@ public class EsRepository implements IEsRepository {
         // FIRST: retrieve all data into inner circle
         ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
         long start = System.currentTimeMillis();
-        FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion,
-                                                   facetsMap);
+        FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion, facetsMap);
         // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
         if (!intoInnerCirclePage.isLast()) {
             throw new RsRuntimeException(
@@ -815,8 +814,7 @@ public class EsRepository implements IEsRepository {
         // SECOND: retrieve all data between inner and outer circles
         start = System.currentTimeMillis();
         FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
-                                                               betweenInnerAndOuterCirclesCriterionOnWgs84,
-                                                               facetsMap);
+                                                               betweenInnerAndOuterCirclesCriterionOnWgs84, facetsMap);
         // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
         if (!intoInnerCirclePage.isLast()) {
             throw new RsRuntimeException(
@@ -873,10 +871,10 @@ public class EsRepository implements IEsRepository {
             // page size is max or page offset is > max page size, prepare sort for search_after
             if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
                 // A sort is mandatory to permit use of searchAfter (id by default if none provided)
-                sort = (sort == null) ? new Sort("ipId") : pageRequest.getSort();
+                sort = (sort == null) ? Sort.by("ipId") : pageRequest.getSort();
                 // To assure unicity, always add "ipId" as a sort parameter
                 if (sort.getOrderFor("ipId") == null) {
-                    sort = sort.and(new Sort("ipId"));
+                    sort = sort.and(Sort.by("ipId"));
                 }
             }
             Object[] lastSearchAfterSortValues = null;
@@ -888,8 +886,8 @@ public class EsRepository implements IEsRepository {
 
             //            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
             SearchRequest request = new SearchRequest(index).types(TYPE);
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
-                    .size(pageRequest.getPageSize());
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder)
+                    .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
 
             // If searchAfter has been executed (in that case manageSortRequest() has already been called)
             if (lastSearchAfterSortValues != null) {
@@ -918,7 +916,7 @@ public class EsRepository implements IEsRepository {
                     // Rebuild request
                     //                    request = new SearchRequest(index).types(searchKey.getSearchTypes());
                     request = new SearchRequest(index).types(TYPE);
-                    builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
+                    builder = new SearchSourceBuilder().query(critBuilder).from((int) pageRequest.getOffset())
                             .size(pageRequest.getPageSize());
                     if (lastSearchAfterSortValues != null) {
                         builder.searchAfter(lastSearchAfterSortValues).from(0); // needed by searchAfter
@@ -959,7 +957,7 @@ public class EsRepository implements IEsRepository {
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
-                    results.add(gson.fromJson(hit.getSourceAsString(), (Class<T>)IIndexable.class));
+                    results.add(gson.fromJson(hit.getSourceAsString(), (Class<T>) IIndexable.class));
                 } catch (JsonParseException e) {
                     LOGGER.error("Unable to jsonify entity with id {}, source: \"{}\"", hit.getId(),
                                  hit.getSourceAsString());
@@ -1014,10 +1012,10 @@ public class EsRepository implements IEsRepository {
                 }
                 // Then check if a closer one exists (advance is done by MAX_RESULT_WINDOW steps so we must take this
                 // into account)
-                searchPageNumber =
-                        (pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW)) / MAX_RESULT_WINDOW;
+                searchPageNumber = (int) ((pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW))
+                        / MAX_RESULT_WINDOW);
                 while (searchPageNumber > 0) {
-                    searchReminderPageRequest = new PageRequest(searchPageNumber, MAX_RESULT_WINDOW);
+                    searchReminderPageRequest = PageRequest.of(searchPageNumber, MAX_RESULT_WINDOW);
                     reminder = new SearchAfterReminder(crit, searchKey, sort, searchReminderPageRequest);
                     reminder = get(REMINDER_IDX, reminder);
                     // A reminder has been found ! Let's start from it
@@ -1049,7 +1047,7 @@ public class EsRepository implements IEsRepository {
             }
             OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MN, ChronoUnit.MINUTES);
 
-            int nextToLastOffset = pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW);
+            int nextToLastOffset = (int) (pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW));
             // Execute as many request with search after as necessary to advance to next to last page of
             // MAX_RESULT_WINDOW size until offset
             while (offset < nextToLastOffset) {
@@ -1059,9 +1057,8 @@ public class EsRepository implements IEsRepository {
                 SearchResponse response = client.search(request, RequestOptions.DEFAULT);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 // Create a AbstractReminder and save it into ES for next page
-                SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
-                                                                       new PageRequest(offset / MAX_RESULT_WINDOW,
-                                                                                       MAX_RESULT_WINDOW).next());
+                SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, PageRequest
+                        .of(offset / MAX_RESULT_WINDOW, MAX_RESULT_WINDOW).next());
                 reminder.setExpirationDate(expirationDate);
                 reminder.setSearchAfterSortValues(
                         response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
@@ -1071,7 +1068,7 @@ public class EsRepository implements IEsRepository {
             }
             // Beware of offset that is a multiple of MAX_RESULT_WINDOW
             if (pageRequest.getOffset() != offset) {
-                int size = pageRequest.getOffset() - offset;
+                int size = (int) (pageRequest.getOffset() - offset);
                 LOGGER.debug("Search after : offset {}, size {}", offset, size);
                 builder.size(size).searchAfter(sortValues).from(0); // needed by searchAfter
                 SearchResponse response = client.search(request, RequestOptions.DEFAULT);
@@ -1252,24 +1249,23 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * Utility class to create a quadruple key (a pair of pairs) used by loading cache mechanism
+     * Utility class to create a triple key used by loading cache mechanism (yes, it's a lazy how to)
      */
-    // TODO replace this shit by a true class with named properties
     private static class CacheKey extends Tuple<SearchKey<?, ?>, Tuple<ICriterion, String>> {
 
         public CacheKey(SearchKey<?, ?> searchKey, ICriterion v2, String v3) {
             super(searchKey, new Tuple<>(v2, v3));
         }
 
-        public SearchKey<?, ?> getV1() {
+        public SearchKey<?, ?> getSearchKey() {
             return v1();
         }
 
-        public ICriterion getV2() {
+        public ICriterion getCriterion() {
             return v2().v1();
         }
 
-        public String getV3() {
+        public String getSourceAttribute() {
             return v2().v2();
         }
     }
@@ -1287,7 +1283,7 @@ public class EsRepository implements IEsRepository {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
                     // with same order
                     SortedSet<Object> results = new TreeSet<>(Comparator.comparing(Objects::hashCode));
-                    results.addAll(searchJoined(key.getV1(), key.getV2(), key.getV3()));
+                    results.addAll(searchJoined(key.getSearchKey(), key.getCriterion(), key.getSourceAttribute()));
                     return results;
                 }
             });
@@ -1362,9 +1358,9 @@ public class EsRepository implements IEsRepository {
                     // map.values().iterator().next() to get value associated to singleton element whatever the key is
                     // Indeed, because of Elasticsearch version 6 single type update, some indices are retrieved through
                     // an alias. Asking an alias mapping returned a block with index name, not alias name
-                    return toMap(
-                            toMap(toMap(toMap(toMap(toMap(map.values().iterator().next()).get("mappings")).get(TYPE)).get(attribute))
-                                          .get("mapping")).get(lastPathAtt)).get("type").equals("text");
+                    return toMap(toMap(toMap(
+                            toMap(toMap(toMap(map.values().iterator().next()).get("mappings")).get(TYPE))
+                                    .get(attribute)).get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
                 }
             }
@@ -1421,9 +1417,8 @@ public class EsRepository implements IEsRepository {
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        Response response = client.getLowLevelClient()
-                .performRequest(
-                        new Request("GET", index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+        Response response = client.getLowLevelClient().performRequest(
+                new Request("GET", index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
         try (InputStream is = response.getEntity().getContent()) {
             Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
             if ((map != null) && !map.isEmpty()) {
@@ -1676,8 +1671,8 @@ public class EsRepository implements IEsRepository {
 
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(filterBuilder);
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder).from(pageRequest.getOffset())
-                    .size(pageRequest.getPageSize());
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder)
+                    .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
 
             SearchResponse response = client.search(request, RequestOptions.DEFAULT);

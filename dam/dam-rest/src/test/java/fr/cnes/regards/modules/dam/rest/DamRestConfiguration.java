@@ -30,9 +30,7 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * Common DAM REST mocks
- *
  * @author Marc Sordi
- *
  */
 @Configuration
 public class DamRestConfiguration {

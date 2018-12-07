@@ -46,14 +46,14 @@ import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.rest.entities.DocumentController;
+import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 
 /**
  * @author lmieulet
  */
 @TestPropertySource(locations = { "classpath:test.properties" })
 @MultitenantTransactional
-@ContextConfiguration(classes = { ControllerITConfig.class })
+@ContextConfiguration(classes = { DamRestConfiguration.class })
 public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
 
     private Model model1;

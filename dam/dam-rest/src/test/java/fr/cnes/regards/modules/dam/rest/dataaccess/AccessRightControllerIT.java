@@ -20,22 +20,17 @@ package fr.cnes.regards.modules.dam.rest.dataaccess;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -59,8 +54,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityFilter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.rest.dataaccess.AccessRightController;
-import fr.cnes.regards.modules.dam.rest.dataaccess.DatasetWithAccessRightController;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 
 /**
@@ -70,9 +63,6 @@ import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")
 public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AccessRightControllerIT.class);
-
     private static final String ACCESS_RIGHTS_ERROR_MSG = "Should have been an answer";
 
     @Autowired
@@ -140,7 +130,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
         projectUser = new ProjectUser();
         projectUser.setEmail(email);
-        Mockito.when(projectUserClientMock.retrieveProjectUser(Matchers.any()))
+        Mockito.when(projectUserClientMock.retrieveProjectUser(ArgumentMatchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(projectUser), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
@@ -174,137 +164,94 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testRetrieveAccessRightsNoArgs() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS, expectations, ACCESS_RIGHTS_ERROR_MSG);
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
     public void testRetrieveDatasetWithAccessRights() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(DatasetWithAccessRightController.ROOT_PATH + DatasetWithAccessRightController.GROUP_PATH,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, ag1Name);
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG,
+                          ag1Name);
     }
 
     @Test
     public void testRetrieveAccessRightsGroupArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("accessgroup=");
-        sb.append(ag1.getName());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
+        String sb = "?" + "accessgroup=" + ag1.getName();
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
     public void testRetrieveAccessRightsDSArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("dataset=");
-        sb.append(ds1.getIpId());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
+        String sb = "?" + "dataset=" + ds1.getIpId();
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
     public void testRetrieveAccessRightsFullArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("dataset=");
-        sb.append(ds1.getIpId());
-        sb.append("&accessgroup=");
-        sb.append(ag1.getName());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
+        String sb = "?" + "dataset=" + ds1.getIpId() + "&accessgroup=" + ag1.getName();
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
     public void testRetrieveAccessRight() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_RIGHTS_ERROR_MSG,
+                          ar1.getId());
     }
 
     @Test
     public void testCreateAccessRight() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         // Associated dataset must be updated
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
-        performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, ar3, expectations, ACCESS_RIGHTS_ERROR_MSG);
+        performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, ar3,
+                           customizer().expectStatusCreated().expectIsNotEmpty(JSON_PATH_ROOT)
+                                   .expectValue("$.content.dataset.groups[0]", ag2.getName()), ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
     public void testUpdateAccessRight() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         // Change access level and group (ag2 instead of ag1)
         AccessRight garTmp = new AccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, ag2);
         garTmp.setId(ar1.getId());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("RESTRICTED_ACCESS"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
         performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
+                          garTmp, customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT)
+                                  .expectValue("$.content.accessLevel", "RESTRICTED_ACCESS")
+                                  .expectValue("$.content.dataset.groups[0]", ag2.getName()), ACCESS_RIGHTS_ERROR_MSG,
+                          ar1.getId());
 
         // Save again garTmp (with ag1 as access group and FULL_ACCESS)
         garTmp = new AccessRight(qf, AccessLevel.FULL_ACCESS, ds1, ag1);
         garTmp.setId(ar1.getId());
-        expectations.clear();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("FULL_ACCESS"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag1.getName()));
         performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
+                          garTmp, customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT)
+                                  .expectValue("$.content.accessLevel", "FULL_ACCESS")
+                                  .expectValue("$.content.dataset.groups[0]", ag1.getName()), ACCESS_RIGHTS_ERROR_MSG,
+                          ar1.getId());
     }
 
     @Test
     public void testDeleteAccessRight() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                             expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
+                             customizer().expectStatusNoContent(), ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
     @Test
     public void testIsUserAutorisedToAccessDataset() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().string("true"));
         RequestParamBuilder requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
                 .param("user", email);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
-
-        expectations.clear();
+                          customizer().expectStatusOk().expect(MockMvcResultMatchers.content().string("true")),
+                          ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
 
         String notExistingUser = "not.existing" + email;
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().string("false"));
-        requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
-                .param("user", notExistingUser);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+                          customizer().expectStatusOk().expect(MockMvcResultMatchers.content().string("false"))
+                                  .addParameter("dataset", ds1.getIpId().toString())
+                                  .addParameter("user", notExistingUser), ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
     }
-
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }
-
 }

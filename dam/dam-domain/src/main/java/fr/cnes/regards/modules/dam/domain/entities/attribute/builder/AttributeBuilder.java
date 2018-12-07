@@ -95,7 +95,7 @@ public final class AttributeBuilder {
                     return (T) buildStringCollection(name, (Collection<String>) value);
                 } else if (value instanceof String[]) {
                     return (T) buildDateArray(name, Arrays.stream((String[]) value)
-                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(size -> new OffsetDateTime[size]));
+                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(OffsetDateTime[]::new));
                 } else {
                     return (T) buildDateArray(name, (OffsetDateTime[]) value);
                 }
@@ -114,7 +114,7 @@ public final class AttributeBuilder {
                     return (T) buildDoubleCollection(name, (Collection<Double>) value);
                 } else {
                     return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
-                            .mapToObj(Double::new).toArray(size -> new Double[size]));
+                            .mapToObj(Double::new).toArray(Double[]::new));
                 }
             case DOUBLE_INTERVAL:
                 return (T) buildDoubleInterval(name, (Range<Double>) value);
@@ -123,7 +123,7 @@ public final class AttributeBuilder {
                     return (T) buildIntegerCollection(name, (Collection<Integer>) value);
                 } else {
                     return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
-                            .mapToObj(Integer::new).toArray(size -> new Integer[size]));
+                            .mapToObj(Integer::new).toArray(Integer[]::new));
                 }
             case INTEGER_INTERVAL:
                 return (T) buildIntegerInterval(name, (Range<Integer>) value);
@@ -135,7 +135,7 @@ public final class AttributeBuilder {
                     return (T) buildLongCollection(name, (Collection<Long>) value);
                 } else {
                     return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
-                            .mapToObj(Long::new).toArray(size -> new Long[size]));
+                            .mapToObj(Long::new).toArray(Long[]::new));
                 }
             case LONG_INTERVAL:
                 return (T) buildLongInterval(name, (Range<Long>) value);

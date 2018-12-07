@@ -889,8 +889,9 @@ public class GeoHelper {
                 return (T) criterion;
             }
             for (ICriterion c : criterion.getCriterions()) {
-                if (c.accept(this) != null) {
-                    return (T) c;
+                T found = c.accept(this);
+                if (found != null) {
+                    return found;
                 }
             }
             return null;

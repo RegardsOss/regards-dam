@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -243,27 +244,27 @@ public class AIPStorageEntityIT extends AbstractMultitenantServiceTest {
     private void waitAndCheck(AbstractEntity<?> entity, EntityAipState expectedState) throws InterruptedException {
         int iteration = 0;
         boolean testOK = false;
-        AbstractEntity<?> loadedEntity = null;
+        Optional<? extends AbstractEntity<?>> loadedEntityOpt = null;
         while (iteration <= 20 && !testOK) {
             switch (entity.getFeature().getEntityType()) {
                 case COLLECTION:
-                    loadedEntity = colRepository.findOne(entity.getId());
+                    loadedEntityOpt = colRepository.findById(entity.getId());
                     break;
                 case DATASET:
-                    loadedEntity = dsRepository.findOne(entity.getId());
+                    loadedEntityOpt = dsRepository.findById(entity.getId());
                     break;
                 case DOCUMENT:
-                    loadedEntity = docRepository.findOne(entity.getId());
+                    loadedEntityOpt = docRepository.findById(entity.getId());
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported entity type");
             }
-            testOK = expectedState.equals(loadedEntity.getStateAip());
+            testOK = expectedState.equals(loadedEntityOpt.get().getStateAip());
             Thread.sleep(1000);
             iteration++;
         }
-        Assert.assertNotNull(loadedEntity);
-        Assert.assertEquals(expectedState, loadedEntity.getStateAip());
+        Assert.assertNotNull(loadedEntityOpt);
+        Assert.assertEquals(expectedState, loadedEntityOpt.get().getStateAip());
     }
 
     /**

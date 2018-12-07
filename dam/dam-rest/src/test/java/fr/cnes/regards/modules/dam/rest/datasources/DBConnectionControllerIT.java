@@ -114,7 +114,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(DBConnectionController.TYPE_MAPPING, readJsonContract("newConnection.json"), customizer,
                            "Configuration should be saved!");
 
-        resolver.forceTenant(DEFAULT_TENANT);
+        resolver.forceTenant(getDefaultTenant());
         List<PluginConfiguration> dbConfs = pluginService.getPluginConfigurationsByType(IConnectionPlugin.class);
         Assert.assertNotNull(dbConfs);
         Assert.assertTrue(dbConfs.size() == 1);
@@ -140,7 +140,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createDBConnectionBadPluginClassName() {
         final PluginConfiguration dbConn = new PluginConfiguration();
-        dbConn.setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgrConnectionPlugin");
+        dbConn.setPluginClassName(
+                "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgrConnectionPlugin");
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -163,7 +164,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConn, expectations,
                            "Empty DBConnection shouldn't be created.");
-        MaintenanceManager.unSetMaintenance(DEFAULT_TENANT); // FIXME: there should be validation on the POJO and if
+        MaintenanceManager.unSetMaintenance(getDefaultTenant());
+        // FIXME: there should be validation on the POJO and if
         // that validation is not passed then it should send back
         // the normalized error code cf
         // GlobalControllerAdvice#hibernateValidation rather than
@@ -286,8 +288,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Ignore // Reactivate to test Oracle DB
     public void updateDBConnection() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
-                                                "Bob");
+        PluginParametersFactory
+                .updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM), "Bob");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
 
@@ -347,8 +349,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testConnectionFailed() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
-                                                "daredevil");
+        PluginParametersFactory
+                .updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM), "daredevil");
 
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
@@ -389,12 +391,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        dbConnection.setParameters(PluginParametersFactory.build()
-                .addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
-                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
-                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
-                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
-                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
+        dbConnection.setParameters(
+                PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
+                        .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
+                        .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
+                        .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
+                        .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;

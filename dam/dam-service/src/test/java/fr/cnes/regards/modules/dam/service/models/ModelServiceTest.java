@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,17 +64,17 @@ public class ModelServiceTest {
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModelServiceTest.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(ModelServiceTest.class);
 
     /**
      * Sample model name
      */
-    private static final String MODEL_NAME = "model";
+    private static String MODEL_NAME = "model";
 
     /**
      * Sample attribute model name
      */
-    private static final String ATT_MOD_NAME = "attmod";
+    private static String ATT_MOD_NAME = "attmod";
 
     /**
      * Model repository
@@ -113,7 +114,7 @@ public class ModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test unexpected model creation")
     public void createUnexpectedModelTest() throws ModuleException {
-        final Model model = new Model();
+        Model model = new Model();
         model.setId(1L);
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
@@ -124,7 +125,7 @@ public class ModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test model creation with conflict")
     public void createAlreadyExistsModelTest() throws ModuleException {
-        final Model model = new Model();
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
 
@@ -137,7 +138,7 @@ public class ModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test model creation")
     public void createModelTest() throws ModuleException {
-        final Model model = new Model();
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
 
@@ -149,29 +150,29 @@ public class ModelServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void getUnknownModelTest() throws ModuleException {
-        final Long modelId = 1L;
+        Long modelId = 1L;
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
+        Mockito.when(mockModelR.existsById(modelId)).thenReturn(false);
 
         modelService.getModel(modelId);
     }
 
     @Test
     public void getModelTest() throws ModuleException {
-        final Long modelId = 1L;
-        final Model model = new Model();
+        Long modelId = 1L;
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelR.existsById(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.findById(modelId)).thenReturn(Optional.of(model));
 
         Assert.assertNotNull(modelService.getModel(modelId));
     }
 
     @Test(expected = EntityNotFoundException.class)
     public void updateUnexpectedModelTest() throws ModuleException {
-        final Model model = new Model();
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         modelService.updateModel(MODEL_NAME, model);
@@ -179,7 +180,7 @@ public class ModelServiceTest {
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateInconsistentModelTest() throws ModuleException {
-        final Model model = new Model();
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         model.setId(2L);
@@ -189,13 +190,13 @@ public class ModelServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void updateUnknownModelTest() throws ModuleException {
-        final Long modelId = 1L;
-        final Model model = new Model();
+        Long modelId = 1L;
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         model.setId(modelId);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
+        Mockito.when(mockModelR.existsById(modelId)).thenReturn(false);
 
         modelService.updateModel(MODEL_NAME, model);
     }
@@ -204,13 +205,13 @@ public class ModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test model update")
     public void updateModelTest() throws ModuleException {
-        final Long modelId = 1L;
-        final Model model = new Model();
+        Long modelId = 1L;
+        Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         model.setId(modelId);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.existsById(modelId)).thenReturn(true);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
 
         Assert.assertNotNull(modelService.updateModel(MODEL_NAME, model));
@@ -226,18 +227,18 @@ public class ModelServiceTest {
     @Purpose("Test error occurs binding attribute that is part of a fragment")
     public void bindAttributeToModelTest() throws ModuleException {
 
-        final Long modelId = 1L;
-        final Model model = new Model();
+        Long modelId = 1L;
+        Model model = new Model();
         model.setId(modelId);
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
 
-        final Fragment frag = Fragment.buildFragment("FRAG", null);
-        final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
+        Fragment frag = Fragment.buildFragment("FRAG", null);
+        Long attId = 10L;
+        AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
                 .fragment(frag).withId(attId).get();
 
-        final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
+        ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
 
         Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(model);
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
@@ -257,24 +258,24 @@ public class ModelServiceTest {
     @Purpose("Test error occurs unbinding attribute that is part of a fragment")
     public void unbindAttributeFromModelTest() throws ModuleException {
 
-        final Long modelId = 1L;
-        final Model model = new Model();
+        Long modelId = 1L;
+        Model model = new Model();
         model.setId(modelId);
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
 
-        final Fragment frag = Fragment.buildFragment("FR2AG", null);
-        final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
+        Fragment frag = Fragment.buildFragment("FR2AG", null);
+        Long attId = 10L;
+        AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
                 .fragment(frag).withId(attId).withPatternRestriction(".*");
 
-        final Long modAttId = 10L;
-        final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
+        Long modAttId = 10L;
+        ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
         modAtt.setId(modAttId);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
-        Mockito.when(mockModelAttR.findOne(modAttId)).thenReturn(modAtt);
+        Mockito.when(mockModelR.existsById(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.findById(modelId)).thenReturn(Optional.of(model));
+        Mockito.when(mockModelAttR.findById(modAttId)).thenReturn(Optional.of(modAtt));
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
         modelService.unbindAttributeFromModel(MODEL_NAME, modAttId);
@@ -287,15 +288,15 @@ public class ModelServiceTest {
     @Test
     public void exportModelTest() throws ModuleException {
 
-        final Long modelId = 1L;
+        Long modelId = 1L;
         String modelName = "sample";
-        final Model model = new Model();
+        Model model = new Model();
         model.setId(modelId);
         model.setName(modelName);
         model.setDescription("Model description");
         model.setType(EntityType.COLLECTION);
 
-        final List<ModelAttrAssoc> modelAttrAssocs = new ArrayList<>();
+        List<ModelAttrAssoc> modelAttrAssocs = new ArrayList<>();
 
         // Attribute #1 in default fragment
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests")
@@ -310,7 +311,7 @@ public class ModelServiceTest {
         modelAttrAssocs.add(modAtt);
 
         // Geo fragment
-        final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
+        Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
 
         // Attribute #3 in geo fragment
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
@@ -319,7 +320,7 @@ public class ModelServiceTest {
         modelAttrAssocs.add(modAtt);
 
         // Geo fragment
-        final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
+        Fragment contact = Fragment.buildFragment("Contact", "Contact information");
 
         // Attribute #5 in contact fragment
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
@@ -349,11 +350,11 @@ public class ModelServiceTest {
         modelAttrAssocs.add(modAtt);
 
         Mockito.when(mockModelR.findByName(modelName)).thenReturn(model);
-        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelR.findById(modelId)).thenReturn(Optional.of(model));
         Mockito.when(mockModelAttR.findByModelName(modelName)).thenReturn(modelAttrAssocs);
 
         try {
-            final OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));
+            OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));
             modelService.exportModel(modelName, output);
         } catch (IOException e) {
             LOGGER.debug("Cannot export fragment");

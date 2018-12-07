@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -136,24 +137,24 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Model createModel(Model model) throws ModuleException {
         if (model.isIdentifiable()) {
-            throw new EntityInvalidException(String.format("Model with name \"%s\" cannot have an identifier!",
-                                                           model.getName()));
+            throw new EntityInvalidException(
+                    String.format("Model with name \"%s\" cannot have an identifier!", model.getName()));
         }
         Model modelFromDb = modelRepository.findByName(model.getName());
         if (modelFromDb != null) {
-            throw new EntityAlreadyExistsException(String.format("Model with name \"%s\" already exists!",
-                                                                 model.getName()));
+            throw new EntityAlreadyExistsException(
+                    String.format("Model with name \"%s\" already exists!", model.getName()));
         }
         return modelRepository.save(model);
     }
 
     @Override
     public Model getModel(Long id) throws ModuleException {
-        final Model model = modelRepository.findOne(id);
-        if (model == null) {
+        Optional<Model> modelOpt = modelRepository.findById(id);
+        if (!modelOpt.isPresent()) {
             throw new EntityNotFoundException(id, Model.class);
         }
-        return model;
+        return modelOpt.get();
     }
 
     @Override
@@ -173,7 +174,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (!modelName.equals(model.getName())) {
             throw new EntityInconsistentIdentifierException(model.getId(), model.getId(), model.getClass());
         }
-        if (!modelRepository.exists(model.getId())) {
+        if (!modelRepository.existsById(model.getId())) {
             throw new EntityNotFoundException(model.getId(), Model.class);
         }
         return modelRepository.save(model);
@@ -186,8 +187,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         // Delete attribute associations
         List<ModelAttrAssoc> modelAttrAssocs = modelAttributeRepository.findByModelId(model.getId());
-        modelAttributeRepository.delete(modelAttrAssocs);
-        modelRepository.delete(model.getId());
+        modelAttributeRepository.deleteAll(modelAttrAssocs);
+        modelRepository.deleteById(model.getId());
     }
 
     @Override
@@ -230,7 +231,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public ModelAttrAssoc bindAttributeToModel(String modelName, ModelAttrAssoc modelAttrAssoc) throws ModuleException {
-        final Model model = getModelByName(modelName);
+        Model model = getModelByName(modelName);
         if (modelAttrAssoc.isIdentifiable()) {
             throw new EntityNotFoundException(modelAttrAssoc.getId(), ModelAttrAssoc.class);
         }
@@ -239,13 +240,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             throw new FragmentAttributeException(modelAttrAssoc.getAttribute().getId());
         }
         // Do not rebind an attribute
-        final Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelName(modelName);
+        Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelName(modelName);
         if (existingModelAtts != null) {
             for (ModelAttrAssoc modAtt : existingModelAtts) {
                 if (modAtt.equals(modelAttrAssoc)) {
-                    throw new EntityAlreadyExistsException(String.format("Attribute %s already exists in model %s!",
-                                                                         modAtt.getAttribute().getName(),
-                                                                         model.getName()));
+                    throw new EntityAlreadyExistsException(
+                            String.format("Attribute %s already exists in model %s!", modAtt.getAttribute().getName(),
+                                          model.getName()));
                 }
             }
         }
@@ -260,14 +261,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public ModelAttrAssoc getModelAttrAssoc(String modelName, Long modelAttributeId) throws ModuleException {
-        final ModelAttrAssoc modelAtt = modelAttributeRepository.findOne(modelAttributeId);
-        if (modelAtt == null) {
+        Optional<ModelAttrAssoc> modelAttOpt = modelAttributeRepository.findById(modelAttributeId);
+        if (!modelAttOpt.isPresent()) {
             throw new EntityNotFoundException(modelAttributeId, ModelAttrAssoc.class);
         }
-        if (!modelName.equals(modelAtt.getModel().getName())) {
-            throw new UnexpectedModelAttributeException(modelAtt.getModel().getId(), modelAttributeId);
+        if (!modelName.equals(modelAttOpt.get().getModel().getName())) {
+            throw new UnexpectedModelAttributeException(modelAttOpt.get().getModel().getId(), modelAttributeId);
         }
-        return modelAtt;
+        return modelAttOpt.get();
     }
 
     @Override
@@ -279,13 +280,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     public ModelAttrAssoc updateModelAttribute(String modelName, Long attributeId, ModelAttrAssoc modelAttrAssoc)
             throws ModuleException {
         if (!modelAttrAssoc.isIdentifiable()) {
-            throw new EntityNotFoundException(String.format("Unknown identifier for model attribute \"%s\"",
-                                                            modelAttrAssoc.getId()));
+            throw new EntityNotFoundException(
+                    String.format("Unknown identifier for model attribute \"%s\"", modelAttrAssoc.getId()));
         }
         if (!modelAttrAssoc.getId().equals(attributeId)) {
             throw new EntityInconsistentIdentifierException(attributeId, modelAttrAssoc.getId(), ModelAttrAssoc.class);
         }
-        if (!modelAttributeRepository.exists(attributeId)) {
+        if (!modelAttributeRepository.existsById(attributeId)) {
             throw new EntityNotFoundException(attributeId, ModelAttrAssoc.class);
         }
         modelAttrAssoc.getAttribute().getFragment().getName();
@@ -300,12 +301,12 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public void unbindAttributeFromModel(String modelName, Long attributeId) throws ModuleException {
-        final ModelAttrAssoc modelAtt = getModelAttrAssoc(modelName, attributeId);
+        ModelAttrAssoc modelAtt = getModelAttrAssoc(modelName, attributeId);
         // Do not bind attribute that is part of a fragment
         if (attributeModelService.isFragmentAttribute(modelAtt.getAttribute().getId())) {
             throw new FragmentAttributeException(modelAtt.getAttribute().getId());
         }
-        modelAttributeRepository.delete(attributeId);
+        modelAttributeRepository.deleteById(attributeId);
     }
 
     @Override
@@ -343,7 +344,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      * @param fragmentId fragment identifier
      * @return true if fragment is bound
      */
-    private boolean isBoundFragment(final Iterable<ModelAttrAssoc> modelAtts, Long fragmentId) {
+    private boolean isBoundFragment(Iterable<ModelAttrAssoc> modelAtts, Long fragmentId) {
         if (modelAtts != null) {
             for (ModelAttrAssoc modelAtt : modelAtts) {
                 if (fragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
@@ -356,7 +357,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public void unbindNSAttributeToModel(String modelName, Long fragmentId) {
-        final Iterable<ModelAttrAssoc> modelAtts = modelAttributeRepository.findByModelName(modelName);
+        Iterable<ModelAttrAssoc> modelAtts = modelAttributeRepository.findByModelName(modelName);
         if (modelAtts != null) {
             for (ModelAttrAssoc modelAtt : modelAtts) {
                 if (fragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
@@ -390,13 +391,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Model duplicateModelAttrAssocs(String sourceModelName, Model targetModel) throws ModuleException {
         // Retrieve all reference model attributes
-        final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(sourceModelName);
+        List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(sourceModelName);
         if (modelAtts != null) {
             for (ModelAttrAssoc modelAtt : modelAtts) {
                 // Computed model associations are not duplicated
                 if (modelAtt.getMode() == ComputationMode.GIVEN) {
                     // Create model attributes to link base attributes
-                    final ModelAttrAssoc duplicatedModelAtt = new ModelAttrAssoc();
+                    ModelAttrAssoc duplicatedModelAtt = new ModelAttrAssoc();
                     duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
                     duplicatedModelAtt.setModel(targetModel);
                     modelAttributeRepository.save(duplicatedModelAtt);
@@ -411,7 +412,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Get model
         Model model = getModelByName(modelName);
         // Get all related attributes
-        final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(modelName);
+        List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(modelName);
         // Export fragment to output stream
         XmlExportHelper.exportModel(os, model, modelAtts);
     }
@@ -420,7 +421,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     public Model importModel(InputStream is) throws ModuleException {
         List<PluginConfiguration> plgConfigurations = new ArrayList<>();
         // Import model from input stream
-        final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, plgConfigurations);
+        List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, plgConfigurations);
         // Create/update PluginConfigurations if there are some
         //        if (!plgConfigurations.isEmpty()) {
         //            this.eventualyCreateComputationConfigurations(plgConfigurations);
@@ -453,9 +454,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
                                                    + "existing plugin configuration points to %s plugin implementation "
                                                    + "while importing one points to %s plugin implementation.",
-                                           plgConf.getLabel(),
-                                           currentPlgConf.getPluginId(),
-                                           plgConf.getPluginId());
+                                           plgConf.getLabel(), currentPlgConf.getPluginId(), plgConf.getPluginId());
                 LOGGER.error(msg);
                 throw new ImportException(msg);
             }
@@ -467,17 +466,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     if (!Objects.equals(param.getStripParameterValue(), curValue)) {
                         String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
                                                            + "plugin parameter %s with value %s differs from existing value (%s)",
-                                                   plgConf.getLabel(),
-                                                   param.getName(),
-                                                   curValue,
+                                                   plgConf.getLabel(), param.getName(), curValue,
                                                    param.getStripParameterValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }
                 } else { // Plugin parameter not found
                     String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
-                                                       + "no plugin parameter %s found",
-                                               plgConf.getLabel(),
+                                                       + "no plugin parameter %s found", plgConf.getLabel(),
                                                param.getName());
                     LOGGER.error(msg);
                     throw new ImportException(msg);
@@ -506,7 +502,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
             AttributeModel imported = modelAtt.getAttribute();
 
-            final AttributeModel existing = attributeModelService
+            AttributeModel existing = attributeModelService
                     .findByNameAndFragmentName(imported.getName(), imported.getFragment().getName());
             // Check if attribute already exists
 
@@ -604,26 +600,22 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Check size
         if (attModels.size() != existingAttModels.size()) {
             LOGGER.error(String.format("Existing fragment \"%s\" contains exactly %s unique attributes (not %s).",
-                                       fragmentName,
-                                       existingAttModels.size(),
-                                       attModels.size()));
+                                       fragmentName, existingAttModels.size(), attModels.size()));
             return false;
         }
 
         // Check attributes
         for (AttributeModel attMod : attModels) {
             if (!fragmentName.equals(attMod.getFragment().getName())) {
-                LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
-                                           attMod.getName(),
-                                           fragmentName,
-                                           attMod.getFragment().getName()));
+                LOGGER.error(
+                        String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)", attMod.getName(),
+                                      fragmentName, attMod.getFragment().getName()));
                 return false;
             }
 
             if (!existingAttModels.contains(attMod)) {
-                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".",
-                                           attMod.getName(),
-                                           fragmentName));
+                LOGGER.error(
+                        String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(), fragmentName));
                 return false;
             }
         }

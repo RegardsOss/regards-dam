@@ -39,7 +39,7 @@ public class SearchAfterReminder extends AbstractReminder {
     private String searchAfterSortValues;
 
     // For information (serialized into Elasticsearch)
-    private final int nextOffset;
+    private final long nextOffset;
 
     // For information (serialized into Elasticsearch)
     private final int nextPageSize;

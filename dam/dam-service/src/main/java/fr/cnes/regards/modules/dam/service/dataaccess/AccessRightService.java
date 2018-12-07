@@ -126,7 +126,7 @@ public class AccessRightService implements IAccessRightService {
     @Override
     public boolean hasAccessRights(AccessGroup accessGroup) {
         Assert.notNull(accessGroup, "Access group is required");
-        Page<AccessRight> accessRights = repository.findAllByAccessGroup(accessGroup, new PageRequest(0, 1));
+        Page<AccessRight> accessRights = repository.findAllByAccessGroup(accessGroup, PageRequest.of(0, 1));
         return accessRights.getTotalElements() > 0;
     }
 
@@ -138,7 +138,7 @@ public class AccessRightService implements IAccessRightService {
         }
         DatasetMetadata metadata = new DatasetMetadata();
 
-        retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
+        retrieveAccessRightsByDataset(datasetIpId, PageRequest.of(0, Integer.MAX_VALUE)).getContent().stream()
                 .forEach(accessRight -> {
                     Long metadataPluginId = null;
                     Long pluginId = null;
@@ -208,22 +208,23 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public AccessRight retrieveAccessRight(Long id) throws EntityNotFoundException {
-        AccessRight result = repository.findById(id);
-        if (result == null) {
+        Optional<AccessRight> resultOpt = repository.findById(id);
+        if (!resultOpt.isPresent()) {
             throw new EntityNotFoundException(id, AccessRight.class);
         }
-        return result;
+        return resultOpt.get();
     }
 
     @Override
     public AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException {
-        AccessRight accessRightFromDb = repository.findById(id);
-        if (accessRightFromDb == null) {
+        Optional<AccessRight> accessRightFromDbOpt = repository.findById(id);
+        if (!accessRightFromDbOpt.isPresent()) {
             throw new EntityNotFoundException(id, AccessRight.class);
         }
         if (!accessRight.getId().equals(id)) {
             throw new EntityInconsistentIdentifierException(id, accessRight.getId(), AccessRight.class);
         }
+        AccessRight accessRightFromDb = accessRightFromDbOpt.get();
         // Remove current group from dataset if accessRight is a GroupAccessRight
         Dataset dataset = datasetService.load(accessRightFromDb.getDataset().getId());
         if (dataset != null) {
@@ -236,9 +237,7 @@ public class AccessRightService implements IAccessRightService {
                 datasetService.update(dataset);
                 accessRight.setDataset(dataset);
             }
-
         }
-
         Optional<PluginConfiguration> toRemove = updatePluginConfiguration(
                 Optional.ofNullable(accessRight.getDataAccessPlugin()),
                 Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
@@ -258,7 +257,11 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public void deleteAccessRight(Long id) throws ModuleException {
-        AccessRight accessRight = repository.findById(id);
+        Optional<AccessRight> accessRightOpt = repository.findById(id);
+        if (!accessRightOpt.isPresent()) {
+            throw new EntityNotFoundException(id, AccessRight.class);
+        }
+        AccessRight accessRight = accessRightOpt.get();
         // Remove current group from dataset if accessRight is a GroupAccessRight
         Dataset dataset = datasetService.load(accessRight.getDataset().getId());
         if (dataset != null) {
@@ -267,7 +270,7 @@ public class AccessRightService implements IAccessRightService {
         }
 
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
-        repository.delete(id);
+        repository.deleteById(id);
 
         if (((confToDelete != null) && (confToDelete.getId() != null))) {
             pluginService.deletePluginConfiguration(confToDelete.getId());
