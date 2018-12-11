@@ -55,10 +55,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-dao</artifactId>
 		</dependency>
 		<dependency>
@@ -76,14 +72,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-dao</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.notification</groupId>
