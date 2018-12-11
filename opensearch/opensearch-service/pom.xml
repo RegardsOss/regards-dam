@@ -70,10 +70,6 @@
 			<artifactId>dam-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>hateoas-regards-starter</artifactId>
 		</dependency>
