@@ -32,6 +32,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -41,6 +42,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -83,6 +86,8 @@ import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
 @Entity
 @Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") },
         uniqueConstraints = @UniqueConstraint(name = "uk_entity_ipId", columnNames = { "ipId" }))
+@NamedEntityGraph(name = "graph.full.abstract.entity",
+        attributeNodes = { @NamedAttributeNode(value = "tags"), @NamedAttributeNode(value = "groups") })
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity<F extends EntityFeature> implements IIndexable, IDocFiles, ILocalizable {
@@ -140,7 +145,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
      * meaning<br/>
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"),
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_tag_entity_id"))
     @Column(name = "value", length = 200)
@@ -412,7 +417,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = (prime * result) + ((getIpId() == null) ? 0 : getIpId().hashCode());
+        result = prime * result + (getIpId() == null ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }

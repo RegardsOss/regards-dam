@@ -18,12 +18,14 @@
  */
 package fr.cnes.regards.modules.dam.dao.entities;
 
-import javax.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -47,7 +49,9 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      * @param pId id of entity
      * @return entity
      */
-    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    @Override
+    //@EntityGraph(attributePaths = { "tags", "groups", "model" })
+    @EntityGraph(value = "graph.full.abstract.entity", type = EntityGraphType.LOAD)
     Optional<T> findById(Long pId);
 
     /**

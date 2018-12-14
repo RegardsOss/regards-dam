@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -35,6 +34,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -45,6 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -332,7 +334,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
 
         // IpIds of entities that will need an AMQP event publishing
@@ -634,8 +636,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
         U entity = loadWithRelations(urn);
         // Store files locally
-        java.util.Collection<DataFile> files = localStorageService
-                .attachFiles(entity, dataType, attachments, fileUriTemplate);
+        java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
+                                                                               fileUriTemplate);
         // Merge previous files with new ones
         if (entity.getFiles().get(dataType) != null) {
             entity.getFiles().get(dataType).addAll(files);
@@ -650,8 +652,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                 ContentTypeValidator.supportsForReference(dataType, ref.getFilename(), ref.getMimeType().toString());
                 // Compute checksum on URI for removal
                 try {
-                    ref.setChecksum(
-                            ChecksumUtils.computeHexChecksum(ref.getUri(), LocalStorageService.DIGEST_ALGORITHM));
+                    ref.setChecksum(ChecksumUtils.computeHexChecksum(ref.getUri(),
+                                                                     LocalStorageService.DIGEST_ALGORITHM));
                     ref.setDigestAlgorithm(LocalStorageService.DIGEST_ALGORITHM);
                 } catch (NoSuchAlgorithmException | IOException e) {
                     String message = String.format("Error while computing checksum");
@@ -681,8 +683,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             }
         }
 
-        String message = String
-                .format("Data file with checksum \"%s\" in entity \"\" not found", checksum, urn.toString());
+        String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
+                                       urn.toString());
         logger.error(message);
         throw new EntityNotFoundException(message);
     }

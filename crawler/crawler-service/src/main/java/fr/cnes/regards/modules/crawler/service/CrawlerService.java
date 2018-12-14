@@ -115,7 +115,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
-     * {@link UUID#nameUUIDFromBytes(byte[]).
+     * {@link UUID#nameUUIDFromBytes(byte[])}.
      * @param tenant the tenant name
      * @param providerId the original primary key value
      * @return the IpId generated from given parameters
@@ -137,7 +137,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         String tenant = runtimeTenantResolver.getTenant();
         OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
         // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
-        int pageNumber = (dsi.getErrorPageNumber() == null) ? 0 : dsi.getErrorPageNumber();
+        int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
         Long dsiId = dsi.getId();
 
         if (!pluginConf.isActive()) {

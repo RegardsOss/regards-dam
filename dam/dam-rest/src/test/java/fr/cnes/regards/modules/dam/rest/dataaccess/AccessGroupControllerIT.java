@@ -123,19 +123,19 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_820")
     public void testAssociateUserToAccessGroup() {
-        performDefaultPut(
-                AccessGroupController.PATH_ACCESS_GROUPS + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL, null,
-                customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG, AG1_NAME,
-                USER1_EMAIL);
+        performDefaultPut(AccessGroupController.PATH_ACCESS_GROUPS
+                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL, null,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG,
+                          AG1_NAME, USER1_EMAIL);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_830")
     public void testDissociateUserFromAccessGroup() {
-        performDefaultDelete(
-                AccessGroupController.PATH_ACCESS_GROUPS + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL,
-                customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG, AG1_NAME,
-                USER1_EMAIL);
+        performDefaultDelete(AccessGroupController.PATH_ACCESS_GROUPS
+                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL,
+                             customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG,
+                             AG1_NAME, USER1_EMAIL);
     }
 
 }
