@@ -63,10 +63,6 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>microservice-core-starter</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>

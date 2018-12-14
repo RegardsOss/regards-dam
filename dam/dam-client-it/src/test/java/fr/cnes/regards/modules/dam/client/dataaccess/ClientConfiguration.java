@@ -16,24 +16,36 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.rest.entities;
+package fr.cnes.regards.modules.dam.client.dataaccess;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
- * Created by oroussel on 04/05/17.
+ * @author Marc SORDI
  */
 @Configuration
-public class ControllerITConfig {
+public class ClientConfiguration {
 
     @Bean
-    public IProjectsClient projectClient() {
+    public INotificationClient getNotificationClient() {
+        return Mockito.mock(INotificationClient.class);
+    }
+
+    @Bean
+    public IAttributeModelClient attributeModelClient() {
+        return Mockito.mock(IAttributeModelClient.class);
+    }
+
+    @Bean
+    public IProjectsClient projectsClient() {
         return Mockito.mock(IProjectsClient.class);
     }
 
@@ -43,7 +55,7 @@ public class ControllerITConfig {
     }
 
     @Bean
-    public IAttributeModelClient attributeModelClient() {
-        return Mockito.mock(IAttributeModelClient.class);
+    public IProjectUsersClient mockProjectUsersClient() {
+        return Mockito.mock(IProjectUsersClient.class);
     }
 }

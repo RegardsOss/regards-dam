@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -126,7 +125,7 @@ public class AccessRightService implements IAccessRightService {
     @Override
     public boolean hasAccessRights(AccessGroup accessGroup) {
         Assert.notNull(accessGroup, "Access group is required");
-        Page<AccessRight> accessRights = repository.findAllByAccessGroup(accessGroup, new PageRequest(0, 1));
+        Page<AccessRight> accessRights = repository.findAllByAccessGroup(accessGroup, PageRequest.of(0, 1));
         return accessRights.getTotalElements() > 0;
     }
 
@@ -138,7 +137,7 @@ public class AccessRightService implements IAccessRightService {
         }
         DatasetMetadata metadata = new DatasetMetadata();
 
-        retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
+        retrieveAccessRightsByDataset(datasetIpId, PageRequest.of(0, Integer.MAX_VALUE)).getContent().stream()
                 .forEach(accessRight -> {
                     Long metadataPluginId = null;
                     Long pluginId = null;
@@ -150,8 +149,8 @@ public class AccessRightService implements IAccessRightService {
                     }
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
-                    boolean dataAccess = datasetAccess && (accessRight.getDataAccessRight().getDataAccessLevel()
-                            != DataAccessLevel.NO_ACCESS);
+                    boolean dataAccess = datasetAccess
+                            && accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS;
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });
@@ -196,7 +195,7 @@ public class AccessRightService implements IAccessRightService {
         accessRight.setDataset(dataset);
 
         // If a new plugin conf is provided, create it
-        if ((accessRight.getDataAccessPlugin() != null)) {
+        if (accessRight.getDataAccessPlugin() != null) {
             createPluginConfiguration(accessRight.getDataAccessPlugin());
         }
 
@@ -208,57 +207,47 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public AccessRight retrieveAccessRight(Long id) throws EntityNotFoundException {
-        AccessRight result = repository.findById(id);
-        if (result == null) {
+        Optional<AccessRight> resultOpt = repository.findById(id);
+        if (!resultOpt.isPresent()) {
             throw new EntityNotFoundException(id, AccessRight.class);
         }
-        return result;
+        return resultOpt.get();
     }
 
+    /**
+     * Update access right is only used to change access levels.
+     */
     @Override
     public AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException {
-        AccessRight accessRightFromDb = repository.findById(id);
-        if (accessRightFromDb == null) {
+        Optional<AccessRight> accessRightFromDbOpt = repository.findById(id);
+        if (!accessRightFromDbOpt.isPresent()) {
             throw new EntityNotFoundException(id, AccessRight.class);
         }
         if (!accessRight.getId().equals(id)) {
             throw new EntityInconsistentIdentifierException(id, accessRight.getId(), AccessRight.class);
         }
-        // Remove current group from dataset if accessRight is a GroupAccessRight
-        Dataset dataset = datasetService.load(accessRightFromDb.getDataset().getId());
-        if (dataset != null) {
-            // If group has changed
-            AccessGroup currentAccessGroup = accessRightFromDb.getAccessGroup();
-            AccessGroup newAccessGroup = accessRight.getAccessGroup();
-            if (!Objects.equals(currentAccessGroup, newAccessGroup)) {
-                dataset.getGroups().remove(currentAccessGroup.getName());
-                dataset.getGroups().add(newAccessGroup.getName());
-                datasetService.update(dataset);
-                accessRight.setDataset(dataset);
-            }
+        AccessRight accessRightFromDb = accessRightFromDbOpt.get();
+        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(Optional.ofNullable(accessRight
+                .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
 
-        }
-
-        Optional<PluginConfiguration> toRemove = updatePluginConfiguration(
-                Optional.ofNullable(accessRight.getDataAccessPlugin()),
-                Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
-
-        AccessRight updated = repository.save(accessRight);
+        repository.save(accessRight);
 
         // Remove unused plugin conf id any
         if (toRemove.isPresent()) {
             pluginService.deletePluginConfiguration(toRemove.get().getId());
         }
 
-        if (dataset != null) {
-            eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
-        }
-        return updated;
+        eventPublisher.publish(new AccessRightEvent(accessRight.getDataset().getIpId(), AccessRightEventType.UPDATE));
+        return accessRight;
     }
 
     @Override
     public void deleteAccessRight(Long id) throws ModuleException {
-        AccessRight accessRight = repository.findById(id);
+        Optional<AccessRight> accessRightOpt = repository.findById(id);
+        if (!accessRightOpt.isPresent()) {
+            throw new EntityNotFoundException(id, AccessRight.class);
+        }
+        AccessRight accessRight = accessRightOpt.get();
         // Remove current group from dataset if accessRight is a GroupAccessRight
         Dataset dataset = datasetService.load(accessRight.getDataset().getId());
         if (dataset != null) {
@@ -267,9 +256,9 @@ public class AccessRightService implements IAccessRightService {
         }
 
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
-        repository.delete(id);
+        repository.deleteById(id);
 
-        if (((confToDelete != null) && (confToDelete.getId() != null))) {
+        if (confToDelete != null && confToDelete.getId() != null) {
             pluginService.deletePluginConfiguration(confToDelete.getId());
         }
 
@@ -295,8 +284,8 @@ public class AccessRightService implements IAccessRightService {
                 Optional<AccessRight> accessRightOptional = repository
                         .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
                 // Check if the accessRight allows to access to that dataset
-                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS
-                        .equals(accessRightOptional.get().getAccessLevel())) {
+                if (accessRightOptional.isPresent()
+                        && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
                     isAutorised = true;
                     // Stop loop iteration
                     break;
@@ -324,10 +313,12 @@ public class AccessRightService implements IAccessRightService {
                     }
                 }
             } catch (ModuleException e) {
-                LOGGER.error(String.format("updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
+                LOGGER.error(String.format(
+                                           "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
                                                    + "dataset %s and group %s. Does plugin exist anymore ?",
                                            ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
-                                           ar.getAccessGroup().getName()), e);
+                                           ar.getAccessGroup().getName()),
+                             e);
             }
         });
 
@@ -335,9 +326,8 @@ public class AccessRightService implements IAccessRightService {
             String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
             try {
                 FeignSecurityManager.asSystem();
-                notificationClient
-                        .notifyRoles(message, "Dynamic access right update", "Data-management", NotificationType.INFO,
-                                     DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                notificationClient.notifyRoles(message, "Dynamic access right update", "Data-management",
+                                               NotificationType.INFO, DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
                 FeignSecurityManager.reset();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 LOGGER.error(String.format("Error sending notification : %s", message), e);

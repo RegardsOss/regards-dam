@@ -115,12 +115,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
-     * {@link UUID#nameUUIDFromBytes(byte[]).
+     * {@link UUID#nameUUIDFromBytes(byte[])}.
      * @param tenant the tenant name
      * @param providerId the original primary key value
      * @return the IpId generated from given parameters
      */
-    private static final UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
+    private static UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
@@ -137,7 +137,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         String tenant = runtimeTenantResolver.getTenant();
         OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
         // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
-        int pageNumber = (dsi.getErrorPageNumber() == null) ? 0 : dsi.getErrorPageNumber();
+        int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
         Long dsiId = dsi.getId();
 
         if (!pluginConf.isActive()) {
@@ -196,7 +196,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                                             new PageRequest(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
@@ -256,7 +256,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                                             new PageRequest(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
@@ -395,23 +395,23 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
 
         // Build decorated page
-        return new PageImpl<>(dataObjects, new PageRequest(page.getNumber(), page.getSize() == 0 ? 1 : page.getSize()),
+        return new PageImpl<>(dataObjects, PageRequest.of(page.getNumber(), page.getSize() == 0 ? 1 : page.getSize()),
                 page.getTotalElements());
     }
 
     @Override
     public List<DatasourceIngestion> getDatasourceIngestions() {
-        return datasourceIngestionRepo.findAll(new Sort("label"));
+        return datasourceIngestionRepo.findAll(Sort.by("label"));
     }
 
     @Override
     public void deleteDatasourceIngestion(Long id) {
-        datasourceIngestionRepo.delete(id);
+        datasourceIngestionRepo.deleteById(id);
     }
 
     @Override
     public void scheduleNowDatasourceIngestion(Long id) {
-        DatasourceIngestion dsi = datasourceIngestionRepo.findOne(id);
+        DatasourceIngestion dsi = datasourceIngestionRepo.findById(id).get();
         dsi.setNextPlannedIngestDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         datasourceIngestionRepo.save(dsi);
     }

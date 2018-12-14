@@ -1,8 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,6 +68,7 @@ public class GeometrySearchIT {
 
     @Before
     public void init() throws ModuleException {
+
         collectionModel = new Model();
         collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);

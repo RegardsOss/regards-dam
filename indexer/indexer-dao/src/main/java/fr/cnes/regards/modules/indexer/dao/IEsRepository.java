@@ -242,7 +242,7 @@ public interface IEsRepository {
      */
     @Deprecated
     default <T> Page<T> searchAllLimited(final String index, final Class<T> clazz, final int pageSize) {
-        return this.searchAllLimited(index, clazz, new PageRequest(0, pageSize));
+        return this.searchAllLimited(index, clazz, PageRequest.of(0, pageSize));
     }
 
     /**
@@ -272,7 +272,7 @@ public interface IEsRepository {
     default <T extends IIndexable> Page<T> search(final SearchKey<T, T> searchKey, final int pageSize,
             final ICriterion crit, final Map<String, FacetType> facetsMap,
             final LinkedHashMap<String, Boolean> ascSortMap) {
-        return this.search(searchKey, new PageRequest(0, pageSize, new LinkedHashMapToSort().convert(ascSortMap)), crit,
+        return this.search(searchKey, PageRequest.of(0, pageSize, new LinkedHashMapToSort().convert(ascSortMap)), crit,
                            facetsMap);
     }
 
@@ -446,7 +446,7 @@ public interface IEsRepository {
      */
     default <T> Page<T> multiFieldsSearch(final SearchKey<T, T> searchKey, final int pageSize, final Object value,
             final String... fields) {
-        return this.multiFieldsSearch(searchKey, new PageRequest(0, pageSize), value, fields);
+        return this.multiFieldsSearch(searchKey, PageRequest.of(0, pageSize), value, fields);
     }
 
     /**

@@ -33,7 +33,6 @@ import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfigu
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
-import fr.cnes.regards.modules.dam.service.dataaccess.AccessRightService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
@@ -64,7 +63,7 @@ public class CrawlerConfiguration {
 
     @Bean
     public IAccessRightService getAccessRightsService() {
-        return Mockito.mock(AccessRightService.class);
+        return Mockito.mock(IAccessRightService.class);
     }
 
     @Bean

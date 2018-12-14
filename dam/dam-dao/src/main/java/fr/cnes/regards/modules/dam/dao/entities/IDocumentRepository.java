@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dam.dao.entities;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -29,7 +30,6 @@ import fr.cnes.regards.modules.dam.domain.entities.Document;
 
 /**
  * Specific requests on Dataset
- *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  * @author lmieulet
@@ -41,20 +41,16 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
 
     /**
      * Find document giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
-     *
-     * @param pId
-     *            document id
+     * @param pId document id
      * @return document
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Document findById(Long pId);
+    Optional<Document> findById(Long pId);
 
     /**
      * Find all documents of which ipId belongs to given set (eagerly loading all relations)
-     *
-     * @param pIpIds
-     *            set of ipId
+     * @param pIpIds set of ipId
      * @return found entities
      */
     @Override
@@ -63,9 +59,7 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
 
     /**
      * Find document of given IpId eagerly loading all common relations (except pluginConfigurationIds)
-     *
-     * @param pIpId
-     *            document ipId
+     * @param pIpId document ipId
      * @return found document
      */
     @Override
@@ -74,9 +68,7 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
 
     /**
      * Find all entities complient with the given modelName
-     *
-     * @param pModelName
-     *            name of the model we want to be complient with
+     * @param pModelName name of the model we want to be complient with
      * @return documents complient with the given model
      */
     @Override
@@ -85,9 +77,7 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
 
     /**
      * Find all entities complient with the given modelName
-     *
-     * @param pModelIds
-     *            model ids we want to be complient with
+     * @param pModelIds model ids we want to be complient with
      * @return documents complient with the given model
      */
     @Override

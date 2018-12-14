@@ -171,8 +171,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
             esRepository.deleteIndex(index);
         }
         esRepository.createIndex(index);
-        String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]);
+        Arrays.stream(EntityType.values()).map(EntityType::toString).toArray(length -> new String[length]);
     }
 
     @After
@@ -287,8 +286,10 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         ar = rightsService.createAccessRight(ar);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
 
+        @SuppressWarnings("rawtypes")
         final SimpleSearchKey<AbstractEntity> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setSearchIndex(TENANT);
+        @SuppressWarnings("rawtypes")
         Page<AbstractEntity> results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));
         Assert.assertEquals(3, results.getTotalElements());
 
@@ -303,8 +304,10 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // 2. Check that no DATA are associated to GROUP1 as no AccessRighrs are created.
         // -------------------------------------------------------------------------------
         runtimeTenantResolver.forceTenant(TENANT);
+        @SuppressWarnings("rawtypes")
         final SimpleSearchKey<AbstractEntity> searchKey = Searches.onSingleEntity(EntityType.DATA);
         searchKey.setSearchIndex(TENANT);
+        @SuppressWarnings("rawtypes")
         Page<AbstractEntity> results = searchService.search(searchKey, 100, ICriterion.all());
         Assert.assertEquals(objects.size(), results.getTotalElements());
         results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group1"));

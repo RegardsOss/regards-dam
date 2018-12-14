@@ -176,7 +176,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private IDatasourceIngestionRepository datasourceIngestionRepository;
+    private IDatasourceIngestionRepository dsIngestionRepository;
 
     @Autowired
     private ProjectGeoSettings projectGeoSettings;
@@ -787,18 +787,18 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
             // care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
+                    .map(UniformResourceName::fromString).toArray(UniformResourceName[]::new)));
         }
         if (bulkSaveResult.getInErrorDocsCount() > 0) {
             // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
             // it doesn't care)
             publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getInErrorDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(n -> new UniformResourceName[n])));
+                    .map(UniformResourceName::fromString).toArray(UniformResourceName[]::new)));
         }
         // If there are errors, notify Admin
         if (buf.length() > 0) {
             // Also add detailed message to datasource ingestion
-            DatasourceIngestion dsIngestion = datasourceIngestionRepository.findOne(Long.parseLong(datasourceId));
+            DatasourceIngestion dsIngestion = dsIngestionRepository.findById(Long.parseLong(datasourceId)).get();
             String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
             self.createNotificationForAdmin(tenant, notifTitle, buf);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());

@@ -89,7 +89,7 @@ public class AccessGroupRepositoryIT extends AbstractDaoTransactionalTest {
     @Test
     public void testFindAllByUsersAndIsPrivate() {
         Page<AccessGroup> accessGroupsOfUser = dao.findAllByUsersOrIsPublic(USER1, Boolean.TRUE,
-                                                                            new PageRequest(0, 10));
+                                                                            PageRequest.of(0, 10));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag1));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag2));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag3));

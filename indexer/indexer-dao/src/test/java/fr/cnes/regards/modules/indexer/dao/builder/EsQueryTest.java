@@ -253,14 +253,14 @@ public class EsQueryTest {
                                          searchAllWithFacetsButDate));
 
         start = System.currentTimeMillis();
-        Pageable pageable = new PageRequest(0, 100, Sort.Direction.ASC, "properties.date");
+        Pageable pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
         page = repository.search(searchKey, pageable, ICriterion.all());
         long searchAllSorted = System.currentTimeMillis() - start;
         System.out.println(
                 String.format("Search all date-sorted: %2$d (%1$d) ms", page.getTotalElements(), searchAllSorted));
 
         start = System.currentTimeMillis();
-        pageable = new PageRequest(0, 100, Sort.Direction.ASC, "properties.date");
+        pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
         page = repository.search(searchKey, pageable, ICriterion.all(),
                                  new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
                                          .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
@@ -270,7 +270,7 @@ public class EsQueryTest {
                                          searchAllSortedWithFacets));
 
         start = System.currentTimeMillis();
-        pageable = new PageRequest(0, 100, Sort.Direction.ASC, "properties.date");
+        pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
         page = repository.search(searchKey, pageable, ICriterion.all(),
                                  new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
                                          .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
@@ -311,7 +311,7 @@ public class EsQueryTest {
 
         start = System.currentTimeMillis();
         startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
-        pageable = new PageRequest(0, 100, Sort.Direction.ASC, "properties.date");
+        pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
         page = repository.search(searchKey, pageable,
                                  ICriterion.between("properties.size", startRandomSize, startRandomSize + 99));
         long search100Sorted = System.currentTimeMillis() - start;
@@ -374,7 +374,7 @@ public class EsQueryTest {
         lower = Math.min(y1, y2);
         upper = Math.max(y1, y2);
 
-        pageable = new PageRequest(0, 100, new Sort("properties.a"));
+        pageable = PageRequest.of(0, 100, Sort.by("properties.a"));
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, pageable, ICriterion.between("properties.x", lower, upper));
@@ -386,7 +386,7 @@ public class EsQueryTest {
         y2 = random.nextDouble();
         lower = Math.min(y1, y2);
         upper = Math.max(y1, y2);
-        pageable = new PageRequest(0, 100, new Sort("properties.text"));
+        pageable = PageRequest.of(0, 100, Sort.by("properties.text"));
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, pageable, ICriterion.between("properties.x", lower, upper),
@@ -633,39 +633,39 @@ public class EsQueryTest {
         SearchKey<Item, Item> searchKey = new SearchKey<>(TYPE1, Item.class);
         searchKey.setSearchIndex("criterions2");
         long now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(43, 1000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(43, 1000, sort), crit).getContent();
         System.out.println("page n : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(44, 1000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(44, 1000, sort), crit).getContent();
         System.out.println("page n + 1 : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(45, 1000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(45, 1000, sort), crit).getContent();
         System.out.println("page n + 2 : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(43, 1000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(43, 1000, sort), crit).getContent();
         System.out.println("page n : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(49, 1000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(49, 1000, sort), crit).getContent();
         System.out.println(
                 "page n + m (m > 1) with (m - n) * page size < 10 000 : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(65, 1000, sort), crit,
+        repository.search(searchKey, PageRequest.of(65, 1000, sort), crit,
                           Collections.singletonMap("properties.text", FacetType.STRING)).getContent();
         System.out.println(
                 "page n + m (m > 1) with (m - n) * page size >= 10 000 : " + (System.currentTimeMillis() - now)
                         + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(0, 10000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(0, 10000, sort), crit).getContent();
         System.out.println("page 0 (10000) : " + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
-        repository.search(searchKey, new PageRequest(1, 10000, sort), crit).getContent();
+        repository.search(searchKey, PageRequest.of(1, 10000, sort), crit).getContent();
         System.out.println("page 1 (10000) : " + (System.currentTimeMillis() - now) + " ms");
 
     }
@@ -680,7 +680,7 @@ public class EsQueryTest {
         int totalPageCount = 10_000_000 / 10_000;
         for (int i = 0; i < totalPageCount; i++) {
             long now = System.currentTimeMillis();
-            repository.search(searchKey, new PageRequest(i, 10_00), crit).getContent();
+            repository.search(searchKey, PageRequest.of(i, 10_00), crit).getContent();
             System.out.println(
                     String.format("page %d / %d : %d ms", i + 1, totalPageCount, (System.currentTimeMillis() - now)));
         }
@@ -698,7 +698,7 @@ public class EsQueryTest {
 
         int totalPageCount = 10_000_000 / 10_000;
         long now = System.currentTimeMillis();
-        FacetPage<Item> facetPage1 = repository.search(searchKey, new PageRequest(0, 10_00), crit,
+        FacetPage<Item> facetPage1 = repository.search(searchKey, PageRequest.of(0, 10_00), crit,
                                                        Collections.singletonMap("properties.text", FacetType.STRING));
         Assert.assertNotNull(facetPage1.getFacets());
         Assert.assertFalse(facetPage1.getFacets().isEmpty());
@@ -708,7 +708,7 @@ public class EsQueryTest {
         StringFacet facet1 = (StringFacet) ifacet1;
         Assert.assertEquals(9, facet1.getValues().size());
 
-        FacetPage<Item> facetPage2 = repository.search(searchKey, new PageRequest(0, 10_00), crit,
+        FacetPage<Item> facetPage2 = repository.search(searchKey, PageRequest.of(0, 10_00), crit,
                                                        Collections.singletonMap("properties.text", FacetType.STRING));
         Assert.assertNotNull(facetPage2.getFacets());
         Assert.assertFalse(facetPage2.getFacets().isEmpty());

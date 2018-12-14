@@ -125,8 +125,8 @@ public class SearchService implements ISearchService {
         }
         int total = objects.size();
         if (!objects.isEmpty()) {
-            objects = objects.subList(pageRequest.getOffset(),
-                                      Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
+            objects = objects.subList((int) pageRequest.getOffset(),
+                                      (int) Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
         }
         return new FacetPage<>(objects, new HashSet<>(), pageRequest, total);
     }

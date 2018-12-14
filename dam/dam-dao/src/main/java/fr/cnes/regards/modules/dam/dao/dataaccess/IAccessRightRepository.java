@@ -42,7 +42,7 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      * @since 1.0-SNAPSHOT
      */
     @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
-    AccessRight findById(Long pId);
+    Optional<AccessRight> findById(Long pId);
 
     @EntityGraph(value = "graph.accessright.plugins")
     Page<AccessRight> findAllByDataset(Dataset dataset, Pageable pageable);

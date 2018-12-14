@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -44,7 +45,6 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 public class EntityServiceTest {
 
@@ -109,9 +109,9 @@ public class EntityServiceTest {
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn((AbstractEntity) data);
-        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn((AbstractEntity) doc);
-        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn((AbstractEntity) dataset);
+        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(Optional.of(data));
+        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(Optional.of(doc));
+        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(Optional.of(dataset));
     }
 
     @Test

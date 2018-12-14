@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -30,8 +31,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,8 +137,8 @@ public class LocalStorageService implements ILocalStorageService {
     public void removeFile(AbstractEntity<?> entity, DataFile dataFile) throws ModuleException {
 
         // Retrieve reference
-        Optional<LocalFile> localFile = localStorageRepo.findOneByEntityAndFileChecksum(entity, dataFile.getChecksum());
-        if (!localFile.isPresent()) {
+        Optional<LocalFile> localFileOpt = localStorageRepo.findOneByEntityAndFileChecksum(entity, dataFile.getChecksum());
+        if (!localFileOpt.isPresent()) {
             throw new EntityNotFoundException(String.format("Failed to remove the file %s for the document %s",
                                                             dataFile.getFilename(), entity.getIpId().toString()),
                     LocalFile.class);
@@ -167,7 +166,7 @@ public class LocalStorageService implements ILocalStorageService {
                 LOGGER.info("File %s was not removed on disk since another document uses it", filePath.toString());
             }
             // Remove from database
-            localStorageRepo.delete(localFile.get().getId());
+            localStorageRepo.deleteById(localFileOpt.get().getId());
         }
 
     }

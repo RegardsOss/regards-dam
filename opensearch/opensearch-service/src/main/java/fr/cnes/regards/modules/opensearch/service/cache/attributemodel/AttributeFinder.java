@@ -163,7 +163,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     /**
      * Initialize queryable static properties
      */
-    private final void initStaticProperties(Map<String, AttributeModel> tenantMap,
+    private void initStaticProperties(Map<String, AttributeModel> tenantMap,
             Multimap<AttributeType, AttributeModel> tenantTypeMap) {
 
         // Unique identifier

@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.dam.domain.entities.feature;
 
 import javax.persistence.Transient;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.hibernate.validator.constraints.NotBlank;
+
 import org.springframework.util.Assert;
 
 import com.google.common.collect.HashMultimap;
