@@ -26,7 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -41,7 +40,6 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  * @author oroussel
  * @param <U> extends {@link AbstractEntity}
  */
-@MultitenantTransactional
 public interface IEntityService<U extends AbstractEntity<?>> extends IValidationService<U> {
 
     /**
