@@ -75,7 +75,12 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      * @param pPageable {@link Pageable}
      * @return list of public or non public groups
      */
+    @EntityGraph(value = "graph.accessgroup.users")
     Page<AccessGroup> findAllByIsPublic(Boolean isPublic, Pageable pPageable);
+
+    @Override
+    @EntityGraph(value = "graph.accessgroup.users")
+    Page<AccessGroup> findAll(Pageable pPageable);
 
     Set<AccessGroup> findAllByUsersOrIsPublic(User user, Boolean aTrue);
 }
