@@ -26,11 +26,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 
 /**
  * Crawler initializer.
@@ -56,15 +57,17 @@ public class CrawlerInitializer {
     private AtomicBoolean elasticSearchUpgradeDone = new AtomicBoolean(false);
 
     @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        upgradeElasticsearchIndices();
+    public void onApplicationEvent(DamGsonReadyEvent event) {
+        LOGGER.info("Running dataset crawler .... ");
         datasetCrawlerService.crawl();
+        LOGGER.info("Dataset crawler started.");
     }
 
     @EventListener
-    public void onApplicationEvent2(ContextRefreshedEvent event) {
-        upgradeElasticsearchIndices();
+    public void onApplicationEvent2(DamGsonReadyEvent event) {
+        LOGGER.info("Running standard crawler .... ");
         crawlerAndIngesterService.crawl();
+        LOGGER.info("Standard crawler started.");
     }
 
     /**

@@ -30,6 +30,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
 import fr.cnes.regards.framework.gson.adapters.MultitenantPolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -118,10 +119,13 @@ public class MultitenantFlattenedAttributeAdapterFactory
      *
      * @param pTenant
      *            tenant
+     * @param pAttributes
      */
     public void registerAttributes(final String pTenant, final List<AttributeModel> pAttributes) {
         if (pAttributes != null) {
             for (AttributeModel att : pAttributes) {
+                LOGGER.debug("{} - Registering attribute {} - {} - {}", pTenant, att.getName(), att.getFullName(),
+                             att.getFullJsonPath());
                 registerAttribute(pTenant, att);
             }
         }

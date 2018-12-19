@@ -22,13 +22,12 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 
@@ -38,7 +37,7 @@ import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
  */
 public interface IEntityIndexerService {
 
-    void handleApplicationReady(ApplicationReadyEvent event);
+    void handleApplicationReady(DamGsonReadyEvent event);
 
     /**
      * Update entity into Elasticsearch

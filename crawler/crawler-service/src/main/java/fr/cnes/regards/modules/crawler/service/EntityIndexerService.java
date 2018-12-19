@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -40,11 +39,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
@@ -56,6 +57,7 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -90,6 +92,7 @@ import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
@@ -183,7 +186,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     @EventListener
-    public void handleApplicationReady(ApplicationReadyEvent event) {
+    public void handleApplicationReady(DamGsonReadyEvent event) {
         subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
@@ -275,9 +278,31 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (curDataset == null) {
             return true;
         }
-        return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getMetadata().getDataObjectsGroupsMap()
-                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
+
+        if (newDataset == null) {
+            return false;
+        }
+
+        boolean need = false;
+        if (newDataset.getOpenSearchSubsettingClause() != null) {
+            need = !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause());
+        } else if (curDataset.getOpenSearchSubsettingClause() != null) {
+            need = true;
+        }
+
+        Map<String, DataObjectGroup> curentMetadata = curDataset.getMetadata() != null
+                ? curDataset.getMetadata().getDataObjectsGroupsMap()
+                : null;
+        Map<String, DataObjectGroup> newMetadata = newDataset.getMetadata() != null
+                ? newDataset.getMetadata().getDataObjectsGroupsMap()
+                : null;
+        if (curentMetadata != null) {
+            need = need || !curentMetadata.equals(newMetadata);
+        } else if (newDataset != null) {
+            need = true;
+        }
+
+        return need;
     }
 
     /**
@@ -334,7 +359,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             Long dsiId) {
         String tenant = runtimeTenantResolver.getTenant();
         sendMessage(String.format("      Updating dataset %s indexation and all its associated data objects...",
-                                  dataset.getLabel()), dsiId);
+                                  dataset.getLabel()),
+                    dsiId);
         sendMessage(String.format("        Searching for dataset %s associated data objects...", dataset.getLabel()),
                     dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
@@ -344,7 +370,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         // Create a callable which bulk save into ES a set of data objects
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
-                                                                                      tenant, dataset.getId());
+                tenant, dataset.getId());
         // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
         removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
 
@@ -453,7 +479,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                                                                    saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -463,7 +489,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association saved.",
-                                  dataObjectUpdater.getObjectsCount()), dsiId);
+                                  dataObjectUpdater.getObjectsCount()),
+                    dsiId);
     }
 
     /**
@@ -491,14 +518,13 @@ public class EntityIndexerService implements IEntityIndexerService {
         subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
-                                                                                             toSaveObjects,
-                                                                                             saveDataObjectsCallable,
-                                                                                             executor, groupName);
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
         esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
         // Saving remaining objects...
         dataObjectAssocUpdater.finalSave();
         sendMessage(String.format("          ...%d data objects group <%s> association saved.",
-                                  dataObjectAssocUpdater.getObjectsCount(), groupName), dsiId);
+                                  dataObjectAssocUpdater.getObjectsCount(), groupName),
+                    dsiId);
     }
 
     /**
@@ -526,12 +552,13 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                              ICriterion.not(dataset.getUserSubsettingClause()));
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
-                                                                                   saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects dataset association removed.",
-                                  dataObjectAssocRemover.getObjectsCount()), dsiId);
+                                  dataObjectAssocRemover.getObjectsCount()),
+                    dsiId);
     }
 
     /**
@@ -554,19 +581,18 @@ public class EntityIndexerService implements IEntityIndexerService {
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendMessage(String.format("          Removing old data objects group <%s> association...", groupName), dsiId);
         // First : Retrieve objects associated to given group and not matching the groupSubsettingClause
-        ICriterion oldAssociatedObjectsCrit = ICriterion
-                .and(ICriterion.eq("tags", dataset.getIpId().toString()), ICriterion.contains("groups", groupName),
-                     ICriterion.not(groupSubsettingClause));
+        ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
+                                                             ICriterion.contains("groups", groupName),
+                                                             ICriterion.not(groupSubsettingClause));
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
-                                                                                             toSaveObjects,
-                                                                                             saveDataObjectsCallable,
-                                                                                             executor, groupName);
+                toSaveObjects, saveDataObjectsCallable, executor, groupName);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendMessage(String.format("          ...%d data objects group <%s> association removed.",
-                                  dataObjectAssocRemover.getObjectsCount(), groupName), dsiId);
+                                  dataObjectAssocRemover.getObjectsCount(), groupName),
+                    dsiId);
     }
 
     /**
@@ -580,8 +606,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute) && attr.getName()
-                                .equals(attrInFragment.getName())).findFirst();
+                        .filter(attr -> (attr instanceof ObjectAttribute)
+                                && attr.getName().equals(attrInFragment.getName()))
+                        .findFirst();
                 if (candidate.isPresent()) {
                     Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
@@ -644,8 +671,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         runtimeTenantResolver.forceTenant(tenant);
         FeignSecurityManager.asSystem();
         NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
-                                                    applicationName, title, NotificationType.ERROR);
+                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title,
+                NotificationType.ERROR);
         notifClient.createNotification(notif);
         FeignSecurityManager.reset();
     }
@@ -837,9 +864,9 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            String msg = String
-                    .format("%s: %s", ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
-                            message);
+            String msg = String.format("%s: %s",
+                                       ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
+                                       message);
             eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
