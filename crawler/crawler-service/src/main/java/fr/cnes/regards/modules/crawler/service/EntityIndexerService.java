@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -279,30 +278,34 @@ public class EntityIndexerService implements IEntityIndexerService {
             return true;
         }
 
-        if (newDataset == null) {
-            return false;
-        }
+        //        if (newDataset == null) {
+        //            return false;
+        //        }
 
-        boolean need = false;
-        if (newDataset.getOpenSearchSubsettingClause() != null) {
-            need = !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause());
-        } else if (curDataset.getOpenSearchSubsettingClause() != null) {
-            need = true;
-        }
+        return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
+                || !newDataset.getMetadata().getDataObjectsGroupsMap()
+                        .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
 
-        Map<String, DataObjectGroup> curentMetadata = curDataset.getMetadata() != null
-                ? curDataset.getMetadata().getDataObjectsGroupsMap()
-                : null;
-        Map<String, DataObjectGroup> newMetadata = newDataset.getMetadata() != null
-                ? newDataset.getMetadata().getDataObjectsGroupsMap()
-                : null;
-        if (curentMetadata != null) {
-            need = need || !curentMetadata.equals(newMetadata);
-        } else if (newDataset != null) {
-            need = true;
-        }
-
-        return need;
+        //        boolean need = false;
+        //        if (newDataset.getOpenSearchSubsettingClause() != null) {
+        //            need = !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause());
+        //        } else if (curDataset.getOpenSearchSubsettingClause() != null) {
+        //            need = true;
+        //        }
+        //
+        //        Map<String, DataObjectGroup> curentMetadata = curDataset.getMetadata() != null
+        //                ? curDataset.getMetadata().getDataObjectsGroupsMap()
+        //                : null;
+        //        Map<String, DataObjectGroup> newMetadata = newDataset.getMetadata() != null
+        //                ? newDataset.getMetadata().getDataObjectsGroupsMap()
+        //                : null;
+        //        if (curentMetadata != null) {
+        //            need = need || !curentMetadata.equals(newMetadata);
+        //        } else if (newDataset != null) {
+        //            need = true;
+        //        }
+        //
+        //        return need;
     }
 
     /**
