@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +40,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
@@ -97,8 +95,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
-    private List<ResultMatcher> expectations;
-
     @Autowired
     private IAttributeModelClient attributeModelClient;
 
@@ -108,7 +104,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Before
     public void init() {
 
-        expectations = new ArrayList<>();
         // Bootstrap default values
         model1 = Model.build("modelName1", "model desc", EntityType.DATASET);
         model1 = modelRepository.save(model1);
@@ -144,9 +139,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testGetAllDatasets() {
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isOk());
+        customizer.expect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DatasetController.TYPE_MAPPING, customizer, "Failed to fetch dataset list");
     }
 
@@ -178,24 +173,24 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         // Set test case
         dataSet2.setOpenSearchSubsettingClause("tags:10");
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(DatasetController.TYPE_MAPPING, dataSet2, customizer, "Failed to create a new dataset");
 
         final Dataset dataSet21 = new Dataset(model1, getDefaultTenant(), "DS21", "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(DatasetController.TYPE_MAPPING, dataSet21, customizer, "Failed to create a new dataset");
     }
 
     @Test
     public void testGetDatasetById() {
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        customizer.addExpectation(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isOk());
+        customizer.expect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, customizer,
                           "Failed to fetch a specific dataset using its id", dataSet1.getId());
     }
@@ -209,8 +204,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSet1, expectations,
                           "Failed to update a specific dataset using its id", dataSetClone.getId());
@@ -226,8 +222,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setProviderId(dataSet1.getProviderId() + "new");
         dataSetClone.setLabel("label");
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, dataSetClone,
                           expectations, "Failed to update a specific dataset using its id", dataSetClone.getId());
@@ -235,7 +232,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testDeleteDataset() {
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ID_PATH, expectations,
                              "Failed to delete a specific dataset using its id", dataSet1.getId());
     }
@@ -255,13 +253,16 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         sj.add("modelIds=" + datasetModel.getId());
         String queryParams = sj.toString();
 
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
         performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
         sj.add("page=1");
         queryParams = sj.toString();
-        expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
+        expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
         performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
     }
@@ -281,13 +282,13 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         sj.add("modelIds=" + datasetModel.getId());
         String queryParams = sj.toString();
 
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
         performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
         sj.add("page=0");
         queryParams = sj.toString();
-        expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
         performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
     }
@@ -299,8 +300,10 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
                 .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
         final Model dataModel = modelService.getModelByName("dataModel");
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
+
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
         DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10%20AND%20tags:abc");
         performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATA_SUB_SETTING_VALIDATION
@@ -308,9 +311,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
                            "Could not validate that subsetting clause");
 
         query = new DatasetController.Query("properties.DO_NOT_EXIST:10");
-        expectations.clear();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
+        expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isOk());
+        expectations.expect(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
         performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATA_SUB_SETTING_VALIDATION
                 + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could validate that subsetting clause");
@@ -321,7 +324,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
      *
      * @param pFilename
      *            filename
-     * @return list of created model attributes
      * @throws ModuleException
      *             if error occurs
      */

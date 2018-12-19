@@ -159,10 +159,10 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         Path filePath = Paths.get("src", "test", "resources", filename);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer expectations = customizer();
+        expectations.expect(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, customizer,
+        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
         final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
@@ -207,8 +207,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         collection.setProperties(atts);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection, customizer,
                            "Failed to create a new collection");
@@ -224,8 +224,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
         collection.setProperties(atts);
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isOk());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, collection,
                           customizer, "Failed to update a collection", collection.getId());
 
@@ -246,8 +246,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
         newCollection.setProperties(atts);
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, newCollection,
                           customizer, "Failed to update a collection", collection.getId());
@@ -265,8 +265,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildString(refAtt, "ref"));
         optionalNonAlterable.setProperties(atts);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPost(CollectionController.TYPE_MAPPING, optionalNonAlterable, customizer,
                            "Failed to create a new collection");
@@ -288,8 +288,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildString(refAtt, "other"));
         optionalAltered.setProperties(atts);
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING, optionalAltered,
                           customizer, "Failed to update a collection", optionalNonAlterable.getId());
 
@@ -300,8 +300,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(CollectionController.TYPE_MAPPING, optionalNotGivenNonAlterable, customizer,
                            "Failed to create a new collection");
 
@@ -323,8 +323,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildString(refAtt, "other"));
         optionalAltered.setProperties(atts);
 
-        customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isOk());
         performDefaultPut(CollectionController.TYPE_MAPPING + CollectionController.COLLECTION_MAPPING,
                           optionalAlteredNotGiven, customizer, "Failed to update a collection",
                           optionalNotGivenNonAlterable.getId());
@@ -361,8 +361,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         collection.setProperties(atts);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().is5xxServerError());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().is5xxServerError());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection, customizer,
                            "Failed to create a new collection");
@@ -394,8 +394,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         collection.setProperties(atts);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
         tenantResolver.forceTenant(getDefaultTenant());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection, customizer,
                            "Failed to create a new collection");
@@ -429,8 +429,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         collection.setProperties(atts);
 
         tenantResolver.forceTenant(getDefaultTenant());
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection, customizer,
                            "Failed to create a new collection");
     }
