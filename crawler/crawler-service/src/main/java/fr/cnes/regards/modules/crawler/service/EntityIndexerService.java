@@ -1,7 +1,23 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -22,12 +38,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
@@ -39,6 +57,7 @@ import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -70,6 +89,7 @@ import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
@@ -144,7 +164,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     @EventListener
-    public void handleApplicationReady(ApplicationReadyEvent event) {
+    public void handleApplicationReady(DamGsonReadyEvent event) {
         subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
@@ -249,9 +269,31 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (curDataset == null) {
             return true;
         }
-        return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getMetadata().getDataObjectsGroupsMap()
-                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
+
+        if (newDataset == null) {
+            return false;
+        }
+
+        boolean need = false;
+        if (newDataset.getOpenSearchSubsettingClause() != null) {
+            need = !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause());
+        } else if (curDataset.getOpenSearchSubsettingClause() != null) {
+            need = true;
+        }
+
+        Map<String, Boolean> curentMetadata = curDataset.getMetadata() != null
+                ? curDataset.getMetadata().getDataObjectsGroupsMap()
+                : null;
+        Map<String, Boolean> newMetadata = newDataset.getMetadata() != null
+                ? newDataset.getMetadata().getDataObjectsGroupsMap()
+                : null;
+        if (curentMetadata != null) {
+            need = need || !curentMetadata.equals(newMetadata);
+        } else if (newDataset != null) {
+            need = true;
+        }
+
+        return need;
     }
 
     /**

@@ -18,13 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -60,6 +60,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGro
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupPublicEvent;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 
 /**
  *
@@ -71,7 +72,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGro
  */
 @Service
 @MultitenantTransactional
-public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent>, IAccessGroupService {
+public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent>, IAccessGroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
 
@@ -307,7 +308,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     @Override
     @Transactional(propagation = Propagation.NEVER)
     // this method is called out of context on microservice initialization
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(DamGsonReadyEvent event) {
         subscriber.subscribeTo(ProjectUserEvent.class, new ProjectUserEventHandler());
     }
 

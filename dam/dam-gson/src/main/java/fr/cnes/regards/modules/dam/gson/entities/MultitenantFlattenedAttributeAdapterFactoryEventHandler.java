@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
@@ -77,6 +78,9 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory factory;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent pEvent) {
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
@@ -86,10 +90,12 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         for (final String tenant : tenantResolver.getAllActiveTenants()) {
             // Register for tenant
             final List<AttributeModel> atts = attributeHelper.getAllAttributes(tenant);
-            LOGGER.debug("Registering already configured attributes and fragments");
+            LOGGER.info("Registering already configured attributes and fragments");
             // Use factory algorithm
             factory.registerAttributes(tenant, atts);
+            LOGGER.info("Registering attributes for tenant {} done", tenant);
         }
+        applicationEventPublisher.publishEvent(new DamGsonReadyEvent(this));
     }
 
     /**

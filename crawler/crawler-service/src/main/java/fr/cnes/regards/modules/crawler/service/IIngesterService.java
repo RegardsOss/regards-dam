@@ -2,11 +2,10 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Optional;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 
 /**
  * Ingester service interface.<br/>
@@ -14,6 +13,7 @@ import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
  * @author oroussel
  */
 public interface IIngesterService {
+
     void manage();
 
     void updateAndCleanTenantDatasourceIngestions(String tenant);
@@ -28,7 +28,7 @@ public interface IIngesterService {
 
     void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException;
 
-    void handleApplicationReadyEvent(ApplicationReadyEvent event);
+    void handleApplicationReadyEvent(DamGsonReadyEvent event);
 
     void handleMessageEvent(MessageEvent event);
 }
