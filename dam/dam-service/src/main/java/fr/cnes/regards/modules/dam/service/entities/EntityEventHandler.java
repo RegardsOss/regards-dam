@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.dam.service.entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +33,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.storage.domain.AIPState;
 import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
  * @author Christophe Mertz
  */
 @Component
-public class EntityEventHandler implements ApplicationListener<ApplicationReadyEvent> {
+public class EntityEventHandler implements ApplicationListener<DamGsonReadyEvent> {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityEventHandler.class);
@@ -70,7 +70,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
      * Subscribe to {@link AIPEvent} in order to update {@link AbstractEntity} for each successfully stored AIP.
      */
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent pEvent) {
+    public void onApplicationEvent(DamGsonReadyEvent pEvent) {
         subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
