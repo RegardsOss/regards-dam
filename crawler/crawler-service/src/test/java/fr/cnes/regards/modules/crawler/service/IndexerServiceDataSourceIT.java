@@ -405,10 +405,10 @@ public class IndexerServiceDataSourceIT {
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
+        /*        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
-        Assert.assertEquals(1, dsPage.getContent().size());
+        Assert.assertEquals(1, dsPage.getContent().size());*/
     }
 
     private void checkDatasetComputedAttribute(final Dataset pDataset,
