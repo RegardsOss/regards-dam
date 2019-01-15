@@ -232,10 +232,9 @@ public class IndexerServiceDataSourceIT {
 
         runtimeTenantResolver.forceTenant(tenant);
         if (esRepos.indexExists(tenant)) {
-            esRepos.deleteAll(tenant);
-        } else {
-            esRepos.createIndex(tenant);
+            esRepos.deleteIndex(tenant);
         }
+        esRepos.createIndex(tenant);
 
         crawlerService.setConsumeOnlyMode(false);
         ingesterService.setConsumeOnlyMode(true);

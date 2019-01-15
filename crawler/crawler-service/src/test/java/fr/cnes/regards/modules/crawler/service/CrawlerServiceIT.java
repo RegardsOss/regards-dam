@@ -200,10 +200,9 @@ public class CrawlerServiceIT {
 
     public void buildData1() throws ModuleException {
         if (esRepos.indexExists(tenant)) {
-            esRepos.deleteAll(tenant);
-        } else {
-            esRepos.createIndex(tenant);
+            esRepos.deleteIndex(tenant);
         }
+        esRepos.createIndex(tenant);
 
         modelColl = Model.build("modelColl", "model desc", EntityType.COLLECTION);
         modelColl = modelService.createModel(modelColl);
