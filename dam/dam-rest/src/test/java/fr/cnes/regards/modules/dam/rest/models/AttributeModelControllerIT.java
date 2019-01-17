@@ -28,6 +28,7 @@ import javax.persistence.PersistenceContext;
 
 import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,8 +47,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
@@ -76,7 +77,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.Restrict
  * @author msordi
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=att_model_it" })
-@MultitenantTransactional
 public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
@@ -104,7 +104,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     private IModelRepository modelRepository;
 
     @Autowired
-    private IFragmentRepository FragmentRepository;
+    private IFragmentRepository fragmentRepository;
 
     /**
      * AttributeModel Repository
@@ -117,6 +117,9 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private IModelAttrAssocRepository modelAttributeRepository;
+
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
     private Model modelTest;
 
@@ -284,7 +287,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException {
-
+        runtimeTenantResolver.forceTenant(getDefaultTenant());
         Model model = new Model();
         model.setName("DataModel");
         model.setType(EntityType.DATA);
@@ -303,7 +306,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         fragment.setDescription("Test");
         fragment.setName("test");
         fragment.setVersion("1.0");
-        FragmentRepository.save(fragment);
+        fragmentRepository.save(fragment);
 
         AttributeModel attribute = new AttributeModel();
         attribute.setFragment(fragment);
@@ -341,9 +344,15 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         modelAttr.setModel(model2);
         modelAttributeRepository.save(modelAttr);
 
-        entityManager.flush();
-        entityManager.clear();
+    }
 
+    @After
+    public void cleanUp() {
+        runtimeTenantResolver.forceTenant(getDefaultTenant());
+        modelAttributeRepository.deleteAll();
+        attributeModelRepository.deleteAll();
+        modelRepository.deleteAll();
+        fragmentRepository.deleteAll();
     }
 
     @Test
