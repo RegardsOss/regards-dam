@@ -59,7 +59,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationType;
+import fr.cnes.regards.modules.notification.domain.NotificationLevel;
 
 /**
  * Access right service implementation
@@ -326,8 +326,8 @@ public class AccessRightService implements IAccessRightService {
             String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
             try {
                 FeignSecurityManager.asSystem();
-                notificationClient.notifyRoles(message, "Dynamic access right update", "Data-management",
-                                               NotificationType.INFO, DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                notificationClient.notify(message, "Dynamic access right update", NotificationLevel.INFO,
+                                          DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
                 FeignSecurityManager.reset();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 LOGGER.error(String.format("Error sending notification : %s", message), e);

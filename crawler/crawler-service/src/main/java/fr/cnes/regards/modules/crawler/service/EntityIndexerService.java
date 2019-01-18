@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,7 +61,6 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -107,8 +105,7 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationType;
-import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
+import fr.cnes.regards.modules.notification.domain.NotificationLevel;
 import fr.cnes.regards.modules.storage.domain.AIPState;
 import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
@@ -252,16 +249,16 @@ public class EntityIndexerService implements IEntityIndexerService {
             // previous version of dataset and current one.
             // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
             // data objects must be updated
-            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
+            boolean needAssociatedDataObjectsUpdate = lastUpdateDate != null || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
-            if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
+            if (!needAssociatedDataObjectsUpdate && entity instanceof Dataset) {
                 Dataset dataset = (Dataset) entity;
                 needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
                                                                                    esRepos.get(tenant, dataset));
             }
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
-            if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
+            if (entity instanceof Dataset && needAssociatedDataObjectsUpdate) {
                 // Subsetting clause is needed by many things
                 ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate, dsiId);
@@ -405,7 +402,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
             // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
-            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
+            if (group.getDatasetAccess() && group.getMetaDataObjectAccessFilterPluginId() != null) {
                 try {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
@@ -606,7 +603,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute)
+                        .filter(attr -> attr instanceof ObjectAttribute
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
@@ -669,12 +666,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
         runtimeTenantResolver.forceTenant(tenant);
-        FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title,
-                NotificationType.ERROR);
-        notifClient.createNotification(notif);
-        FeignSecurityManager.reset();
+        notifClient.notify(buf.toString(), title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
     }
 
     /**
@@ -693,7 +685,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             errors = e.getMessages();
         }
         // No exception thrown but still validation errors
-        if ((errors == null) && (errorsObject.hasErrors())) {
+        if (errors == null && errorsObject.hasErrors()) {
             errors = toErrors(errorsObject);
         }
         // No error => dataObject is valid
