@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -39,9 +40,13 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     List<ModelAttrAssoc> findByModelId(Long pModelId);
 
+    @EntityGraph(attributePaths = {"attribute.properties"})
     List<ModelAttrAssoc> findByModelName(String modelName);
 
     ModelAttrAssoc findByModelIdAndAttribute(Long pModelId, AttributeModel pAttributeModel);
+
+    @EntityGraph(attributePaths = {"attribute.properties"})
+    List<ModelAttrAssoc> findAll();
 
     /**
      * Find page attribute which are associated to at least one of the models
@@ -57,6 +62,7 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
      * @param pModelsIds
      * @return the model attribute assocations
      */
+    @EntityGraph(attributePaths = {"attribute.properties"})
     Collection<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelsIds);
 
     /**

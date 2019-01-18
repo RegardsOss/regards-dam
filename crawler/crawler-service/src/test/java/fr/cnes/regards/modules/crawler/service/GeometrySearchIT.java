@@ -10,6 +10,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -33,6 +36,7 @@ import fr.cnes.regards.modules.indexer.service.Searches;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @TestPropertySource(locations = { "classpath:test.properties" })
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_CLASS)
 public class GeometrySearchIT {
 
     @Autowired

@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.rest.datasources;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -46,6 +43,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
@@ -160,14 +158,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         Assert.assertEquals(0, dataSourceService.getAllDataSources().size());
 
-        // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
-
+        RequestBuilderCustomizer expectations = customizer().expectStatusOk()
+                .expectValue(JSON_PATH_LABEL, dataSource.getLabel())
+                .expect(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE, Matchers
+                        .contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
 
@@ -183,12 +177,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         Assert.assertEquals(0, dataSourceService.getAllDataSources().size());
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath(JSON_PATH_TABLE_NAME,
-                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.TABLE_PARAM))));
+        RequestBuilderCustomizer expectations = customizer().expectStatusOk()
+                .expectValue(JSON_PATH_LABEL, dataSource.getLabel())
+                .expect(MockMvcResultMatchers.jsonPath(JSON_PATH_TABLE_NAME, Matchers
+                        .contains(dataSource.getStripParameterValue(DataSourcePluginConstants.TABLE_PARAM))));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -200,23 +192,20 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system allows to get a datasource")
     public void getDataSource() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
         final PluginConfiguration dataSource = createDataSourceWithFromClause();
-        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, customizer().expectStatusOk(),
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setId(pls.get(0).getId());
 
         // Define expectations
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+        RequestBuilderCustomizer expectations = customizer().expectValue(JSON_PATH_LABEL, dataSource.getLabel())
+                .expect(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
+                        .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())))
+                .expect(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE, Matchers
+                        .contains(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
                           "DataSource shouldn't be retrieve.", dataSource.getId());
@@ -224,10 +213,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void getUnknownDataSource() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNotFound());
-
-        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
+        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", customizer().expectStatusNotFound(),
                           "DataSource shouldn't be retrieve.", Long.MAX_VALUE);
     }
 
@@ -235,12 +221,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SRC_120")
     @Purpose("The system allows to update a datasource by updating the SQL request")
     public void dataSourceUpdateFromClause() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
         PluginConfiguration dataSource = createDataSourceWithFromClause();
-        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, customizer().expectStatusOk(),
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setId(pls.get(0).getId());
@@ -249,13 +233,12 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.getParameter(DataSourcePluginConstants.FROM_CLAUSE).setValue("\"from table where table.id>1000\"");
 
         // Define expectations
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.hasItem(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
-
+        RequestBuilderCustomizer expectations = customizer().expectStatusOk()
+                .expectArrayContains(JSON_PATH_PLUGIN_CONNECTION,
+                                     dataSource.getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM)
+                                             .getId().intValue())
+                .expectArrayContains(JSON_PATH_FROM_CLAUSE,
+                                     dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE));
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
     }
@@ -264,12 +247,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SRC_120")
     @Purpose("The system allows to update a datasource by updating the connection")
     public void dataSourceUpdateDBConnection() throws ModuleException {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
-        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
-                           "DataSource shouldn't be created.");
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(),
+                           customizer().expectStatusOk(), "DataSource shouldn't be created.");
 
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         PluginConfiguration dataSource = pls.get(0);
@@ -280,12 +261,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.getParameter(DataSourcePluginConstants.CONNECTION_PARAM).setPluginConfiguration(otherDbConnection);
 
         // Define expectations
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_PLUGIN_CONNECTION, Matchers.hasItem(dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM).getId().intValue())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath(JSON_PATH_FROM_CLAUSE,
-                          Matchers.hasItem(dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
+        RequestBuilderCustomizer expectations = customizer().expectStatusOk()
+                .expectValue(JSON_PATH_LABEL, dataSource.getLabel())
+                .expectArrayContains(JSON_PATH_PLUGIN_CONNECTION,
+                                     dataSource.getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM)
+                                             .getId().intValue())
+                .expectArrayContains(JSON_PATH_FROM_CLAUSE,
+                                     dataSource.getStripParameterValue(DataSourcePluginConstants.FROM_CLAUSE));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
                           "DataSource shouldn't be created.", dataSource.getId());
@@ -295,45 +277,39 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SRC_130")
     @Purpose("The system allows to delete a datasource")
     public void deleteDataSource() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
         // Create a DataSource
         final PluginConfiguration dataSource = createDataSourceWithFromClause();
-        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource,
+                           customizer().expect(MockMvcResultMatchers.status().is2xxSuccessful()),
                            "DataSource should have been created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setId(pls.get(0).getId());
 
-        // Define expectations
-        expectations.add(status().isNoContent());
-
-        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
-                             "DataSource should have been deleted.", dataSource.getId());
+        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{pluginConfId}",
+                             customizer().expectStatusNoContent(), "DataSource should have been deleted.",
+                             dataSource.getId());
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_150")
     @Purpose("The system allows to get all datasources")
     public void getAllDataSources() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
-        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
-                           "DataSource shouldn't be created.");
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(),
+                           customizer().expectStatusOk(), "DataSource shouldn't be created.");
 
         // Create a DataSource
-        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
-                           "DataSource shouldn't be created.");
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(),
+                           customizer().expectStatusOk(), "DataSource shouldn't be created.");
 
-        expectations
-                .add(MockMvcResultMatchers.jsonPath("$.[0].content." + PLUGIN_CONNECTION_PARAM_PATH,
-                                                    Matchers.hasItem(pluginPostgreDbConnection.getId().intValue())));
-        expectations
-                .add(MockMvcResultMatchers.jsonPath("$.[1].content." + PLUGIN_CONNECTION_PARAM_PATH,
-                                                    Matchers.hasItem(pluginPostgreDbConnection.getId().intValue())));
-
-        performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");
+        performDefaultGet(DataSourceController.TYPE_MAPPING,
+                          customizer().expectStatusOk()
+                                  .expectArrayContains("$.[0].content." + PLUGIN_CONNECTION_PARAM_PATH,
+                                                       pluginPostgreDbConnection.getId().intValue())
+                                  .expectArrayContains("$.[1].content." + PLUGIN_CONNECTION_PARAM_PATH,
+                                                       pluginPostgreDbConnection.getId().intValue()),
+                          "DataSources shouldn't be retrieve.");
     }
 
     private PluginConfiguration createDataSourceWithFromClause() {
@@ -380,12 +356,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     public void createDataSourceWithJson() {
         String dataSourceRequest = readJsonContract("request-datasource.json");
 
-        // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-
-        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSourceRequest, expectations,
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSourceRequest,
+                           customizer().expectStatusOk()
+                                   .expect(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue())),
                            "DataSource creation request error.");
     }
 

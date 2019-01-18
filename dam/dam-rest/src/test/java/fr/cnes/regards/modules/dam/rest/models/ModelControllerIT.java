@@ -54,7 +54,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
-import fr.cnes.regards.modules.dam.rest.models.ModelController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
@@ -104,14 +103,14 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         }
         descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "model name"));
         descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "model description")
-                                .type(JSON_STRING_TYPE).optional());
+                .type(JSON_STRING_TYPE).optional());
         descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "model version")
-                                .type(JSON_STRING_TYPE).optional());
-        descriptors.add(constrainedFields.withPath(prefixPath + "type",
-                                                   "type",
-                                                   "model type",
-                                                   "Available values: " + Arrays.stream(EntityType.values())
-                                                           .map(type -> type.name()).collect(Collectors.joining(", ")))
+                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(
+                        constrainedFields
+                                .withPath(prefixPath + "type", "type", "model type",
+                                          "Available values: " + Arrays.stream(EntityType.values())
+                                                  .map(type -> type.name()).collect(Collectors.joining(", ")))
                                 .type(JSON_STRING_TYPE));
         // ignore links
         ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
@@ -133,12 +132,10 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final Model model = new Model();
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        performDefaultPost(ModelController.TYPE_MAPPING,
-                           model,
-                           requestBuilderCustomizer,
+        performDefaultPost(ModelController.TYPE_MAPPING, model, requestBuilderCustomizer,
                            "Empty model shouldn't be created.");
     }
 
@@ -201,17 +198,14 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         model.setType(pType);
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+        requestBuilderCustomizer.document(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer.document(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        performDefaultPost(ModelController.TYPE_MAPPING,
-                           model,
-                           requestBuilderCustomizer,
+        performDefaultPost(ModelController.TYPE_MAPPING, model, requestBuilderCustomizer,
                            "Consistent model should be created.");
     }
 
@@ -269,24 +263,16 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         modelAttributeService.bindNSAttributeToModel(model.getName(), attMod.getFragment());
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE))));
+        requestBuilderCustomizer.document(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
-        final ResultActions resultActions = performDefaultGet(
-                ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING + "/export",
-                requestBuilderCustomizer,
-                "Should return result",
-                model.getName());
+        final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING
+                + ModelController.MODEL_MAPPING + "/export", requestBuilderCustomizer, "Should return result",
+                                                              model.getName());
 
         assertMediaType(resultActions, MediaType.APPLICATION_XML);
         Assert.assertNotNull(payload(resultActions));
@@ -305,23 +291,15 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DOCUMENT));
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isNoContent());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
-                                                                                                     .parameterWithName(
-                                                                                                             "modelName")
-                                                                                                     .description(
-                                                                                                             "model name")
-                                                                                                     .attributes(
-                                                                                                             Attributes
-                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
-                                                                                                                     .value(JSON_STRING_TYPE))));
+        requestBuilderCustomizer.document(RequestDocumentation
+                .pathParameters(RequestDocumentation.parameterWithName("modelName").description("model name")
+                        .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
         // Perform test
-        performDefaultDelete(ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING,
-                             requestBuilderCustomizer,
-                             "Model should be deleted",
-                             model.getName());
+        performDefaultDelete(ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING, requestBuilderCustomizer,
+                             "Model should be deleted", model.getName());
     }
 }

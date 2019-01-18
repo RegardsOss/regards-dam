@@ -536,6 +536,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         switch (this.type) {
             case STRING:
             case STRING_ARRAY:
+            case URL:
                 return true;
             case BOOLEAN:
             case DATE_ARRAY:

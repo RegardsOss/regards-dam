@@ -89,8 +89,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         Path filePath = Paths.get("src", "test", "resources", pFilename);
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
 
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, customizer,
                                  "Should be able to import a fragment");
@@ -113,8 +113,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         final Collection mission1 = new Collection(mission, null, "COL1", "SPOT");
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isOk());
         performDefaultPost(CollectionController.TYPE_MAPPING, mission1, customizer, "...");
     }
 
@@ -138,8 +138,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         // Set multitenant factory tenant
         tenantResolver.forceTenant(getDefaultTenant());
 
-        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
-        customizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer customizer = customizer();
+        customizer.expect(MockMvcResultMatchers.status().isCreated());
         performDefaultPost(CollectionController.TYPE_MAPPING, collection, customizer,
                            "Failed to create a new collection");
     }
