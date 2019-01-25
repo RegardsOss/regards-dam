@@ -145,7 +145,7 @@ public class LocalStorageService implements ILocalStorageService {
         }
 
         Path filePath = getDataFilePath(dataFile.getChecksum());
-        if (Files.isRegularFile(filePath)) {
+        if (Files.exists(filePath)) {
             // Check rights
             if (!Files.isWritable(filePath)) {
                 throw new ModuleException(
@@ -165,9 +165,9 @@ public class LocalStorageService implements ILocalStorageService {
             } else {
                 LOGGER.info("File %s was not removed on disk since another document uses it", filePath.toString());
             }
-            // Remove from database
-            localStorageRepo.deleteById(localFileOpt.get().getId());
         }
+        // Remove from database
+        localStorageRepo.delete(localFile.get().getId());
 
     }
 
