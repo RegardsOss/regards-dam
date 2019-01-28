@@ -44,7 +44,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
@@ -58,11 +57,6 @@ public class IAttributeModelClientIT extends AbstractRegardsWebIT {
 
     @Configuration
     static class Conf {
-
-        @Bean
-        public INotificationClient getNotificationClient() {
-            return Mockito.mock(INotificationClient.class);
-        }
 
         @Bean
         public IAttributeModelClient attributeModelClient() {

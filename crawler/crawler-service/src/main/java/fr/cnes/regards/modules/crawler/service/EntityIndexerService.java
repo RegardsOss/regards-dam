@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +48,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -62,7 +60,6 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -107,8 +104,7 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationType;
-import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
+import fr.cnes.regards.modules.notification.domain.NotificationLevel;
 import fr.cnes.regards.modules.storage.domain.AIPState;
 import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
@@ -665,16 +661,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
-    @Async
     @Override
-    public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
-        runtimeTenantResolver.forceTenant(tenant);
-        FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
-                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title,
-                NotificationType.ERROR);
-        notifClient.createNotification(notif);
-        FeignSecurityManager.reset();
+    public void createNotificationForAdmin(String title, String message, NotificationLevel level) {
+        notifClient.notify(message, title, level, DefaultRole.PROJECT_ADMIN);
     }
 
     /**
@@ -827,7 +816,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Also add detailed message to datasource ingestion
             DatasourceIngestion dsIngestion = dsIngestionRepository.findById(Long.parseLong(datasourceId)).get();
             String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(tenant, notifTitle, buf);
+            self.createNotificationForAdmin(notifTitle, buf.toString(), NotificationLevel.ERROR);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
     }

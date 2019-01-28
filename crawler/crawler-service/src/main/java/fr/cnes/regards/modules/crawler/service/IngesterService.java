@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +46,6 @@ import org.springframework.transaction.annotation.Propagation;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
@@ -71,8 +69,7 @@ import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationType;
-import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
+import fr.cnes.regards.modules.notification.domain.NotificationLevel;
 
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
@@ -290,13 +287,13 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                 case ERROR:
                     createNotificationForAdmin(title, String.format("Indexation error. Cause : %s",
                                                                     dsIngestion.getStackTrace()),
-                                               NotificationType.ERROR);
+                                               NotificationLevel.ERROR);
                     break;
                 case FINISHED_WITH_WARNINGS:
                     createNotificationForAdmin(title, String
                             .format("Indexation ends with %s new indexed objects and %s errors.",
                                     dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
-                                               NotificationType.WARNING);
+                                               NotificationLevel.WARNING);
                     break;
                 case NOT_FINISHED:
                     createNotificationForAdmin(title, String
@@ -305,13 +302,13 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                     + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
                                     + "soon as possible or will continue at its planned date",
                                     dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()),
-                                               NotificationType.WARNING);
+                                               NotificationLevel.WARNING);
                     break;
                 default:
                     createNotificationForAdmin(title,
                                                String.format("Indexation success. %s new objects indexed.",
                                                              dsIngestion.getSavedObjectsCount()),
-                                               NotificationType.INFO);
+                                               NotificationLevel.INFO);
                     break;
             }
         }
@@ -417,12 +414,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         return dsIngestionOpt;
     }
 
-    private void createNotificationForAdmin(String title, String message, NotificationType nType) {
-        FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(message, Collections.emptySet(),
-                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title, nType);
-        notifClient.createNotification(notif);
-        FeignSecurityManager.reset();
+    private void createNotificationForAdmin(String title, String message, NotificationLevel level) {
+        notifClient.notify(message, title, level, DefaultRole.PROJECT_ADMIN);
     }
 
     @Override

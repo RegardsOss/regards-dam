@@ -31,6 +31,7 @@ import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServi
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
@@ -72,6 +73,16 @@ public class CrawlerConfiguration {
     }
 
     @Bean
+    public IProjectUsersClient projectUsersClient() {
+        return Mockito.mock(IProjectUsersClient.class);
+    }
+
+    @Bean
+    public INotificationClient notifClient() {
+        return Mockito.mock(INotificationClient.class);
+    }
+
+    @Bean
     public IModelAttrAssocClient modelAttrAssocClient() {
         return Mockito.mock(IModelAttrAssocClient.class);
     }
@@ -79,11 +90,6 @@ public class CrawlerConfiguration {
     @Bean
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
-    }
-
-    @Bean
-    public INotificationClient notifClient() {
-        return Mockito.mock(INotificationClient.class);
     }
 
     @Bean
