@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.access-group.client")
 @RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessGroupClient { // NOSONAR

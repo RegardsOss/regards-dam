@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.model.client")
 @RequestMapping(IModelClient.TYPE_MAPPING)
 public interface IModelClient {
 

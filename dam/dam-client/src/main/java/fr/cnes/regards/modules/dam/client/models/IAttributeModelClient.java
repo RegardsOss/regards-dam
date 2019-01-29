@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
  * Feign client handling {@link AttributeModel}s
  * @author Xavier-Alexandre Brochard
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.attribute-model.client")
 @RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAttributeModelClient {

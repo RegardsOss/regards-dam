@@ -39,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Collection;
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.collections.client")
 @RequestMapping(value = "/collections", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface ICollectionsClient {

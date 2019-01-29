@@ -39,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
  * @author Sylvain Vissiere-Guerinet
  * @author Christophe Mertz
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.dataset.client")
 @RequestMapping(value = IDatasetClient.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IDatasetClient {
 
