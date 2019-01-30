@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
@@ -33,11 +32,6 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
  */
 @Configuration
 public class ClientConfiguration {
-
-    @Bean
-    public INotificationClient getNotificationClient() {
-        return Mockito.mock(INotificationClient.class);
-    }
 
     @Bean
     public IAttributeModelClient attributeModelClient() {

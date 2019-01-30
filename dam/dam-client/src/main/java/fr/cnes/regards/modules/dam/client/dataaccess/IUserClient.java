@@ -18,8 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.client.dataaccess;
 
-import javax.validation.Valid;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
@@ -38,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
  * Client of UserController
  * @author Sylvain Vissiere-Guerinet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.user.client")
 @RequestMapping(value = IUserClient.BASE_PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IUserClient {

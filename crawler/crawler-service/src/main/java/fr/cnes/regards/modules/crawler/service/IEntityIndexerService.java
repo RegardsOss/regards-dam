@@ -27,9 +27,10 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
+import fr.cnes.regards.modules.notification.domain.NotificationLevel;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.
@@ -150,9 +151,9 @@ public interface IEntityIndexerService {
 
     /**
      * Create a notification for admin
-     * @param tenant concerned tenant
      * @param title notification title
-     * @param buf Buffer containing message
+     * @param message
+     * @param level {@link NotificationLevel}
      */
-    void createNotificationForAdmin(String tenant, String title, CharSequence buf);
+    void createNotificationForAdmin(String title, String message, NotificationLevel level);
 }

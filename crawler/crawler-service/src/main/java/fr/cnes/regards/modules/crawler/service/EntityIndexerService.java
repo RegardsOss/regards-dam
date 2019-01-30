@@ -48,7 +48,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -662,7 +661,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
-    @Async
     @Override
     public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
         runtimeTenantResolver.forceTenant(tenant);
@@ -819,7 +817,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Also add detailed message to datasource ingestion
             DatasourceIngestion dsIngestion = dsIngestionRepository.findById(Long.parseLong(datasourceId)).get();
             String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(tenant, notifTitle, buf);
+            self.createNotificationForAdmin(notifTitle, buf.toString(), NotificationLevel.ERROR);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
     }
