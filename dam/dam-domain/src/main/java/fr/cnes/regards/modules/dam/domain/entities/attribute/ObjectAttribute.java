@@ -34,4 +34,12 @@ public class ObjectAttribute extends AbstractAttribute<Set<AbstractAttribute<?>>
         return true;
     }
 
+    /**
+     * Appends attribute in this attribute set
+     * @param attribute to append
+     */
+    public void addAttribute(AbstractAttribute<?> attribute){
+        getValue().add(attribute);
+    }
+
 }
