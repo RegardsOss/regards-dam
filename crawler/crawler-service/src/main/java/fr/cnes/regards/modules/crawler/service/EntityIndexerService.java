@@ -662,9 +662,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
-    public void createNotificationForAdmin(String tenant, String title, CharSequence buf) {
-        runtimeTenantResolver.forceTenant(tenant);
-        notifClient.notify(buf.toString(), title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
+    public void createNotificationForAdmin(String tenant, String title, String message, NotificationLevel level) {
+        notifClient.notify(message, title, level, DefaultRole.PROJECT_ADMIN);
     }
 
     /**
@@ -817,7 +816,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Also add detailed message to datasource ingestion
             DatasourceIngestion dsIngestion = dsIngestionRepository.findById(Long.parseLong(datasourceId)).get();
             String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(notifTitle, buf.toString(), NotificationLevel.ERROR);
+            self.createNotificationForAdmin(tenant, notifTitle, buf.toString(), NotificationLevel.ERROR);
             bulkSaveResult.setDetailedErrorMsg(buf.toString());
         }
     }
