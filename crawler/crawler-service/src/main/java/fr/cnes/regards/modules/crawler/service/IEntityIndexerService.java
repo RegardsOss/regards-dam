@@ -151,9 +151,10 @@ public interface IEntityIndexerService {
 
     /**
      * Create a notification for admin
+     * @param tenant
      * @param title notification title
      * @param message
      * @param level {@link NotificationLevel}
      */
-    void createNotificationForAdmin(String title, String message, NotificationLevel level);
+    void createNotificationForAdmin(String tenant, String title, String message, NotificationLevel level);
 }
