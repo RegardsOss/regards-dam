@@ -14,9 +14,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.modules.opensearch</groupId>
-	<artifactId>opensearch-service</artifactId>
+	<artifactId>opensearch-rest</artifactId>
 
-	<description>Service layer of the OpenSearch module</description>
+	<description>Rest access of the OpenSearch module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
 	<licenses>
@@ -47,61 +47,9 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.opensearch</groupId>
-			<artifactId>opensearch-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>feign-regards-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.project</groupId>
-			<artifactId>project-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>hateoas-regards-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>module-regards</artifactId>
-		</dependency>
-		<!-- COTS -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-cache</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>proxy-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.locationtech.jts</groupId>
-			<artifactId>jts-core</artifactId>
-		</dependency>
-		<!-- Opensearch-service needs lucene-queryparser BUT elasticsearch needs 
-			it too. To avoid having versions incompatibilities, it is better here to 
-			depends on elasticsearch (which brings lucene-queryparser with one of the 
-			latest version) -->
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-		</dependency>
-		<dependency>
-			<!-- this dependence is added here for a good management of amqp transactional 
-				in AttributeModelCache -->
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-multitenant-regards-starter</artifactId>
+			<artifactId>opensearch-service</artifactId>
 		</dependency>
 		<!-- Test dependencies -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>
