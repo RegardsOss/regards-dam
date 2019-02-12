@@ -24,6 +24,9 @@ import java.util.Set;
 
 import javax.persistence.LockModeType;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -92,6 +95,14 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Set<T> findAllByModelIdIn(Set<Long> modelIds);
+
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Page<T> findAll(Specification<T> spec, Pageable pageRequest);
+
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Page<T> findAll(Pageable pageRequest);
 
     /**
      * Check if at least one model is already linked to at least one entity
