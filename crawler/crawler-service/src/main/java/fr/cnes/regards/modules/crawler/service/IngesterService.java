@@ -281,7 +281,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
 
     private void sendNotificationSummary(DatasourceIngestion dsIngestion) {
         // Send admin notification for ingestion ends if something as been done
-        if (dsIngestion.getSavedObjectsCount() != 0 || dsIngestion.getInErrorObjectsCount() != 0) {
+        if ((dsIngestion.getSavedObjectsCount() != 0) || (dsIngestion.getInErrorObjectsCount() != 0)) {
             String title = String.format("%s indexation ends.", dsIngestion.getLabel());
             switch (dsIngestion.getStatus()) {
                 case ERROR:
@@ -305,7 +305,9 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                        NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
                     break;
                 default:
-                    notifClient.notify(String.format("Indexation success. %s new objects indexed."), title,
+                    notifClient.notify(String
+                            .format("Indexation finished. %s new objects indexed. %s objects in error.",
+                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
                                        NotificationLevel.INFO, DefaultRole.PROJECT_ADMIN);
                     break;
             }
