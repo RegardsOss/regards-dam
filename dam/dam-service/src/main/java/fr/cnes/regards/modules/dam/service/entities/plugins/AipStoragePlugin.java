@@ -188,7 +188,7 @@ public class AipStoragePlugin implements IStorageService {
         // Add dynamic properties
         if ((entity.getProperties() != null) && (entity.getProperties().size() > 0)) {
             entity.getProperties().stream().forEach(property -> {
-                builder.addDescriptiveInformation(property.getName(), gson.toJson(property.getValue()));
+                builder.addDescriptiveInformation(property.getName(), property.getValue());
             });
         }
 
