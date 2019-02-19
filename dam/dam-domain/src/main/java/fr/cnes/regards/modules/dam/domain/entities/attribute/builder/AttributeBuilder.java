@@ -372,7 +372,7 @@ public final class AttributeBuilder {
             case LONG:
                 return (T) buildLong(name, null);
             case LONG_ARRAY:
-                return (T) buildIntegerCollection(name);
+                return (T) buildLongArray(name, null);
             case LONG_INTERVAL:
                 return (T) buildLongInterval(name, null);
             case STRING:
