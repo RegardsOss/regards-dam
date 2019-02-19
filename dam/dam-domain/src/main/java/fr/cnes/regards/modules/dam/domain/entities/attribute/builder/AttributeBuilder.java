@@ -18,41 +18,23 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.attribute.builder;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.LongArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.LongAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.LongIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.StringArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.StringAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.UrlAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.*;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+
+import java.lang.reflect.Array;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.DateTimeException;
+import java.time.OffsetDateTime;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * Attribute builder
+ *
  * @author Marc Sordi
  * @author oroussel
  * @author Sylvain Vissiere-Guerinet
@@ -64,19 +46,191 @@ public final class AttributeBuilder {
     }
 
     /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static Boolean toBooleanValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof String) {
+            return Boolean.valueOf((String) value); // always returns a value
+        }
+        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a boolean", value.toString()));
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    private static OffsetDateTime toDateValue(Object value) throws IllegalArgumentException {
+        // only strings are accepted here as valid input
+        if (value instanceof String) {
+            try {
+                return OffsetDateTimeAdapter.parse((String) value);
+            } catch (DateTimeException e) {
+                // do nothing, raise final exception instead
+            }
+        }
+        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a date", value.toString()));
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static Double toDoubleValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Double.valueOf((String) value);
+            } catch (NumberFormatException e) {
+                // do nothing, raise final exception instead
+            }
+        }
+        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a double number", value.toString()));
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static Integer toIntegerValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.valueOf((String) value);
+            } catch (NumberFormatException e) {
+                // do nothing, raise final exception instead
+            }
+        }
+        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an integer number", value.toString()));
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static Long toLongValue(Object value) throws IllegalArgumentException {
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Long.valueOf((String) value);
+            } catch (NumberFormatException e) {
+                // do nothing, raise final exception instead
+            }
+        }
+        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into a long number", value.toString()));
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     */
+    static String toStringValue(Object value) {
+        return value.toString();
+    }
+
+    /**
+     * Converts to expected attribute value
+     *
+     * @param value to convert
+     * @return converted attribute value
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static URL toURLValue(Object value) throws IllegalArgumentException {
+        if (value instanceof URL) {
+            return (URL) value;
+        }
+        if (value instanceof String) {
+            try {
+                return new URL((String) value);
+            } catch (MalformedURLException e) {
+                // do nothing, raise final exception instead
+            }
+        }
+        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an URL", value.toString()));
+    }
+
+
+    /**
+     * Converts value into typed array value.
+     *
+     * @param value             input value from GEOJson results. Both array and lists are supproted
+     * @param elementsConverter array elements converter, that returns null when an element cannot be converted
+     * @param elementsClass     targeted elements class
+     * @param <T>               Array elements type
+     * @return converted list
+     * @throws IllegalArgumentException when conversion is not possible
+     */
+    static <T> T[] toArrayValue(Object value, Function<Object, T> elementsConverter, Class<T> elementsClass) throws IllegalArgumentException {
+        Collection<?> sourceList = null;
+        List<String> invalidValues = new ArrayList<>();
+
+        // 1 - recover a list of elements
+        if (value.getClass().isArray()) {
+            // Convert each value to date then return array if there were no error
+            sourceList = Arrays.asList((Object[]) value);
+        } else if (value instanceof Collection) {
+            sourceList = (Collection<?>) value;
+        } else {
+            throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an %s[] (expected array or collection types)", value.toString(), elementsClass.getName()));
+        }
+        // 2 - convert each element
+        ArrayList<T> converted = new ArrayList<>(sourceList.size());
+        for (Object elt : sourceList) {
+            try {
+                converted.add(elt == null ? null : elementsConverter.apply(elt));
+            } catch (IllegalArgumentException e) {
+                invalidValues.add(elt.toString());
+            }
+        }
+        // 3 - return converted array or throw exception
+        if (invalidValues.isEmpty()) {
+            //noinspection unchecked
+            return converted.toArray((T[]) Array.newInstance(elementsClass, converted.size()));
+        } else {
+            throw new IllegalArgumentException(String.format("In input array, the values '%s' could not be converted into %s", String.join(",", invalidValues), elementsClass.getName()));
+        }
+    }
+
+    /**
      * Method allowing to get an AbstractAttribute according to the AttributeType, for the given name and value. The
      * type of pValue is expected to be coherent with the AttributeType. In particular, for intervals we are expecting
-     * {@link Range} and as dates we are expecting {@link OffsetDateTime}
-     * @param <U> type of the value
-     * @param <T> type of the attribute generated
-     * @param attributeType Type of the attribute created
-     * @param name name of the attribute to be created
-     * @param value value of the attribute to be created
+     * {@link Range}. For other elements, value parsing will be attempted if they are provided as string.
+     *
+     * @param attributeType Type of the attribute to be created
+     * @param name          name of the attribute to be created
+     * @param value         value of the attribute to be created
      * @return a newly created AbstractAttribute according the given AttributeType, name and value
+     * @throws IllegalArgumentException when the value cannot converted into expected type for attribute
      */
     @SuppressWarnings("unchecked")
-    public static <U, T extends AbstractAttribute<U>> T forType(AttributeType attributeType, String name, U value) {
-        if (name == null) {
+    public static AbstractAttribute<?> forType(AttributeType attributeType, String name, Object value) throws IllegalArgumentException {
+        if (name == null || attributeType == null) {
             throw new IllegalArgumentException("An attribute cannot have a null name");
         }
         if (value == null) {
@@ -84,71 +238,38 @@ public final class AttributeBuilder {
         }
 
         switch (attributeType) {
-            case INTEGER:
-                return (T) ((value instanceof Number) ? buildInteger(name, ((Number) value).intValue())
-                        : buildInteger(name, Integer.valueOf((String) value)));
             case BOOLEAN:
-                return (T) ((value instanceof Boolean) ? buildBoolean(name, (Boolean) value)
-                        : buildBoolean(name, Boolean.valueOf((String) value)));
+                return buildBoolean(name, toBooleanValue(value));
             case DATE_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildStringCollection(name, (Collection<String>) value);
-                } else if (value instanceof String[]) {
-                    return (T) buildDateArray(name, Arrays.stream((String[]) value)
-                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(OffsetDateTime[]::new));
-                } else {
-                    return (T) buildDateArray(name, (OffsetDateTime[]) value);
-                }
+                return buildDateArray(name, toArrayValue(value, AttributeBuilder::toDateValue, OffsetDateTime.class));
             case DATE_INTERVAL:
-                return (T) buildDateInterval(name, (Range<OffsetDateTime>) value);
+                return buildDateInterval(name, (Range<OffsetDateTime>) value);
             case DATE_ISO8601:
-                if (value instanceof String) {
-                    return (T) buildDate(name, OffsetDateTimeAdapter.parse((String) value));
-                }
-                return (T) buildDate(name, (OffsetDateTime) value);
+                return buildDate(name, toDateValue(value));
             case DOUBLE:
-                return (T) ((value instanceof Number) ? buildDouble(name, ((Number) value).doubleValue())
-                        : buildDouble(name, new Double((String) value)));
+                return buildDouble(name, toDoubleValue(value));
             case DOUBLE_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildDoubleCollection(name, (Collection<Double>) value);
-                } else {
-                    return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
-                            .mapToObj(Double::new).toArray(Double[]::new));
-                }
+                return buildDoubleArray(name, toArrayValue(value, AttributeBuilder::toDoubleValue, Double.class));
             case DOUBLE_INTERVAL:
-                return (T) buildDoubleInterval(name, (Range<Double>) value);
+                return buildDoubleInterval(name, (Range<Double>) value);
+            case INTEGER:
+                return buildInteger(name, toIntegerValue(value));
             case INTEGER_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildIntegerCollection(name, (Collection<Integer>) value);
-                } else {
-                    return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
-                            .mapToObj(Integer::new).toArray(Integer[]::new));
-                }
+                return buildIntegerArray(name, toArrayValue(value, AttributeBuilder::toIntegerValue, Integer.class));
             case INTEGER_INTERVAL:
-                return (T) buildIntegerInterval(name, (Range<Integer>) value);
+                return buildIntegerInterval(name, (Range<Integer>) value);
             case LONG:
-                return (T) ((value instanceof Number) ? buildLong(name, ((Number) value).longValue())
-                        : buildLong(name, Long.valueOf((String) value)));
+                return buildLong(name, toLongValue((value)));
             case LONG_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildLongCollection(name, (Collection<Long>) value);
-                } else {
-                    return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
-                            .mapToObj(Long::new).toArray(Long[]::new));
-                }
+                return buildLongArray(name, toArrayValue(value, AttributeBuilder::toLongValue, Long.class));
             case LONG_INTERVAL:
-                return (T) buildLongInterval(name, (Range<Long>) value);
+                return buildLongInterval(name, (Range<Long>) value);
             case STRING:
-                return (T) buildString(name, String.valueOf(value));
+                return buildString(name, toStringValue(value));
             case STRING_ARRAY:
-                if (value instanceof Collection) {
-                    return (T) buildStringCollection(name, (Collection<String>) value);
-                } else {
-                    return (T) buildStringArray(name, (String[]) value);
-                }
+                return buildStringArray(name, toArrayValue(value, AttributeBuilder::toStringValue, String.class));
             case URL:
-                return (T) ((value instanceof URL) ? buildUrl(name, (URL) value) : buildUrl(name, (String) value));
+                return buildUrl(name, toURLValue(value));
             default:
                 throw new IllegalArgumentException(attributeType + " is not a handled value of "
                         + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
@@ -162,17 +283,18 @@ public final class AttributeBuilder {
      * <li>we are expecting an ISO 8601 string for dates</li>
      * <li>a number for double, integer and long</li>
      * </ul>
-     * @param <U> type of the value
-     * @param <T> type of the attribute generated
+     *
+     * @param <U>           type of the value
+     * @param <T>           type of the attribute generated
      * @param attributeType Type of the attribute created
-     * @param name name of the attribute to be created
-     * @param lowerBound value of the attribute to be created
-     * @param upperBound value of the attribute to be created
+     * @param name          name of the attribute to be created
+     * @param lowerBound    value of the attribute to be created
+     * @param upperBound    value of the attribute to be created
      * @return a newly created AbstractAttribute according the given AttributeType, name and value
      */
     @SuppressWarnings("unchecked")
     public static <U, T extends AbstractAttribute<U>> T forType(AttributeType attributeType, String name, U lowerBound,
-            U upperBound) {
+                                                                U upperBound) {
 
         if (!attributeType.isInterval()) {
             throw new IllegalArgumentException(attributeType + " with name " + name + " is not an interval type");
@@ -209,6 +331,7 @@ public final class AttributeBuilder {
 
     /**
      * Build a range considering null value for one of the bound
+     *
      * @param lowerBound lower bound
      * @param upperBound upper bound
      * @return a range representation
@@ -224,7 +347,7 @@ public final class AttributeBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public static <U, T extends AbstractAttribute<U>> T forTypeWithNullValue(AttributeType attributeType, String name) {
+    public static <U, T extends AbstractAttribute<?>> T forTypeWithNullValue(AttributeType attributeType, String name) {
         switch (attributeType) {
             case INTEGER:
                 return (T) buildInteger(name, null);
@@ -249,7 +372,7 @@ public final class AttributeBuilder {
             case LONG:
                 return (T) buildLong(name, null);
             case LONG_ARRAY:
-                return (T) buildLongArray(name);
+                return (T) buildIntegerCollection(name);
             case LONG_INTERVAL:
                 return (T) buildLongInterval(name, null);
             case STRING:
@@ -331,7 +454,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static DateArrayAttribute buildDateCollection(String name, Collection offsetDateTimes) {
         DateArrayAttribute att = new DateArrayAttribute();
         att.setName(name);
@@ -351,7 +474,7 @@ public final class AttributeBuilder {
     }
 
     public static DateIntervalAttribute buildDateInterval(String name, OffsetDateTime lowerBoundDate,
-            OffsetDateTime upperBoundDate) {
+                                                          OffsetDateTime upperBoundDate) {
         DateIntervalAttribute att = new DateIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundDate, upperBoundDate));
@@ -365,7 +488,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static DoubleArrayAttribute buildDoubleCollection(String name, Collection values) {
         DoubleArrayAttribute att = new DoubleArrayAttribute();
         att.setName(name);
@@ -385,7 +508,7 @@ public final class AttributeBuilder {
     }
 
     public static DoubleIntervalAttribute buildDoubleInterval(String name, Double lowerBoundDouble,
-            Double upperBoundDouble) {
+                                                              Double upperBoundDouble) {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundDouble, upperBoundDouble));
@@ -399,7 +522,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static IntegerArrayAttribute buildIntegerCollection(String name, Collection values) {
         IntegerArrayAttribute att = new IntegerArrayAttribute();
         att.setName(name);
@@ -419,7 +542,7 @@ public final class AttributeBuilder {
     }
 
     public static IntegerIntervalAttribute buildIntegerInterval(String name, Integer lowerBoundInteger,
-            Integer upperBoundInteger) {
+                                                                Integer upperBoundInteger) {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundInteger, upperBoundInteger));
@@ -433,7 +556,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static LongArrayAttribute buildLongCollection(String name, Collection values) {
         LongArrayAttribute att = new LongArrayAttribute();
         att.setName(name);
@@ -473,7 +596,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static StringArrayAttribute buildStringCollection(String name, Collection values) {
         StringArrayAttribute att = new StringArrayAttribute();
         att.setName(name);
