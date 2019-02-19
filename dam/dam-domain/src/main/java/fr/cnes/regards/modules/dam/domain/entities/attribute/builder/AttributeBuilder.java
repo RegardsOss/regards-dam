@@ -28,7 +28,9 @@ import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.DateTimeException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.function.Function;
 
@@ -71,6 +73,12 @@ public final class AttributeBuilder {
      */
     private static OffsetDateTime toDateValue(Object value) throws IllegalArgumentException {
         // only strings are accepted here as valid input
+        if (value instanceof TemporalAccessor){
+            return OffsetDateTime.from(((TemporalAccessor) value));
+        }
+        if (value instanceof  Date){
+            return OffsetDateTime.from(((Date) value).toInstant());
+        }
         if (value instanceof String) {
             try {
                 return OffsetDateTimeAdapter.parse((String) value);
