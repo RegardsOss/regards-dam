@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.client.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,6 @@ import com.google.common.collect.Lists;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.httpclient.ApacheHttpClient;
-import fr.cnes.httpclient.HttpClient;
 import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
