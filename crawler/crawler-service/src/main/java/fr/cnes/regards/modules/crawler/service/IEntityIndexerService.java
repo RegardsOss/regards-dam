@@ -18,11 +18,8 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.time.OffsetDateTime;
-import java.util.Collection;
-import java.util.List;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -30,10 +27,14 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
-import fr.cnes.regards.modules.notification.domain.NotificationLevel;
+
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.
+ *
  * @author oroussel
  */
 public interface IEntityIndexerService {
@@ -42,40 +43,44 @@ public interface IEntityIndexerService {
 
     /**
      * Update entity into Elasticsearch
-     * @param tenant concerned tenant
-     * @param ipId concerned entity id
-     * @param updateDate current update date (usually now)
+     *
+     * @param tenant                        concerned tenant
+     * @param ipId                          concerned entity id
+     * @param updateDate                    current update date (usually now)
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      * @throws ModuleException
      */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
-            boolean forceAssociatedEntitiesUpdate) throws ModuleException {
+                                    boolean forceAssociatedEntitiesUpdate) throws ModuleException {
         this.updateEntityIntoEs(tenant, ipId, null, updateDate, forceAssociatedEntitiesUpdate, null);
     }
 
     /**
      * Manage computed attributes computation
+     *
      * @param dataset concerned dataset
-     * @param dsiId {@link DatasourceIngestion} id. can be null (in this case, no notification is sent)
+     * @param dsiId   {@link DatasourceIngestion} id. can be null (in this case, no notification is sent)
      * @param tenant
      */
     void computeComputedAttributes(Dataset dataset, Long dsiId, String tenant);
 
     /**
      * Update entity into Elasticsearch
-     * @param tenant concerned tenant
-     * @param ipId concerned entity id
-     * @param lastUpdateDate last ingestion update date
-     * @param updateDate current update date (usually now)
+     *
+     * @param tenant                        concerned tenant
+     * @param ipId                          concerned entity id
+     * @param lastUpdateDate                last ingestion update date
+     * @param updateDate                    current update date (usually now)
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
-     * @param dsiId {@link DatasourceIngestion} id
+     * @param dsiId                         {@link DatasourceIngestion} id
      * @throws ModuleException
      */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) throws ModuleException;
+                            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) throws ModuleException;
 
     /**
      * Create index it doesn't exist
+     *
      * @param tenant concerned tenant
      * @return true if a creation has been done
      */
@@ -83,6 +88,7 @@ public interface IEntityIndexerService {
 
     /**
      * CreDeleteate index if exist
+     *
      * @param tenant concerned tenant
      * @return true if a deletion has been done
      */
@@ -90,18 +96,20 @@ public interface IEntityIndexerService {
 
     /**
      * Transactional method updating a set of datasets
+     *
      * @param tenant
      * @param datasets
-     * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
+     * @param lastUpdateDate         Take into account only more recent lastUpdateDate than provided
      * @param forceDataObjectsUpdate true to force all associated data objects update
-     * @param dsiId datasetIngestion id
+     * @param dsiId                  datasetIngestion id
      * @throws ModuleException
      */
     void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException;
+                        boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException;
 
     /**
      * Force update of all {@link Dataset}s
+     *
      * @param tenant
      * @throws ModuleException
      */
@@ -109,6 +117,7 @@ public interface IEntityIndexerService {
 
     /**
      * Force update of all {@link Document}s
+     *
      * @param tenant
      * @throws ModuleException
      */
@@ -116,6 +125,7 @@ public interface IEntityIndexerService {
 
     /**
      * Force update of all {@link fr.cnes.regards.modules.dam.domain.entities.Collection}s
+     *
      * @param tenant
      * @throws ModuleException
      */
@@ -123,38 +133,42 @@ public interface IEntityIndexerService {
 
     /**
      * Create given data objects into Elasticsearch
-     * @param tenant concerned tenant
+     *
+     * @param tenant       concerned tenant
      * @param datasourceId id of data source from where data objects come
-     * @param now update date (usually now)
-     * @param objects objects to save
+     * @param now          update date (usually now)
+     * @param objects      objects to save
      * @return bulk save result
      */
     BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
     /**
      * Merge given data objects into Elasticsearch
-     * @param tenant concerned tenant
+     *
+     * @param tenant       concerned tenant
      * @param datasourceId id of data source from where data objects come
-     * @param now update date (usually now)
-     * @param objects objects to save
+     * @param now          update date (usually now)
+     * @param objects      objects to save
      * @return bulk save result
      */
     BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
     /**
      * Delete given data object from Elasticsearch
+     *
      * @param tenant concerned tenant
-     * @param ipId id of Data object
+     * @param ipId   id of Data object
      * @return wether or not the data object has been deleted
      */
     boolean deleteDataObject(String tenant, String ipId);
 
     /**
      * Create a notification for admin
+     *
      * @param tenant
-     * @param title notification title
+     * @param title   notification title
      * @param message
-     * @param level {@link NotificationLevel}
+     * @param level   {@link NotificationLevel}
      */
     void createNotificationForAdmin(String tenant, String title, String message, NotificationLevel level);
 }

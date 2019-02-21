@@ -18,23 +18,8 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
-import java.util.Optional;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -44,6 +29,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
@@ -59,10 +45,23 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Access right service implementation
+ *
  * @author Sylvain Vissiere-Guerinet
  */
 @Service
@@ -91,7 +90,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
-            Pageable pageable) throws ModuleException {
+                                                  Pageable pageable) throws ModuleException {
         if (accessGroupName != null) {
             return retrieveAccessRightsByAccessGroup(datasetIpId, accessGroupName, pageable);
         }
@@ -152,14 +151,14 @@ public class AccessRightService implements IAccessRightService {
                     boolean dataAccess = datasetAccess
                             && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
-                                                metadataPluginId, pluginId);
+                            metadataPluginId, pluginId);
                 });
         return metadata;
 
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
-            String pAccessGroupName, Pageable pPageable) throws ModuleException {
+                                                                String pAccessGroupName, Pageable pPageable) throws ModuleException {
         AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
@@ -308,17 +307,17 @@ public class AccessRightService implements IAccessRightService {
                     IDataObjectAccessFilterPlugin plugin = pluginService.getPlugin(ar.getDataAccessPlugin().getId());
                     if (plugin.isDynamic()) {
                         LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
-                                    ar.getDataset().getIpId());
+                                ar.getDataset().getIpId());
                         datasetsToUpdate.add(ar.getDataset().getIpId());
                     }
                 }
             } catch (ModuleException e) {
                 LOGGER.error(String.format(
-                                           "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
-                                                   + "dataset %s and group %s. Does plugin exist anymore ?",
-                                           ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
-                                           ar.getAccessGroup().getName()),
-                             e);
+                        "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
+                                + "dataset %s and group %s. Does plugin exist anymore ?",
+                        ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
+                        ar.getAccessGroup().getName()),
+                        e);
             }
         });
 
@@ -327,7 +326,7 @@ public class AccessRightService implements IAccessRightService {
             try {
                 FeignSecurityManager.asSystem();
                 notificationClient.notify(message, "Dynamic access right update", NotificationLevel.INFO,
-                                          DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
+                        DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
                 FeignSecurityManager.reset();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 LOGGER.error(String.format("Error sending notification : %s", message), e);
@@ -345,20 +344,21 @@ public class AccessRightService implements IAccessRightService {
         if (pluginConfiguration.getId() != null) {
             throw new EntityInvalidException(
                     String.format("Plugin configuration %s must not already have an identifier.",
-                                  pluginConfiguration.getLabel()));
+                            pluginConfiguration.getLabel()));
         }
         return pluginService.savePluginConfiguration(pluginConfiguration);
     }
 
     /**
      * Create or update a plugin configuration cleaning old one if necessary
+     *
      * @param pluginConfiguration new plugin configuration or update
-     * @param existing existing plugin configuration
+     * @param existing            existing plugin configuration
      * @return configuration to remove because it is no longer used
      * @throws ModuleException if error occurs!
      */
     private Optional<PluginConfiguration> updatePluginConfiguration(Optional<PluginConfiguration> pluginConfiguration,
-            Optional<PluginConfiguration> existing) throws ModuleException {
+                                                                    Optional<PluginConfiguration> existing) throws ModuleException {
 
         Optional<PluginConfiguration> confToRemove = Optional.empty();
 

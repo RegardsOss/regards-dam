@@ -18,6 +18,43 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
+import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
+import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
+import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
@@ -33,113 +70,61 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-
-import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.amqp.domain.IHandler;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
-import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
-import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
-import fr.cnes.regards.modules.crawler.domain.IngestionResult;
-import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
-import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
-import fr.cnes.regards.modules.notification.domain.NotificationLevel;
-
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
-
+    /**
+     * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
+     * in parallel)
+     */
+    private static final AtomicBoolean managing = new AtomicBoolean(false);
+    /**
+     * An atomic boolean permitting to take into account a new datasource creation or update while managing current ones
+     * (or inverse)
+     */
+    private static AtomicBoolean doItAgain = new AtomicBoolean(false);
+    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
     /**
      * All tenants resolver
      */
     @Autowired
     private ITenantResolver tenantResolver;
-
     /**
      * Current tenant resolver
      */
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
-
     @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
-
     @Autowired
     private IDatasourceIngesterService datasourceIngester;
-
     /**
      * Only used to delete all data objects from a removed datasource
      */
     @Autowired
     private IEsRepository esRepos;
-
     @Autowired
     private IPluginService pluginService;
-
     @Autowired
     private ISubscriber subscriber;
-
     @Autowired
     private INotificationClient notifClient;
-
     /**
      * The spring application name ~= microservice type
      */
     @Value("${spring.application.name}")
     private String applicationName;
-
     /**
      * Proxied version of this service
      */
     @Autowired
     @Lazy
     private IIngesterService self;
-
-    /**
-     * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
-     * in parallel)
-     */
-    private static final AtomicBoolean managing = new AtomicBoolean(false);
-
-    /**
-     * An atomic boolean permitting to take into account a new datasource creation or update while managing current ones
-     * (or inverse)
-     */
-    private static AtomicBoolean doItAgain = new AtomicBoolean(false);
-
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
      */
     private boolean consumeOnlyMode = false;
-
-    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
 
     @Override
     @EventListener
@@ -286,29 +271,29 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             switch (dsIngestion.getStatus()) {
                 case ERROR:
                     notifClient.notify(String.format("Indexation error. Cause : %s", dsIngestion.getStackTrace()),
-                                       title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
+                            title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
                     break;
                 case FINISHED_WITH_WARNINGS:
                     notifClient.notify(
-                                       String.format("Indexation ends with %s new indexed objects and %s errors.",
-                                                     dsIngestion.getInErrorObjectsCount(),
-                                                     dsIngestion.getSavedObjectsCount()),
-                                       title, NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
+                            String.format("Indexation ends with %s new indexed objects and %s errors.",
+                                    dsIngestion.getInErrorObjectsCount(),
+                                    dsIngestion.getSavedObjectsCount()),
+                            title, NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
                     break;
                 case NOT_FINISHED:
                     notifClient.notify(String
-                            .format("Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
-                                    + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
-                                    + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
-                                    + "soon as possible or will continue at its planned date",
-                                    dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()), title,
-                                       NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
+                                    .format("Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
+                                                    + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
+                                                    + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
+                                                    + "soon as possible or will continue at its planned date",
+                                            dsIngestion.getInErrorObjectsCount(), dsIngestion.getSavedObjectsCount()), title,
+                            NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
                     break;
                 default:
                     notifClient.notify(String
-                            .format("Indexation finished. %s new objects indexed. %s objects in error.",
-                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
-                                       NotificationLevel.INFO, DefaultRole.PROJECT_ADMIN);
+                                    .format("Indexation finished. %s new objects indexed. %s objects in error.",
+                                            dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
+                            NotificationLevel.INFO, DefaultRole.PROJECT_ADMIN);
                     break;
             }
         }
@@ -346,6 +331,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
 
     /**
      * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
+     *
      * @param tenant
      * @param dataSourceId
      */
@@ -384,7 +370,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                 case FINISHED: // last ingest + refreshRate
                 case FINISHED_WITH_WARNINGS: // last ingest + refreshRate
                     dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
-                                                                                              ChronoUnit.SECONDS));
+                            ChronoUnit.SECONDS));
                     dsIngestionRepos.save(dsIngestion);
                     break;
                 case STARTED: // Already in progress
