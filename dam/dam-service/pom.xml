@@ -89,11 +89,6 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>geojson-starter</artifactId>
 		</dependency>
-		<!-- Templates, to be consumed by plugins -->
-		<dependency>
-			<groupId>fr.cnes.regards.modules.templates</groupId>
-			<artifactId>templates-service</artifactId>
-		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
