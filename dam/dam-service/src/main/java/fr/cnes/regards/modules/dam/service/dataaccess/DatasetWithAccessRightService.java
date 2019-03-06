@@ -70,9 +70,11 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
         for (Dataset ds : datasets.getContent()) {
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
+                // There is only one possible AccessRight for a given dataset and a given accessGroup.
+                // We set the pagination to 1 element max
                 Page<AccessRight> accessRights = accessRightService
-                        .retrieveAccessRights(accessGroupName, ds.getIpId(), new PageRequest(
-                                pageRequest.getPageNumber(), pageRequest.getPageSize(), new Sort(Direction.ASC, "id")));
+                        .retrieveAccessRights(accessGroupName, ds.getIpId(),
+                                              new PageRequest(0, 1, new Sort(Direction.ASC, "id")));
                 if (accessRights.hasContent()) {
                     datasetWithAR.setAccessRight(accessRights.getContent().get(0));
                 }
