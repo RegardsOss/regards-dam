@@ -289,9 +289,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (!modelAttributeRepository.existsById(attributeId)) {
             throw new EntityNotFoundException(attributeId, ModelAttrAssoc.class);
         }
-        modelAttrAssoc.getAttribute().getFragment().getName();
-        modelAttrAssoc.getAttribute().getName();
-        modelAttrAssoc = modelAttributeRepository.save(modelAttrAssoc);
+        modelAttributeRepository.save(modelAttrAssoc);
         // If associated attribute is a computed one, send and event (to compute all datasets values)
         if (modelAttrAssoc.getComputationConf() != null) {
             publisher.publishEvent(new ComputedAttributeModelEvent(modelAttrAssoc));
