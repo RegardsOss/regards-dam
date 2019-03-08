@@ -156,13 +156,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             mergeNeeded = esRepos.count(searchKey, ICriterion.all()) != 0;
         }
         if (mergeNeeded) {
-            sendMessage("Start reading datasource and creating objects...", dsiId);
-            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
-                                                            pageNumber);
-        } else { // index exists, data objects may also exist
+            // index exists, data objects may also exist
             sendMessage("Start reading datasource and merging/creating objects...", dsiId);
             saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
                                                            pageNumber);
+        } else {
+            sendMessage("Start reading datasource and creating objects...", dsiId);
+            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
+                                                            pageNumber);
         }
         sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
         // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
