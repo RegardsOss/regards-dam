@@ -88,6 +88,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-monitoring-regards-starter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>plugins-rest</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
