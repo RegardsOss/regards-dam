@@ -43,7 +43,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@TestPropertySource("classpath:test.properties")
+@TestPropertySource(locations = "classpath:test.properties",
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_ar_client_it" })
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 public class IAccessRightClientIT extends AbstractRegardsWebIT {
 

@@ -33,6 +33,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedEntityGraphs;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -54,8 +55,11 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
         name = "uk_access_right_access_group_id_dataset_id"))
 @NamedEntityGraphs({
         @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup",
-                attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup"),
-                        @NamedAttributeNode(value = "dataAccessPlugin") }),
+                attributeNodes = { @NamedAttributeNode(value = "dataset"),
+                        @NamedAttributeNode(value = "accessGroup", subgraph = "subgraph.accessgroup"),
+                        @NamedAttributeNode(value = "dataAccessPlugin") },
+                subgraphs = @NamedSubgraph(name = "subgraph.accessgroup",
+                        attributeNodes = { @NamedAttributeNode(value = "users") })),
         @NamedEntityGraph(name = "graph.accessright.plugins",
                 attributeNodes = { @NamedAttributeNode(value = "dataAccessPlugin") }) })
 public class AccessRight implements IIdentifiable<Long> {

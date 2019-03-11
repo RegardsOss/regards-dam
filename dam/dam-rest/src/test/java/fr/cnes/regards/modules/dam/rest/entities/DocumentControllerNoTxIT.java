@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -40,15 +38,6 @@ import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
         properties = { "spring.jpa.properties.hibernate.default_schema=documentationitnotx" })
 @ContextConfiguration(classes = { DamRestConfiguration.class })
 public class DocumentControllerNoTxIT extends AbstractDocumentControllerIT {
-
-    @Autowired
-    protected IRuntimeTenantResolver runtimetenantResolver;
-
-    @Override
-    public void initRepos() {
-        runtimetenantResolver.forceTenant(getDefaultTenant());
-        super.initRepos();
-    }
 
     @Requirement("REGARDS_DSL_DAM_DOC_230")
     @Purpose("Shall associate or dissociate tag from the document")

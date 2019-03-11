@@ -35,15 +35,16 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
 import org.springframework.restdocs.snippet.Attributes;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
@@ -70,8 +71,9 @@ import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
  * Test {@link ModelAttrAssoc} API
  * @author Maxime Bouveron
  */
-@MultitenantTransactional
-public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=models_rest" })
+public class ModelAttributeControllerIT extends AbstractRegardsIT {
 
     /**
      * Logger
@@ -128,6 +130,9 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IPluginService pluginService;
 
+    @Autowired
+    protected IRuntimeTenantResolver runtimetenantResolver;
+
     public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
         String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
         ConstrainedFields constrainedFields = new ConstrainedFields(ModelAttrAssoc.class);
@@ -159,6 +164,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         datasetRepository.deleteAll();
         entityRepos.deleteAll();
         modelAttributeRepository.deleteAll();
@@ -253,29 +259,43 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();
         requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id").value(att.getId().intValue()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type").value(att.getType().toString()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.type").value(mod.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.id")
+                .value(att.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.name")
+                .value(att.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.type")
+                .value(att.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.type")
+                .value(mod.getType().toString()));
 
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id").value(att2.getId().intValue()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.id")
+                .value(att2.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.name")
+                .value(att2.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.type")
                 .value(att2.getType().toString()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.type")
+                .value(mod.getType().toString()));
 
         requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
@@ -480,29 +500,43 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();
         requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id").value(att.getId().intValue()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type").value(att.getType().toString()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[0]content.model.type").value(mod.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.id")
+                .value(att.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.name")
+                .value(att.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.type")
+                .value(att.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.type")
+                .value(mod.getType().toString()));
 
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id").value(att2.getId().intValue()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.id")
+                .value(att2.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.name")
+                .value(att2.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.type")
                 .value(att2.getType().toString()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer
-                .expect(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.type")
+                .value(mod.getType().toString()));
 
         requestBuilderCustomizer
                 .document(PayloadDocumentation.requestFields(FragmentControllerIT.documentBody(false, "")));

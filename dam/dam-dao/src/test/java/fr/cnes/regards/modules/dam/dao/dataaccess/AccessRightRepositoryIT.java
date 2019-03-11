@@ -30,8 +30,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
-import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
@@ -46,7 +44,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=dam_ar_dao" })
 public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Autowired

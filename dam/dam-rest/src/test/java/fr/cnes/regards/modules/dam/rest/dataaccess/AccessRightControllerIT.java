@@ -22,14 +22,12 @@ import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-
 /**
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
-@MultitenantTransactional
-@TestPropertySource("classpath:test.properties")
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_ag_rest" })
 public class AccessRightControllerIT extends AbstractAccessRightControllerIT {
 
     @Test

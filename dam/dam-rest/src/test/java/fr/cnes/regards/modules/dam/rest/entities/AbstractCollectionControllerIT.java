@@ -22,13 +22,15 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
@@ -40,7 +42,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
  * @author Sylvain Vissiere-Guerinet
  */
 
-public abstract class AbstractCollectionControllerIT extends AbstractRegardsTransactionalIT {
+public abstract class AbstractCollectionControllerIT extends AbstractRegardsIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractCollectionControllerIT.class);
 
@@ -60,8 +62,21 @@ public abstract class AbstractCollectionControllerIT extends AbstractRegardsTran
 
     protected RequestBuilderCustomizer customizer;
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
+    @After
+    public void clear() {
+        tenantResolver.forceTenant(getDefaultTenant());
+        collectionRepository.deleteAll();
+        modelRepository.deleteAll();
+        tenantResolver.clearTenant();
+    }
+
     @Before
     public void initRepos() {
+        clear();
+        tenantResolver.forceTenant(getDefaultTenant());
         customizer = customizer();
         // Bootstrap default values
         model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);

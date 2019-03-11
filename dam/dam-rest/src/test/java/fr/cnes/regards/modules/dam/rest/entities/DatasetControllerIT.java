@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import org.assertj.core.util.Sets;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,15 +44,18 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
+import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
@@ -59,6 +63,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
+import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 
@@ -66,10 +71,10 @@ import fr.cnes.regards.modules.dam.service.models.IModelService;
  * @author Sylvain Vissiere-Guerinet
  */
 @DirtiesContext
-@TestPropertySource(locations = { "classpath:test.properties" })
-@MultitenantTransactional
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_datasets_test" })
 @ContextConfiguration(classes = { DamRestConfiguration.class })
-public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
+public class DatasetControllerIT extends AbstractRegardsIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasetControllerIT.class);
 
@@ -96,13 +101,29 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     private IModelRepository modelRepository;
 
     @Autowired
+    private IAttributeModelRepository attModelRepo;
+
+    @Autowired
+    private IModelAttrAssocRepository attrModelAssocRepo;
+
+    @Autowired
+    private IAttributePropertyRepository attModelPropertyRepo;
+
+    @Autowired
     private IAttributeModelClient attributeModelClient;
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
     @Before
     public void init() {
+
+        tenantResolver.forceTenant(getDefaultTenant());
+
+        clear();
 
         // Bootstrap default values
         model1 = Model.build("modelName1", "model desc", EntityType.DATASET);
@@ -135,6 +156,16 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet1 = datasetRepository.save(dataSet1);
         dataSet3 = datasetRepository.save(dataSet3);
         dataSet4 = datasetRepository.save(dataSet4);
+    }
+
+    public void clear() {
+
+        datasetRepository.deleteAll();
+
+        attrModelAssocRepo.deleteAll();
+        attModelPropertyRepo.deleteAll();
+        attModelRepo.deleteAll();
+        modelRepository.deleteAll();
     }
 
     @Test
@@ -249,22 +280,26 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
         ds = datasetRepository.save(ds);
-        final StringJoiner sj = new StringJoiner("&", "?", "");
-        sj.add("modelIds=" + datasetModel.getId());
-        String queryParams = sj.toString();
+
+        DatasetDataAttributesRequestBody body = new DatasetDataAttributesRequestBody();
+        Set<Long> modelIds = Sets.newHashSet();
+        modelIds.add(datasetModel.getId());
+        body.setModelIds(modelIds);
 
         RequestBuilderCustomizer expectations = customizer();
         expectations.expect(MockMvcResultMatchers.status().isOk());
         expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
-        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
-                          expectations, "failed to fetch the data attributes");
+        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH, body,
+                           expectations, "failed to fetch the data attributes");
+
+        final StringJoiner sj = new StringJoiner("&", "?", "");
         sj.add("page=1");
-        queryParams = sj.toString();
+        String queryParams = sj.toString();
         expectations = customizer();
         expectations.expect(MockMvcResultMatchers.status().isOk());
         expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
-        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
-                          expectations, "failed to fetch the data attributes");
+        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATASET_DATA_ATTRIBUTES_PATH
+                + queryParams, body, expectations, "failed to fetch the data attributes");
     }
 
     @Test
@@ -278,19 +313,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getName());
         ds = datasetRepository.save(ds);
-        final StringJoiner sj = new StringJoiner("&", "?", "");
-        sj.add("modelIds=" + datasetModel.getId());
-        String queryParams = sj.toString();
+
+        DatasetDataAttributesRequestBody body = new DatasetDataAttributesRequestBody();
+        Set<Long> modelIds = Sets.newHashSet();
+        modelIds.add(datasetModel.getId());
+        body.setModelIds(modelIds);
 
         RequestBuilderCustomizer expectations = customizer();
         expectations.expect(MockMvcResultMatchers.status().isOk());
         expectations.expect(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
-        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
-                          expectations, "failed to fetch the data attributes");
-        sj.add("page=0");
-        queryParams = sj.toString();
-        performDefaultGet(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
-                          expectations, "failed to fetch the data attributes");
+        performDefaultPost(DatasetController.TYPE_MAPPING + DatasetController.DATASET_ATTRIBUTES_PATH, body,
+                           expectations, "failed to fetch the data attributes");
     }
 
     @Test

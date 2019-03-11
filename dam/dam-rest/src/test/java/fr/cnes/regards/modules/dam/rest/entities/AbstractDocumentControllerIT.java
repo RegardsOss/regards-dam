@@ -22,11 +22,13 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
@@ -37,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
 /**
  * @author lmieulet
  */
-public abstract class AbstractDocumentControllerIT extends AbstractRegardsTransactionalIT {
+public abstract class AbstractDocumentControllerIT extends AbstractRegardsIT {
 
     protected Model model1;
 
@@ -60,9 +62,23 @@ public abstract class AbstractDocumentControllerIT extends AbstractRegardsTransa
     @Autowired
     protected IModelRepository modelRepository;
 
+    @Autowired
+    protected IRuntimeTenantResolver runtimetenantResolver;
+
+    @After
+    public void clear() {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
+        collectionRepository.deleteAll();
+        documentRepository.deleteAll();
+        modelRepository.deleteAll();
+        runtimetenantResolver.clearTenant();
+    }
+
     @Before
     public void initRepos() {
 
+        clear();
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         // Bootstrap default values
         model1 = Model.build("documentModelName1", "model desc", EntityType.COLLECTION);
         model2 = Model.build("documentModelName2", "model desc", EntityType.DOCUMENT);

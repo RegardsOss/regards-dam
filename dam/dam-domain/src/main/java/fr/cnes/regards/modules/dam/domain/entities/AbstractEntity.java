@@ -156,7 +156,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * This is a set of group names that the entity can reach (access groups are positionned on datasets and then added
      * to collections that tag the dataset and then added to collections that tag collections containing groups)
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"),
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_group_entity_id"))
     @Column(name = "name", length = 200)
@@ -417,7 +417,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = prime * result + (getIpId() == null ? 0 : getIpId().hashCode());
+        result = (prime * result) + (getIpId() == null ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }

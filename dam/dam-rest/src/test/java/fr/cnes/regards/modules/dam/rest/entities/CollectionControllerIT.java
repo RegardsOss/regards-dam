@@ -26,7 +26,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
@@ -36,8 +35,8 @@ import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource(locations = { "classpath:test.properties" })
-@MultitenantTransactional
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_coll_test" })
 @ContextConfiguration(classes = { DamRestConfiguration.class })
 public class CollectionControllerIT extends AbstractCollectionControllerIT {
 

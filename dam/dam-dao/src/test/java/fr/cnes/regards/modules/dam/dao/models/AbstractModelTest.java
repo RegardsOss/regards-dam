@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.models.Model;
@@ -38,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.Abstract
  *
  * @author Marc Sordi
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=dam_models_dao" })
 public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
 
     /**

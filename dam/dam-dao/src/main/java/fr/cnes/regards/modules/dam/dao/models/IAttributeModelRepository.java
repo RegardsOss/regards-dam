@@ -42,7 +42,8 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 public interface IAttributeModelRepository
         extends CrudRepository<AttributeModel, Long>, JpaSpecificationExecutor<AttributeModel> {
 
-    @EntityGraph(attributePaths = {"properties"})
+    @Override
+    @EntityGraph(attributePaths = { "properties" })
     Optional<AttributeModel> findById(Long id);
 
     List<AttributeModel> findByType(AttributeType pType);
@@ -53,6 +54,7 @@ public interface IAttributeModelRepository
 
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 
+    @EntityGraph(attributePaths = { "properties" })
     List<AttributeModel> findByFragmentId(Long pFragmentId);
 
     /**
@@ -62,6 +64,7 @@ public interface IAttributeModelRepository
      */
     Collection<AttributeModel> findByName(String fragmentName);
 
-    @EntityGraph(attributePaths = {"properties"})
+    @Override
+    @EntityGraph(attributePaths = { "properties" })
     List<AttributeModel> findAll(Specification<AttributeModel> spec);
 }

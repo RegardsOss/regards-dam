@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dam.rest.dataaccess;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
+import org.junit.After;
 import org.junit.Before;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -32,12 +33,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
+import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
+import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
@@ -55,7 +59,7 @@ import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
-public abstract class AbstractAccessRightControllerIT extends AbstractRegardsTransactionalIT {
+public abstract class AbstractAccessRightControllerIT extends AbstractRegardsIT {
 
     protected static final String ACCESS_RIGHTS_ERROR_MSG = "Should have been an answer";
 
@@ -109,14 +113,47 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsTra
     protected IAccessRightRepository arRepo;
 
     @Autowired
+    private IModelRepository modelRepository;
+
+    @Autowired
+    private IAttributeModelRepository attModelRepo;
+
+    @Autowired
+    private IModelAttrAssocRepository attrModelAssocRepo;
+
+    @Autowired
+    private IAttributePropertyRepository attModelPropertyRepo;
+
+    @Autowired
+    private IDatasetRepository datasetRepository;
+
+    @Autowired
     protected IRuntimeTenantResolver runtimetenantResolver;
 
     @Autowired
     protected IProjectUsersClient projectUserClientMock;
 
+    @After
+    public void clear() {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
+        arRepo.deleteAll();
+        agRepo.deleteAll();
+
+        datasetRepository.deleteAll();
+
+        attrModelAssocRepo.deleteAll();
+        attModelPropertyRepo.deleteAll();
+        attModelRepo.deleteAll();
+        modelRepository.deleteAll();
+        runtimetenantResolver.clearTenant();
+    }
+
     @Before
     public void init() {
+        clear();
+
         runtimetenantResolver.forceTenant(getDefaultTenant());
+
         OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
@@ -151,6 +188,6 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsTra
         ag2 = agRepo.save(ag2);
         ar2 = new AccessRight(qf, al, ds2, ag2);
         ar2 = arRepo.save(ar2);
-        ar3 = new AccessRight(qf, al, ds2, ag2);
+        ar3 = new AccessRight(qf, al, ds1, ag2);
     }
 }

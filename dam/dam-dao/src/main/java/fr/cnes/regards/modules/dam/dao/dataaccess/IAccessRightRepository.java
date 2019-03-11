@@ -41,13 +41,18 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      * @return {@link AccessRight} with {@link Dataset} associated.
      * @since 1.0-SNAPSHOT
      */
+    @Override
     @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     Optional<AccessRight> findById(Long pId);
 
-    @EntityGraph(value = "graph.accessright.plugins")
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     Page<AccessRight> findAllByDataset(Dataset dataset, Pageable pageable);
 
-    @EntityGraph(value = "graph.accessright.plugins")
+    @Override
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
+    Page<AccessRight> findAll(Pageable pageable);
+
+    @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")
     List<AccessRight> findAllByDataset(Dataset dataset);
 
     @EntityGraph(value = "graph.accessright.dataset.and.accessgroup")

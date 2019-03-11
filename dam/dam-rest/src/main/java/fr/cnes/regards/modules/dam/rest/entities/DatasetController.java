@@ -54,6 +54,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
 import fr.cnes.regards.modules.dam.rest.entities.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -274,20 +275,19 @@ public class DatasetController implements IResourceController<Dataset> {
 
     /**
      * Retrieve data attributes of datasets of given URNs and given model name
-     * @param urns the URNs of datasets
-     * @param modelIds the id of dataset models
+     * @param requestBody {@link DatasetDataAttributesRequestBody}
      * @param pageable the page
      * @param assembler the resources assembler
      * @return the page of attribute models wrapped in an HTTP response
      * @throws ModuleException
      */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_DATA_ATTRIBUTES_PATH)
+    @RequestMapping(method = RequestMethod.POST, value = DATASET_DATA_ATTRIBUTES_PATH)
     @ResourceAccess(description = "Retrieves data attributes of given datasets")
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveDataAttributes(
-            @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> urns,
-            @RequestParam(name = "modelIds", required = false) final Set<Long> modelIds, final Pageable pageable,
+            @RequestBody DatasetDataAttributesRequestBody requestBody, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
-        Page<AttributeModel> result = service.getDataAttributeModels(urns, modelIds, pageable);
+        Page<AttributeModel> result = service.getDataAttributeModels(requestBody.getDatasetIds(),
+                                                                     requestBody.getModelIds(), pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 
@@ -300,13 +300,12 @@ public class DatasetController implements IResourceController<Dataset> {
      * @return the page of attribute models wrapped in an HTTP response
      * @throws ModuleException
      */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ATTRIBUTES_PATH)
+    @RequestMapping(method = RequestMethod.POST, value = DATASET_ATTRIBUTES_PATH)
     @ResourceAccess(description = "Retrieves data attributes of given datasets")
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveAttributes(
-            @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> urns,
-            @RequestParam(name = "modelIds", required = false) final Set<Long> modelIds, final Pageable pageable,
+            @RequestBody DatasetDataAttributesRequestBody body, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
-        Page<AttributeModel> result = service.getAttributeModels(urns, modelIds, pageable);
+        Page<AttributeModel> result = service.getAttributeModels(body.getDatasetIds(), body.getModelIds(), pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 

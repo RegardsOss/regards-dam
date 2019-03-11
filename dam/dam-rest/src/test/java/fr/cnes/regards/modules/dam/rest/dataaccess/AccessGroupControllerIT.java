@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.rest.dataaccess;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -26,25 +27,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 
 /**
  * REST module controller
  * @author Marc Sordi
  */
-@MultitenantTransactional
-@TestPropertySource("classpath:test.properties")
-public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_ag_rest" })
+@ContextConfiguration(classes = { DamRestConfiguration.class })
+public class AccessGroupControllerIT extends AbstractRegardsIT {
 
     private static final String ACCESS_GROUPS_ERROR_MSG = "";
 
@@ -65,8 +69,21 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IProjectUsersClient projectUserClientMock;
 
+    @Autowired
+    protected IRuntimeTenantResolver runtimetenantResolver;
+
+    @After
+    public void clear() {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
+        dao.deleteAll();
+        runtimetenantResolver.clearTenant();
+    }
+
     @Before
     public void init() {
+        clear();
+
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
         Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(ArgumentMatchers.any()))
