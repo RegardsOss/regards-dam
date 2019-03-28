@@ -44,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
@@ -72,6 +73,9 @@ public class LocalStorageService implements ILocalStorageService {
 
     @Autowired
     private ILocalFileRepository localStorageRepo;
+
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
     /**
      * Folder where this service will store all document files
@@ -213,10 +217,9 @@ public class LocalStorageService implements ILocalStorageService {
             // We assume that baseStorageLocation already exists on the file system.
             // We just need to create, if required, the directory between localStoragePath and the file.
 
-            // folder = localStoragePath + 2 first char of checksum
-            Path folderPath = Paths.get(localStoragePath, checksum.substring(0, 2));
+            Path folderPath = getDataFolder(checksum);
             if (!Files.exists(folderPath)) {
-                Files.createDirectory(folderPath);
+                Files.createDirectories(folderPath);
             }
 
             // Save file
@@ -240,9 +243,9 @@ public class LocalStorageService implements ILocalStorageService {
     }
 
     /**
-     * Lets compute the file folder localStoragePath + 2 first char of checksum
+     * Lets compute the file folder localStoragePath + tenant + 2 first char of checksum
      */
     private Path getDataFolder(String checksum) {
-        return Paths.get(localStoragePath, checksum.substring(0, 2));
+        return Paths.get(localStoragePath, runtimeTenantResolver.getTenant(), checksum.substring(0, 2));
     }
 }
