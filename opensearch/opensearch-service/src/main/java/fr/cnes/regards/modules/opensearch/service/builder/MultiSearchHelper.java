@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service.builder;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
@@ -46,7 +47,10 @@ public final class MultiSearchHelper {
      */
     public static Set<AttributeModel> discoverFields(final IAttributeFinder finder, String value)
             throws OpenSearchUnknownParameter {
-        // TODO test with number, date, etc. so we can add fields with this type. Value has to "castable" to this type.
-        return finder.findByType(AttributeType.STRING);
+        // TODO test with number, date, etc. so we can add fields with this type. Value has to be "castable" to this type.
+        Set<AttributeModel> result = new HashSet<>();
+        result.addAll(finder.findByType(AttributeType.STRING));
+        result.addAll(finder.findByType(AttributeType.STRING_ARRAY));
+        return result;
     }
 }
