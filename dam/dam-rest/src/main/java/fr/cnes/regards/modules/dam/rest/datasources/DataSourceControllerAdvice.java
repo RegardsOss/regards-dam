@@ -39,7 +39,7 @@ public class DataSourceControllerAdvice {
     @ExceptionHandler(AssociatedDatasetExistsException.class)
     public ResponseEntity<ServerErrorResponse> handleAssociatedDatasetExistsException(
             AssociatedDatasetExistsException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage(), e));
     }
 
 }

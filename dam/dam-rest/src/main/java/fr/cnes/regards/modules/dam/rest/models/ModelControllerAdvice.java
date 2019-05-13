@@ -39,6 +39,6 @@ public class ModelControllerAdvice {
 
     @ExceptionHandler(ImportException.class)
     public ResponseEntity<ServerErrorResponse> importException(final ImportException pException) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ServerErrorResponse(pException.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ServerErrorResponse(pException.getMessage(), pException));
     }
 }
