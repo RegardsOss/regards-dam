@@ -44,31 +44,31 @@ public class EntityControllerAdvice {
     @ExceptionHandler(InvalidCharsetException.class)
     public ResponseEntity<ServerErrorResponse> invalidCharsetException(InvalidCharsetException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(exception.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage(), exception));
     }
 
     @ExceptionHandler(InvalidContentTypeException.class)
     public ResponseEntity<ServerErrorResponse> invalidContentTypeException(InvalidContentTypeException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(exception.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage(), exception));
     }
 
     @ExceptionHandler(InvalidFilenameException.class)
     public ResponseEntity<ServerErrorResponse> invalidFilenameException(InvalidFilenameException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(exception.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage(), exception));
     }
 
     @ExceptionHandler(InvalidFileLocation.class)
     public ResponseEntity<ServerErrorResponse> invalidFileLocation(InvalidFileLocation exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(exception.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage(), exception));
     }
 
     @ExceptionHandler(AssociatedAccessRightExistsException.class)
     public ResponseEntity<ServerErrorResponse> handleAssociatedAccessRightExistsException(
             AssociatedAccessRightExistsException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage(), e));
     }
 
 }
