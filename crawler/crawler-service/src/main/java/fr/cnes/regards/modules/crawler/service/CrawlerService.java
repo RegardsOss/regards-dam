@@ -352,7 +352,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
         // Find all features
-        Page<DataObjectFeature> page = dsPlugin.findAll(tenant, pageable, date);
+        Page<DataObjectFeature> page;
+        try {
+            page = dsPlugin.findAll(tenant, pageable, date);
+        } catch (Exception e) {
+            LOGGER.error("Cannot retrieve data from datasource", e);
+            throw e;
+        }
 
         // Decorate features with its related entity (i.e. DataObject)
         List<DataObject> dataObjects = new ArrayList<>();
