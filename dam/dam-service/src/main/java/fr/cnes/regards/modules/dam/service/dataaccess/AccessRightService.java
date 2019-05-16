@@ -232,14 +232,15 @@ public class AccessRightService implements IAccessRightService {
                 .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
 
         repository.save(accessRight);
+        // Load access right with dependencies
+        accessRight = repository.findById(accessRight.getId()).get();
 
         // Remove unused plugin conf id any
         if (toRemove.isPresent()) {
             pluginService.deletePluginConfiguration(toRemove.get().getId());
         }
 
-        eventPublisher
-                .publish(new AccessRightEvent(accessRightFromDb.getDataset().getIpId(), AccessRightEventType.UPDATE));
+        eventPublisher.publish(new AccessRightEvent(accessRight.getDataset().getIpId(), AccessRightEventType.UPDATE));
         return accessRight;
     }
 
