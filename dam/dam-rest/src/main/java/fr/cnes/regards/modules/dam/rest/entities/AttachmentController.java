@@ -131,10 +131,10 @@ public class AttachmentController {
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
         }
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + dataFile.getFilename());
-        getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
-        // Change content type after calling download file and no error occurs!
+        // NOTE : Do not set content type after download. It can be ignored.
         response.setContentType(dataFile.getMimeType().toString());
         response.setContentLengthLong(dataFile.getFilesize());
+        getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
         response.getOutputStream().flush();
         response.setStatus(HttpStatus.OK.value());
     }
