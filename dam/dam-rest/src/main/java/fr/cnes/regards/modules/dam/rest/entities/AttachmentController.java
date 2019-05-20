@@ -130,7 +130,7 @@ public class AttachmentController {
         if (origin != null) {
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
         }
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline;filename=" + dataFile.getFilename());
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + dataFile.getFilename());
         getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
         // Change content type after calling download file and no error occurs!
         response.setContentType(dataFile.getMimeType().toString());
