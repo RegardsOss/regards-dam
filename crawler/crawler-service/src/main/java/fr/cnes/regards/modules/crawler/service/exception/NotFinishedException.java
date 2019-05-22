@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.crawler.service.exception;
 
-import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveLightResult;
 
 /**
  * Exception used to manage a problem with datasource plugin or Elasticsearch during an ingestion by permitting
@@ -26,17 +26,18 @@ import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
  * @author Olivier Rousselot
  */
 public class NotFinishedException extends Exception {
-    private BulkSaveResult saveResult;
 
-    private int pageNumber;
+    private final BulkSaveLightResult saveResult;
 
-    public NotFinishedException(Throwable cause, BulkSaveResult saveResult, int pageNumber) {
+    private final int pageNumber;
+
+    public NotFinishedException(Throwable cause, BulkSaveLightResult saveResult, int pageNumber) {
         super(cause);
         this.saveResult = saveResult;
         this.pageNumber = pageNumber;
     }
 
-    public BulkSaveResult getSaveResult() {
+    public BulkSaveLightResult getSaveResult() {
         return saveResult;
     }
 

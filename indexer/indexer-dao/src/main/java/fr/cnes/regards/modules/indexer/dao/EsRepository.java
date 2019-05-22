@@ -674,11 +674,11 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
         try {
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex());
-            //            request.types(searchKey.getSearchTypes());
+
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(inCrit, searchKey.getSearchTypes()));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             ICriterion crit = inCrit == null ? ICriterion.all() : inCrit;
             crit = addTypes(crit, searchKey.getSearchTypes());
-            SearchSourceBuilder builder = new SearchSourceBuilder();
             builder.query(crit.accept(CRITERION_VISITOR)).size(DEFAULT_SCROLLING_HITS_SIZE);
             request.source(builder);
             request.scroll(TimeValue.timeValueMinutes(KEEP_ALIVE_SCROLLING_TIME_MN));
@@ -1783,8 +1783,8 @@ public class EsRepository implements IEsRepository {
             // Add files cardinality aggregation
             addFilesCardinalityAgg(searchKey, discriminantProperty, builder, fileTypes);
 
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
+
             // Launch the request
             SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             // First "global" aggregations results

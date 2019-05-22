@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -131,12 +132,22 @@ public class AttachmentController {
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
         }
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + dataFile.getFilename());
-        getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
-        // Change content type after calling download file and no error occurs!
+        // NOTE : Do not set content type after download. It can be ignored.
         response.setContentType(dataFile.getMimeType().toString());
-        response.setContentLengthLong(dataFile.getFilesize());
+        if (dataFile.getFilesize() != null) {
+            response.setContentLengthLong(dataFile.getFilesize());
+        }
+        try {
+            getEntityService(urn).downloadFile(urn, checksum, response.getOutputStream());
+        } catch (ModuleException e) {
+            // Workaround to handle conversion of ServletErrorResponse in JSON format and
+            // avoid using ContentType of file set before.
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            throw e;
+        }
         response.getOutputStream().flush();
         response.setStatus(HttpStatus.OK.value());
+
     }
 
     /**

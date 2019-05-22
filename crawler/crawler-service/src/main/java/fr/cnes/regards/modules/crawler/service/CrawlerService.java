@@ -69,6 +69,7 @@ import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveLightResult;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
@@ -151,7 +152,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         }
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf.getId());
 
-        BulkSaveResult saveResult;
+        BulkSaveLightResult saveResult;
         OffsetDateTime now = OffsetDateTime.now();
         String datasourceId = pluginConf.getId().toString();
         // If index doesn't exist, just create all data objects
@@ -189,11 +190,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         return new IngestionResult(now, saveResult.getSavedDocsCount(), saveResult.getInErrorDocsCount());
     }
 
-    private BulkSaveResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+    private BulkSaveLightResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
-        BulkSaveResult saveResult = new BulkSaveResult();
+        BulkSaveLightResult saveResult = new BulkSaveLightResult();
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -249,11 +250,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         return saveResult;
     }
 
-    private BulkSaveResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+    private BulkSaveLightResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
-        BulkSaveResult saveResult = new BulkSaveResult();
+        BulkSaveLightResult saveResult = new BulkSaveLightResult();
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
