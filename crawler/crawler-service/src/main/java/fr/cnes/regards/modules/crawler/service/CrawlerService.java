@@ -49,9 +49,11 @@ import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceExcepti
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -74,6 +76,7 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -99,6 +102,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     @Autowired
     private ProjectGeoSettings projectGeoSettings;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     /**
      * Self proxy
@@ -356,6 +362,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         try {
             page = dsPlugin.findAll(tenant, pageable, date);
         } catch (Exception e) {
+            notificationClient.notify(e.getMessage(), "Datasource harvesting failure", NotificationLevel.ERROR,
+                                      DefaultRole.ADMIN);
             LOGGER.error("Cannot retrieve data from datasource", e);
             throw e;
         }
