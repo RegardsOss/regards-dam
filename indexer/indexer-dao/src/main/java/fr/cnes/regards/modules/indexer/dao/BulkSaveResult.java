@@ -29,9 +29,10 @@ import java.util.stream.Stream;
  * @author oroussel
  */
 public class BulkSaveResult {
-    private Set<String> savedDocIds = new HashSet<>();
 
-    private Map<String, Exception> inErrorDocsMap = new HashMap<>();
+    private final Set<String> savedDocIds = new HashSet<>();
+
+    private final Map<String, Exception> inErrorDocsMap = new HashMap<>();
 
     /**
      * Error detailed message is set by EsRespository when notify to admin. It is then used to show error message while
@@ -84,8 +85,10 @@ public class BulkSaveResult {
      * @return this
      */
     public BulkSaveResult append(BulkSaveResult otherBulkSaveResult) {
-        this.savedDocIds.addAll(otherBulkSaveResult.savedDocIds);
-        this.inErrorDocsMap.putAll(otherBulkSaveResult.inErrorDocsMap);
+        if (otherBulkSaveResult != null) {
+            this.savedDocIds.addAll(otherBulkSaveResult.savedDocIds);
+            this.inErrorDocsMap.putAll(otherBulkSaveResult.inErrorDocsMap);
+        }
         return this;
     }
 }
