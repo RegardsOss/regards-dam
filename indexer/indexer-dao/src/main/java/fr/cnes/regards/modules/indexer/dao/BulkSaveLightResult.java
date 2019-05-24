@@ -53,8 +53,10 @@ public class BulkSaveLightResult {
      * @return this
      */
     public BulkSaveLightResult append(BulkSaveResult bulkSaveResult) {
-        this.savedDocsCount += bulkSaveResult.getSavedDocsCount();
-        this.inErrorDocsCount += bulkSaveResult.getInErrorDocsCount();
+        if (bulkSaveResult != null) {
+            this.savedDocsCount += bulkSaveResult.getSavedDocsCount();
+            this.inErrorDocsCount += bulkSaveResult.getInErrorDocsCount();
+        }
         return this;
     }
 }

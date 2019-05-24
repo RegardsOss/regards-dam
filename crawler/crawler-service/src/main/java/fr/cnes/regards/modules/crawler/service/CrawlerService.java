@@ -289,7 +289,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 }
                 throw new NotFinishedException(e, saveResult, page.getNumber());
             } finally { // Don't forget current indexation task...(from previous page)
-                saveResult.append(task.get());
+                if (task != null) {
+                    saveResult.append(task.get());
+                }
             }
         } catch (ExecutionException e) { // ES indexation has failed
             // Failed at first indexation => "classical" ERROR
