@@ -59,12 +59,7 @@ import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
 @MultitenantTransactional
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
-    /**
-     * Logger
-     */
     private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionControllerIT.class);
-
-    private static final String ORACLE_PLUGIN_CONNECTION = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOracleConnectionPlugin";
 
     private static final String POSTGRESQL_PLUGIN_CONNECTION = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin";
 
@@ -269,54 +264,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultDelete(DBConnectionController.TYPE_MAPPING + "/{connectionId}", expectations,
                              "Could not delete a DBConnection.", 123L);
-    }
-
-    @Test
-    @Requirement("REGARDS_DSL_DAM_SRC_020")
-    @Purpose("The system allows to modify an existing connection")
-    @Ignore // Reactivate to test Oracle DB
-    public void updateDBConnection() throws ModuleException {
-        PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
-                                                "Bob");
-        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
-        dbConnection.setId(plgConf.getId());
-
-        // Define expectations
-        RequestBuilderCustomizer expectations = customizer();
-        expectations.expect(MockMvcResultMatchers.status().isOk());
-
-        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{connectionId}", dbConnection, expectations,
-                          "Could not update a DBConnection.", dbConnection.getId());
-    }
-
-    @Test
-    @Ignore // Reactivate to test Oracle DB
-    public void updateBadDBConnection() throws ModuleException {
-        PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
-        dbConnection.setId(plgConf.getId());
-
-        // Define expectations
-        RequestBuilderCustomizer expectations = customizer();
-        expectations.expect(MockMvcResultMatchers.status().isBadRequest());
-
-        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{connectionId}", dbConnection, expectations,
-                          "Could not update a DBConnection.", 456789L);
-    }
-
-    @Ignore
-    @Test
-    public void updateUnknownDBConnection() throws ModuleException {
-        PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        dbConnection.setId(234568L);
-
-        // Define expectations
-        RequestBuilderCustomizer expectations = customizer();
-        expectations.expect(MockMvcResultMatchers.status().isNotFound());
-
-        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{connectionId}", dbConnection, expectations,
-                          "Could not update a DBConnection.", dbConnection.getId());
     }
 
     @Test

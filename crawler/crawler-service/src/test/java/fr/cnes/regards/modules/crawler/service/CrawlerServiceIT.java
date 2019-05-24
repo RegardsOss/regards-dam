@@ -169,35 +169,6 @@ public class CrawlerServiceIT {
 
     }
 
-    private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-        // final List<PluginParameter> parameters = PluginParametersFactory.build()
-        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-        // .getParameters();
-        //
-        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO replace by a Postgres plugin
-        return null;
-    }
-
-    private PluginConfiguration getOracleConnectionConfiguration() {
-        // final List<PluginParameter> parameters = PluginParametersFactory.build()
-        // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
-        // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
-        // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
-        // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
-        // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
-        // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
-        // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-        //
-        // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO replace by a Postgres plugin
-        return null;
-    }
-
     public void buildData1() throws ModuleException {
         if (esRepos.indexExists(tenant)) {
             esRepos.deleteAll(tenant);
@@ -219,11 +190,14 @@ public class CrawlerServiceIT {
         modelService.createModel(dataModel);
         modelAttrMapping = Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
                 AttributeType.INTEGER, "DATA_OBJECTS_ID"));
-        pluginConf = getOracleConnectionConfiguration();
+
+        // TODO revoir init plugin sur base générique (connection)
+        pluginConf = null;
         pluginService.savePluginConfiguration(pluginConf);
 
         // DataSource PluginConf
-        dataSourcePluginConf = getOracleDataSource(pluginConf);
+        // TODO revoir init plugin sur base générique (dataSource)
+        dataSourcePluginConf = null;
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
         dataset1 = new Dataset(modelDataset, tenant, "DS1", "labelDs1");

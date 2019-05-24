@@ -117,7 +117,7 @@ public class DBConnectionServiceTest {
     @Purpose("Test the creation of a connection by setting the connection's parameters including the pool size")
     public void createConnection() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        String className = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOracleConnectionPlugin";
+        String className = "fr.cnes.regards.modules.dam.plugins.datasources.DefaultPostgreConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection");
@@ -127,11 +127,10 @@ public class DBConnectionServiceTest {
         Assert.assertTrue(true);
     }
 
-    @SuppressWarnings("unchecked")
     @Test(expected = EntityInvalidException.class)
     public void createConnectionUnknownPluginClassName() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        String className = "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultOrcleConnectionPlugin";
+        String className = "fr.cnes.regards.modules.dam.plugins.datasources.DefaultPostgreConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection failed");
