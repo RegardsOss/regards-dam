@@ -58,6 +58,10 @@
 			<artifactId>multitenant-regards-starter</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.notification</groupId>
+			<artifactId>notification-client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-dao</artifactId>
 		</dependency>
@@ -65,18 +69,14 @@
 			<groupId>fr.cnes.regards.modules.dam</groupId>
 			<artifactId>dam-domain</artifactId>
 		</dependency>
-
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<!-- <version>2.7</version> -->
-		</dependency>
+    		<groupId>org.apache.logging.log4j</groupId>
+    		<artifactId>log4j-to-slf4j</artifactId>
+			</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<!-- <version>2.7</version> -->
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
-
 
 		<!-- Test dependencies -->
 		<dependency>
