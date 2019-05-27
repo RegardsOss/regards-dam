@@ -36,6 +36,7 @@ import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
+import fr.cnes.regards.modules.notification.client.IInstanceNotificationClient;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
@@ -80,6 +81,11 @@ public class CrawlerConfiguration {
     @Bean
     public INotificationClient notifClient() {
         return Mockito.mock(INotificationClient.class);
+    }
+
+    @Bean
+    public IInstanceNotificationClient instanceNotifClient() {
+        return Mockito.mock(IInstanceNotificationClient.class);
     }
 
     @Bean
