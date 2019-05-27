@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -28,8 +26,10 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.notification.client.IInstanceNotificationClient;
 
 /**
  * Listening for tenant creation and application ready to manage Elasticsearch index creation
@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
  */
 @Component
 public class IndexerEventsListener {
+
     @Autowired
     private IEsRepository repository;
 
@@ -45,6 +46,8 @@ public class IndexerEventsListener {
 
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
+
+    private IInstanceNotificationClient instanceNotificationClient;
 
     @EventListener
     public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
@@ -65,10 +68,15 @@ public class IndexerEventsListener {
 
     private void checkIndex(String tenant) {
         if (!repository.indexExists(tenant)) {
-            boolean created = repository.createIndex(tenant);
-            if (created) {
-                String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
-                        .toArray(length -> new String[length]);
+            if (repository.createIndex(tenant)) {
+                instanceNotificationClient.notify(String
+                        .format("Elasticsearch index %s successfully created for tenant %s.", tenant, tenant),
+                                                  "Index creation failure", NotificationLevel.INFO,
+                                                  DefaultRole.INSTANCE_ADMIN);
+            } else {
+                instanceNotificationClient
+                        .notify(String.format("Elasticsearch index creation for tenant %s has failed.", tenant, tenant),
+                                "Index creation success", NotificationLevel.INFO, DefaultRole.INSTANCE_ADMIN);
             }
         }
     }
