@@ -47,6 +47,7 @@ public class IndexerEventsListener {
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
 
+    @Autowired
     private IInstanceNotificationClient instanceNotificationClient;
 
     @EventListener
