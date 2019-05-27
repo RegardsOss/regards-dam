@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import javax.persistence.EntityManager;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,7 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -82,6 +84,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private final IPluginService pluginService;
 
     @Autowired
+    private IDatasetRepository datasetRepository;
+
+    @Autowired
     private IAttributeFinder finder;
 
     @Autowired
@@ -114,9 +119,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setDataModel(model.getName());
             } catch (ModuleException e) {
                 logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
-                throw new EntityNotFoundException(
-                        String.format("Unable to dejsonify model parameter from PluginConfiguration (%s)",
-                                      e.getMessage()), PluginConfiguration.class);
+                throw new EntityNotFoundException(String
+                        .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
+                        PluginConfiguration.class);
             }
         }
         return dataset;
@@ -234,5 +239,13 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         accessRights.forEach(ar -> accessRightRepository.delete(ar));
         // Delete dataset
         return delete(toDelete);
+    }
+
+    /* (non-Javadoc)
+     * @see fr.cnes.regards.modules.dam.service.entities.IDatasetService#countByDataSource(java.lang.Long)
+     */
+    @Override
+    public Long countByDataSource(Long dataSourcePluginConfId) {
+        return datasetRepository.countByPlgConfDataSourceId(dataSourcePluginConfId);
     }
 }
