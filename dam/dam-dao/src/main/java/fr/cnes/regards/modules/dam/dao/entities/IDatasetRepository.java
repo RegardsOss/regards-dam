@@ -37,6 +37,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     long countByDataModelIn(Set<String> dataModelNames);
 
+    long countByPlgConfDataSourceId(Long pluginConfigurationId);
+
     /**
      * Check if at least one model is already linked to at least one dataset as a data source model
      * @param dataModelNames model list

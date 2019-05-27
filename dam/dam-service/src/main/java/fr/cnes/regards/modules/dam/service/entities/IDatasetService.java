@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -75,6 +76,13 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @throws ModuleException if the model cannot be retrieve
      */
     ICriterionVisitor<Boolean> getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
+
+    /**
+     * Get the number of datasets associated to a given datasource plugin configuration.
+     * @param dataSourcePluginConfId identifier of the {@link PluginConfiguration} of the datasource
+     * @return number of datasets.
+     */
+    Long countByDataSource(Long dataSourcePluginConfId);
 
     Set<Dataset> findAllByModel(Long modelId);
 }
