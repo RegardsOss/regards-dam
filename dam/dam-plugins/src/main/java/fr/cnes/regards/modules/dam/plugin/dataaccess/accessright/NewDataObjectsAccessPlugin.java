@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
  */
 @Plugin(id = "NewDataObjectsAccess", version = "4.0.0-SNAPSHOT",
         description = "Allow access only to new data objects. New data objects are thoses created at most X days ago. X is a parameter to configure.",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class NewDataObjectsAccessPlugin implements IDataObjectAccessFilterPlugin {
 

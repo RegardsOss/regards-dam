@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  */
 @Plugin(id = "IntSumComputePlugin", version = "1.0.0",
         description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 @ComputationPlugin(supportedType = AttributeType.INTEGER)
 public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer> {

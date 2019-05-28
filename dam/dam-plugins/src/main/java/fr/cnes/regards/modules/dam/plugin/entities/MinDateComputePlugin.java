@@ -42,10 +42,11 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  */
 @Plugin(id = "MinDateComputePlugin",
         description = "allows to compute the minimum of a DateAttribute according to a collection of data",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
 @ComputationPlugin(supportedType = AttributeType.DATE_ISO8601)
 public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {
+
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
             description = "Name of parameter attribute used to compute result attribute.")
     private String parameterAttributeName;

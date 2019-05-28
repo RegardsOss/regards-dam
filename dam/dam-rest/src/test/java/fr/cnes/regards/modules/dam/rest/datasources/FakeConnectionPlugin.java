@@ -24,7 +24,8 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
  * @author Marc Sordi
  *
  */
-@Plugin(id = "fake-plugin", author = "CSSI", contact = "CSSI", description = "Fake plugin", version = "alpha", url = "none", owner = "CSSI", licence = "none")
+@Plugin(id = "fake-plugin", author = "CSSI", contact = "CSSI", description = "Fake plugin", version = "alpha",
+        url = "none", owner = "CSSI", license = "GPLv3")
 public class FakeConnectionPlugin implements IFakeConnectionPlugin {
 
 }

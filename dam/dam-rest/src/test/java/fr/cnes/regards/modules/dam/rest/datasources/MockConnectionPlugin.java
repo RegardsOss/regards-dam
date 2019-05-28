@@ -34,7 +34,7 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugi
  *
  */
 @Plugin(id = "MockConnectionPlugin", author = "CSSI", contact = "CSSI", description = "MockConnectionPlugin",
-        version = "alpha", url = "none", owner = "CSSI", licence = "none")
+        version = "alpha", url = "none", owner = "CSSI", license = "GPLv3")
 public class MockConnectionPlugin implements IDBConnectionPlugin {
 
     @Override
