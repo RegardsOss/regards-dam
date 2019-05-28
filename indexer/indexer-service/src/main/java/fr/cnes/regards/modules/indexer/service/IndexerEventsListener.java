@@ -72,12 +72,12 @@ public class IndexerEventsListener {
             if (repository.createIndex(tenant)) {
                 instanceNotificationClient.notify(String
                         .format("Elasticsearch index %s successfully created for tenant %s.", tenant, tenant),
-                                                  "Index creation failure", NotificationLevel.INFO,
+                                                  "Index creation success", NotificationLevel.INFO,
                                                   DefaultRole.INSTANCE_ADMIN);
             } else {
                 instanceNotificationClient
                         .notify(String.format("Elasticsearch index creation for tenant %s has failed.", tenant, tenant),
-                                "Index creation success", NotificationLevel.INFO, DefaultRole.INSTANCE_ADMIN);
+                                "Index creation failure", NotificationLevel.INFO, DefaultRole.INSTANCE_ADMIN);
             }
         }
     }
