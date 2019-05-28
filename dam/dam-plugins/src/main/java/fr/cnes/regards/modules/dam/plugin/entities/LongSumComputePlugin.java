@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  */
 @Plugin(id = "LongSumComputePlugin", version = "1.0.0",
         description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 @ComputationPlugin(supportedType = AttributeType.LONG)
 public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> {

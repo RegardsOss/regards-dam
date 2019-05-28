@@ -42,7 +42,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  */
 @Plugin(id = "MaxDateComputePlugin",
         description = "allows to compute the maximum of a DateAttribute according to a collection of data",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
 @ComputationPlugin(supportedType = AttributeType.DATE_ISO8601)
 public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {

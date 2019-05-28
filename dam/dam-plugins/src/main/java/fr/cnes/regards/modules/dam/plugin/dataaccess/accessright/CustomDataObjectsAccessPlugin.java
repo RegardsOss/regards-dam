@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  */
 @Plugin(id = "CustomDataObjectsAccessPlugin", version = "4.0.0-SNAPSHOT",
         description = "Allow access to dataObjects matching the given opensearch lucene formated query.",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class CustomDataObjectsAccessPlugin implements IDataObjectAccessFilterPlugin {
 
