@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.junit.Assert;
@@ -29,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.search.schema.OpenSearchDescription;
 import fr.cnes.regards.modules.search.schema.UrlType;
@@ -57,6 +59,22 @@ public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
         url.getParameter().forEach(p -> {
             LOG.info(String.format("Available parameter %s - %s", p.getName(), p.getTitle()));
         });
+    }
+
+    @Test(expected = ModuleException.class)
+    public void testInvalidUrl() throws MalformedURLException, ModuleException {
+        opensearchService
+                .readDescriptor(new URL("https://theia.cnes.fr/atdistrib/resto2/api/collections/describe.xmlx"));
+    }
+
+    @Test(expected = ModuleException.class)
+    public void testInvalidUrl2() throws MalformedURLException, ModuleException {
+        opensearchService.readDescriptor(new URL("https://plop.com/describe.xml"));
+    }
+
+    @Test(expected = ModuleException.class)
+    public void testInvalidUrl3() throws MalformedURLException, ModuleException {
+        opensearchService.readDescriptor(new URL("https://google.com"));
     }
 
 }

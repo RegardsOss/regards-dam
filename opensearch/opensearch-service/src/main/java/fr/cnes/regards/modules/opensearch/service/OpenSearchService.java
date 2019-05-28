@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.http.client.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import com.google.common.collect.Lists;
 
 import feign.Target;
 import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
 import feign.httpclient.ApacheHttpClient;
 import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -92,8 +94,18 @@ public class OpenSearchService implements IOpenSearchService {
         try {
             ResponseEntity<OpenSearchDescription> descriptor = FeignClientBuilder
                     .buildXml(target, new ApacheHttpClient(httpClient)).getDescriptor();
-            return descriptor.getBody();
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            if (descriptor.getStatusCode() == HttpStatus.OK) {
+                if (!descriptor.getBody().getUrl().isEmpty()) {
+                    return descriptor.getBody();
+                } else {
+                    throw new ModuleException(
+                            String.format("No valid opensearch descriptor found at %s.", url.toString()));
+                }
+            } else {
+                throw new ModuleException(
+                        String.format("Error retrieving opensearch descriptor at %s.", url.toString()));
+            }
+        } catch (HttpClientErrorException | HttpServerErrorException | DecodeException e) {
             throw new ModuleException(e.getMessage(), e);
         }
     }
