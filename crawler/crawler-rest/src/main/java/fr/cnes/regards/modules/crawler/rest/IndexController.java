@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.crawler.rest;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +30,21 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.service.IDatasourceIngesterService;
 import fr.cnes.regards.modules.crawler.service.IEntityIndexerService;
 
 @RestController
 @RequestMapping(IndexController.TYPE_MAPPING)
 public class IndexController {
 
-    public static final String TYPE_MAPPING = "index";
+    public static final String TYPE_MAPPING = "/index";
 
     @Autowired
     protected IEntityIndexerService entityIndexerService;
+
+    @Autowired
+    private IDatasourceIngesterService dataSourceIngesterService;
 
     /**
      * Current tenant resolver
@@ -51,7 +57,7 @@ public class IndexController {
      * @return void
      * @throws ModuleException
      */
-    @ResourceAccess(description = "Delete and recreate curent index.", role = DefaultRole.INSTANCE_ADMIN)
+    @ResourceAccess(description = "Delete and recreate curent index.")
     @RequestMapping(method = RequestMethod.DELETE)
     public ResponseEntity<Void> recreateIndex() throws ModuleException {
 
@@ -64,6 +70,12 @@ public class IndexController {
         entityIndexerService.updateAllDatasets(tenant);
         entityIndexerService.updateAllDocuments(tenant);
         entityIndexerService.updateAllCollections(tenant);
+
+        //3. Clear all datasources ingestion
+        List<DatasourceIngestion> datasources = dataSourceIngesterService.getDatasourceIngestions();
+        if ((datasources != null) && !datasources.isEmpty()) {
+            datasources.forEach(ds -> dataSourceIngesterService.deleteDatasourceIngestion(ds.getId()));
+        }
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
