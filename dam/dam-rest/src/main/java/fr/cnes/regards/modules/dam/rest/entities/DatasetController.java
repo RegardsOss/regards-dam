@@ -51,7 +51,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.Validity;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
@@ -189,7 +188,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IP_ID_PATH)
-    @ResourceAccess(description = "Retrieves a dataset", role = DefaultRole.INSTANCE_ADMIN)
+    @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Dataset> retrieveDataset(@PathVariable("dataset_ipId") final String datasetIpId)
             throws ModuleException {
         Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
