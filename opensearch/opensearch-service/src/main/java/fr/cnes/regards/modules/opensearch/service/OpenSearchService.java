@@ -20,9 +20,12 @@ package fr.cnes.regards.modules.opensearch.service;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,6 +53,7 @@ import fr.cnes.regards.modules.opensearch.service.parser.IParser;
 import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 import fr.cnes.regards.modules.search.schema.OpenSearchDescription;
 import fr.cnes.regards.modules.search.schema.UrlType;
+import fr.cnes.regards.modules.search.schema.parameters.OpenSearchParameter;
 
 /**
  * Parses generic OpenSearch requests like
@@ -61,6 +65,9 @@ import fr.cnes.regards.modules.search.schema.UrlType;
  */
 @Service
 public class OpenSearchService implements IOpenSearchService {
+
+    // Class logger
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchService.class);
 
     // Thread safe parsers holder
     private static ThreadLocal<List<IParser>> parsersHolder;
@@ -96,7 +103,7 @@ public class OpenSearchService implements IOpenSearchService {
                     .buildXml(target, new ApacheHttpClient(httpClient)).getDescriptor();
             if (descriptor.getStatusCode() == HttpStatus.OK) {
                 if (!descriptor.getBody().getUrl().isEmpty()) {
-                    return descriptor.getBody();
+                    return removeDuplicatedParameters(descriptor.getBody());
                 } else {
                     throw new ModuleException(
                             String.format("No valid opensearch descriptor found at %s.", url.toString()));
@@ -108,6 +115,23 @@ public class OpenSearchService implements IOpenSearchService {
         } catch (HttpClientErrorException | HttpServerErrorException | DecodeException e) {
             throw new ModuleException(e.getMessage(), e);
         }
+    }
+
+    private OpenSearchDescription removeDuplicatedParameters(OpenSearchDescription descriptor) {
+        descriptor.getUrl().forEach(url -> {
+            List<OpenSearchParameter> uniqParameters = Lists.newArrayList();
+            Iterator<OpenSearchParameter> it = url.getParameter().iterator();
+            while (it.hasNext()) {
+                OpenSearchParameter param = it.next();
+                if (uniqParameters.stream().filter(p -> p.getName().equals(param.getName())).findAny().isPresent()) {
+                    it.remove();
+                    LOGGER.warn("Removing duplicated attribute {} from opensearch descriptor", param.getName());
+                } else {
+                    uniqParameters.add(param);
+                }
+            }
+        });
+        return descriptor;
     }
 
     @Override
