@@ -365,6 +365,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         try {
             page = dsPlugin.findAll(tenant, pageable, date);
         } catch (Exception e) {
+            // Catch Exception in order to catch all exceptions from plugins. Plugins can be out of our scope.
             notificationClient.notify(e.getMessage(), "Datasource harvesting failure", NotificationLevel.ERROR,
                                       DefaultRole.ADMIN);
             LOGGER.error("Cannot retrieve data from datasource", e);

@@ -290,7 +290,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 : null;
         if (curentMetadata != null) {
             need = need || !curentMetadata.equals(newMetadata);
-        } else if (newDataset != null) {
+        } else {
             need = true;
         }
 
