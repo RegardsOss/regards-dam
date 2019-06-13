@@ -213,7 +213,7 @@ public final class AttributeBuilder {
             try {
                 converted.add(elt == null ? null : elementsConverter.apply(elt));
             } catch (IllegalArgumentException e) {
-                invalidValues.add(elt.toString());
+                invalidValues.add(elt == null ? null : elt.toString());
             }
         }
         // 3 - return converted array or throw exception
