@@ -51,7 +51,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
     private String parameterAttributeName;
 
     @PluginParameter(name = PARAMETER_FRAGMENT_NAME, label = "Parameter fragment name",
-            description = "Name of parameter attribute fragment. If parameter attribute belongs to default fragment, this value can be set to null.",
+            description = "Name of parameter attribute fragment. If parameter attribute belongs to default fragment, leave this field empty.",
             optional = true)
     private String parameterAttributeFragmentName;
 

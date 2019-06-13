@@ -52,7 +52,7 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
     private String parameterAttributeName;
 
     @PluginParameter(name = PARAMETER_FRAGMENT_NAME, label = "Parameter fragment name",
-            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
+            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, leave this field empty.",
             optional = true)
     private String parameterAttributeFragmentName;
 
