@@ -60,8 +60,6 @@ import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
 @Component
 public class DamConfigurationManager extends AbstractModuleManager<Void> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DamConfigurationManager.class);
-
     public static final String PLUGIN_CONFIGURATION_ALREADY_EXISTS = "A plugin configuration already exists with same label, skipping import of %s.";
 
     public static final String VALIDATION_ISSUES = "Skipping import of %s for these reasons: %s";
@@ -184,7 +182,7 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                 PluginConfiguration linked = pluginService.savePluginConfiguration(p.getPluginConfiguration());
                 p.setPluginConfiguration(linked);
             } catch (EntityInvalidException | EntityNotFoundException | EncryptionException e1) {
-                LOGGER.error("Error creating pluging parameter.", e1);
+                logger.error("Error creating pluging parameter.", e1);
             }
         }
     }
