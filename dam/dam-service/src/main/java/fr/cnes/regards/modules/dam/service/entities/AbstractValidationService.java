@@ -127,7 +127,7 @@ public abstract class AbstractValidationService<U extends AbstractEntity<?>> imp
                     errors.reject(messageKey, defaultMessage);
                     return;
                 }
-                logger.debug(String.format("Attribute \"%s\" not required in current context.", attPath));
+                logger.debug(String.format("Attribute \"%s\" is required in current context.", attPath));
                 return;
             }
 
