@@ -10,5 +10,6 @@ public enum IngestionStatus {
     FINISHED, // Last ingestion finished without error
     FINISHED_WITH_WARNINGS, // Last ingestion finished with warnings
     ERROR, // Last ingestion finished with errors
+    NOT_FINISHED, // Last ingestion has been partially done
     INACTIVE // ingestion is inactive
 }

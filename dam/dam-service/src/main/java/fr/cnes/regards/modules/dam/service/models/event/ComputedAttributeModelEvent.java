@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -26,6 +26,7 @@ import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
  * Event sent when a plugin configuration is updated on a computed attribute
  * @author oroussel
  */
+@SuppressWarnings("serial")
 public class ComputedAttributeModelEvent extends ApplicationEvent {
 
     public ComputedAttributeModelEvent(ModelAttrAssoc source) {

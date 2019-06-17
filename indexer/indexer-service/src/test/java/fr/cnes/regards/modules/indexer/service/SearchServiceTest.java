@@ -74,8 +74,6 @@ public class SearchServiceTest {
     public void setTup() throws TransformException {
         if (!repos.indexExists(tenant)) {
             repos.createIndex(tenant);
-            repos.setGeometryMapping(tenant, EntityType.DATA.toString());
-            repos.setAutomaticDoubleMapping(tenant, EntityType.DATA.toString());
 
             this.createPolygons();
             this.createTenthDegreesPoints();

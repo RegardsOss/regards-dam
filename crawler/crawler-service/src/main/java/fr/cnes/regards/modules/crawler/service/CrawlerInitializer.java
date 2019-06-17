@@ -18,10 +18,20 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 
 /**
  * Crawler initializer.
@@ -31,19 +41,51 @@ import org.springframework.stereotype.Component;
 @Component
 public class CrawlerInitializer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerInitializer.class);
+
     @Autowired
     private ICrawlerService datasetCrawlerService;
 
     @Autowired
     private ICrawlerAndIngesterService crawlerAndIngesterService;
 
+    @Autowired
+    private IEsRepository repository;
+
+    private static ExecutorService singlePool = Executors.newSingleThreadExecutor();
+
+    private AtomicBoolean elasticSearchUpgradeDone = new AtomicBoolean(false);
+
     @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event) {
+    public void onApplicationEvent(DamGsonReadyEvent event) {
+        LOGGER.info("Running dataset crawler .... ");
         datasetCrawlerService.crawl();
+        LOGGER.info("Dataset crawler started.");
     }
 
     @EventListener
-    public void onApplicationEvent2(ContextRefreshedEvent event) {
+    public void onApplicationEvent2(DamGsonReadyEvent event) {
+        LOGGER.info("Running standard crawler .... ");
         crawlerAndIngesterService.crawl();
+        LOGGER.info("Standard crawler started.");
     }
+
+    /**
+     * Upgrade Elasticsearch indices.
+     * This method garanties upgrade is done only one time
+     */
+    private void upgradeElasticsearchIndices() {
+        try {
+            singlePool.submit(() -> {
+                if (!elasticSearchUpgradeDone.getAndSet(true)) {
+                    repository.upgradeAllIndices4SingleType();
+                }
+                return null;
+            }).get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOGGER.error("Unable to upgrade Elasticsearch indices", e);
+            System.exit(0);
+        }
+    }
+
 }

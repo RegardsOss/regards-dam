@@ -18,14 +18,31 @@
  */
 package fr.cnes.regards.modules.opensearch.service;
 
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import com.google.common.collect.Lists;
 
+import feign.Target;
+import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
+import feign.httpclient.ApacheHttpClient;
+import fr.cnes.regards.framework.feign.FeignClientBuilder;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -34,6 +51,9 @@ import fr.cnes.regards.modules.opensearch.service.parser.FieldExistsParser;
 import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
 import fr.cnes.regards.modules.opensearch.service.parser.IParser;
 import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
+import fr.cnes.regards.modules.search.schema.OpenSearchDescription;
+import fr.cnes.regards.modules.search.schema.UrlType;
+import fr.cnes.regards.modules.search.schema.parameters.OpenSearchParameter;
 
 /**
  * Parses generic OpenSearch requests like
@@ -46,8 +66,14 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 @Service
 public class OpenSearchService implements IOpenSearchService {
 
+    // Class logger
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSearchService.class);
+
     // Thread safe parsers holder
     private static ThreadLocal<List<IParser>> parsersHolder;
+
+    @Autowired
+    private HttpClient httpClient;
 
     public OpenSearchService(IAttributeFinder finder) {
         OpenSearchService.parsersHolder = ThreadLocal
@@ -66,6 +92,52 @@ public class OpenSearchService implements IOpenSearchService {
             }
         }
         return criteria.isEmpty() ? ICriterion.all() : ICriterion.and(criteria);
+    }
+
+    @Override
+    public OpenSearchDescription readDescriptor(URL url) throws ModuleException {
+        Target<IOpensearchDescriptorClient> target = new HardCodedTarget<>(IOpensearchDescriptorClient.class,
+                url.toString());
+        try {
+            ResponseEntity<OpenSearchDescription> descriptor = FeignClientBuilder
+                    .buildXml(target, new ApacheHttpClient(httpClient)).getDescriptor();
+            if (descriptor.getStatusCode() == HttpStatus.OK) {
+                if (!descriptor.getBody().getUrl().isEmpty()) {
+                    return removeDuplicatedParameters(descriptor.getBody());
+                } else {
+                    throw new ModuleException(
+                            String.format("No valid opensearch descriptor found at %s.", url.toString()));
+                }
+            } else {
+                throw new ModuleException(
+                        String.format("Error retrieving opensearch descriptor at %s.", url.toString()));
+            }
+        } catch (HttpClientErrorException | HttpServerErrorException | DecodeException e) {
+            throw new ModuleException(e.getMessage(), e);
+        }
+    }
+
+    private OpenSearchDescription removeDuplicatedParameters(OpenSearchDescription descriptor) {
+        descriptor.getUrl().forEach(url -> {
+            List<OpenSearchParameter> uniqParameters = Lists.newArrayList();
+            Iterator<OpenSearchParameter> it = url.getParameter().iterator();
+            while (it.hasNext()) {
+                OpenSearchParameter param = it.next();
+                if (uniqParameters.stream().filter(p -> p.getName().equals(param.getName())).findAny().isPresent()) {
+                    it.remove();
+                    LOGGER.warn("Removing duplicated attribute {} from opensearch descriptor", param.getName());
+                } else {
+                    uniqParameters.add(param);
+                }
+            }
+        });
+        return descriptor;
+    }
+
+    @Override
+    public UrlType getSearchRequestURL(OpenSearchDescription descriptor, MediaType type) throws Exception {
+        return descriptor.getUrl().stream().filter(template -> type.toString().equals(template.getType())).findFirst()
+                .orElseThrow(() -> new Exception("No Template url matching"));
     }
 
 }

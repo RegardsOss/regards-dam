@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.dam.rest.entities.dto;
 
 import javax.validation.constraints.NotNull;
 
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -105,6 +105,8 @@ public class DataFileReference {
 
     /**
      * Transform DTO in data file
+     * @param dataType
+     * @return {@link DataFile}
      */
     public DataFile toDataFile(DataType dataType) {
         DataFile dataFile = DataFile.build(dataType, filename, uri, mimeType, Boolean.TRUE, Boolean.TRUE);

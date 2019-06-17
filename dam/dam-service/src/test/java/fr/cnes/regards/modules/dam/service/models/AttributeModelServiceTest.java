@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.dam.service.models;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,7 +62,7 @@ public class AttributeModelServiceTest {
     /**
      * Default attribute name
      */
-    private static final String ATT_NAME = "DEFAULT_NAME";
+    private static String ATT_NAME = "DEFAULT_NAME";
 
     /**
      * Attribute model service
@@ -117,31 +118,33 @@ public class AttributeModelServiceTest {
                 mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_060")
     @Purpose("Retrieve list of project attributes")
     public void getAttributesTest() {
-        final List<AttributeModel> expectedAttModels = new ArrayList<>();
+        List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST", AttributeType.STRING, "ForTests").get());
         expectedAttModels.add(AttributeModelBuilder.build("SECOND", AttributeType.BOOLEAN, "ForTests").get());
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     @Requirement("REGARDS_DSL_DAM_MOD_060")
     @Purpose("Retrieve list of project attributes by type")
     public void getAttributesByTypeTest() {
-        final List<AttributeModel> expectedAttModels = new ArrayList<>();
+        List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST_STRING", AttributeType.STRING, "ForTests").get());
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
         Assert.assertEquals(1, attModels.size());
     }
 
@@ -154,9 +157,9 @@ public class AttributeModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     @Purpose("Create an attribute and automatically bind it to default fragment (i.e. namespace)")
     public void addAttributeTest() throws ModuleException {
-        final String attName = "MISSION";
-        final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+        String attName = "MISSION";
+        AttributeType attType = AttributeType.STRING;
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
                 .withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
@@ -176,11 +179,11 @@ public class AttributeModelServiceTest {
     @Requirement("REGARDS_DSL_DAM_MOD_050")
     @Purpose("Manage a GEO fragment (i.e. consistent object)")
     public void addAttributeInFragmentTest() throws ModuleException {
-        final String attName = "COORDINATE";
-        final AttributeType attType = AttributeType.STRING;
-        final Fragment fragment = Fragment.buildFragment("GEO", "Coordinate + CRS");
+        String attName = "COORDINATE";
+        AttributeType attType = AttributeType.STRING;
+        Fragment fragment = Fragment.buildFragment("GEO", "Coordinate + CRS");
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
                 .fragment(fragment).withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
@@ -198,9 +201,9 @@ public class AttributeModelServiceTest {
      */
     @Test(expected = UnsupportedRestrictionException.class)
     public void addAttributeWithUnsupportedRestriction() throws ModuleException {
-        final String attName = "RESTRICTED";
-        final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+        String attName = "RESTRICTED";
+        AttributeType attType = AttributeType.STRING;
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
                 .withoutRestriction();
         // Bypass builder to set a bad restriction
         // CHECKSTYLE:OFF
@@ -220,9 +223,9 @@ public class AttributeModelServiceTest {
      */
     @Test(expected = EntityAlreadyExistsException.class)
     public void addConflictAttributeTest() throws ModuleException {
-        final String attName = "CONFLICT";
-        final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+        String attName = "CONFLICT";
+        AttributeType attType = AttributeType.STRING;
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
                 .withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
@@ -234,35 +237,35 @@ public class AttributeModelServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void getUnknownAttributeTest() throws ModuleException {
-        final Long attributeId = 1L;
+        Long attributeId = 1L;
 
-        Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.FALSE);
+        Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.FALSE);
         attributeModelService.getAttribute(attributeId);
     }
 
     @Test
     public void getAttributeTest() throws ModuleException {
-        final Long attributeId = 1L;
+        Long attributeId = 1L;
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder
+        AttributeModel expectedAttModel = AttributeModelBuilder
                 .build("EXISTING", AttributeType.DOUBLE, "ForTests").withoutRestriction();
-        Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.TRUE);
-        Mockito.when(mockAttModelR.findOne(attributeId)).thenReturn(expectedAttModel);
+        Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.TRUE);
+        Mockito.when(mockAttModelR.findById(attributeId)).thenReturn(Optional.of(expectedAttModel));
 
-        final AttributeModel attModel = attributeModelService.getAttribute(attributeId);
+        AttributeModel attModel = attributeModelService.getAttribute(attributeId);
         Assert.assertNotNull(attModel);
     }
 
     @Test(expected = EntityNotFoundException.class)
     public void updateNotIdentifiableAttributeTest() throws ModuleException {
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();
         attributeModelService.updateAttribute(1L, expectedAttModel);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateInconsistentAttributeTest() throws ModuleException {
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();
         expectedAttModel.setId(1L);
         attributeModelService.updateAttribute(2L, expectedAttModel);
@@ -271,15 +274,15 @@ public class AttributeModelServiceTest {
 
     @Test
     public void updateAttributeTest() throws ModuleException {
-        final Long attributeId = 1L;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
+        Long attributeId = 1L;
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();
         expectedAttModel.setId(attributeId);
 
-        Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.TRUE);
+        Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.TRUE);
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);
 
-        final AttributeModel attModel = attributeModelService.updateAttribute(attributeId, expectedAttModel);
+        AttributeModel attModel = attributeModelService.updateAttribute(attributeId, expectedAttModel);
         Assert.assertNotNull(attModel);
     }
 
@@ -289,17 +292,17 @@ public class AttributeModelServiceTest {
      */
     @Test
     public void deleteAttributeTest() throws ModuleException {
-        final Long attributeId = 1L;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
+        Long attributeId = 1L;
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();
         expectedAttModel.setId(attributeId);
 
-        Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.FALSE);
+        Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.FALSE);
 
         attributeModelService.deleteAttribute(attributeId);
 
-        Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.TRUE);
-        final IAttributeModelService spy = Mockito.spy(attributeModelService);
+        Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.TRUE);
+        IAttributeModelService spy = Mockito.spy(attributeModelService);
         Mockito.doNothing().when(spy).deleteAttribute(attributeId);
 
         attributeModelService.deleteAttribute(attributeId);
@@ -307,15 +310,15 @@ public class AttributeModelServiceTest {
 
     @Test
     public void isFragmentAttributeTest() throws ModuleException {
-        final Long attributeId = 1L;
-        final Fragment fragment = Fragment.buildFragment("CONTACT", "Name + Surname + Phone + ...");
+        Long attributeId = 1L;
+        Fragment fragment = Fragment.buildFragment("CONTACT", "Name + Surname + Phone + ...");
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build("PHONE", AttributeType.STRING, "ForTests")
+        AttributeModel expectedAttModel = AttributeModelBuilder.build("PHONE", AttributeType.STRING, "ForTests")
                 .fragment(fragment).withoutRestriction();
 
-        Mockito.when(mockAttModelR.findOne(attributeId)).thenReturn(expectedAttModel);
+        Mockito.when(mockAttModelR.findById(attributeId)).thenReturn(Optional.of(expectedAttModel));
 
-        final boolean is = attributeModelService.isFragmentAttribute(attributeId);
+        boolean is = attributeModelService.isFragmentAttribute(attributeId);
         Assert.assertTrue(is);
     }
 }

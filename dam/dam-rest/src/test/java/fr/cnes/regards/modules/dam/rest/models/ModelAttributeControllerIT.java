@@ -35,16 +35,16 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
 import org.springframework.restdocs.snippet.Attributes;
-import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
@@ -71,8 +71,9 @@ import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
  * Test {@link ModelAttrAssoc} API
  * @author Maxime Bouveron
  */
-@MultitenantTransactional
-public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=models_rest" })
+public class ModelAttributeControllerIT extends AbstractRegardsIT {
 
     /**
      * Logger
@@ -129,6 +130,9 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IPluginService pluginService;
 
+    @Autowired
+    protected IRuntimeTenantResolver runtimetenantResolver;
+
     public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
         String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
         ConstrainedFields constrainedFields = new ConstrainedFields(ModelAttrAssoc.class);
@@ -160,6 +164,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         datasetRepository.deleteAll();
         entityRepos.deleteAll();
         modelAttributeRepository.deleteAll();
@@ -193,25 +198,21 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
      * Generates a standard List of ResultMatchers
      * @param pAtt The AttributeModel
      * @param pMod The Model
-     * @return The List of ResultMatchers
      */
-    private List<ResultMatcher> defaultExpectations(AttributeModel pAtt, Model pMod) {
+    private void defaultExpectations(RequestBuilderCustomizer customizer, AttributeModel pAtt, Model pMod) {
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        customizer.expect(MockMvcResultMatchers.status().isOk());
 
         // Test attribute
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.attribute.id").value(pAtt.getId().intValue()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.attribute.name").value(pAtt.getName()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.attribute.type").value(pAtt.getType().toString()));
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.attribute.id").value(pAtt.getId().intValue()));
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.attribute.name").value(pAtt.getName()));
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.attribute.type").value(pAtt.getType().toString()));
 
         // Test Model
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.model.id").value(pMod.getId().intValue()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.model.name").value(pMod.getName()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.model.type").value(pMod.getType().toString()));
-
-        return expectations;
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.model.id").value(pMod.getId().intValue()));
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.model.name").value(pMod.getName()));
+        customizer.expect(MockMvcResultMatchers.jsonPath("$.content.model.type").value(pMod.getType().toString()));
     }
 
     /**
@@ -226,16 +227,15 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(att, mod);
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectations(defaultExpectations(att, mod));
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        defaultExpectations(requestBuilderCustomizer, att, mod);
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+        requestBuilderCustomizer.document(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer.document(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         // Perform request
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, modAtt,
@@ -256,36 +256,48 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         createModelAttribute(att2, mod);
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.id")
                 .value(att.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.name")
+                .value(att.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.type")
                 .value(att.getType().toString()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.type")
                 .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.id")
                 .value(att2.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.name")
+                .value(att2.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.type")
                 .value(att2.getType().toString()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.type")
                 .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
@@ -306,13 +318,12 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final ModelAttrAssoc modAtt = createModelAttribute(att, mod);
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectations(defaultExpectations(att, mod));
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        defaultExpectations(requestBuilderCustomizer, att, mod);
 
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+        requestBuilderCustomizer.document(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
                                 RequestDocumentation.parameterWithName("attributeId")
@@ -332,10 +343,10 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         PluginConfiguration confWithUnknownParameter = PluginUtils.getPluginConfiguration(params,
                                                                                           IntSumComputePlugin.class);
         pluginService.savePluginConfiguration(confWithUnknownParameter);
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
         requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));
+                .expect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.COMPUTATION_TYPE_MAPPING,
                           requestBuilderCustomizer, "Should return mappings possible for computed attribute");
     }
@@ -353,35 +364,34 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         List<ModelAttrAssoc> shouldBeData = shouldBe.stream()
                 .filter(item -> item.getModel().getType().equals(EntityType.DATA)).collect(Collectors.toList());
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$").isArray());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$").isArray());
         requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBeCollections.size())));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBeCollections), false));
+                .expect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBeCollections.size())));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.content().json(gson(shouldBeCollections), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
                 + EntityType.COLLECTION, requestBuilderCustomizer, "Should return model attribute association");
 
-        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$").isArray());
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBeData.size())));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBeData), false));
+        requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$").isArray());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBeData.size())));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.content().json(gson(shouldBeData), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
                 + EntityType.DATA, requestBuilderCustomizer, "Should return model attribute association");
 
-        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$").isArray());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBe.size())));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBe), false));
+        requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$").isArray());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBe.size())));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.content().json(gson(shouldBe), false));
 
         requestBuilderCustomizer
-                .addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
-                        .parameterWithName("type").description("Model type for which we want the associations")
+                .document(RequestDocumentation.requestParameters(RequestDocumentation.parameterWithName("type")
+                        .description("Model type for which we want the associations")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE),
                                     Attributes.key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
                                             .value("Available values: " + Arrays.stream(EntityType.values())
@@ -425,14 +435,13 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         modAtt.setAttribute(newAtt);
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectations(defaultExpectations(newAtt, mod));
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        defaultExpectations(requestBuilderCustomizer, newAtt, mod);
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(false, "")));
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+        requestBuilderCustomizer.document(PayloadDocumentation.requestFields(documentBody(false, "")));
+        requestBuilderCustomizer.document(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
                                 RequestDocumentation.parameterWithName("attributeId")
@@ -455,10 +464,10 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final AttributeModel att = createAttribute(name);
         final ModelAttrAssoc modAtt = createModelAttribute(att, mod);
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isNoContent());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
                                 RequestDocumentation.parameterWithName("attributeId")
@@ -488,39 +497,51 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         attributeModelService.addAttribute(att, false);
         attributeModelService.addAttribute(att2, false);
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.id")
                 .value(att.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.name")
+                .value(att.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.attribute.type")
                 .value(att.getType().toString()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[0]content.model.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att.getName() + "\')].content.model.type")
                 .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.id")
                 .value(att2.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.name")
+                .value(att2.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.attribute.type")
                 .value(att2.getType().toString()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$.[1]content.model.type")
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.id")
+                .value(mod.getId().intValue()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.name")
+                .value(mod.getName()));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers
+                .jsonPath("$.[?(@.content.attribute.name == \'" + att2.getName() + "\')].content.model.type")
                 .value(mod.getType().toString()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation
-                .requestFields(FragmentControllerIT.documentBody(false, "")));
+        requestBuilderCustomizer
+                .document(PayloadDocumentation.requestFields(FragmentControllerIT.documentBody(false, "")));
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE))));
 
@@ -552,10 +573,10 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
         modelAttributeService.getModelAttrAssocs(name);
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isNoContent());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("modelName").description("Model name")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value(JSON_STRING_TYPE)),
                                 RequestDocumentation.parameterWithName("fragmentId").description("Fragment identifier")

@@ -18,11 +18,22 @@
  */
 package fr.cnes.regards.modules.opensearch.service;
 
+import java.net.URL;
+
+import org.springframework.http.MediaType;
+
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.opensearch.service.parser.IParser;
+import fr.cnes.regards.modules.search.schema.OpenSearchDescription;
+import fr.cnes.regards.modules.search.schema.UrlType;
 
 /**
  * @author Xavier-Alexandre Brochard
  */
 public interface IOpenSearchService extends IParser {
+
+    OpenSearchDescription readDescriptor(URL url) throws ModuleException;
+
+    UrlType getSearchRequestURL(OpenSearchDescription descriptor, MediaType type) throws Exception;
 
 }

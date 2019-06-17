@@ -1,7 +1,6 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
 
 /**
@@ -9,6 +8,8 @@ import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEv
  */
 public interface IDatasetCrawlerService extends ICrawlerService {
     void onApplicationReadyEvent(ApplicationReadyEvent event);
+
+    void onApplicationReadyEvent(DamGsonReadyEvent event);
 
     void onComputedAttributeModelEvent(ComputedAttributeModelEvent event);
 }

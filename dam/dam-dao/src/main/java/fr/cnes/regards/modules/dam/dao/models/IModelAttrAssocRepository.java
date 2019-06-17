@@ -20,12 +20,12 @@ package fr.cnes.regards.modules.dam.dao.models;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
@@ -39,9 +39,19 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     List<ModelAttrAssoc> findByModelId(Long pModelId);
 
+    @EntityGraph(attributePaths = { "attribute.properties" })
     List<ModelAttrAssoc> findByModelName(String modelName);
 
+    @EntityGraph(attributePaths = { "attribute.properties" })
     ModelAttrAssoc findByModelIdAndAttribute(Long pModelId, AttributeModel pAttributeModel);
+
+    @Override
+    @EntityGraph(attributePaths = { "attribute.properties" })
+    List<ModelAttrAssoc> findAll();
+
+    @Override
+    @EntityGraph(attributePaths = { "attribute.properties" })
+    Optional<ModelAttrAssoc> findById(Long id);
 
     /**
      * Find page attribute which are associated to at least one of the models
@@ -49,14 +59,15 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
      * @param pPageable
      * @return a page of attribute which are associated to at least one of the models
      */
-    @Query("SELECT assoc.attribute FROM ModelAttrAssoc assoc WHERE assoc.model.id IN :modelIds")
-    Page<AttributeModel> findAllAttributeByModelIdIn(@Param("modelIds") Collection<Long> pModelIds, Pageable pPageable);
+    @EntityGraph(attributePaths = { "attribute.properties" })
+    Page<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelIds, Pageable pPageable);
 
     /**
      * Find all the model attribute association which model is one of the given, represented by their ids
      * @param pModelsIds
      * @return the model attribute assocations
      */
+    @EntityGraph(attributePaths = { "attribute.properties" })
     Collection<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelsIds);
 
     /**
@@ -64,5 +75,6 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
      * @param attrId
      * @return the model attribute associations
      */
+    @EntityGraph(attributePaths = { "attribute.properties" })
     Collection<ModelAttrAssoc> findAllByAttributeId(Long attrId);
 }

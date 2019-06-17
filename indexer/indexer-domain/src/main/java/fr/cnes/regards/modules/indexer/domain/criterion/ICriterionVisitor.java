@@ -35,6 +35,8 @@ public interface ICriterionVisitor<T> {
 
     T visitStringMatchCriterion(StringMatchCriterion criterion);
 
+    T visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion);
+
     T visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion);
 
     T visitIntMatchCriterion(IntMatchCriterion criterion);

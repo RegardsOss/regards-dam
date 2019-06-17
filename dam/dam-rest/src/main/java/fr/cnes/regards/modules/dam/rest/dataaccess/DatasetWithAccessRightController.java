@@ -69,10 +69,12 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
 
     /**
      * Retrieve datasets with access rights
+     * @param accessGroupName
      * @param label String for label filter
      * @param pageRequest the page request
      * @param assembler the dataset resources assembler
      * @return the page of dataset wrapped in an HTTP response
+     * @throws ModuleException
      */
     @RequestMapping(value = GROUP_PATH, method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")

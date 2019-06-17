@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
  * @author Christophe Mertz
  */
 @Plugin(id = "FakeDataSourcePlugin", version = "2.0-SNAPSHOT", description = "FakeDataSourcePlugin",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class FakeDataSourcePlugin implements IDataSourcePlugin {
 

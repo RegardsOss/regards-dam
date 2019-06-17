@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dam.service.entities;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,7 +31,6 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
@@ -39,8 +39,6 @@ import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.entities.CollectionService;
-import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 
@@ -61,8 +59,6 @@ public class CollectionServiceTest {
     private Collection collection3;
 
     private Collection collection4;
-
-    private UniformResourceName collection2URN;
 
     private ICollectionRepository collectionRepositoryMocked;
 
@@ -96,18 +92,18 @@ public class CollectionServiceTest {
 
         // create a mock repository
         collectionRepositoryMocked = Mockito.mock(ICollectionRepository.class);
-        Mockito.when(collectionRepositoryMocked.findOne(collection1.getId())).thenReturn(collection1);
-        Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
-        Mockito.when(collectionRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
+        Mockito.when(collectionRepositoryMocked.findById(collection1.getId())).thenReturn(Optional.of(collection1));
+        Mockito.when(collectionRepositoryMocked.findById(collection2.getId())).thenReturn(Optional.of(collection2));
+        Mockito.when(collectionRepositoryMocked.findById(collection3.getId())).thenReturn(Optional.of(collection3));
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
         Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection1.getId())).thenReturn((AbstractEntity) collection1);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection2.getId())).thenReturn((AbstractEntity) collection2);
-        Mockito.when(entitiesRepositoryMocked.findOne(collection3.getId())).thenReturn((AbstractEntity) collection3);
+        Mockito.when(entitiesRepositoryMocked.findById(collection1.getId())).thenReturn(Optional.of(collection1));
+        Mockito.when(entitiesRepositoryMocked.findById(collection2.getId())).thenReturn(Optional.of(collection2));
+        Mockito.when(entitiesRepositoryMocked.findById(collection3.getId())).thenReturn(Optional.of(collection3));
 
         IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);

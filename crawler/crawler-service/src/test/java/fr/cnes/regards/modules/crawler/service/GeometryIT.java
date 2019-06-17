@@ -2,7 +2,6 @@ package fr.cnes.regards.modules.crawler.service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -92,17 +91,9 @@ public class GeometryIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
-            try {
-                esRepos.deleteAll(TENANT);
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        } else {
-            esRepos.createIndex(TENANT);
+            esRepos.deleteIndex(TENANT);
         }
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
-
+        esRepos.createIndex(TENANT);
         crawlerService.setConsumeOnlyMode(true);
     }
 
@@ -120,10 +111,10 @@ public class GeometryIT {
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
         if (collection != null) {
-            Utils.execute(entityRepos::delete, collection.getId());
+            Utils.execute(entityRepos::deleteById, collection.getId());
         }
         if (collection2 != null) {
-            Utils.execute(entityRepos::delete, collection2.getId());
+            Utils.execute(entityRepos::deleteById, collection2.getId());
         }
         if (collectionModel != null) {
             Utils.execute(modelService::deleteModel, collectionModel.getName());

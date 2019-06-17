@@ -103,6 +103,7 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
     /**
      * Get the ICriterion tree containing DATA_SOURCE_ID restriction ie different from saved subsetting clause and
      * opensearch one which are user-friendly (do not contain views of intern structure)
+     * @return  {@link ICriterion}
      */
     public ICriterion getSubsettingClause() {
         ICriterion subsettingCrit = subsettingClause;

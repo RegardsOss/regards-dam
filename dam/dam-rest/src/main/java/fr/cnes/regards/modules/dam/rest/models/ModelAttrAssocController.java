@@ -158,8 +158,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "List all model attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName)
-            throws ModuleException {
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName) {
         return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(modelName), modelName));
     }
 
@@ -209,8 +208,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @ResourceAccess(description = "Update a model attribute")
     @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
-            @PathVariable Long attributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute)
-            throws ModuleException {
+            @PathVariable Long attributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
         return ResponseEntity
                 .ok(toResource(modelAttrAssocService.updateModelAttribute(modelName, attributeId, pModelAttribute),
                                modelName));
@@ -228,8 +226,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Unbind an attribute from a model")
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/{attributeId}")
-    public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable String modelName,
-            @PathVariable Long attributeId) throws ModuleException {
+    public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable String modelName, @PathVariable Long attributeId)
+            throws ModuleException {
         modelAttrAssocService.unbindAttributeFromModel(modelName, attributeId);
         return ResponseEntity.noContent().build();
     }

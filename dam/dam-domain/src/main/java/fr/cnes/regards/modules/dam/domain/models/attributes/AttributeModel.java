@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import fr.cnes.regards.framework.gson.utils.GSONConstants;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -273,6 +273,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     /**
      * Set the label
+     * @param label
      */
     public void setLabel(String label) {
         this.label = label;
@@ -478,7 +479,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     /**
      * Retrieve full feature attribute json path
-     * @return
+     * @return json path
      */
     public String getFullJsonPath() {
         if (isInternal()) {
@@ -493,7 +494,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Construct a json path for the current attribute depending on given prefix namespace
      * @param namespace
-     * @return
+     * @return json path
      */
     public String getJsonPathForNamespace(String namespace) {
         StringBuilder builder = new StringBuilder(namespace);
@@ -529,12 +530,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     /**
      * Does the current attribute type is {@link AttributeType#STRING} or {@link AttributeType#STRING_ARRAY} ?
-     * @return {@link boolean}
+     * @return {@link Boolean}
      */
     public boolean isTextAttribute() {
         switch (this.type) {
             case STRING:
             case STRING_ARRAY:
+            case URL:
                 return true;
             case BOOLEAN:
             case DATE_ARRAY:

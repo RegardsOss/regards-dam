@@ -43,8 +43,6 @@ import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
-import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
-import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 

@@ -54,6 +54,7 @@ public interface IEntitiesService {
      * Retrieve and instanciate the plugins needed to compute all the computed attributes of an entity. We may not be
      * able to compute the attributes here because of pagination of {@link DataObject} cf. CrawlerService, that's why we
      * are just instanciating the plugins.
+     * @param <T> {@link IComputedAttribute}
      *
      * @param pEntity entity we are interrested to get computation plugins
      * @return instanciated plugins so computation can be executed

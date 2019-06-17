@@ -49,14 +49,10 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>crawler</artifactId>
-		<version>3.0.0-RELEASE</version>
+		<version>0.4.0</version>
 	</parent>
 
 	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-domain</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-dao</artifactId>
@@ -78,14 +74,6 @@
 			<artifactId>plugins-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-dao</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.notification</groupId>
 			<artifactId>notification-client</artifactId>
 		</dependency>
@@ -94,33 +82,11 @@
 			<artifactId>storage-domain</artifactId>
 		</dependency>
 
-		<!-- TODO : slf4j -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<!-- <version>2.7</version> -->
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<!-- <version>2.7</version> -->
-		</dependency>
-
 
 		<!-- Test dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

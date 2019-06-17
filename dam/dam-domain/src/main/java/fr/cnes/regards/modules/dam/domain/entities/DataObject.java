@@ -119,6 +119,10 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
 
     /**
      * Wrap a {@link DataObjectFeature} into a {@link DataObject} decorator
+     * @param model  {@link Model}
+     * @param feature {@link DataObjectFeature}
+     * @param internal
+     * @return {@link DataObject}
      */
     public static DataObject wrap(Model model, DataObjectFeature feature, Boolean internal) {
         Assert.notNull(model, "Model is required");

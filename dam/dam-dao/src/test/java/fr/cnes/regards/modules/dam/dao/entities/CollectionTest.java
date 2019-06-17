@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,8 +31,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.dao.entities.EntitySpecifications;
-import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.models.Model;
@@ -59,8 +58,9 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         Collection coll = new Collection(model1, "PROJECT", "coll", "coll");
         coll.setProviderId("IpID");
         Collection collection1 = collectionRepository.save(coll);
-        Collection collection2 = collectionRepository.findOne(collection1.getId());
-        Assert.assertEquals(collection1, collection2);
+        Optional<Collection> collection2Opt = collectionRepository.findById(collection1.getId());
+        Assert.assertTrue(collection2Opt.isPresent());
+        Assert.assertEquals(collection1, collection2Opt.get());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         coll.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         cols.add(coll);
 
-        collectionRepository.save(cols);
+        collectionRepository.saveAll(cols);
 
         // Search
         EntitySpecifications<Collection> specs = new EntitySpecifications<>();

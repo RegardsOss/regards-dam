@@ -19,11 +19,16 @@
 package fr.cnes.regards.modules.dam.dao.entities;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.LockModeType;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -37,6 +42,7 @@ import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
  * Common requests on entities
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
+ * @param <T> {@link AbstractEntity}
  */
 public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
         extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
@@ -46,8 +52,10 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      * @param pId id of entity
      * @return entity
      */
-    @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    T findById(Long pId);
+    @Override
+    //@EntityGraph(attributePaths = { "tags", "groups", "model" })
+    @EntityGraph(value = "graph.full.abstract.entity", type = EntityGraphType.LOAD)
+    Optional<T> findById(Long pId);
 
     /**
      * Find all entities of which ipId belongs to given set (eagerly loading all relations)
@@ -87,6 +95,14 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Set<T> findAllByModelIdIn(Set<Long> modelIds);
+
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Page<T> findAll(Specification<T> spec, Pageable pageRequest);
+
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Page<T> findAll(Pageable pageRequest);
 
     /**
      * Check if at least one model is already linked to at least one entity

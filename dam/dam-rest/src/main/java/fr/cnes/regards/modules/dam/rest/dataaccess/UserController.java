@@ -18,8 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.rest.dataaccess;
 
-import javax.validation.Valid;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -78,6 +79,9 @@ public class UserController implements IResourceController<AccessGroup> {
 
     /**
      * Retrieve page of a user, represented by its email, access groups
+     * @param userEmail
+     * @param pageable
+     * @param pAssembler
      * @return page of a user access groups
      */
     @RequestMapping(method = RequestMethod.GET)
@@ -93,6 +97,10 @@ public class UserController implements IResourceController<AccessGroup> {
 
     /**
      * Set a user, represented by its email, access groups
+     * @param userEmail
+     * @param newAccessGroups
+     * @return {@link Void}
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
@@ -105,6 +113,10 @@ public class UserController implements IResourceController<AccessGroup> {
 
     /**
      * Dissociate an access group, represented by its name, to a user, represented by its email
+     * @param userEmail
+     * @param accessGroupNameToBeAdded
+     * @return  {@link Void}
+     * @throws EntityNotFoundException
      */
 
     @RequestMapping(method = RequestMethod.PUT, value = GROUP_NAME_PATH)
@@ -118,6 +130,10 @@ public class UserController implements IResourceController<AccessGroup> {
 
     /**
      * Dissociate an access group, represented by its name, from a user, represented by its email
+     * @param userEmail
+     * @param accessGroupNameToBeAdded
+     * @return {@link Void}
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = GROUP_NAME_PATH)
     @ResponseBody

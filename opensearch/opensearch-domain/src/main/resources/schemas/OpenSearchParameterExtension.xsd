@@ -55,6 +55,8 @@
 		<xs:sequence>
 			<xs:element name="Option" type="OpenSearchParameterOption"
 				minOccurs="0" maxOccurs="unbounded" />
+			<xs:element name="Options" type="OpenSearchParameterOption"
+				minOccurs="0" maxOccurs="unbounded" />
 		</xs:sequence>
 		<xs:attribute name="name" use="required">
 			<xs:annotation>

@@ -18,7 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.rest.datasources;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -41,8 +43,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
+import fr.cnes.regards.modules.dam.rest.datasources.dto.DataSourceDTO;
 import fr.cnes.regards.modules.dam.rest.datasources.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 
 /**
  * REST interface for Datasources plugin configuration ie only {@link IDataSourcePlugin} are concerned
@@ -51,7 +55,7 @@ import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
  */
 @RestController
 @RequestMapping(DataSourceController.TYPE_MAPPING)
-public class DataSourceController implements IResourceController<PluginConfiguration> {
+public class DataSourceController implements IResourceController<DataSourceDTO> {
 
     /**
      * Type mapping
@@ -63,6 +67,9 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @Autowired
     private IDataSourceService dataSourceService;
+
+    @Autowired
+    private IDatasetService datasetService;
 
     /**
      * Resource service
@@ -76,7 +83,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "List all plugin configurations of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<PluginConfiguration>>> getAllDataSources() {
+    public ResponseEntity<List<Resource<DataSourceDTO>>> getAllDataSources() {
         return ResponseEntity.ok(toResources(dataSourceService.getAllDataSources()));
     }
 
@@ -89,8 +96,8 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Create a DataSource")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<PluginConfiguration>> createDataSource(
-            @Valid @RequestBody PluginConfiguration datasource) throws ModuleException {
+    public ResponseEntity<Resource<DataSourceDTO>> createDataSource(@Valid @RequestBody PluginConfiguration datasource)
+            throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.createDataSource(datasource)));
     }
 
@@ -102,7 +109,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> getDataSource(@PathVariable Long pluginConfId)
+    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable Long pluginConfId)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pluginConfId)));
     }
@@ -116,7 +123,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> updateDataSource(@PathVariable Long pluginConfId,
+    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(@PathVariable Long pluginConfId,
             @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
         if (!pluginConfId.equals(dataSource.getId())) {
             throw new EntityInconsistentIdentifierException(pluginConfId, dataSource.getId(),
@@ -129,6 +136,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
      * @param pluginConfId {@link PluginConfiguration} identifier
      * @return nothing
+     * @throws AssociatedDatasetExistsException
      * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
@@ -151,13 +159,24 @@ public class DataSourceController implements IResourceController<PluginConfigura
         return ResponseEntity.noContent().build();
     }
 
+    private List<Resource<DataSourceDTO>> toResources(Collection<PluginConfiguration> confs) {
+        return confs.stream().map(conf -> toResource(conf)).collect(Collectors.toList());
+    }
+
+    private Resource<DataSourceDTO> toResource(PluginConfiguration conf, Object... pExtras) {
+        DataSourceDTO dto = new DataSourceDTO(datasetService.countByDataSource(conf.getId()), conf);
+        return toResource(dto, pExtras);
+    }
+
     @Override
-    public Resource<PluginConfiguration> toResource(PluginConfiguration conf, Object... pExtras) {
-        Resource<PluginConfiguration> resource = resourceService.toResource(conf);
+    public Resource<DataSourceDTO> toResource(DataSourceDTO conf, Object... pExtras) {
+        Resource<DataSourceDTO> resource = resourceService.toResource(conf);
         resourceService.addLink(resource, this.getClass(), "getDataSource", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, conf.getId()));
-        resourceService.addLink(resource, this.getClass(), "deleteDataSource", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, conf.getId()));
+        if (conf.getAssociatedDatasets() == 0) {
+            resourceService.addLink(resource, this.getClass(), "deleteDataSource", LinkRels.DELETE,
+                                    MethodParamFactory.build(Long.class, conf.getId()));
+        }
         resourceService.addLink(resource, this.getClass(), "updateDataSource", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, conf.getId()),
                                 MethodParamFactory.build(PluginConfiguration.class));

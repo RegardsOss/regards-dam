@@ -19,10 +19,13 @@
 package fr.cnes.regards.modules.opensearch.service.cache.attributemodel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -48,7 +54,7 @@ import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
- * Implement {@link IAttributeFinder} using {@link AttributeModelCache} properly through proxyfied cacheable class.
+ * Implement {@link IAttributeFinder}.
  * @author Marc Sordi
  *
  */
@@ -71,6 +77,11 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      * Allows intelligent guess of attribute from a partial or complete JSON path preventing potential conflicts!<br/>
      */
     private final Map<String, Map<String, AttributeModel>> propertyMap = new HashMap<>();
+
+    /**
+     * Store dynamic and static properties by tenant and type for full text search
+     */
+    private final Map<String, Multimap<AttributeType, AttributeModel>> typedPropertyMap = new HashMap<>();
 
     public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {
@@ -95,18 +106,31 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     }
 
     @Override
+    public Set<AttributeModel> findByType(AttributeType type) throws OpenSearchUnknownParameter {
+
+        Collection<AttributeModel> ppties = getTenantTypedMap().get(type);
+        if (ppties == null) {
+            String errorMessage = String.format("No parameter found with type %s for tenant %s", type,
+                                                runtimeTenantResolver.getTenant());
+            LOGGER.error(errorMessage);
+            throw new OpenSearchUnknownParameter(errorMessage);
+        }
+        return new HashSet<>(ppties);
+    }
+
+    @Override
     public String findName(AttributeModel attribute) {
         // Check dynamic properties
         String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
-        if (!attribute.isDynamic() && (attribute.getId() != null)) {
+        if (!attribute.isDynamic() && attribute.getId() != null) {
             return name;
         }
 
         for (Entry<String, AttributeModel> entry : getTenantMap().entrySet()) {
             AttributeModel att = entry.getValue();
-            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
+            if (att.isDynamic() && att.getId() != null && att.getId().equals(attribute.getId())) {
                 if (entry.getKey().length() < name.length()) {
                     name = entry.getKey();
                 }
@@ -128,10 +152,19 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         return propertyMap.get(tenant);
     }
 
+    private Multimap<AttributeType, AttributeModel> getTenantTypedMap() {
+        String tenant = runtimeTenantResolver.getTenant();
+        if (!typedPropertyMap.containsKey(tenant)) {
+            computePropertyMap(tenant);
+        }
+        return typedPropertyMap.get(tenant);
+    }
+
     /**
      * Initialize queryable static properties
      */
-    private final void initStaticProperties(Map<String, AttributeModel> tenantMap) {
+    private void initStaticProperties(Map<String, AttributeModel> tenantMap,
+            Multimap<AttributeType, AttributeModel> tenantTypeMap) {
 
         // Unique identifier
         tenantMap.put(StaticProperties.FEATURE_ID, AttributeModelBuilder
@@ -161,13 +194,14 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         tenantMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
                 .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.LONG, null).isInternal().get());
 
+        // Register static properties by types
+        tenantMap.values().forEach(attModel -> tenantTypeMap.put(attModel.getType(), attModel));
     }
 
     /**
      * Use the feign client to retrieve all attribute models.<br>
      * The method is private because it is not expected to be used directly, but via its cached facade
      * "getAttributeModels" method.
-     * @return the list of user's access groups
      */
     protected void computePropertyMap(String tenant) {
 
@@ -181,18 +215,25 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
             attModels = HateoasUtils.unwrapCollection(response.getBody());
         }
 
-        // Build or rebuild the map
+        // Build or rebuild the maps
         Map<String, AttributeModel> tenantMap = new HashMap<>();
+        Multimap<AttributeType, AttributeModel> tenantTypeMap = ArrayListMultimap.create();
+
         // Add static properties
-        initStaticProperties(tenantMap);
-        // Reference tenant map (override current if any)
+        initStaticProperties(tenantMap, tenantTypeMap);
+
+        // Reference tenant maps (override maybe)
         propertyMap.put(tenant, tenantMap);
+        typedPropertyMap.put(tenant, tenantTypeMap);
 
         // Conflictual dynamic keys to be removed
         List<String> conflictualKeys = new ArrayList<>();
 
         // Build intelligent map preventing conflicts
         for (AttributeModel attModel : attModels) {
+
+            // Register properties by types
+            tenantTypeMap.put(attModel.getType(), attModel);
 
             // - Add mapping between short property name and attribute if no conflict detected
             String key = attModel.getName();

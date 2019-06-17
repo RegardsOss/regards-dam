@@ -21,28 +21,33 @@ package fr.cnes.regards.modules.dam.gson.entities;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
 
 /**
- * Entity adapter factory
+ * IIndexable document adapter factory
  * @author Marc Sordi
  */
 @SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactory
-public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractEntity> {
+public class IndexableAdapterFactory extends PolymorphicTypeAdapterFactory<IIndexable> {
 
     /**
      * Constructor
+     * <b>Note: type needs to be injected</b>
      */
-    public EntityAdapterFactory() {
-        super(AbstractEntity.class, "entityType", true);
+    public IndexableAdapterFactory() {
+        super(IIndexable.class, "type", true);
+        // AbstractEntities
         registerSubtype(Collection.class, EntityType.COLLECTION);
         registerSubtype(Dataset.class, EntityType.DATASET);
         registerSubtype(Document.class, EntityType.DOCUMENT);
         registerSubtype(DataObject.class, EntityType.DATA, true);
+        // Reminder
+        registerSubtype(SearchAfterReminder.class, SearchAfterReminder.TYPE);
     }
 }

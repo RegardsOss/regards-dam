@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.dam.rest.models;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -33,7 +32,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -45,7 +43,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.dam.rest.models.ModelController;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
 /**
@@ -76,9 +73,6 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttrAssocService modelAttributeService;
 
-    @Autowired
-    private IPluginService pluginService;
-
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -88,13 +82,9 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         importModel(pFilename, MockMvcResultMatchers.status().isCreated());
     }
 
-    private void importModel(String pFilename, ResultMatcher pMatcher) {
-        final Path filePath = Paths.get("src", "test", "resources", pFilename);
-
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(pMatcher);
-
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+    private void importModel(String filename, ResultMatcher matcher) {
+        Path filePath = Paths.get("src", "test", "resources", filename);
+        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, customizer().expect(matcher),
                                  "Should be able to import a model");
     }
 

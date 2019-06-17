@@ -18,14 +18,14 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.EntityManager;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,7 +50,6 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
-import fr.cnes.regards.modules.dam.service.entities.DatasetService;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
@@ -142,15 +141,15 @@ public class DatasetServiceTest {
         dataSet2.addTags(dataSet1.getIpId().toString());
 
         // create a mock repository
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
+        Mockito.when(dataSetRepositoryMocked.findById(dataSet1.getId())).thenReturn(Optional.of(dataSet1));
+        Mockito.when(dataSetRepositoryMocked.findById(dataSet2.getId())).thenReturn(Optional.of(dataSet2));
 
         List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(dataSet1);
         Mockito.when(entitiesRepositoryMocked.findByTags(dataSet2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn((AbstractEntity) dataSet1);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet2.getId())).thenReturn((AbstractEntity) dataSet2);
+        Mockito.when(entitiesRepositoryMocked.findById(dataSet1.getId())).thenReturn(Optional.of(dataSet1));
+        Mockito.when(entitiesRepositoryMocked.findById(dataSet2.getId())).thenReturn(Optional.of(dataSet2));
 
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 
@@ -162,12 +161,12 @@ public class DatasetServiceTest {
     }
 
     /**
-     * @param pImportModel
+     * @param modelAttrAssocs
      */
-    private void setModelInPlace(List<ModelAttrAssoc> pImportModel) {
-        modelOfObjects = pImportModel.get(0).getModel();
+    private void setModelInPlace(List<ModelAttrAssoc> modelAttrAssocs) {
+        modelOfObjects = modelAttrAssocs.get(0).getModel();
         modelOfObjects.setId(3L);
-        ModelAttrAssoc attStringModelAtt = pImportModel.stream()
+        ModelAttrAssoc attStringModelAtt = modelAttrAssocs.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_string"))
                 .findAny().get();
@@ -176,7 +175,7 @@ public class DatasetServiceTest {
         Mockito.when(pAttributeModelService.findByNameAndFragmentName(attString.getName(), null)).thenReturn(attString);
         Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), attString))
                 .thenReturn(attStringModelAtt);
-        ModelAttrAssoc attBooleanModelAtt = pImportModel.stream()
+        ModelAttrAssoc attBooleanModelAtt = modelAttrAssocs.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_boolean"))
                 .findAny().get();
@@ -186,7 +185,7 @@ public class DatasetServiceTest {
                 .thenReturn(attBoolean);
         Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), attBoolean))
                 .thenReturn(attBooleanModelAtt);
-        ModelAttrAssoc CRS_CRSModelAtt = pImportModel.stream()
+        ModelAttrAssoc CRS_CRSModelAtt = modelAttrAssocs.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
                         && ma.getAttribute().getName().equals("CRS"))
                 .findAny().get();
@@ -196,7 +195,7 @@ public class DatasetServiceTest {
                 .findByNameAndFragmentName(GEO_CRS.getName(), GEO_CRS.getFragment().getName())).thenReturn(GEO_CRS);
         Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), GEO_CRS))
                 .thenReturn(CRS_CRSModelAtt);
-        ModelAttrAssoc Contact_PhoneModelAtt = pImportModel.stream()
+        ModelAttrAssoc Contact_PhoneModelAtt = modelAttrAssocs.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("Contact")
                         && ma.getAttribute().getName().equals("Phone"))
                 .findAny().get();

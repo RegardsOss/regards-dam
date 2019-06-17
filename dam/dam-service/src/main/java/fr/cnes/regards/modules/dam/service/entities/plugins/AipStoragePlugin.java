@@ -57,7 +57,7 @@ import fr.cnes.regards.modules.storage.domain.RejectedAip;
  * @author Christophe Mertz
  */
 @Plugin(description = "This plugin allows to POST AIP entities to storage unit", id = "AipStoragePlugin",
-        version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class AipStoragePlugin implements IStorageService {
 
@@ -115,6 +115,7 @@ public class AipStoragePlugin implements IStorageService {
         return toPersist;
     }
 
+    @SuppressWarnings("serial")
     @Override
     public <T extends AbstractEntity<?>> T updateAIP(T toUpdate) {
         ResponseEntity<Void> response;
@@ -187,7 +188,7 @@ public class AipStoragePlugin implements IStorageService {
         // Add dynamic properties
         if ((entity.getProperties() != null) && (entity.getProperties().size() > 0)) {
             entity.getProperties().stream().forEach(property -> {
-                builder.addDescriptiveInformation(property.getName(), gson.toJson(property.getValue()));
+                builder.addDescriptiveInformation(property.getName(), property.getValue());
             });
         }
 

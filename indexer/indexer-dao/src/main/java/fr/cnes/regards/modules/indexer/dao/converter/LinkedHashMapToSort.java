@@ -46,7 +46,7 @@ public class LinkedHashMapToSort implements Converter<LinkedHashMap<String, Bool
                 .add(new Order(ascendance ? Direction.ASC : Direction.DESC, property));
 
         sortMap.forEach(addNewOrder);
-        return new Sort(orders);
+        return Sort.by(orders);
     }
 
 }

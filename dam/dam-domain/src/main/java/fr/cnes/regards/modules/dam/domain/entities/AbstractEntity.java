@@ -18,6 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -26,6 +32,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,16 +42,13 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -53,6 +57,7 @@ import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -81,6 +86,8 @@ import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
 @Entity
 @Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") },
         uniqueConstraints = @UniqueConstraint(name = "uk_entity_ipId", columnNames = { "ipId" }))
+@NamedEntityGraph(name = "graph.full.abstract.entity",
+        attributeNodes = { @NamedAttributeNode(value = "tags"), @NamedAttributeNode(value = "groups") })
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity<F extends EntityFeature> implements IIndexable, IDocFiles, ILocalizable {
@@ -138,7 +145,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
      * meaning<br/>
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"),
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_tag_entity_id"))
     @Column(name = "value", length = 200)
@@ -149,7 +156,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * This is a set of group names that the entity can reach (access groups are positionned on datasets and then added
      * to collections that tag the dataset and then added to collections that tag collections containing groups)
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"),
             foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_group_entity_id"))
     @Column(name = "name", length = 200)
@@ -192,7 +199,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     @Override
     public String getType() {
-        return feature.getEntityType().toString();
+        return this.feature.getEntityType().toString();
     }
 
     @Override
@@ -233,6 +240,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Set the feature id
+     * @param ipId
      */
     public void setIpId(UniformResourceName ipId) {
         this.ipId = ipId;
@@ -243,6 +251,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
      * {@link #removeTags(Collection)}
+     * @return tags
      */
     public ImmutableSet<String> getTags() {
         return ImmutableSet.copyOf(tags);
@@ -269,7 +278,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.addTags(tags);
     }
 
-
     public void addTags(String... tags) {
         Assert.notEmpty(tags, "Tags must not be null or empty");
         this.tags.addAll(Arrays.asList(tags));
@@ -293,6 +301,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of feature properties.
      * If this set should be modified, please use addProperty or removeProperty
+     * @return {@link AbstractAttribute}s
      */
     public ImmutableSet<AbstractAttribute<?>> getProperties() {
         return ImmutableSet.copyOf(feature.getProperties());
@@ -300,6 +309,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Get a mutable copy of property paths.
+     * @return properties path
      */
     public Set<String> getMutableCopyOfPropertiesPaths() {
         Set<String> propertiesPaths = new HashSet<>();
@@ -319,6 +329,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Add feature property
+     * @param property {@link AbstractAttribute}
      */
     public void addProperty(AbstractAttribute<?> property) {
         feature.addProperty(property);
@@ -334,6 +345,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Set the properties
+     * @param attributes
      */
     public void setProperties(Set<AbstractAttribute<?>> attributes) {
         feature.setProperties(attributes);
@@ -355,6 +367,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setProviderId(providerId);
     }
 
+    @Override
     public String getLabel() {
         return feature.getLabel();
     }
@@ -381,6 +394,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setNormalizedGeometry(geometry);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getGeometry() {
         return (T) feature.getGeometry();
     }
@@ -388,8 +402,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     public void setGeometry(IGeometry geometry) {
         feature.setGeometry(geometry);
     }
-
-
 
     @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getWgs84() {
@@ -405,7 +417,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = (prime * result) + ((getIpId() == null) ? 0 : getIpId().hashCode());
+        result = (prime * result) + (getIpId() == null ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }

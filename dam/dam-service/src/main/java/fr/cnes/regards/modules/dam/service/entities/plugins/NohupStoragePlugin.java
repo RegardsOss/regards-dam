@@ -27,7 +27,7 @@ import fr.cnes.regards.modules.dam.service.entities.IStorageService;
  * @author Christophe Mertz
  */
 @Plugin(description = "With plugins does not POST AIP entities to Storrage module", id = "NohupStoragePlugin",
-        version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class NohupStoragePlugin implements IStorageService {
 

@@ -6,7 +6,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -23,9 +22,9 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRig
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
+import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 
 /**
  * Crawler service for Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -47,9 +46,6 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IEsRepository esRepository;
-
-    @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
     /**
@@ -61,7 +57,7 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
 
     @Override
     @EventListener
-    public void onApplicationReadyEvent(ApplicationReadyEvent event) {
+    public void onApplicationReadyEvent(DamGsonReadyEvent event) {
         subscriber.subscribeTo(AccessRightEvent.class, this);
     }
 
@@ -76,9 +72,8 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
             for (Dataset dataset : datasets) {
                 try {
                     datasetRepository.save(dataset);
-                    entityIndexerService
-                            .updateEntityIntoEs(tenantResolver.getTenant(), dataset.getIpId(), OffsetDateTime.now(),
-                                                true);
+                    entityIndexerService.updateEntityIntoEs(tenantResolver.getTenant(), dataset.getIpId(),
+                                                            OffsetDateTime.now(), true);
                 } catch (ModuleException e) {
                     LOGGER.error("Cannot update dataset", e);
                 }

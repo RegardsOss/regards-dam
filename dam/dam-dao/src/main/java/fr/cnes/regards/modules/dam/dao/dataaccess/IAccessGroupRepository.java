@@ -42,6 +42,7 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      * @param pName
      * @return the access group or null if none found
      */
+    @EntityGraph(value = "graph.accessgroup.users")
     AccessGroup findOneByName(String pName);
 
     /**
@@ -50,6 +51,7 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      * @param pPageable pageable
      * @return list of groups
      */
+    @EntityGraph(value = "graph.accessgroup.users")
     Page<AccessGroup> findAllByUsers(User pUser, Pageable pPageable);
 
     /**
@@ -67,14 +69,22 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      * @param pPageable page informations
      * @return page of groups which the user belongs to or which are public
      */
+    @EntityGraph(value = "graph.accessgroup.users")
     Page<AccessGroup> findAllByUsersOrIsPublic(User pUser, Boolean pTrue, Pageable pPageable);
 
     /**
      * Find all public or non public group
      * @param isPublic whether we have to select public or non public groups
+     * @param pPageable {@link Pageable}
      * @return list of public or non public groups
      */
+    @EntityGraph(value = "graph.accessgroup.users")
     Page<AccessGroup> findAllByIsPublic(Boolean isPublic, Pageable pPageable);
 
+    @Override
+    @EntityGraph(value = "graph.accessgroup.users")
+    Page<AccessGroup> findAll(Pageable pPageable);
+
+    @EntityGraph(value = "graph.accessgroup.users")
     Set<AccessGroup> findAllByUsersOrIsPublic(User user, Boolean aTrue);
 }

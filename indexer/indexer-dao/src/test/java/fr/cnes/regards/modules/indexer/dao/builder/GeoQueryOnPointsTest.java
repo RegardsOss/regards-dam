@@ -37,12 +37,14 @@ import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
 import fr.cnes.regards.framework.utils.spring.SpringContext;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.AbstractOnPointsTest;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -61,13 +63,22 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
 
     private static SimpleSearchKey<PointItem> searchKey;
 
+    private static class ItemAdapterFactory extends PolymorphicTypeAdapterFactory<IIndexable> {
+
+        protected ItemAdapterFactory() {
+            super(IIndexable.class, "type");
+            registerSubtype(PointItem.class, TYPE);
+        }
+    }
+
     @BeforeClass
     public static void setUp() throws Exception {
         Map<String, String> propMap = Maps.newHashMap();
         // By now, repository try to connect localhost:9200 for ElasticSearch
         boolean repositoryOK = true;
         try {
-            gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
+            gson = new GsonBuilder().registerTypeAdapterFactory(new ItemAdapterFactory()).
+                    registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
                     .create();
             repository = new EsRepository(gson, null, "localhost", 9200,
                                           new AggregationBuilderFacetTypeVisitor(100, 5));
@@ -88,7 +99,6 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
             repository.deleteIndex(INDEX);
         }
         repository.createIndex(INDEX);
-        repository.setGeometryMapping(INDEX, TYPE);
 
         PointItem northPole = new PointItem("NORTH_POLE", 0.0, 90.0);
         PointItem southPole = new PointItem("SOUTH_POLE", 0.0, -90.0);

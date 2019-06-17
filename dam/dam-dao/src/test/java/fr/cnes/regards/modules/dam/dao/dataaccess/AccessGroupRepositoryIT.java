@@ -29,7 +29,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
-import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 
@@ -37,7 +36,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=dam_ag_dao" })
 public class AccessGroupRepositoryIT extends AbstractDaoTransactionalTest {
 
     private static final String AG1_NAME = "AG1";
@@ -88,8 +87,7 @@ public class AccessGroupRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Test
     public void testFindAllByUsersAndIsPrivate() {
-        Page<AccessGroup> accessGroupsOfUser = dao.findAllByUsersOrIsPublic(USER1, Boolean.TRUE,
-                                                                            new PageRequest(0, 10));
+        Page<AccessGroup> accessGroupsOfUser = dao.findAllByUsersOrIsPublic(USER1, Boolean.TRUE, PageRequest.of(0, 10));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag1));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag2));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag3));

@@ -62,9 +62,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
     public static final String QUERY_PARAMETER = "q";
 
     /**
-     * Default field. Use a random string because we want to disable the lucene's default field behaviour.
+     * Field use for full text search
      */
-    private static final String DEFAULT_FIELD = "label";
+    public static final String MULTISEARCH = "@multisearch";
 
     /**
      * Constructor
@@ -75,7 +75,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
               new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(finder));
         setEnablePositionIncrements(true);
         setAllowLeadingWildcard(true);
-        setLowercaseExpandedTerms(false);
+//        setLowercaseExpandedTerms(false);
     }
 
     @Override
@@ -93,7 +93,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
             return ICriterion.all();
         }
         try {
-            return (ICriterion) super.parse(q, DEFAULT_FIELD);
+            return (ICriterion) super.parse(q, MULTISEARCH);
         } catch (QueryNodeException e) {
             LOGGER.error("q parsing error", e);
             throw new OpenSearchParseException(e.getMessage(), e);
@@ -115,9 +115,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * Enable or disable lowercase regexp transformation
      */
-    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
-        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
-    }
+//    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+//        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
+//    }
 
     /**
      * Set to <code>true</code> to enable position increments in result query.

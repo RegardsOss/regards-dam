@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +34,9 @@ import java.util.Set;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -48,11 +51,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -101,9 +108,11 @@ import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
 
@@ -111,6 +120,7 @@ import fr.cnes.regards.modules.indexer.service.Searches;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @TestPropertySource(locations = { "classpath:test.properties" })
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_CLASS)
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
@@ -224,18 +234,21 @@ public class IndexerServiceDataSourceIT {
 
     private Dataset dataset3;
 
+    @Autowired
+    private ProjectGeoSettings settings;
+
     @Before
     public void setUp() throws Exception {
+        Mockito.when(settings.getCrs()).thenReturn(Crs.WGS_84);
 
         // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
         runtimeTenantResolver.forceTenant(tenant);
         if (esRepos.indexExists(tenant)) {
-            esRepos.deleteAll(tenant);
-        } else {
-            esRepos.createIndex(tenant);
+            esRepos.deleteIndex(tenant);
         }
+        esRepos.createIndex(tenant);
 
         crawlerService.setConsumeOnlyMode(false);
         ingesterService.setConsumeOnlyMode(true);
@@ -284,7 +297,7 @@ public class IndexerServiceDataSourceIT {
     @Purpose("Requirement is for collection. Multi search field is used here on data objects but the code is the same")
     @Test
     public void test() throws Exception {
-        final String tenant = runtimeTenantResolver.getTenant();
+        String tenant = runtimeTenantResolver.getTenant();
 
         // Creation
         long start = System.currentTimeMillis();
@@ -292,12 +305,12 @@ public class IndexerServiceDataSourceIT {
         dsi.setLabel("Label");
         dsIngestionRepos.save(dsi);
 
-        final IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf, dsi);
+        IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf, dsi);
         System.out.println("Insertion : " + (System.currentTimeMillis() - start) + " ms");
 
         // Update
         start = System.currentTimeMillis();
-        final IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf, dsi);
+        IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf, dsi);
         System.out.println("Update : " + (System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(summary1.getSavedObjectsCount(), summary2.getSavedObjectsCount());
 
@@ -342,7 +355,7 @@ public class IndexerServiceDataSourceIT {
 
         // SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(),
         // DataObject.class);
-        final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(EntityType.DATA);
+        SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(EntityType.DATA);
         objectSearchKey.setSearchIndex(tenant);
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
@@ -377,7 +390,7 @@ public class IndexerServiceDataSourceIT {
 
         // Search for Dataset but with criterion on DataObjects
         // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
-        final JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
+        JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
                 .onSingleEntityReturningJoinEntity(EntityType.DATA, EntityType.DATASET);
         dsSearchKey.setSearchIndex(tenant);
         // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
@@ -408,16 +421,35 @@ public class IndexerServiceDataSourceIT {
         Assert.assertEquals(1, dsPage.getContent().size());
     }
 
-    private void checkDatasetComputedAttribute(final Dataset pDataset,
-            final SimpleSearchKey<DataObject> pObjectSearchKey, final long objectsCreationCount) throws IOException {
-        RestClient restClient;
+    /**
+     * Add document type (Elasticsearch prior to version 6 type) into criterion
+     * (Copied from EsRepository)
+     */
+    private static ICriterion addTypes(ICriterion criterion, String... types) {
+        // Beware if crit is null
+        criterion = criterion == null ? ICriterion.all() : criterion;
+        // Then add type
+        switch (types.length) {
+            case 0:
+                return criterion;
+            case 1:
+                return ICriterion.and(ICriterion.eq("type", types[0]), criterion);
+            default:
+                ICriterion orCrit = ICriterion.or(Arrays.stream(types).map(type -> ICriterion.eq("type", type))
+                        .toArray(n -> new ICriterion[n]));
+                return ICriterion.and(orCrit, criterion);
+        }
+
+    }
+
+    private void checkDatasetComputedAttribute(Dataset dataset, SimpleSearchKey<DataObject> objectSearchKey,
+            long objectsCreationCount) throws IOException {
+        RestClientBuilder restClientBuilder;
         RestHighLevelClient client;
         try {
-            restClient = RestClient
-                    .builder(new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress),
-                            esPort))
-                    .build();
-            client = new RestHighLevelClient(restClient);
+            restClientBuilder = RestClient.builder(new HttpHost(
+                    InetAddress.getByName(!Strings.isNullOrEmpty(esHost) ? esHost : esAddress), esPort));
+            client = new RestHighLevelClient(restClientBuilder);
 
         } catch (final UnknownHostException e) {
             LOGGER.error("could not get a connection to ES in the middle of the test where we know ES is available", e);
@@ -427,9 +459,10 @@ public class IndexerServiceDataSourceIT {
         // lets build the request so elasticsearch can calculate the few attribute we are using in test(min(START_DATE),
         // max(STOP_DATE), sum(FILE_SIZE) via aggregation, the count of element in this context is already known:
         // objectsCreationCount
-        final QueryBuilderCriterionVisitor critVisitor = new QueryBuilderCriterionVisitor();
-        final ICriterion crit = ICriterion.eq("tags", pDataset.getIpId().toString());
-        final QueryBuilder qb = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+        QueryBuilderCriterionVisitor critVisitor = new QueryBuilderCriterionVisitor();
+        ICriterion crit = ICriterion.eq("tags", dataset.getIpId().toString());
+        crit = addTypes(crit, objectSearchKey.getSearchTypes());
+        QueryBuilder qb = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(crit.accept(critVisitor));
         // now we have a request on the right data
         SearchSourceBuilder builder = new SearchSourceBuilder();
@@ -444,23 +477,22 @@ public class IndexerServiceDataSourceIT {
         // aggregation for the sum
         builder.aggregation(AggregationBuilders.sum("sum_values_l1")
                 .field(StaticProperties.FEATURE_PROPERTIES_PATH + ".value_l1"));
-        SearchRequest request = new SearchRequest(pObjectSearchKey.getSearchIndex().toLowerCase())
-                .types(pObjectSearchKey.getSearchTypes()).source(builder);
+        SearchRequest request = new SearchRequest(objectSearchKey.getSearchIndex().toLowerCase()).source(builder);
 
         // get the results computed by ElasticSearch
-        SearchResponse response = client.search(request);
-        final Map<String, Aggregation> aggregations = response.getAggregations().asMap();
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        Map<String, Aggregation> aggregations = response.getAggregations().asMap();
 
         // now lets actually test things
-        Assert.assertEquals(objectsCreationCount, getDatasetProperty(pDataset, "vcount").getValue());
+        Assert.assertEquals(objectsCreationCount, getDatasetProperty(dataset, "vcount").getValue());
         Assert.assertEquals((long) ((ParsedSum) aggregations.get("sum_values_l1")).getValue(),
-                            getDatasetProperty(pDataset, "values_l1_sum").getValue());
+                            getDatasetProperty(dataset, "values_l1_sum").getValue());
         // lets convert both dates to instant, it is the simpliest way to compare them
         Assert.assertEquals(Instant.parse(((ParsedMin) aggregations.get("min_start_date")).getValueAsString()),
-                            ((OffsetDateTime) getDatasetProperty(pDataset, "start_date").getValue()).toInstant());
+                            ((OffsetDateTime) getDatasetProperty(dataset, "start_date").getValue()).toInstant());
         Assert.assertEquals(Instant.parse(((ParsedMax) aggregations.get("max_stop_date")).getValueAsString()),
-                            ((OffsetDateTime) getDatasetProperty(pDataset, "end_date").getValue()).toInstant());
-        restClient.close();
+                            ((OffsetDateTime) getDatasetProperty(dataset, "end_date").getValue()).toInstant());
+        client.close();
     }
 
     private AbstractAttribute<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {
@@ -470,19 +502,18 @@ public class IndexerServiceDataSourceIT {
     /**
      * Import model definition file from resources directory
      * @param pFilename filename
-     * @return list of created model attributes
      * @throws ModuleException if error occurs
      */
     private void importModel(final String pFilename) throws ModuleException {
         try {
-            final InputStream input = Files
+            InputStream input = Files
                     .newInputStream(Paths.get("src", "test", "resources", "validation", "models", pFilename));
             modelService.importModel(input);
 
-            final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null);
+            List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null);
             gsonAttributeFactory.refresh(tenant, attributes);
         } catch (final IOException e) {
-            final String errorMessage = "Cannot import " + pFilename;
+            String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
         }
     }

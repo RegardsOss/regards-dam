@@ -16,14 +16,12 @@
  
  You should have received a copy of the GNU General Public License
  along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>opensearch</artifactId>
-	<version>3.0.0-RELEASE</version>
+	<version>0.4.0</version>
 	<packaging>pom</packaging>
 
 	<description>Module responsible for treating the OpenSearch requests performed when searching indexed data</description>
@@ -51,8 +49,8 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>3.0.0-RELEASE</version>
-		<relativePath />
+		<version>0.4.0</version>
+		<relativePath/>
 	</parent>
 	
 
@@ -75,5 +73,6 @@
 	<modules>
 		<module>opensearch-service</module>
 		<module>opensearch-domain</module>
-	</modules>
+    <module>opensearch-rest</module>
+  </modules>
 </project>

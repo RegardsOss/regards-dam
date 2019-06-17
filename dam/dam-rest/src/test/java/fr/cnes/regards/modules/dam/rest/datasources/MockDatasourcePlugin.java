@@ -36,7 +36,7 @@ import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
  *
  */
 @Plugin(id = "MockDatasourcePlugin", author = "CSSI", contact = "CSSI", description = "MockDatasourcePlugin",
-        version = "alpha", url = "none", owner = "CSSI", licence = "none")
+        version = "alpha", url = "none", owner = "CSSI", license = "GPLv3")
 public class MockDatasourcePlugin implements IDBDataSourcePlugin {
 
     @Override

@@ -17,6 +17,7 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
  * @author oroussel
  */
 public abstract class AbstractDataObjectBulkSaver {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataObjectBulkSaver.class);
 
     /**
@@ -106,6 +107,7 @@ public abstract class AbstractDataObjectBulkSaver {
                 // Directly call on current thread without doing a clone
                 saveDataObjectsCallable.setSet(toSaveObjects);
                 saveDataObjectsCallable.call();
+                toSaveObjects.clear();
             } catch (Exception e) {
                 LOGGER.error(String.format("Unable to save data objects (dataset %d)", datasetId), e);
             }

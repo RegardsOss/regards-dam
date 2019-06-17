@@ -20,9 +20,11 @@ package fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup;
 
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
+
 /**
  * Mirror of a ProjectUser for data access purpose, only contains email. Access rights are attribited to a user thanks
- * to {@link UserAccessRight}
+ * to {@link AccessRight}
  *
  * @author Sylvain Vissiere-Guerinet
  *

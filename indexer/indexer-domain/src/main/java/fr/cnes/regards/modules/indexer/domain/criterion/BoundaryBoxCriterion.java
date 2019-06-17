@@ -45,7 +45,9 @@ public class BoundaryBoxCriterion implements ICriterion {
     }
 
     /**
-     * Creates BoundaryBoxCriterion from string format "left,bottom,right,top" where each field is a {@link double}.
+     * Creates BoundaryBoxCriterion from string format "left,bottom,right,top" where each field is a double.
+     * @param bbox
+     * @throws InvalidGeometryException
      */
     public BoundaryBoxCriterion(String bbox) throws InvalidGeometryException {
         String[] values = bbox.split(",");
@@ -88,6 +90,7 @@ public class BoundaryBoxCriterion implements ICriterion {
 
     /**
      * This method can be used by QueryBuilderCriterionVisitor to update a > 180 longitude
+     * @param maxX
      */
     public void setMaxX(double maxX) {
         this.maxX = maxX;
@@ -107,8 +110,8 @@ public class BoundaryBoxCriterion implements ICriterion {
             return false;
         }
         BoundaryBoxCriterion crit = (BoundaryBoxCriterion) o;
-        return (crit.getMinX() == this.getMinX()) && (crit.getMinY() == this.getMinY()) && (crit.getMaxX() == this
-                .getMaxX()) && (crit.getMaxY() == this.getMaxY());
+        return (crit.getMinX() == this.getMinX()) && (crit.getMinY() == this.getMinY())
+                && (crit.getMaxX() == this.getMaxX()) && (crit.getMaxY() == this.getMaxY());
     }
 
 }

@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.dam.service.entities;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 
@@ -29,6 +28,7 @@ public interface ILocalStorageService {
      * @param attachments the files to attach to the document
      * @param fileUriTemplate the file's uri template in order to generate each file's uri
      * @return the set of files
+     * @throws ModuleException
      */
     Collection<DataFile> attachFiles(AbstractEntity<?> entity, DataType dataType, MultipartFile[] attachments,
             String fileUriTemplate) throws ModuleException;
@@ -36,12 +36,14 @@ public interface ILocalStorageService {
     /**
      * @param entity the entity which we are editing
      * @param dataFile the file we're removing
-     * @throws IOException
+     * @throws ModuleException
      * @throws EntityNotFoundException
      */
     void removeFile(AbstractEntity<?> entity, DataFile dataFile) throws ModuleException;
 
     /**
+     * @param entity {@link AbstractEntity}
+     * @param dataFile {@link DataFile}
      * @return true when the database knows this entity
      */
     boolean isFileLocallyStored(AbstractEntity<?> entity, DataFile dataFile);
@@ -49,6 +51,9 @@ public interface ILocalStorageService {
     /**
      * Write the file in the output stream.<br/>
      * {@link OutputStream} has to be flush after this method completes.
+     * @param checksum
+     * @param output {@link OutputStream}
+     * @throws ModuleException
      */
     void getFileContent(String checksum, OutputStream output) throws ModuleException;
 }

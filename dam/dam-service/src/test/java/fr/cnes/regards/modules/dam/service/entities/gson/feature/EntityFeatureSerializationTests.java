@@ -98,13 +98,13 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
 
         // - Refresh attribute factory
         List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
-        gsonAttributeFactory.refresh(DEFAULT_TENANT, atts);
+        gsonAttributeFactory.refresh(getDefaultTenant(), atts);
     }
 
     @Test
     public void serializeCollectionFeature() {
 
-        CollectionFeature feature = new CollectionFeature(DEFAULT_TENANT, "FIRST", "My first collection");
+        CollectionFeature feature = new CollectionFeature(getDefaultTenant(), "FIRST", "My first collection");
 
         // Set dynamic properties
         feature.getProperties().add(AttributeBuilder.buildString(GALAXY, MILKY_WAY));
@@ -127,7 +127,7 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
     @Test
     public void serializeCollection() {
 
-        Collection collection = new Collection(galaxyModel, DEFAULT_TENANT, "SECOND", "My second collection");
+        Collection collection = new Collection(galaxyModel, getDefaultTenant(), "SECOND", "My second collection");
 
         // Set dynamic properties
         collection.addProperty(AttributeBuilder.buildString(GALAXY, MILKY_WAY));

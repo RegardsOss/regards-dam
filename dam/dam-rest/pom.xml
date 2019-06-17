@@ -49,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>dam</artifactId>
-		<version>3.0.0-RELEASE</version>
+		<version>0.4.0</version>
 	</parent>
 	
 	<dependencies>
@@ -72,10 +72,6 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-		</dependency>
-			<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>oais-starter</artifactId>
 		</dependency>
 		<!-- Module dependencies -->
@@ -87,11 +83,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-dao</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

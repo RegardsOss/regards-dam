@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -46,8 +47,12 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * model.<br/>
      * If pUrns is not null and not empty AND pModelName is null then the scope of datasets is restrained to all the
      * datasets represented by the given urns
+     * @param pUrns {@link UniformResourceName}s
+     * @param pModelIds
      *
      * @param pPageable
+     * @return {@link AttributeModel}s
+     * @throws ModuleException
      */
     Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
@@ -57,7 +62,7 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @param pUrns
      * @param pModelIds
      * @param pPageable
-     * @return
+     * @return {@link AttributeModel}s
      * @throws ModuleException
      */
     Page<AttributeModel> getAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
@@ -71,6 +76,13 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @throws ModuleException if the model cannot be retrieve
      */
     ICriterionVisitor<Boolean> getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
+
+    /**
+     * Get the number of datasets associated to a given datasource plugin configuration.
+     * @param dataSourcePluginConfId identifier of the {@link PluginConfiguration} of the datasource
+     * @return number of datasets.
+     */
+    Long countByDataSource(Long dataSourcePluginConfId);
 
     Set<Dataset> findAllByModel(Long modelId);
 }

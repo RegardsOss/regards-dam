@@ -51,7 +51,7 @@ public class EsHelper {
      * @param n value to scale
      * @return 2 decimal digits scaled value
      */
-    public static final double scaled(double n) {
+    public static double scaled(double n) {
         if (!Double.isFinite(n)) {
             return n;
         }
@@ -63,7 +63,7 @@ public class EsHelper {
      * @param n value to scale
      * @return 12 decimal digits scaled value
      */
-    public static final double highScaled(double n) {
+    public static double highScaled(double n) {
         if (!Double.isFinite(n)) {
             return n;
         }
@@ -79,7 +79,7 @@ public class EsHelper {
      * @param n value to scale
      * @return 2 decimal scaled value
      */
-    public static final double scaledUp(double n) {
+    public static double scaledUp(double n) {
         if (!Double.isFinite(n)) {
             return n;
         }
@@ -94,7 +94,7 @@ public class EsHelper {
      * @param n value to scale
      * @return 2 decimal scaled value
      */
-    public static final double scaledDown(double n) {
+    public static double scaledDown(double n) {
         if (!Double.isFinite(n)) {
             return n;
         }

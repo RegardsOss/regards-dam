@@ -34,6 +34,10 @@ public enum AccessLevel {
      */
     RESTRICTED_ACCESS,
     /**
+     * Access to dataset metadata and custom access to data metadata
+     */
+    CUSTOM_ACCESS,
+    /**
      * full acces to the dataset(so the meta data of the dataset and the meta data of its data), the access to the
      * physical data of the datum is constrained by the {@link DataAccessRight}
      */

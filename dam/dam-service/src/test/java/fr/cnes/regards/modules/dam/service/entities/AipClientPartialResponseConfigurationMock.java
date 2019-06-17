@@ -18,14 +18,13 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.validation.Valid;
 
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.google.gson.Gson;
-
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
@@ -62,12 +60,12 @@ class AipClientPartialResponseConfigurationMock {
     private Gson gson;
 
     @Bean
-    public IProjectsClient projectsClient() {
+    public IProjectsClient partialProjectsClient() {
         return Mockito.mock(IProjectsClient.class);
     }
 
     @Bean
-    public IAipClient aipClient() {
+    public IAipClient partialAipClient() {
         AipClientPartialProxy aipClientProxy = new AipClientPartialProxy();
         InvocationHandler handler = (proxy, method, args) -> {
             for (Method aipClientProxyMethod : aipClientProxy.getClass().getMethods()) {

@@ -30,8 +30,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
-import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
@@ -46,7 +44,7 @@ import fr.cnes.regards.modules.dam.domain.models.Model;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=dam_ar_dao" })
 public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Autowired
@@ -110,25 +108,25 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Test
     public void testfindAllByAccessGroupName() {
-        Page<AccessRight> response = repo.findAllByAccessGroup(ag1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByAccessGroup(ag1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByDataset() {
-        Page<AccessRight> response = repo.findAllByDataset(ds1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByDataset(ds1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByAccessGroupNameByDataset() {
-        Page<AccessRight> response = repo.findAllByAccessGroupAndDataset(ag1, ds1, new PageRequest(0, 10));
+        Page<AccessRight> response = repo.findAllByAccessGroupAndDataset(ag1, ds1, PageRequest.of(0, 10));
         Assert.assertTrue(response.getContent().contains(ar1));
         Assert.assertFalse(response.getContent().contains(ar2));
 
-        response = repo.findAllByAccessGroupAndDataset(ag1, ds2, new PageRequest(0, 10));
+        response = repo.findAllByAccessGroupAndDataset(ag1, ds2, PageRequest.of(0, 10));
         Assert.assertFalse(response.hasContent());
     }
 

@@ -74,8 +74,8 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
-                    new AggregationBuilderFacetTypeVisitor(10, 1));
+                                          Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
@@ -103,7 +103,6 @@ public class EsAggsTest {
         }
         for (int i = 0; i < size; i++) {
             while (!randomSet.add(TAGS[random.nextInt(TAGS.length)])) {
-                ;
             }
         }
         return randomSet;
@@ -162,6 +161,8 @@ public class EsAggsTest {
 
         private String docId;
 
+        private String type = TYPE;
+
         private Set<String> tags = new HashSet<>();
 
         private final Feature feature = new Feature();
@@ -182,7 +183,7 @@ public class EsAggsTest {
 
         @Override
         public String getType() {
-            return TYPE;
+            return type;
         }
 
         public void setDocId(String docId) {

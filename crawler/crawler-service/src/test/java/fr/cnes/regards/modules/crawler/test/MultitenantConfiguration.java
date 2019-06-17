@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -18,6 +19,7 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
  * Multitenant test configuration
  * @author oroussel
  */
+@Profile("!indexer-service")
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
         "fr.cnes.regards.modules.dam", "fr.cnes.regards.modules.search",

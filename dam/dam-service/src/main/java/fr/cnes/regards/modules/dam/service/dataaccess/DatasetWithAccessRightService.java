@@ -64,15 +64,17 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
         // 1. Search for datasets
         // NOTE : New pageRequest to avoid Sort. Sort is forced in the JPA specification to sort by label
         Page<Dataset> datasets = datasetService
-                .search(datasetLabelFilter, new PageRequest(pageRequest.getPageNumber(), pageRequest.getPageSize()));
+                .search(datasetLabelFilter, PageRequest.of(pageRequest.getPageNumber(), pageRequest.getPageSize()));
 
         // 2. For each dataset of the result page, retrieve the associated AccessRight
         for (Dataset ds : datasets.getContent()) {
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
+                // There is only one possible AccessRight for a given dataset and a given accessGroup.
+                // We set the pagination to 1 element max
                 Page<AccessRight> accessRights = accessRightService
-                        .retrieveAccessRights(accessGroupName, ds.getIpId(), new PageRequest(
-                                pageRequest.getPageNumber(), pageRequest.getPageSize(), new Sort(Direction.ASC, "id")));
+                        .retrieveAccessRights(accessGroupName, ds.getIpId(),
+                                              PageRequest.of(0, 1, Sort.by(Direction.ASC, "id")));
                 if (accessRights.hasContent()) {
                     datasetWithAR.setAccessRight(accessRights.getContent().get(0));
                 }

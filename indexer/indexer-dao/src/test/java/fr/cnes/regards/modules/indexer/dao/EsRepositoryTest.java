@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.svenjacobs.loremipsum.LoremIpsum;
+import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -43,6 +44,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 @RunWith(SpringRunner.class)
 @TestPropertySource("classpath:test.properties")
 public class EsRepositoryTest {
+    private static final String TYPE = "item";
 
     /**
      * Class to test
@@ -60,6 +62,14 @@ public class EsRepositoryTest {
     @Value("${regards.elasticsearch.http.port}")
     private int elasticPort;
 
+    private static class ItemAdapterFactory extends PolymorphicTypeAdapterFactory<IIndexable> {
+
+        protected ItemAdapterFactory() {
+            super(IIndexable.class, "type");
+            registerSubtype(Item.class, TYPE);
+        }
+    }
+
     /**
      * Befor class setting up method
      * @throws Exception exception
@@ -69,7 +79,7 @@ public class EsRepositoryTest {
         boolean repositoryOK = true;
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         try {
-            gson = new GsonBuilder().create();
+            gson = new GsonBuilder().registerTypeAdapterFactory(new ItemAdapterFactory()).create();
             repository = new EsRepository(gson, null, elasticHost, elasticPort,
                                           new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
@@ -120,9 +130,6 @@ public class EsRepositoryTest {
     public void testCreateIndexWithSpecialMappings() {
         Assert.assertTrue(repository.createIndex("test"));
         String[] types = { "pipo", "bimbo" };
-        repository.setAutomaticDoubleMapping("test", types);
-        repository.setGeometryMapping("test", types);
-
     }
 
     @Test
@@ -295,6 +302,8 @@ public class EsRepositoryTest {
 
         private String id;
 
+        private String type = TYPE;
+
         private String name;
 
         private List<String> groups;
@@ -378,7 +387,7 @@ public class EsRepositoryTest {
 
         @Override
         public String getType() {
-            return "item";
+            return type;
         }
 
         @Override

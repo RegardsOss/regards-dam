@@ -82,6 +82,8 @@ public interface IAttributeModelService {
 
     /**
      * Check if attribute not already linked to any entity.
+     * @param attributeId
+     * @return {@link Boolean}
      */
     boolean isDeletable(Long attributeId);
 
@@ -117,7 +119,7 @@ public interface IAttributeModelService {
     /**
      * Determines whether a fragment can be created without conflicting name with any existing attribute
      * @param fragmentName
-     * @return
+     * @return {@link Boolean}
      */
     boolean isFragmentCreatable(String fragmentName);
 }

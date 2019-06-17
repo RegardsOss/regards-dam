@@ -23,6 +23,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 /**
  * @author oroussel
  */
+@SuppressWarnings("serial")
 public class AssociatedDatasetExistsException extends ModuleException {
 
     public AssociatedDatasetExistsException() {

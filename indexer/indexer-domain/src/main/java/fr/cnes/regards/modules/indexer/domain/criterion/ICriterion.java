@@ -19,10 +19,13 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
@@ -414,6 +417,7 @@ public interface ICriterion {
 
     /**
      * Criterion to test if a numeric value (int or double) is into (inclusive) given interval attribute name
+     * @param <T> extends {@link Number}
      * @param attName interval attribute name
      * @param value value to test inclusion
      * @return criterion
@@ -437,6 +441,7 @@ public interface ICriterion {
 
     /**
      * Criterion to test if given number range intersects given interval attribute name
+     * @param <T> extends {@link Number}
      * @param attName interval attribute name
      * @param lowerBound lower bound
      * @param upperBound upper bound
@@ -470,6 +475,7 @@ public interface ICriterion {
      * Criterion to test the intersaction with a boundary box
      * @param bbox String bbox as "left,bottom,right,top" (or "minX, minY, maxX, maxY" or "minLon, minLat, maxLon,
      * maxLat"), blanks are accepted
+     * @return {@link ICriterion}
      * @throws InvalidGeometryException
      */
     static ICriterion intersectsBbox(String bbox) throws InvalidGeometryException {
@@ -478,6 +484,11 @@ public interface ICriterion {
 
     /**
      * Criterion to test the intersaction with a boundary box
+     * @param left
+     * @param bottom
+     * @param right
+     * @param top
+     * @return  {@link ICriterion}
      */
     static ICriterion intersectsBbox(double left, double bottom, double right, double top) {
         return new BoundaryBoxCriterion(left, bottom, right, top);
@@ -490,5 +501,25 @@ public interface ICriterion {
      */
     static ICriterion attributeExists(String attName) {
         return new FieldExistsCriterion(attName);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters contains the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatch(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.BEST_FIELDS, text);
+    }
+
+    /**
+     * Criterion to test if at least one of the parameters starts with the provided text
+     * @param attNames list of String
+     * @param text provided text
+     * @return criterion
+     */
+    static ICriterion multiMatchStartWith(Set<String> attNames, String text) {
+        return new StringMultiMatchCriterion(attNames, MultiMatchQueryBuilder.Type.PHRASE_PREFIX, text);
     }
 }

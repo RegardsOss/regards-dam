@@ -51,12 +51,12 @@ public class ProjectGeoSettings {
     private IRuntimeTenantResolver tenantResolver;
 
     /**
-     * Using a cache to manage projects values and to be refreshed every 5 minutes in case project properties have
+     * Using a cache to manage projects values and to be refreshed every 1 minute in case project properties have
      * changed.
-     * This cache contains Crs and shouldManagePolsOnGeometries values associated to projects
+     * This cache contains Crs and shouldManagePolesOnGeometries values associated to projects
      */
     private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
+            .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
                 @Override
                 public Pair<Boolean, Crs> load(String key) {
@@ -67,11 +67,16 @@ public class ProjectGeoSettings {
                                 .retrieveProject(tenantResolver.getTenant());
                         if (response.getStatusCode() == HttpStatus.OK) {
                             Project currentProject = response.getBody().getContent();
+                            // To avoid problems later...No CRS => WGS84
+                            if (currentProject.getCrs() == null) {
+                                currentProject.setCrs(Crs.WGS_84.toString());
+                            }
                             return Pair.of(currentProject.getPoleToBeManaged(), Crs.valueOf(currentProject.getCrs()));
                         } else { // Must throw something
                             throw new RsRuntimeException(new Exception(
-                                    String.format("Error while asking project client: Error %d",
-                                                  response.getStatusCode())));
+                                    String.format("Error while asking project client: Error %d - %s",
+                                                  response.getStatusCode().value(),
+                                                  response.getStatusCode().getReasonPhrase())));
                         }
                     } finally {
                         FeignSecurityManager.reset();

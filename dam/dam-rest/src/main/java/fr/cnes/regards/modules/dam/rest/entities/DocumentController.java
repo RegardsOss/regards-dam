@@ -80,6 +80,8 @@ public class DocumentController implements IResourceController<Document> {
 
     /**
      * Entry point to retrieve {@link Document}s
+     * @param pageable {@link Pageable}
+     * @param assembler
      * @return all {@link Document}s
      */
     @RequestMapping(method = RequestMethod.GET)
@@ -96,6 +98,7 @@ public class DocumentController implements IResourceController<Document> {
      * Entry point to retrieve a document using its id
      * @param id {@link Document} id
      * @return {@link Document} as a {@link Resource}
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_MAPPING)
     @ResourceAccess(description = "Retrieve a document")
@@ -113,6 +116,7 @@ public class DocumentController implements IResourceController<Document> {
      * @param result for validation of entites' properties
      * @return update {@link Document} as a {@link Resource}
      * @throws ModuleException if error occurs!
+     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.PUT, value = DocumentController.DOCUMENT_MAPPING)
     @ResponseBody
@@ -131,6 +135,8 @@ public class DocumentController implements IResourceController<Document> {
      * Entry point to delete a document using its id
      * @param id {@link Document} id
      * @return nothing
+     * @throws IOException
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DocumentController.DOCUMENT_MAPPING)
     @ResponseBody
@@ -147,7 +153,7 @@ public class DocumentController implements IResourceController<Document> {
      * @param result validation errors
      * @return {@link Document} as a {@link Resource}
      * @throws ModuleException if validation fails
-     * @
+     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create a new document according to what is passed as parameter")

@@ -49,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-boot-parent</artifactId>
-		<version>3.0.0-RELEASE</version>
+		<version>0.4.0</version>
 		<relativePath></relativePath>
 	</parent>
 
@@ -63,14 +63,14 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>microservice-core-starter</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
 			<artifactId>dam-rest</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.opensearch</groupId>
+			<artifactId>opensearch-rest</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices.administration</groupId>
@@ -85,8 +85,8 @@
 			<artifactId>crawler-rest</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>amqp-monitoring-regards-starter</artifactId>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>plugins-rest</artifactId>
 		</dependency>
 		<!-- Test -->
 		<dependency>

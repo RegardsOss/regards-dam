@@ -32,12 +32,16 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
@@ -47,10 +51,17 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
  * @author Sylvain Vissiere-Guerinet
  */
 @Entity
-@Table(name = "t_access_right",
-        uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" }, name = "uk_access_right_access_group_id_dataset_id"))
-@NamedEntityGraph(name = "graph.accessright.dataset.and.accesgroup",
-        attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
+@Table(name = "t_access_right", uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" },
+        name = "uk_access_right_access_group_id_dataset_id"))
+@NamedEntityGraphs({
+        @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup",
+                attributeNodes = { @NamedAttributeNode(value = "dataset"),
+                        @NamedAttributeNode(value = "accessGroup", subgraph = "subgraph.accessgroup"),
+                        @NamedAttributeNode(value = "dataAccessPlugin") },
+                subgraphs = @NamedSubgraph(name = "subgraph.accessgroup",
+                        attributeNodes = { @NamedAttributeNode(value = "users") })),
+        @NamedEntityGraph(name = "graph.accessright.plugins",
+                attributeNodes = { @NamedAttributeNode(value = "dataAccessPlugin") }) })
 public class AccessRight implements IIdentifiable<Long> {
 
     /**
@@ -75,6 +86,13 @@ public class AccessRight implements IIdentifiable<Long> {
     @Enumerated(EnumType.STRING)
     @NotNull
     protected AccessLevel accessLevel;
+
+    /**
+     * Plugin configuration allowing to customize the data access level
+     */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "data_access_plugin", foreignKey = @ForeignKey(name = "fk_access_right_data_access_plugin"))
+    private PluginConfiguration dataAccessPlugin;
 
     /**
      * The data access right
@@ -191,6 +209,14 @@ public class AccessRight implements IIdentifiable<Long> {
 
     public void setAccessGroup(final AccessGroup pAccessGroup) {
         accessGroup = pAccessGroup;
+    }
+
+    public PluginConfiguration getDataAccessPlugin() {
+        return dataAccessPlugin;
+    }
+
+    public void setDataAccessPlugin(PluginConfiguration dataAccessPlugin) {
+        this.dataAccessPlugin = dataAccessPlugin;
     }
 
 }

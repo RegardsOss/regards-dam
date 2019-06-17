@@ -22,11 +22,16 @@ package fr.cnes.regards.modules.dam.domain.models;
  * Visitor for ICalculationModel plugins
  *
  * @author Sylvain Vissiere-Guerinet
+ * @param <T>
  */
 public interface IComputedAttributeVisitor<T> {
 
     /**
      * Visit method from the visitor design pattern
+     * @param pPlugin {@link IComputedAttribute}<P, U>
+     * @param <P> Type of entity on which the attribute will be added
+     * @param <U> Type of the attribute value
+     * @return T
      */
     <P, U> T visit(IComputedAttribute<P, U> pPlugin);
 

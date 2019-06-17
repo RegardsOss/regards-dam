@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.dam.dao.models;
 
+import java.util.Optional;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +29,6 @@ import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
-import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
-import fr.cnes.regards.modules.dam.dao.models.IRestrictionRepository;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
@@ -42,7 +39,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.Abstract
  *
  * @author Marc Sordi
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=dam_models_dao" })
 public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
 
     /**
@@ -86,33 +83,33 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
     /**
      * Save an attribute model
      *
-     * @param pAttributeModel entity to save
+     * @param attributeModel entity to save
      * @return the saved attribute model
      */
-    protected AttributeModel saveAttribute(final AttributeModel pAttributeModel) {
-        Assert.assertNotNull(pAttributeModel);
+    protected AttributeModel saveAttribute(AttributeModel attributeModel) {
+        Assert.assertNotNull(attributeModel);
         // Save restriction if any
-        if (pAttributeModel.getRestriction() != null) {
-            final AbstractRestriction restriction = pAttributeModel.getRestriction();
+        if (attributeModel.getRestriction() != null) {
+            AbstractRestriction restriction = attributeModel.getRestriction();
             restrictionRepository.save(restriction);
         }
         // Save fragment if any
-        if (pAttributeModel.getFragment() != null) {
-            final Fragment fragment = pAttributeModel.getFragment();
+        if (attributeModel.getFragment() != null) {
+            Fragment fragment = attributeModel.getFragment();
             fragmentRepository.save(fragment);
         } else {
             Fragment defaultF = fragmentRepository.findByName(Fragment.getDefaultName());
             if (defaultF == null) {
                 defaultF = fragmentRepository.save(Fragment.buildDefault());
             }
-            pAttributeModel.setFragment(defaultF);
+            attributeModel.setFragment(defaultF);
         }
         // Save attribute model
-        return attModelRepository.save(pAttributeModel);
+        return attModelRepository.save(attributeModel);
     }
 
     protected AttributeModel findSingle() {
-        final Iterable<AttributeModel> atts = attModelRepository.findAll();
+        Iterable<AttributeModel> atts = attModelRepository.findAll();
         if (Iterables.size(atts) != 1) {
             Assert.fail("Only single result is expected!");
         }
@@ -122,25 +119,27 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
     /**
      * Create a model
      *
-     * @param pName model name
-     * @param pDescription description
-     * @param pModelType model type
+     * @param name model name
+     * @param description description
+     * @param modelType model type
      * @return a model
      */
-    protected Model createModel(String pName, String pDescription, EntityType pModelType) {
+    protected Model createModel(String name, String description, EntityType modelType) {
 
-        final Model model = new Model();
-        model.setName(pName);
-        model.setType(pModelType);
-        model.setDescription(pDescription);
+        Model model = new Model();
+        model.setName(name);
+        model.setType(modelType);
+        model.setDescription(description);
 
         modelRepository.save(model);
         Assert.assertTrue(model.isIdentifiable());
 
-        final Model retrieved = modelRepository.findOne(model.getId());
-        Assert.assertEquals(pName, retrieved.getName());
-        Assert.assertEquals(pDescription, retrieved.getDescription());
-        Assert.assertEquals(pModelType, retrieved.getType());
+        Optional<Model> retrievedOpt = modelRepository.findById(model.getId());
+        Assert.assertTrue(retrievedOpt.isPresent());
+        Model retrieved = retrievedOpt.get();
+        Assert.assertEquals(name, retrieved.getName());
+        Assert.assertEquals(description, retrieved.getDescription());
+        Assert.assertEquals(modelType, retrieved.getType());
         return retrieved;
     }
 }

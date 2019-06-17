@@ -18,6 +18,10 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -25,7 +29,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,7 +54,20 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions.Type;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -64,21 +80,30 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -110,6 +135,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -122,19 +148,17 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -168,7 +192,7 @@ public class EsRepository implements IEsRepository {
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
      * Set it to 10 minutes to avoid timeouts while scrolling.
      */
-    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 60000 * 10;
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MN = 10;
 
     /**
      * Default number of hits retrieved by scrolling (10 is the default value and according to doc is the best value)
@@ -186,12 +210,20 @@ public class EsRepository implements IEsRepository {
      */
     private static final QueryBuilderCriterionVisitor CRITERION_VISITOR = new QueryBuilderCriterionVisitor();
 
-    public static final String REMINDER_IDX = "reminder";
+    /**
+     * Index used to store search after cursors
+     */
+    private static final String REMINDER_IDX = "reminder";
 
     /**
      * Suffix for text attributes
      */
     private static final String KEYWORD_SUFFIX = ".keyword";
+
+    /**
+     * From Elasticsearch 6.0, a single type is allowed, its name is (by now) "_doc"
+     */
+    private static final String TYPE = "_doc";
 
     /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
@@ -205,11 +237,6 @@ public class EsRepository implements IEsRepository {
     private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;
 
     /**
-     * Low level Rest API client
-     */
-    private final RestClient restClient;
-
-    /**
      * High level Rest API client
      */
     private final RestHighLevelClient client;
@@ -221,14 +248,14 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Constructor
-     * @param pGson JSon mapper bean
+     * @param gson JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
+    public EsRepository(@Autowired Gson gson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
             AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) {
 
-        gson = pGson;
+        this.gson = gson;
         String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
@@ -236,17 +263,16 @@ public class EsRepository implements IEsRepository {
                 .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        restClient = RestClient.builder(new HttpHost(esHost, esPort))
-                // .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(60_000))
-                // .setMaxRetryTimeoutMillis(60_000).build();
-                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1200_000))
-                .setMaxRetryTimeoutMillis(1200_000).build();
+        // Timeouts are set to 20 minutes particulary for bulk save containing geo_shape
+        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(esHost, esPort))
+                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1_200_000))
+                .setMaxRetryTimeoutMillis(1_200_000);
 
-        client = new RestHighLevelClient(restClient);
+        client = new RestHighLevelClient(restClientBuilder);
 
         try {
             // Testing availability of ES
-            if (!client.ping()) {
+            if (!client.ping(RequestOptions.DEFAULT)) {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
         } catch (IOException | RuntimeException e) {
@@ -258,7 +284,7 @@ public class EsRepository implements IEsRepository {
     public void close() {
         LOGGER.info("Closing connection");
         try {
-            restClient.close();
+            client.close();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -267,66 +293,50 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean createIndex(String index) {
         try {
-            Response response = restClient.performRequest("PUT", index.toLowerCase());
-            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
+            CreateIndexRequest request = Requests.createIndexRequest(index.toLowerCase());
+            // mapping (properties)
+            request.mapping(TYPE, XContentFactory.jsonBuilder().startObject() // NOSONAR
+                    // XContentFactory.jsonBuilder() of type XContentBuilder is closed by request.mapping()
+                    // Automatic double mapping (dynamic_templates)
+                    .startArray("dynamic_templates").startObject().startObject("doubles")
+                    .field("match_mapping_type", "double").startObject("mapping").field("type", "double").endObject()
+                    .endObject().endObject().endArray()
+                    // Properties mapping for geometry and type
+                    .startObject("properties")
+                    // _doc is now this unique type => add a "type" property containing previous type
+                    .startObject("type").field("type", "keyword").endObject()
+                    // Geometry mapping (field is wgs84 even if two over fields contain geometry, they
+                    // are not mapped as geo_shape, they only bring informations)
+                    .startObject("wgs84").field("type", "geo_shape") // default
+                    // With geohash
+                    .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
+                    // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
+                    // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
+                    // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
+                    // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
+
+                    // With quadtree
+                    //                                    .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
+                    // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
+                    // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
+
+                    .endObject().endObject().endObject());
+            CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
     }
 
     @Override
-    public boolean setAutomaticDoubleMapping(String index, String... types) {
-        try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-            String mapping = builder.startObject().startArray("dynamic_templates").startObject().startObject("doubles")
-                    .field("match_mapping_type", "double").startObject("mapping").field("type", "double").endObject()
-                    .endObject().endObject().endArray().endObject().string();
-
-            try (NStringEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON)) {
-
-                for (String type : types) {
-                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
-                                                                  Collections.emptyMap(), entity);
-                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        } catch (IOException ioe) {
-            throw new RsRuntimeException(ioe);
-        }
-    }
-
-    @Override
-    public boolean setGeometryMapping(String index, String... types) {
+    public boolean createAlias(String index, String alias) {
         try {
-            for (String type : types) {
-                try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-                    String mapping = builder.startObject().startObject(type).startObject("properties")
-                            .startObject("wgs84").field("type", "geo_shape")
-                            // With geohash
-                            .field("tree", "geohash") // precison = 11 km Astro test 13s to fill constellations
-                            // .field("tree_levels", "5") // precision = 3.5 km Astro test 19 s to fill constellations
-                            // .field("tree_levels", "6") // precision = 3.5 km Astro test 41 s to fill constellations
-                            // .field("tree_levels", "7") // precision = 111 m Astro test 2 mn to fill constellations
-                            // .field("tree_levels", "8") // precision = 111 m Astro test 13 mn to fill constellations
-
-                            // With quadtree
-                            .field("tree", "quadtree") // precison = 11 km Astro test 10s to fill constellations
-                            // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
-                            // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
-
-                            .endObject().endObject().endObject().endObject().string();
-
-                    HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
-                                                                  Collections.emptyMap(), entity);
-                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                        return false;
-                    }
-                }
-            }
-            return true;
+            IndicesAliasesRequest request = new IndicesAliasesRequest();
+            AliasActions createAliasAction = new AliasActions(Type.ADD).index(index.toLowerCase())
+                    .alias(alias.toLowerCase());
+            request.addAliasAction(createAliasAction);
+            AcknowledgedResponse response = client.indices().updateAliases(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -335,18 +345,12 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean setSettingsForBulk(String index) {
         try {
-            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-                String mapping = builder.startObject().startObject("index").field("refresh_interval", "-1")
-                        .field("number_of_replicas", "0").endObject().endObject().string();
-
-                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
-                }
-            }
-            return true;
+            UpdateSettingsRequest request = Requests.updateSettingsRequest(index.toLowerCase());
+            Settings.Builder builder = Settings.builder().put("index.refresh_interval", -1)
+                    .put("index.number_of_replicas", 0);
+            request.settings(builder);
+            AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -356,18 +360,12 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean unsetSettingsForBulk(String index) {
         try {
-            try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
-                String mapping = builder.startObject().startObject("index").field("refresh_interval", "1s")
-                        .field("number_of_replicas", "1").endObject().endObject().string();
-
-                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/_settings", Collections.emptyMap(), entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
-                }
-            }
-            return true;
+            UpdateSettingsRequest request = Requests.updateSettingsRequest(index.toLowerCase());
+            Settings.Builder builder = Settings.builder().put("index.refresh_interval", "1s")
+                    .put("index.number_of_replicas", 1);
+            request.settings(builder);
+            AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -375,11 +373,63 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean delete(String index, String type, String id) {
-        DeleteRequest request = new DeleteRequest(index.toLowerCase(), type, id);
+    public boolean indexExists(String name) {
         try {
-            DeleteResponse response = client.delete(request);
-            return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
+            GetIndexRequest request = new GetIndexRequest();
+            request.indices(name.toLowerCase());
+            return client.indices().exists(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean deleteIndex(String inIndex) throws IndexNotFoundException {
+        String index = inIndex.toLowerCase();
+        try {
+            return deleteIndex0(index);
+        } catch (RsRuntimeException e) {
+            if (Throwables.getRootCause(e) instanceof ElasticsearchException) {
+                ElasticsearchException ee = (ElasticsearchException) Throwables.getRootCause(e);
+                // It's probably because index is an alias
+                if (ee.status() == RestStatus.BAD_REQUEST) {
+                    try {
+                        GetAliasesRequest request = new GetAliasesRequest(index);
+                        GetAliasesResponse response = client.indices().getAlias(request, RequestOptions.DEFAULT);
+                        // There should be only one index (an alias cannot be multi-index...i assume it)
+                        if (response.getAliases().size() == 1) {
+                            Map.Entry<String, Set<AliasMetaData>> entry = response.getAliases().entrySet().iterator()
+                                    .next();
+                            // Given alias must be the only one for this index
+                            if (entry.getValue().size() == 1) {
+                                // Now it is ok to delete index (concerned alias is necessarily asked one)
+                                return deleteIndex0(entry.getKey());
+                            }
+                        }
+                        return false;
+                    } catch (Exception e1) { // NOSONAR (let's focus on first exception)
+                        // Ok, let it go, go back to first exception
+                        throw e;
+                    }
+                } else {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private boolean deleteIndex0(String index) throws IndexNotFoundException {
+        try {
+            DeleteIndexRequest request = Requests.deleteIndexRequest(index);
+            AcknowledgedResponse response = client.indices().delete(request, RequestOptions.DEFAULT);
+            return response.isAcknowledged();
+        } catch (ElasticsearchException e) {
+            if (e.status() == RestStatus.NOT_FOUND) {
+                throw new IndexNotFoundException(index.toLowerCase());
+            }
+            throw new RsRuntimeException(e);
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -394,14 +444,17 @@ public class EsRepository implements IEsRepository {
     public long deleteByQuery(String index, ICriterion criterion) {
         try {
             HttpEntity entity = new NStringEntity("{ \"query\":" + criterion.accept(CRITERION_VISITOR).toString() + "}",
-                                                  ContentType.APPLICATION_JSON);
-            Response response = restClient
-                    .performRequest("POST", "/" + index.toLowerCase() + "/_delete_by_query", Collections.emptyMap(),
-                                    entity);
-
-            try (InputStream is = response.getEntity().getContent()) {
-                Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-                return ((Number) map.get("deleted")).longValue();
+                    ContentType.APPLICATION_JSON);
+            try {
+                Request request = new Request("POST", "/" + index.toLowerCase() + "/_delete_by_query");
+                request.setEntity(entity);
+                Response response = client.getLowLevelClient().performRequest(request);
+                try (InputStream is = response.getEntity().getContent()) {
+                    Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+                    return ((Number) map.get("deleted")).longValue();
+                }
+            } finally {
+                ((NStringEntity) entity).close();
             }
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -409,15 +462,88 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean deleteIndex(String index) throws IndexNotFoundException {
+    public Collection<String> upgradeAllIndices4SingleType() {
+        List<String> newIndices = new ArrayList<>();
         try {
-            Response response = restClient.performRequest("DELETE", index.toLowerCase());
-            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
-        } catch (ResponseException e) {
-            if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                throw new IndexNotFoundException(index.toLowerCase());
+            GetIndexRequest request = new GetIndexRequest();
+            request.indices("*");
+            GetIndexResponse response = client.indices().get(request, RequestOptions.DEFAULT);
+            for (ObjectObjectCursor<String, Settings> settings : response.getSettings()) {
+                // index starting with . are kibana ones (don't give a shit)
+                if (!settings.key.startsWith(".")) {
+                    String ver = settings.value.getAsSettings("index").getAsSettings("version").get("created");
+                    Version version = Version.fromId(Integer.parseInt(ver));
+                    if (version.before(Version.V_6_0_0)) {
+                        long start = System.currentTimeMillis();
+                        LOGGER.info("Upgrading index {}:v{}...", settings.key, version);
+                        try {
+                            // Reindex
+                            LOGGER.info("Reindexing...");
+                            String newIndex = reindex(settings.key);
+                            if (newIndex != null) {
+                                LOGGER.info("...Reindexing from {} to {} OK", settings.key, newIndex);
+                                newIndices.add(newIndex);
+                                // Delete old index
+                                LOGGER.info("Deleting old index {}...", settings.key);
+                                if (deleteIndex(settings.key)) {
+                                    LOGGER.info("...Deletion OK");
+                                } else {
+                                    LOGGER.warn("...Deletion NOK, still try to create alias");
+                                }
+                                // Create alias with old name for new index
+                                LOGGER.error("Creating alias {} for {}...", newIndex, settings.key);
+                                if (createAlias(newIndex, settings.key)) {
+                                    LOGGER.info("...Alias created");
+                                } else {
+                                    LOGGER.warn("...Alias not created, please analyze the problem and try by hand");
+                                }
+                            }
+                            LOGGER.info("...Upgrade OK ({} ms)", System.currentTimeMillis() - start);
+                        } catch (Exception e) { // NOSONAR (let's continue on next index whatever problem occured)
+                            LOGGER.error(String.format("Cannot upgrade %s", settings.key), e);
+                        }
+                    }
+                }
             }
+
+        } catch (IOException e) {
             throw new RsRuntimeException(e);
+        }
+        return newIndices;
+    }
+
+    @Override
+    public String reindex(String index) throws IOException {
+        String newIndex = index.toLowerCase() + "_" + Version.CURRENT.major;
+        if (this.createIndex(newIndex)) {
+            // Reindex
+            String requestStr = String.format("{  \"source\": {    \"index\": \"%s\"  },  \"dest\": {"
+                    + "    \"index\": \"%s\"  },  \"script\": {"
+                    + "    \"source\": \"      ctx._source.type = ctx._type;" + "      ctx._type = '_doc';    \"  }}",
+                                              index, newIndex);
+            HttpEntity entity = new NStringEntity(requestStr, ContentType.APPLICATION_JSON);
+            try {
+                Request request = new Request("POST", "_reindex");
+                request.setEntity(entity);
+                Response response = client.getLowLevelClient().performRequest(request);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    return newIndex;
+                } else {
+                    LOGGER.error(response.getStatusLine().toString());
+                }
+            } finally {
+                ((NStringEntity) entity).close();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void refresh(String index) {
+        // To make just saved documents searchable, the associated index must be refreshed
+        try {
+            RefreshRequest request = Requests.refreshRequest(index.toLowerCase());
+            client.indices().refresh(request, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -425,9 +551,9 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T extends IIndexable> T get(String index, String type, String id, Class<T> clazz) {
-        GetRequest request = new GetRequest(index.toLowerCase(), type, id);
+        GetRequest request = new GetRequest(index.toLowerCase(), TYPE, id);
         try {
-            GetResponse response = client.get(request);
+            GetResponse response = client.get(request, RequestOptions.DEFAULT);
             if (!response.isExists()) {
                 return null;
             }
@@ -438,10 +564,11 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean indexExists(String name) {
+    public boolean delete(String index, String type, String id) {
+        DeleteRequest request = new DeleteRequest(index.toLowerCase(), TYPE, id);
         try {
-            Response response = restClient.performRequest("HEAD", name.toLowerCase());
-            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
+            DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
+            return response.getResult() == Result.DELETED || response.getResult() == Result.NOT_FOUND;
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -457,19 +584,11 @@ public class EsRepository implements IEsRepository {
     public boolean save(String index, IIndexable doc) {
         checkDocument(doc);
         try {
-            IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
-                                                          .source(gson.toJson(doc), XContentType.JSON));
-            return (response.getResult() == Result.CREATED);
-        } catch (IOException e) {
-            throw new RsRuntimeException(e);
-        }
-    }
-
-    @Override
-    public void refresh(String index) {
-        // To make just saved documents searchable, the associated index must be refreshed
-        try {
-            restClient.performRequest("GET", index.toLowerCase() + "/_refresh");
+            IndexResponse response = client.index(
+                                                  new IndexRequest(index.toLowerCase(), TYPE, doc.getDocId())
+                                                          .source(gson.toJson(doc), XContentType.JSON),
+                                                  RequestOptions.DEFAULT);
+            return response.getResult() == Result.CREATED; // Else UPDATED
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -480,7 +599,7 @@ public class EsRepository implements IEsRepository {
             StringBuilder errorBuffer, @SuppressWarnings("unchecked") T... documents) {
         try {
             // Use existing one or create
-            BulkSaveResult result = (bulkSaveResult == null) ? new BulkSaveResult() : bulkSaveResult;
+            BulkSaveResult result = bulkSaveResult == null ? new BulkSaveResult() : bulkSaveResult;
             if (documents.length == 0) {
                 return result;
             }
@@ -493,12 +612,12 @@ public class EsRepository implements IEsRepository {
             BulkRequest bulkRequest = new BulkRequest();
             Map<String, String> map = new HashMap<>();
             for (T doc : documents) {
-                bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId())
-                                        .source(gson.toJson(doc), XContentType.JSON));
+                bulkRequest
+                        .add(new IndexRequest(index, TYPE, doc.getDocId()).source(gson.toJson(doc), XContentType.JSON));
                 map.put(doc.getDocId(), doc.getLabel());
             }
             // Bulk save
-            BulkResponse response = client.bulk(bulkRequest);
+            BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
             // Parse response to creata a more exploitable object
             for (BulkItemResponse itemResponse : response.getItems()) {
                 if (itemResponse.isFailed()) {
@@ -531,27 +650,49 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    /**
+     * Add document type (Elasticsearch prior to version 6 type) into criterion
+     */
+    private static ICriterion addTypes(ICriterion criterion, String... types) {
+        // Beware if crit is null
+        criterion = criterion == null ? ICriterion.all() : criterion;
+        // Then add type
+        switch (types.length) {
+            case 0:
+                return criterion;
+            case 1:
+                return ICriterion.and(ICriterion.eq("type", types[0]), criterion);
+            default:
+                ICriterion orCrit = ICriterion
+                        .or(Arrays.stream(types).map(type -> ICriterion.eq("type", type)).toArray(ICriterion[]::new));
+                return ICriterion.and(orCrit, criterion);
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
+    public <T extends IIndexable> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
         try {
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex());
-            request.types(searchKey.getSearchTypes());
-            ICriterion crit = (inCrit == null) ? ICriterion.all() : inCrit;
-            SearchSourceBuilder builder = new SearchSourceBuilder();
+
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(inCrit, searchKey.getSearchTypes()));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
+            ICriterion crit = inCrit == null ? ICriterion.all() : inCrit;
+            crit = addTypes(crit, searchKey.getSearchTypes());
             builder.query(crit.accept(CRITERION_VISITOR)).size(DEFAULT_SCROLLING_HITS_SIZE);
             request.source(builder);
-            request.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
-            SearchResponse scrollResp = client.search(request);
+            request.scroll(TimeValue.timeValueMinutes(KEEP_ALIVE_SCROLLING_TIME_MN));
+            SearchResponse scrollResp = client.search(request, RequestOptions.DEFAULT);
 
             // Scroll until no hits are returned
             do {
                 for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                    action.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                    action.accept(gson.fromJson(hit.getSourceAsString(), (Class<T>) IIndexable.class));
                 }
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollResp.getScrollId());
-                scrollRequest.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
-                scrollResp = client.searchScroll(scrollRequest);
+                scrollRequest.scroll(TimeValue.timeValueMinutes(KEEP_ALIVE_SCROLLING_TIME_MN));
+                scrollResp = client.scroll(scrollRequest, RequestOptions.DEFAULT);
             } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
             // loop.
         } catch (IOException e) {
@@ -562,30 +703,32 @@ public class EsRepository implements IEsRepository {
     /**
      * Returns a set of attribute values from search documents
      * @param searchKey search key for documents of type R
-     * @param pCrit search criterion on documents of type R
+     * @param criterion search criterion on documents of type R
      * @param attributeSource document attribute to return
      * @param <R> Type of document to apply search
      * @return a set of unique attribute values
      */
-    private <R> Set<Object> searchJoined(SearchKey<?, R> searchKey, ICriterion pCrit, String attributeSource) {
+    private <R> Set<Object> searchJoined(SearchKey<?, R> searchKey, ICriterion criterion, String attributeSource) {
         try {
-            // Only first type is chosen, this case is too complex to permit a multi-type search
             // Add ".keyword" if attribute mapping type is of type text
-            String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0],
-                                             attributeSource) ? attributeSource + KEYWORD_SUFFIX : attributeSource;
-            return this.unique(searchKey, pCrit, attribute);
+            String attribute = isTextMapping(searchKey.getSearchIndex(), attributeSource)
+                    ? attributeSource + KEYWORD_SUFFIX
+                    : attributeSource;
+            return unique(searchKey, addTypes(criterion, searchKey.getSearchTypes()), attribute, Integer.MAX_VALUE,
+                          new HashSet<>());
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
     }
 
     @Override
+    @Deprecated
     public <T> Page<T> searchAllLimited(String index, Class<T> clazz, Pageable pageRequest) {
         try {
             final List<T> results = new ArrayList<>();
             SearchRequest request = new SearchRequest(index.toLowerCase());
 
-            SearchSourceBuilder builder = new SearchSourceBuilder().from(pageRequest.getOffset())
+            SearchSourceBuilder builder = new SearchSourceBuilder().from((int) pageRequest.getOffset())
                     .size(pageRequest.getPageSize());
             request.source(builder);
 
@@ -603,7 +746,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion crit,
             Map<String, FacetType> facetsMap) {
-        ICriterion criterion = (crit == null) ? ICriterion.all() : crit;
+        ICriterion criterion = addTypes(crit, searchKey.getSearchTypes());
         // Search context is different from Earth search context, check if it's a geo-search
         if (searchKey.getCrs() != Crs.WGS_84) {
             // Does criterion tree contain a BoundaryBox or Polygon criterion, if so => make a projection on WGS84
@@ -627,90 +770,97 @@ public class EsRepository implements IEsRepository {
                             FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
                                     * AUTHALIC_SPHERE_RADIUS);
                 }
-                // If criterion contains a Circle criterion, it is more complicated :
-                // Mars and Earth flattenings are different (and so astro, it's a perfect sphere)
-                // So we obtain a max radius cricle and a min radius circle for earth projected coordinates
-                // Every shapes into min radius circle are guaranted to be ok
-                // Every shapes outo max radius circle are guaranted to not be ok
-                // Other ones must be unitary tested one by one
-                GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(searchKey.getCrs());
-                Pair<ICriterion, ICriterion> critOnWgs84Pair = criterion.accept(visitor);
-                // In case of symetry (=> same radius for inner and outer circles) same criterion is returned into pair
-                if (critOnWgs84Pair.getFirst().equals(critOnWgs84Pair.getSecond())) {
-                    long start = System.currentTimeMillis();
-                    FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
-                    LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
-                                 GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
-                                 System.currentTimeMillis() - start);
-                    return page;
-                }
-                // Criterion permiting to retrieve shapes betwwen both circles
-                ICriterion betweenInnerAndOuterCirclesCriterionOnWgs84 = critOnWgs84Pair.getSecond();
-
-                // FIRST: retrieve all data into inner circle
-                ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
-                long start = System.currentTimeMillis();
-                FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion,
-                                                           facetsMap);
-                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
-                if (!intoInnerCirclePage.isLast()) {
-                    throw new RsRuntimeException(
-                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
-                }
-                CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
-                LOGGER.debug(
-                        "Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
-                        intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
-                        Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
-                // SECOND: retrieve all data between inner and outer circles
-                start = System.currentTimeMillis();
-                FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
-                                                                       betweenInnerAndOuterCirclesCriterionOnWgs84,
-                                                                       facetsMap);
-                // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
-                if (!intoInnerCirclePage.isLast()) {
-                    throw new RsRuntimeException(
-                            new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
-                }
-                LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
-                             betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
-
-                // THIRD: keep only entities with a shape nearer than specified radius from specified center
-                // Retrieve radius of specified circle on given Crs
-                CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
-                double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
-                double[] center = circleCriterionOnCrs.getCoordinates();
-
-                // Test all data one by one
-                List<T> inOuterCircleEntities = new ArrayList<>();
-                for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
-                    if (entity instanceof ILocalizable) {
-                        IGeometry shape = ((ILocalizable) entity).getNormalizedGeometry();
-                        if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
-                            inOuterCircleEntities.add(entity);
-                        } else {
-                            System.err.println("Remove " + entity);
-                        }
-                    }
-                }
-                // Merge data
-                if (!inOuterCircleEntities.isEmpty()) {
-                    LOGGER.debug("Keep {} points between inner and outer circles", inOuterCircleEntities.size());
-                    List<T> resultList = new ImmutableList.Builder<T>().addAll(intoInnerCirclePage.getContent())
-                            .addAll(inOuterCircleEntities).build();
-                    return new FacetPage<>(resultList, null, intoInnerCirclePage.getPageable(), resultList.size());
-                } else {
-                    LOGGER.debug("Keep no points between inner and outer circles");
-                }
-                return intoInnerCirclePage;
+                return searchWithCircleCriterionInProjectedCrs(searchKey, pageRequest, facetsMap, criterion);
             }
         }
         return search0(searchKey, pageRequest, criterion, facetsMap);
     }
 
     /**
-     * Inner search on WGS84 method
+     * Particular case when search is asked with a circle criterion into a CRS which is not WGS84.
      */
+    private <T extends IIndexable> FacetPage<T> searchWithCircleCriterionInProjectedCrs(SearchKey<T, T> searchKey,
+            Pageable pageRequest, Map<String, FacetType> facetsMap, ICriterion criterion) {
+        // If criterion contains a Circle criterion, it is more complicated :
+        // Mars and Earth flattenings are different (and so astro, it's a perfect sphere)
+        // So we obtain a max radius cricle and a min radius circle for earth projected coordinates
+        // Every shapes into min radius circle are guaranted to be ok
+        // Every shapes outo max radius circle are guaranted to not be ok
+        // Other ones must be unitary tested one by one
+        GeoCriterionWithCircleVisitor visitor = new GeoCriterionWithCircleVisitor(searchKey.getCrs());
+        Pair<ICriterion, ICriterion> critOnWgs84Pair = criterion.accept(visitor);
+        // In case of symetry (=> same radius for inner and outer circles) same criterion is returned into pair
+        if (critOnWgs84Pair.getFirst().equals(critOnWgs84Pair.getSecond())) {
+            long start = System.currentTimeMillis();
+            FacetPage<T> page = search0(searchKey, pageRequest, critOnWgs84Pair.getFirst(), facetsMap);
+            LOGGER.debug("Simple symetric circle search with radius: {} (duration: {} ms)",
+                         GeoHelper.findCircleCriterion(critOnWgs84Pair.getFirst()).getRadius(),
+                         System.currentTimeMillis() - start);
+            return page;
+        }
+        // Criterion permiting to retrieve shapes betwwen both circles
+        ICriterion betweenInnerAndOuterCirclesCriterionOnWgs84 = critOnWgs84Pair.getSecond();
+
+        // FIRST: retrieve all data into inner circle
+        ICriterion innerCircleOnWgs84Criterion = critOnWgs84Pair.getFirst();
+        long start = System.currentTimeMillis();
+        FacetPage<T> intoInnerCirclePage = search0(searchKey, pageRequest, innerCircleOnWgs84Criterion, facetsMap);
+        // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+        if (!intoInnerCirclePage.isLast()) {
+            throw new RsRuntimeException(
+                    new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+        }
+        CircleCriterion innerCircleCrit = GeoHelper.findCircleCriterion(innerCircleOnWgs84Criterion);
+        LOGGER.debug("Found {} points into inner circle with radius {} and center {} projected on WGS84 (search duration: {} ms)",
+                     intoInnerCirclePage.getNumberOfElements(), innerCircleCrit.getRadius(),
+                     Arrays.toString(innerCircleCrit.getCoordinates()), System.currentTimeMillis() - start);
+        // SECOND: retrieve all data between inner and outer circles
+        start = System.currentTimeMillis();
+        FacetPage<T> betweenInnerAndOuterCirclesPage = search0(searchKey, pageRequest,
+                                                               betweenInnerAndOuterCirclesCriterionOnWgs84, facetsMap);
+        // If more than MAX_PAGE_SIZE => TooManyResultException (too complicated case)
+        if (!intoInnerCirclePage.isLast()) {
+            throw new RsRuntimeException(
+                    new TooManyResultsException("Please refine criteria to avoid exceeding page size limit"));
+        }
+        LOGGER.debug("Found {} points between inner and outer circles (search duration: {} ms)",
+                     betweenInnerAndOuterCirclesPage.getNumberOfElements(), System.currentTimeMillis() - start);
+
+        // THIRD: keep only entities with a shape nearer than specified radius from specified center
+        // Retrieve radius of specified circle on given Crs
+        CircleCriterion circleCriterionOnCrs = GeoHelper.findCircleCriterion(criterion);
+        double maxRadiusOnCrs = EsHelper.toMeters(circleCriterionOnCrs.getRadius());
+        double[] center = circleCriterionOnCrs.getCoordinates();
+
+        // Test all data one by one
+        List<T> inOuterCircleEntities = new ArrayList<>();
+        for (T entity : betweenInnerAndOuterCirclesPage.getContent()) {
+            if (entity instanceof ILocalizable) {
+                IGeometry shape = ((ILocalizable) entity).getNormalizedGeometry();
+                if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
+                    inOuterCircleEntities.add(entity);
+                } else {
+                    System.err.println("Remove " + entity);
+                }
+            }
+        }
+        // Merge data
+        if (!inOuterCircleEntities.isEmpty()) {
+            LOGGER.debug("Keep {} points between inner and outer circles", inOuterCircleEntities.size());
+            List<T> resultList = new ImmutableList.Builder<T>().addAll(intoInnerCirclePage.getContent())
+                    .addAll(inOuterCircleEntities).build();
+            return new FacetPage<>(resultList, null, intoInnerCirclePage.getPageable(), resultList.size());
+        } else {
+            LOGGER.debug("Keep no points between inner and outer circles");
+        }
+        return intoInnerCirclePage;
+    }
+
+    /**
+     * Inner search on WGS84 method.
+     * <b>NOTE : criterion already contains restricition on types !!</b>
+     */
+    @SuppressWarnings("unchecked")
     private <T extends IIndexable> FacetPage<T> search0(SearchKey<T, T> searchKey, Pageable pageRequest,
             ICriterion criterion, Map<String, FacetType> facetsMap) {
         String index = searchKey.getSearchIndex();
@@ -723,12 +873,12 @@ public class EsRepository implements IEsRepository {
 
             Sort sort = pageRequest.getSort();
             // page size is max or page offset is > max page size, prepare sort for search_after
-            if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
+            if (pageRequest.getOffset() >= MAX_RESULT_WINDOW || pageRequest.getPageSize() == MAX_RESULT_WINDOW) {
                 // A sort is mandatory to permit use of searchAfter (id by default if none provided)
-                sort = (sort == null) ? new Sort("ipId") : pageRequest.getSort();
+                sort = sort == null || sort.isUnsorted() ? Sort.by("ipId") : pageRequest.getSort();
                 // To assure unicity, always add "ipId" as a sort parameter
                 if (sort.getOrderFor("ipId") == null) {
-                    sort = sort.and(new Sort("ipId"));
+                    sort = sort.and(Sort.by("ipId"));
                 }
             }
             Object[] lastSearchAfterSortValues = null;
@@ -738,16 +888,17 @@ public class EsRepository implements IEsRepository {
                                                                    critBuilder);
             }
 
-            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
-                    .size(pageRequest.getPageSize());
+            //            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
+            SearchRequest request = new SearchRequest(index).types(TYPE);
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder)
+                    .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
 
             // If searchAfter has been executed (in that case manageSortRequest() has already been called)
             if (lastSearchAfterSortValues != null) {
                 builder.searchAfter(lastSearchAfterSortValues).from(0);
                 manageSortRequest(index, builder, sort);
                 // } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
-            } else if (sort != null) {
+            } else if (sort != null && sort.isSorted()) {
                 manageSortRequest(index, builder, sort);
             }
 
@@ -757,7 +908,7 @@ public class EsRepository implements IEsRepository {
             // Launch the request
             long start = System.currentTimeMillis();
             LOGGER.trace("ElasticsearchRequest: {}", request.toString());
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
 
             start = System.currentTimeMillis();
@@ -767,13 +918,14 @@ public class EsRepository implements IEsRepository {
                 // facets
                 if (twoPassRequestNeeded) {
                     // Rebuild request
-                    request = new SearchRequest(index).types(searchKey.getSearchTypes());
-                    builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
+                    //                    request = new SearchRequest(index).types(searchKey.getSearchTypes());
+                    request = new SearchRequest(index).types(TYPE);
+                    builder = new SearchSourceBuilder().query(critBuilder).from((int) pageRequest.getOffset())
                             .size(pageRequest.getPageSize());
                     if (lastSearchAfterSortValues != null) {
                         builder.searchAfter(lastSearchAfterSortValues).from(0); // needed by searchAfter
                         manageSortRequest(index, builder, sort);
-                    } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
+                    } else if (pageRequest.getSort() != null && pageRequest.getSort().isSorted()) { // Don't forget to manage sort if one is provided
                         manageSortRequest(index, builder, pageRequest.getSort());
                     }
                     Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
@@ -781,17 +933,16 @@ public class EsRepository implements IEsRepository {
                     // Relaunch the request with replaced facets
                     request.source(builder);
                     LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
-                    response = client.search(request);
+                    response = client.search(request, RequestOptions.DEFAULT);
                 }
 
                 // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
                 // (not necessarly)
-                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize()
-                        == MAX_RESULT_WINDOW)) {
+                if (pageRequest.getOffset() >= MAX_RESULT_WINDOW || pageRequest.getPageSize() == MAX_RESULT_WINDOW) {
                     saveReminder(searchKey, pageRequest, criterion, sort, response);
                 }
 
-                if ((facetsMap != null) && (response.getAggregations() != null)) {
+                if (facetsMap != null && response.getAggregations() != null) {
                     // Get the new aggregations result map
                     Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                     // Fill the facet set
@@ -809,7 +960,7 @@ public class EsRepository implements IEsRepository {
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
-                    results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                    results.add(gson.fromJson(hit.getSourceAsString(), (Class<T>) IIndexable.class));
                 } catch (JsonParseException e) {
                     LOGGER.error("Unable to jsonify entity with id {}, source: \"{}\"", hit.getId(),
                                  hit.getSourceAsString());
@@ -829,21 +980,25 @@ public class EsRepository implements IEsRepository {
         if (response.getHits().getHits().length != 0) {
             // Store last sort value in order to use searchAfter next time
             Object[] sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
+            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MN, ChronoUnit.MINUTES);
             // Create a AbstractReminder and save it into ES for next page
             SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest.next());
             reminder.setExpirationDate(expirationDate);
             reminder.setSearchAfterSortValues(sortValues);
 
             save(REMINDER_IDX, reminder);
-            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
+            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MN that delete all reminders whom
             // expiration date has been reached
+            // No need to add reminder type criterion because reminder type is useless since ES6
             reminderCleanExecutor
                     .schedule(() -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
-                              KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
+                              KEEP_ALIVE_SCROLLING_TIME_MN, TimeUnit.MINUTES);
         }
     }
 
+    /**
+     * <b>NOTE: critBuilder already contains restriction on types</b>
+     */
     private <T extends IIndexable> Object[] advanceWithSearchAfter(ICriterion crit, SearchKey<T, T> searchKey,
             Pageable pageRequest, String index, Sort sort, QueryBuilder critBuilder) {
         try {
@@ -859,12 +1014,11 @@ public class EsRepository implements IEsRepository {
                     return reminder.getSearchAfterSortValues();
                 }
                 // Then check if a closer one exists (advance is done by MAX_RESULT_WINDOW steps so we must take this
-                // into
-                // account)
-                searchPageNumber =
-                        (pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW)) / MAX_RESULT_WINDOW;
+                // into account)
+                searchPageNumber = (int) ((pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW)
+                        / MAX_RESULT_WINDOW);
                 while (searchPageNumber > 0) {
-                    searchReminderPageRequest = new PageRequest(searchPageNumber, MAX_RESULT_WINDOW);
+                    searchReminderPageRequest = PageRequest.of(searchPageNumber, MAX_RESULT_WINDOW);
                     reminder = new SearchAfterReminder(crit, searchKey, sort, searchReminderPageRequest);
                     reminder = get(REMINDER_IDX, reminder);
                     // A reminder has been found ! Let's start from it
@@ -878,7 +1032,7 @@ public class EsRepository implements IEsRepository {
             }
 
             // No reminder found (first request or last one is too old) => advance to next to last page
-            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
+            SearchRequest request = new SearchRequest(index).types(TYPE);
             // By default, launch request from 0 to 10_000 (without aggregations)...
             int offset = 0;
             int pageSize = MAX_RESULT_WINDOW;
@@ -890,25 +1044,24 @@ public class EsRepository implements IEsRepository {
                 offset = searchPageNumber * MAX_RESULT_WINDOW;
             } else {
                 LOGGER.debug("Search (after) : offset {}", offset);
-                SearchResponse response = client.search(request);
+                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 offset += MAX_RESULT_WINDOW;
             }
-            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
+            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MN, ChronoUnit.MINUTES);
 
-            int nextToLastOffset = pageRequest.getOffset() - (pageRequest.getOffset() % MAX_RESULT_WINDOW);
+            int nextToLastOffset = (int) (pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW);
             // Execute as many request with search after as necessary to advance to next to last page of
             // MAX_RESULT_WINDOW size until offset
             while (offset < nextToLastOffset) {
                 // Change offset
                 LOGGER.debug("Search after : offset {}", offset);
                 builder.from(0).searchAfter(sortValues);
-                SearchResponse response = client.search(request);
+                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 // Create a AbstractReminder and save it into ES for next page
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
-                                                                       new PageRequest(offset / MAX_RESULT_WINDOW,
-                                                                                       MAX_RESULT_WINDOW).next());
+                        PageRequest.of(offset / MAX_RESULT_WINDOW, MAX_RESULT_WINDOW).next());
                 reminder.setExpirationDate(expirationDate);
                 reminder.setSearchAfterSortValues(
                         response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
@@ -918,18 +1071,19 @@ public class EsRepository implements IEsRepository {
             }
             // Beware of offset that is a multiple of MAX_RESULT_WINDOW
             if (pageRequest.getOffset() != offset) {
-                int size = pageRequest.getOffset() - offset;
+                int size = (int) (pageRequest.getOffset() - offset);
                 LOGGER.debug("Search after : offset {}, size {}", offset, size);
                 builder.size(size).searchAfter(sortValues).from(0); // needed by searchAfter
-                SearchResponse response = client.search(request);
+                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
             }
 
-            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
+            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MN that delete all reminders whom
             // expiration date has been reached
+            // No need to add type restriction, reminder is useless since ES6
             reminderCleanExecutor
                     .schedule(() -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
-                              KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
+                              KEEP_ALIVE_SCROLLING_TIME_MN, TimeUnit.MINUTES);
             return sortValues;
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -939,11 +1093,10 @@ public class EsRepository implements IEsRepository {
     /**
      * Build a SearchSourceBuilder following given ICriterion on searchKey with a result size of 0
      */
-    private <T> SearchSourceBuilder createSourceBuilder4Agg(SearchKey<?, T> searchKey, ICriterion criterion) {
+    private <T> SearchSourceBuilder createSourceBuilder4Agg(ICriterion criterion) {
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
-        ICriterion crit = (criterion == null) ? ICriterion.all() : criterion;
         QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                .filter(crit.accept(CRITERION_VISITOR));
+                .filter(criterion.accept(CRITERION_VISITOR));
         // Only return hits information
         return new SearchSourceBuilder().query(critBuilder).size(0);
     }
@@ -951,11 +1104,10 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion criterion) {
         try {
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             return response.getHits().getTotalHits();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -965,12 +1117,11 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> double sum(SearchKey<?, T> searchKey, ICriterion criterion, String attName) {
         try {
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
             builder.aggregation(AggregationBuilders.sum(attName).field(attName));
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             return ((Sum) response.getAggregations().get(attName)).getValue();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -981,14 +1132,13 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable> OffsetDateTime minDate(SearchKey<?, T> searchKey, ICriterion criterion,
             String attName) {
         try {
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
             builder.aggregation(AggregationBuilders.min(attName).field(attName));
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             Min min = response.getAggregations().get(attName);
-            if ((min == null) || !Double.isFinite(min.getValue())) {
+            if (min == null || !Double.isFinite(min.getValue())) {
                 return null;
             }
             return OffsetDateTimeAdapter.parse(min.getValueAsString());
@@ -1001,14 +1151,13 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion criterion,
             String attName) {
         try {
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
             builder.aggregation(AggregationBuilders.max(attName).field(attName));
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             Max max = response.getAggregations().get(attName);
-            if ((max == null) || !Double.isFinite(max.getValue())) {
+            if (max == null || !Double.isFinite(max.getValue())) {
                 return null;
             }
             return OffsetDateTimeAdapter.parse(max.getValueAsString());
@@ -1021,17 +1170,18 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable> Aggregations getAggregations(SearchKey<?, T> searchKey, ICriterion criterion,
             Collection<QueryableAttribute> attributes) {
         try {
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
-            attributes.stream().filter(qa -> qa.isTextAttribute() && (qa.getTermsLimit() > 0)).forEach(a -> builder
-                    .aggregation(
-                            AggregationBuilders.terms(a.getAttributeName()).field(a.getAttributeName() + KEYWORD_SUFFIX)
-                                    .size(a.getTermsLimit())));
-            attributes.stream().filter(qa -> !qa.isTextAttribute()).forEach(qa -> builder
-                    .aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName())));
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
+            for (QueryableAttribute qa : attributes) {
+                if (qa.isTextAttribute() && qa.getTermsLimit() > 0) {
+                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName())
+                            .field(qa.getAttributeName() + KEYWORD_SUFFIX).size(qa.getTermsLimit()));
+                } else if (!qa.isTextAttribute()) {
+                    builder.aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName()));
+                }
+            }
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             // Update attributes with aggregation if any
             if (response.getAggregations() != null) {
                 for (Aggregation agg : response.getAggregations()) {
@@ -1058,7 +1208,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit,
             String attName, int maxCount) {
-        return unique(searchKey, crit, attName, maxCount, new TreeSet<>());
+        return unique(searchKey, addTypes(crit, searchKey.getSearchTypes()), attName, maxCount, new TreeSet<>());
     }
 
     /**
@@ -1071,22 +1221,21 @@ public class EsRepository implements IEsRepository {
      * @return an HashSet
      */
     public <T, R> Set<R> unique(SearchKey<?, T> searchKey, ICriterion crit, String attName) {
-        return unique(searchKey, crit, attName, Integer.MAX_VALUE, new HashSet<R>());
+        return unique(searchKey, addTypes(crit, searchKey.getSearchTypes()), attName, Integer.MAX_VALUE,
+                      new HashSet<R>());
     }
 
+    @SuppressWarnings("unchecked")
     private <T, R, S extends Set<R>> S unique(SearchKey<?, T> searchKey, ICriterion crit, String inAttName,
             int maxCount, S set) {
         try {
-            String attName = (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], inAttName)) ?
-                    inAttName + ".keyword" :
-                    inAttName;
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + ".keyword" : inAttName;
+            SearchSourceBuilder builder = createSourceBuilder4Agg(crit);
             // Assuming no more than Integer.MAX_SIZE results will be returned
             builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             Terms terms = response.getAggregations().get(attName);
             if (terms == null) {
                 return set;
@@ -1101,7 +1250,7 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * Utility class to create a quadruple key (a pair of pairs) used by loading cache mechanism
+     * Utility class to create a triple key used by loading cache mechanism (yes, it's a lazy how to)
      */
     private static class CacheKey extends Tuple<SearchKey<?, ?>, Tuple<ICriterion, String>> {
 
@@ -1109,15 +1258,15 @@ public class EsRepository implements IEsRepository {
             super(searchKey, new Tuple<>(v2, v3));
         }
 
-        public SearchKey<?, ?> getV1() {
+        public SearchKey<?, ?> getSearchKey() {
             return v1();
         }
 
-        public ICriterion getV2() {
+        public ICriterion getCriterion() {
             return v2().v1();
         }
 
-        public String getV3() {
+        public String getSourceAttribute() {
             return v2().v2();
         }
     }
@@ -1135,7 +1284,7 @@ public class EsRepository implements IEsRepository {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
                     // with same order
                     SortedSet<Object> results = new TreeSet<>(Comparator.comparing(Objects::hashCode));
-                    results.addAll(searchJoined(key.getV1(), key.getV2(), key.getV3()));
+                    results.addAll(searchJoined(key.getSearchKey(), key.getCriterion(), key.getSourceAttribute()));
                     return results;
                 }
             });
@@ -1144,8 +1293,8 @@ public class EsRepository implements IEsRepository {
     @Override
     public <R> List<R> search(SearchKey<?, R> searchKey, ICriterion criterion, String sourceAttribute) {
         try {
-            SortedSet<Object> objects = searchAllCache
-                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            SortedSet<Object> objects = searchAllCache.getUnchecked(new CacheKey(searchKey,
+                    addTypes(criterion, searchKey.getSearchTypes()), sourceAttribute));
             return objects.stream().map(o -> (R) o).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw new RsRuntimeException(e);
@@ -1157,8 +1306,8 @@ public class EsRepository implements IEsRepository {
     public <R, U> List<U> search(SearchKey<?, R> searchKey, ICriterion criterion, String sourceAttribute,
             Function<R, U> transformFct) {
         try {
-            SortedSet<Object> objects = searchAllCache
-                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            SortedSet<Object> objects = searchAllCache.getUnchecked(new CacheKey(searchKey,
+                    addTypes(criterion, searchKey.getSearchTypes()), sourceAttribute));
             return objects.stream().map(o -> (R) o).map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw new RsRuntimeException(e);
@@ -1170,8 +1319,8 @@ public class EsRepository implements IEsRepository {
     public <R, U> List<U> search(SearchKey<?, R[]> searchKey, ICriterion criterion, String sourceAttribute,
             Predicate<R> filterPredicate, Function<R, U> transformFct) {
         try {
-            SortedSet<Object> objects = searchAllCache
-                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            SortedSet<Object> objects = searchAllCache.getUnchecked(new CacheKey(searchKey,
+                    addTypes(criterion, searchKey.getSearchTypes()), sourceAttribute));
             return objects.stream().map(o -> (R) o).distinct().filter(filterPredicate).map(transformFct)
                     .collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
@@ -1179,6 +1328,10 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    /**
+     * If you think this method is horrible and completely useless (and bordel line) look at next method...
+     */
+    @SuppressWarnings("unchecked")
     private static Map<String, Object> toMap(Object o) {
         return (Map<String, Object>) o;
     }
@@ -1186,27 +1339,28 @@ public class EsRepository implements IEsRepository {
     /**
      * Is given attribute (can be a composite attribute like toto.titi) of type text from ES mapping ?
      * @param inIndex concerned index
-     * @param type concerned type
      * @param attribute attribute from type
      * @return true or false
      */
-    private boolean isTextMapping(String inIndex, String type, String attribute) throws IOException {
+    private boolean isTextMapping(String inIndex, String attribute) throws IOException {
         String index = inIndex.toLowerCase();
         try {
-            Response response = restClient
-                    .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
+            Response response = client.getLowLevelClient()
+                    .performRequest(new Request("GET", index + "/_mapping/" + TYPE + "/field/" + attribute));
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
                 // If attribute exists, response should contain this chain of several maps :
                 // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
-                if ((map != null) && !map.isEmpty()) {
-                    // In cas attribute is toto.titi.tutu, we will need "tutu" further
-                    String lastPathAtt = (attribute.contains(".") ?
-                            attribute.substring(attribute.lastIndexOf('.') + 1) :
-                            attribute);
-                    return toMap(
-                            toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
-                                          .get("mapping")).get(lastPathAtt)).get("type").equals("text");
+                if (map != null && !map.isEmpty()) {
+                    // In case attribute is toto.titi.tutu, we will need "tutu" further
+                    String lastPathAtt = attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
+                            : attribute;
+                    // BEWARE : instead of map.get(index) on the innermost map value retrieval, we use directly
+                    // map.values().iterator().next() to get value associated to singleton element whatever the key is
+                    // Indeed, because of Elasticsearch version 6 single type update, some indices are retrieved through
+                    // an alias. Asking an alias mapping returned a block with index name, not alias name
+                    return toMap(toMap(toMap(toMap(toMap(toMap(map.values().iterator().next()).get("mappings"))
+                            .get(TYPE)).get(attribute)).get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
                 }
             }
@@ -1231,12 +1385,13 @@ public class EsRepository implements IEsRepository {
                 attribute;
         try {
             // Mapping map contain only one value, the concerned index mapping BUT in case index is an alias, map key
-            // is true index name, not alias one so DON'T retrieve mappinh from its name !!!
+            // is true index name, not alias one so DON'T retrieve mapping from its name !!!
             Iterator<Object> i = map.values().iterator();
             if (i.hasNext()) {
                 Map<String, Object> allTypesMapping = toMap(toMap(i.next()).get("mappings"));
                 // Search from all types mapping if one contains asked attribute (frankly, all must contain it but maybe
                 // automatic mapping isn't present for all
+                // Since ES6, single type so this loop isn't really one
                 for (Object oTypeMap : allTypesMapping.values()) {
                     Map<String, Object> typeMap = toMap(oTypeMap);
                     if (typeMap.containsKey(attribute)) {
@@ -1262,13 +1417,11 @@ public class EsRepository implements IEsRepository {
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        Response response = restClient
-                .performRequest("GET", index + "/_mapping" + "/field/" + Joiner.on(",").join(ascSortMap.keySet()),
-                                Collections.emptyMap());
+        Response response = client.getLowLevelClient().performRequest(new Request("GET",
+                index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
         try (InputStream is = response.getEntity().getContent()) {
             Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-            if ((map != null) && !map.isEmpty()) {
-                // All types mappings are retrieved.
+            if (map != null && !map.isEmpty()) {
                 // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
                 // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
                 LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
@@ -1310,7 +1463,7 @@ public class EsRepository implements IEsRepository {
             // size of values
             for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
                 FacetType facetType = entry.getValue();
-                if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
+                if (facetType == FacetType.NUMERIC || facetType == FacetType.DATE) {
                     // Add min aggregation and max aggregagtion when a range aggregagtion is asked for (NUMERIC and DATE
                     // facets leed to range aggregagtion at second pass) to avoid ranges with Infinties values
                     builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
@@ -1327,29 +1480,28 @@ public class EsRepository implements IEsRepository {
     /**
      * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first
      * pass request results) to create range aggregagtions.
-     * @param pFacetsMap asked facets
+     * @param facetsMap asked facets
      * @param builder search request
      * @param aggsMap first pass aggregagtions results
      */
-    private void manageSecondPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchSourceBuilder builder,
+    private void manageSecondPassRequestAggregations(Map<String, FacetType> facetsMap, SearchSourceBuilder builder,
             Map<String, Aggregation> aggsMap) {
-        for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+        for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
             FacetType facetType = entry.getValue();
             String attributeName = entry.getKey();
             String attName;
             // Replace percentiles aggregations by range aggregations
-            if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                attName = (facetType == FacetType.NUMERIC) ?
-                        attributeName + NUMERIC_FACET_SUFFIX :
-                        attributeName + DATE_FACET_SUFFIX;
+            if (facetType == FacetType.NUMERIC || facetType == FacetType.DATE) {
+                attName = facetType == FacetType.NUMERIC ? attributeName + NUMERIC_FACET_SUFFIX
+                        : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
                 // No percentile values for this property => skip aggregation
                 if (Iterables.all(percentiles, p -> Double.isNaN(p.getValue()))) {
                     continue;
                 }
-                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
-                        FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
-                        FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
+                AggregationBuilder aggBuilder = facetType == FacetType.NUMERIC
+                        ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
+                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     // And add max and min aggregations
@@ -1501,27 +1653,32 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue,
-            String... pFields) {
+    public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object inValue,
+            String... fields) {
         try {
             final List<T> results = new ArrayList<>();
             // OffsetDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof OffsetDateTime) ?
-                    OffsetDateTimeAdapter.format((OffsetDateTime) pValue) :
-                    pValue;
-            QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                    .filter(QueryBuilders.multiMatchQuery(value, pFields));
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder).from(pPageRequest.getOffset())
-                    .size(pPageRequest.getPageSize());
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            Object value = inValue instanceof OffsetDateTime ? OffsetDateTimeAdapter.format((OffsetDateTime) inValue)
+                    : inValue;
+            // Create filter query with all asked types and multi match query
+            BoolQueryBuilder filterBuilder = QueryBuilders.boolQuery();
+            for (String type : searchKey.getSearchTypes()) {
+                filterBuilder = filterBuilder.must(QueryBuilders.matchPhraseQuery("type", type));
+            }
+            filterBuilder = filterBuilder.must(QueryBuilders.multiMatchQuery(value, fields));
 
-            SearchResponse response = client.search(request);
+            QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                    .filter(filterBuilder);
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder)
+                    .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
+
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
-            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+            return new PageImpl<>(results, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -1531,17 +1688,16 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes) {
         try {
-            if ((fileTypes == null) || (fileTypes.length == 0)) {
+            if (fileTypes == null || fileTypes.length == 0) {
                 throw new IllegalArgumentException("At least one file type must be provided");
             }
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(crit, searchKey.getSearchTypes()));
             // Add files count and files sum size aggregations
             addFilesCountAndSumAggs(searchKey, discriminantProperty, builder, fileTypes);
 
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
 
             // First "global" aggregations results
             summary.addDocumentsCount(response.getHits().getTotalHits());
@@ -1602,7 +1758,7 @@ public class EsRepository implements IEsRepository {
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
-        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+        if (isTextMapping(searchKey.getSearchIndex(), discriminantProperty)) {
             termsFieldProperty += KEYWORD_SUFFIX;
         }
         // Discriminant distribution aggregator
@@ -1624,18 +1780,18 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes) {
         try {
-            if ((fileTypes == null) || (fileTypes.length == 0)) {
+            if (fileTypes == null || fileTypes.length == 0) {
                 throw new IllegalArgumentException("At least one file type must be provided");
             }
 
-            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(crit, searchKey.getSearchTypes()));
             // Add files cardinality aggregation
             addFilesCardinalityAgg(searchKey, discriminantProperty, builder, fileTypes);
 
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
-                    .source(builder);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
+
             // Launch the request
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             // First "global" aggregations results
             summary.addDocumentsCount(response.getHits().getTotalHits());
             Aggregations aggs = response.getAggregations();
@@ -1682,12 +1838,11 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file cardinality
             builder.aggregation(AggregationBuilders.cardinality("total_" + fileType + "_files_count")
-                                        .field("feature.files." + fileType + ".uri"
-                                                       + KEYWORD_SUFFIX)); // Only count files with a size
+                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
-        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+        if (isTextMapping(searchKey.getSearchIndex(), discriminantProperty)) {
             termsFieldProperty += KEYWORD_SUFFIX;
         }
         // Discriminant distribution aggregator
@@ -1697,7 +1852,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files cardinality
             termsAggBuilder.subAggregation(AggregationBuilders.cardinality(fileType + "_files_count")
-                                                   .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX));
+                    .field("feature.files." + fileType + ".uri" + KEYWORD_SUFFIX));
         }
         builder.aggregation(termsAggBuilder);
     }

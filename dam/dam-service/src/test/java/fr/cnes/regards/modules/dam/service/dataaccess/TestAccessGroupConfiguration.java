@@ -16,34 +16,40 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.rest.entities;
+package fr.cnes.regards.modules.dam.service.dataaccess;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
-/**
- * Created by oroussel on 04/05/17.
- */
 @Configuration
-public class ControllerITConfig {
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.dam.service.dataaccess.test2" })
+public class TestAccessGroupConfiguration {
 
     @Bean
-    public IProjectsClient projectClient() {
+    public IAttributeModelClient mockAttributeModelClient() {
+        return Mockito.mock(IAttributeModelClient.class);
+    }
+
+    @Bean
+    public IProjectsClient mockProjectsClient() {
         return Mockito.mock(IProjectsClient.class);
     }
 
     @Bean
-    public IModelAttrAssocClient modelAttrAssocClient() {
+    public IModelAttrAssocClient mockModelAttrAssocClient() {
         return Mockito.mock(IModelAttrAssocClient.class);
     }
 
     @Bean
-    public IAttributeModelClient attributeModelClient() {
-        return Mockito.mock(IAttributeModelClient.class);
+    public IProjectUsersClient mockProjectUsersClient() {
+        return Mockito.mock(IProjectUsersClient.class);
     }
+
 }

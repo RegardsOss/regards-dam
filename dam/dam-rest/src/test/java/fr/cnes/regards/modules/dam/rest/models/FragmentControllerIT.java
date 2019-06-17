@@ -54,7 +54,6 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilde
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.dam.rest.models.FragmentController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 
 /**
@@ -101,8 +100,8 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment fragment = new Fragment();
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isUnprocessableEntity());
 
         performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
                            "Empty fragment shouldn't be created.");
@@ -115,13 +114,12 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment fragment = Fragment.buildFragment("GEO", "Geo description");
 
         // Define expectations
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
-        requestBuilderCustomizer
-                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+        requestBuilderCustomizer.document(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer.document(PayloadDocumentation.responseFields(documentBody(false, "content")));
 
         performDefaultPost(FragmentController.TYPE_MAPPING, fragment, requestBuilderCustomizer,
                            "Fragment cannot be created.");
@@ -131,11 +129,10 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     public void getAllFragment() throws ModuleException {
         populateDatabase();
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
         int expectedSize = 3;
-        requestBuilderCustomizer
-                .addExpectation(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
         performDefaultGet(FragmentController.TYPE_MAPPING, requestBuilderCustomizer, "Should return all fragments");
     }
@@ -154,10 +151,10 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         final Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
 
-        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation
+        requestBuilderCustomizer.document(RequestDocumentation
                 .pathParameters(RequestDocumentation.parameterWithName("fragmentId").description("Fragment identifier")
                         .attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TYPE).value("Number"), Attributes
                                 .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS).value("Should be a whole number"))));
@@ -183,8 +180,8 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         final Path filePath = Paths.get("src", "test", "resources", "fragment_it.xml");
 
-        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isCreated());
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer();
+        requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isCreated());
 
         performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, requestBuilderCustomizer,
                                  "Should be able to import a fragment");

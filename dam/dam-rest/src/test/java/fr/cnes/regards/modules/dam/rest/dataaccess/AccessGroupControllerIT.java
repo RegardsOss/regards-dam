@@ -18,45 +18,37 @@
  */
 package fr.cnes.regards.modules.dam.rest.dataaccess;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dam.rest.dataaccess.AccessGroupController;
+import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 
 /**
  * REST module controller
- *
  * @author Marc Sordi
  */
-@MultitenantTransactional
-@TestPropertySource("classpath:test.properties")
-public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupControllerIT.class);
+@TestPropertySource(locations = { "classpath:test.properties" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=dam_ag_rest" })
+@ContextConfiguration(classes = { DamRestConfiguration.class })
+public class AccessGroupControllerIT extends AbstractRegardsIT {
 
     private static final String ACCESS_GROUPS_ERROR_MSG = "";
 
@@ -77,97 +69,90 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IProjectUsersClient projectUserClientMock;
 
+    @Autowired
+    protected IRuntimeTenantResolver runtimetenantResolver;
+
+    @After
+    public void clear() {
+        runtimetenantResolver.forceTenant(getDefaultTenant());
+        dao.deleteAll();
+        runtimetenantResolver.clearTenant();
+    }
+
     @Before
     public void init() {
+        clear();
+
+        runtimetenantResolver.forceTenant(getDefaultTenant());
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
-        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
+        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(ArgumentMatchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
-        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
+        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(ArgumentMatchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
         ag1 = new AccessGroup(AG1_NAME);
         ag1 = dao.save(ag1);
         AccessGroup ag2 = new AccessGroup(AG2_NAME);
         ag2.setPublic(true);
-        ag2 = dao.save(ag2);
+        dao.save(ag2);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_810")
     public void testRetrieveAccessGroupsList() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS, expectations, ACCESS_GROUPS_ERROR_MSG);
+        performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_810")
     public void testRetrievePublicAccessGroupsList() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS, expectations, ACCESS_GROUPS_ERROR_MSG,
-                          RequestParamBuilder.build().param("public", "true"));
+        performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT).addParameter("public", "true"),
+                          ACCESS_GROUPS_ERROR_MSG);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_810")
     public void testRetrieveAccessGroup() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS + AccessGroupController.PATH_ACCESS_GROUPS_NAME,
-                          expectations, ACCESS_GROUPS_ERROR_MSG, AG1_NAME);
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG,
+                          AG1_NAME);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_810")
     public void testDeleteAccessGroup() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(AccessGroupController.PATH_ACCESS_GROUPS + AccessGroupController.PATH_ACCESS_GROUPS_NAME,
-                             expectations, ACCESS_GROUPS_ERROR_MSG, AG2_NAME);
+                             customizer().expectStatusNoContent(), ACCESS_GROUPS_ERROR_MSG, AG2_NAME);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_810")
     public void testCreateAccessGroup() {
+        AccessGroup toBeCreated = new AccessGroup("NameIsNeeded");
 
-        final AccessGroup toBeCreated = new AccessGroup("NameIsNeeded");
-
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        // TODO: complete with some checks(Id is present, links...)
-        performDefaultPost(AccessGroupController.PATH_ACCESS_GROUPS, toBeCreated, expectations,
+        performDefaultPost(AccessGroupController.PATH_ACCESS_GROUPS, toBeCreated,
+                           customizer().expectStatusCreated().expectIsNotEmpty(JSON_PATH_ROOT),
                            ACCESS_GROUPS_ERROR_MSG);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_820")
     public void testAssociateUserToAccessGroup() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultPut(AccessGroupController.PATH_ACCESS_GROUPS
-                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL, null, expectations, ACCESS_GROUPS_ERROR_MSG,
+                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL, null,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG,
                           AG1_NAME, USER1_EMAIL);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_830")
     public void testDissociateUserFromAccessGroup() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultDelete(AccessGroupController.PATH_ACCESS_GROUPS
-                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL, expectations, ACCESS_GROUPS_ERROR_MSG, AG1_NAME,
-                             USER1_EMAIL);
+                + AccessGroupController.PATH_ACCESS_GROUPS_NAME_EMAIL,
+                             customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_ROOT), ACCESS_GROUPS_ERROR_MSG,
+                             AG1_NAME, USER1_EMAIL);
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
-    }
 }

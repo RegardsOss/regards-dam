@@ -106,6 +106,7 @@ public final class XmlImportHelper {
     /**
      * Import model {@link ModelAttrAssoc} from input stream
      * @param pInputStream input stream
+     * @param plgConfigurations  {@link PluginConfiguration}s
      * @return list of {@link ModelAttrAssoc}
      * @throws ImportException if error occurs!
      */
@@ -244,8 +245,11 @@ public final class XmlImportHelper {
             if (xmlParamPluginType != null) {
                 parameters.add(new PluginParameter("parameterAttributeName",
                         xmlParamPluginType.getParameterAttributeName()));
-                parameters.add(new PluginParameter("parameterAttributeFragmentName",
-                        xmlParamPluginType.getParameterAttributeFragmentName()));
+                // attribute fragment name being an optional parameter, lets check it
+                if (xmlParamPluginType.getParameterAttributeFragmentName() != null) {
+                    parameters.add(new PluginParameter("parameterAttributeFragmentName",
+                            xmlParamPluginType.getParameterAttributeFragmentName()));
+                }
             }
             compConf.setParameters(parameters);
             modelAtt.setComputationConf(compConf);

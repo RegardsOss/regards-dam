@@ -49,13 +49,17 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>indexer</artifactId>
-		<version>3.0.0-RELEASE</version>
+		<version>0.4.0</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>multitenant-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.notification</groupId>
+			<artifactId>notification-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
@@ -66,21 +70,13 @@
 			<artifactId>dam-domain</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-
+    		<groupId>org.apache.logging.log4j</groupId>
+    		<artifactId>log4j-to-slf4j</artifactId>
+			</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<!-- <version>2.7</version> -->
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<!-- <version>2.7</version> -->
-		</dependency>
-
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -91,11 +87,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

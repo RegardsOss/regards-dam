@@ -42,6 +42,7 @@ public interface IDataSourceService {
      * Create a datasource {@link PluginConfiguration}.</br>
      * @param dataSource datasource {@link PluginConfiguration} to create
      * @return created {@link PluginConfiguration}
+     * @throws ModuleException
      */
     PluginConfiguration createDataSource(PluginConfiguration dataSource) throws ModuleException;
 
@@ -57,12 +58,14 @@ public interface IDataSourceService {
      * Update datasource {@link PluginConfiguration}
      * @param dataSource {@link PluginConfiguration} to update
      * @return updated {@link PluginConfiguration}
+     * @throws ModuleException
      */
     PluginConfiguration updateDataSource(PluginConfiguration dataSource) throws ModuleException;
 
     /**
      * Delete datasource {@link PluginConfiguration}.
      * @param id {@link PluginConfiguration} id
+     * @throws ModuleException
      */
     void deleteDataSource(Long id) throws ModuleException;
 }

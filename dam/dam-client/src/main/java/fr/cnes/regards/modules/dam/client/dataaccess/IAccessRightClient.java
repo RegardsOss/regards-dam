@@ -38,7 +38,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.access-right.client")
 @RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessRightClient { // NOSONAR
@@ -71,14 +71,12 @@ public interface IAccessRightClient { // NOSONAR
     ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String groupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size);
+            @RequestParam("page") int page, @RequestParam("size") int size);
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHT)
     @ResponseBody
     ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
             @RequestParam(name = "dataset") UniformResourceName datasetIpId);
-
 
     /**
      * Create an access right

@@ -1,15 +1,18 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -33,6 +36,7 @@ import fr.cnes.regards.modules.indexer.service.Searches;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @TestPropertySource(locations = { "classpath:test.properties" })
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_CLASS)
 public class GeometrySearchIT {
 
     @Autowired
@@ -63,13 +67,12 @@ public class GeometrySearchIT {
         } else {
             esRepos.createIndex(TENANT);
         }
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
 
     }
 
     @Before
     public void init() throws ModuleException {
+
         collectionModel = new Model();
         collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);

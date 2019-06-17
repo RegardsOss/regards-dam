@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -72,13 +73,13 @@ import fr.cnes.regards.modules.storage.client.IAipClient;
 @TestPropertySource(locations = { "classpath:test-with-storage.properties" })
 public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityPartialResponseIT.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityPartialResponseIT.class);
 
-    private static final int SLEEP_TIME = 20000;
+    private static int SLEEP_TIME = 20000;
 
-    private static final String MODEL_DATASET_FILE_NAME = "modelDataSet.xml";
+    private static String MODEL_DATASET_FILE_NAME = "modelDataSet.xml";
 
-    private static final String MODEL_DATASET_NAME = "modelDataSet";
+    private static String MODEL_DATASET_NAME = "modelDataSet";
 
     @Autowired
     private IModelService modelService;
@@ -112,13 +113,14 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
     private Dataset dataset1;
 
     @Autowired
-    IAipClient aipClient;
+    private IAipClient aipClient;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
     @Test
-    public void createDataset() throws ModuleException, IOException, InterruptedException {
+    @Ignore
+    public void createDataset() throws ModuleException, InterruptedException {
 
         dataset1 = dsService.create(dataset1);
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
@@ -127,7 +129,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
 
         Thread.sleep(SLEEP_TIME);
 
-        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+        Dataset dsFind = dsRepository.findById(dataset1.getId()).get();
         Assert.assertEquals(EntityAipState.AIP_STORE_ERROR, dsFind.getStateAip());
     }
 
@@ -137,12 +139,12 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
      * @return the created model attributes
      * @throws ModuleException if error occurs
      */
-    private Model importModel(final String filename) throws ModuleException {
+    private Model importModel(String filename) throws ModuleException {
         try {
-            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", filename));
+            InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", filename));
             return modelService.importModel(input);
-        } catch (final IOException e) {
-            final String errorMessage = "Cannot import " + filename;
+        } catch (IOException e) {
+            String errorMessage = "Cannot import " + filename;
             throw new AssertionError(errorMessage);
         }
     }
@@ -193,8 +195,9 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         dataset1.setLicence("the licence");
         dataset1.setProviderId("ProviderId1");
         dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
-        dataset1.setNormalizedGeometry(IGeometry.multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
-                                                  IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
+        dataset1.setNormalizedGeometry(IGeometry
+                .multiPoint(IGeometry.position(41.12, -10.5), IGeometry.position(42., -72.),
+                            IGeometry.position(15., -72.), IGeometry.position(15., -9.)));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("VSIZE", 12345));
         dataset1.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusHours(15)));
@@ -220,7 +223,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
                                                              new Long(5698L), new Long(5522336689L), new Long(7748578L),
                                                              new Long(22000014L), new Long(9850012565556565L)));
 
-        dataset1.setOpenSearchSubsettingClause("the open search subsetting claise");
+        dataset1.setOpenSearchSubsettingClause("label:TheSubsettingClause");
     }
 
 }

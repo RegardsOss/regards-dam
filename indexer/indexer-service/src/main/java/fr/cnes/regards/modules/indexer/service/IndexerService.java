@@ -47,8 +47,6 @@ public class IndexerService implements IIndexerService {
             if (created) {
                 String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
                         .toArray(length -> new String[length]);
-                repository.setAutomaticDoubleMapping(pIndex, types);
-                repository.setGeometryMapping(pIndex, types);
             }
             return created;
         }

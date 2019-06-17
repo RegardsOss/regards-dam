@@ -36,7 +36,7 @@ import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@RestClient(name = "rs-dam")
+@RestClient(name = "rs-dam", contextId = "rs-dam.model-att-assoc.client")
 @RequestMapping(IModelAttrAssocClient.BASE_MAPPING)
 public interface IModelAttrAssocClient {
 
@@ -56,7 +56,7 @@ public interface IModelAttrAssocClient {
     String ASSOCS_MAPPING = "/assocs";
 
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("modelName") Long modelName);
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("modelName") String modelName);
 
     @RequestMapping(path = "{datasetUrn}" + ASSOCS_MAPPING, method = RequestMethod.GET)
     ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(

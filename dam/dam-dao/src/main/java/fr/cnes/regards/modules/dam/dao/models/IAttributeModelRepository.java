@@ -20,7 +20,10 @@ package fr.cnes.regards.modules.dam.dao.models;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -39,6 +42,10 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 public interface IAttributeModelRepository
         extends CrudRepository<AttributeModel, Long>, JpaSpecificationExecutor<AttributeModel> {
 
+    @Override
+    @EntityGraph(attributePaths = { "properties" })
+    Optional<AttributeModel> findById(Long id);
+
     List<AttributeModel> findByType(AttributeType pType);
 
     List<AttributeModel> findByTypeAndFragmentName(AttributeType pType, String pFragmentName);
@@ -47,6 +54,7 @@ public interface IAttributeModelRepository
 
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 
+    @EntityGraph(attributePaths = { "properties" })
     List<AttributeModel> findByFragmentId(Long pFragmentId);
 
     /**
@@ -55,4 +63,8 @@ public interface IAttributeModelRepository
      * @return attributes
      */
     Collection<AttributeModel> findByName(String fragmentName);
+
+    @Override
+    @EntityGraph(attributePaths = { "properties" })
+    List<AttributeModel> findAll(Specification<AttributeModel> spec);
 }
