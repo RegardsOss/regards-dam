@@ -7,7 +7,6 @@ import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEv
  * @author oroussel
  */
 public interface IDatasetCrawlerService extends ICrawlerService {
-    void onApplicationReadyEvent(ApplicationReadyEvent event);
 
     void onApplicationReadyEvent(DamGsonReadyEvent event);
 

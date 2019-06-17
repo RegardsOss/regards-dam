@@ -92,8 +92,8 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
         if (wrapper.getContent() != null) {
             AccessRightEvent event = wrapper.getContent();
             try {
-                entityIndexerService
-                        .updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(), OffsetDateTime.now(), false);
+                entityIndexerService.updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(),
+                                                        OffsetDateTime.now(), false);
             } catch (ModuleException e) {
                 LOGGER.error("Cannot handle access right event", e);
                 // FIXME notify

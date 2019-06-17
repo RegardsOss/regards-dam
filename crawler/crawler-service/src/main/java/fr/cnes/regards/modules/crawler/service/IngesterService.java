@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +46,6 @@ import org.springframework.transaction.annotation.Propagation;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
@@ -239,8 +237,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
-                                    | DataSourceException | ModuleException e) {
+                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException | DataSourceException | ModuleException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
@@ -342,7 +339,10 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.existsById(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
+                                                                                 OffsetDateTime.now()
+                                                                                         .withOffsetSameInstant(
+                                                                                                 ZoneOffset.UTC),
+                                                                                 pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -426,14 +426,6 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             dsIngestionRepos.save(dsIngestion);
         }
         return dsIngestionOpt;
-    }
-
-    private void createNotificationForAdmin(String title, String message, NotificationType nType) {
-        FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(message, Collections.emptySet(),
-                Collections.singleton(DefaultRole.PROJECT_ADMIN.name()), applicationName, title, nType);
-        notifClient.createNotification(notif);
-        FeignSecurityManager.reset();
     }
 
     @Override

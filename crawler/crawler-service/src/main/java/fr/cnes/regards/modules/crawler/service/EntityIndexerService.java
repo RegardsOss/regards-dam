@@ -475,7 +475,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                                                                    saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -550,7 +550,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ICriterion.not(dataset.getUserSubsettingClause()));
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
-                                                                                   saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor);
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();

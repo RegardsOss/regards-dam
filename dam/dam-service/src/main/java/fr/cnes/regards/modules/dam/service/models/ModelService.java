@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -224,9 +225,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             if (m != null) {
                 return m.getId();
             }
-            LOGGER.error(
-                    "The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
-                    modelName);
+            LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
+                         modelName);
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
         Page<ModelAttrAssoc> assocs = modelAttributeRepository.findAllByModelIdIn(modelIds, pageable);
@@ -539,9 +539,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     modelAtt.setComputationConf(eventualyCreateComputationConfiguration(modelAtt.getComputationConf()));
                     break;
                 default:
-                    throw new IllegalArgumentException(
-                            modelAtt.getMode() + " is not a handled value of " + ComputationMode.class.getName()
-                                    + " in " + getClass().getName());
+                    throw new IllegalArgumentException(modelAtt.getMode() + " is not a handled value of "
+                            + ComputationMode.class.getName() + " in " + getClass().getName());
             }
             // we have to check if it already exists because of logic to add modelAttrAssocs when we are adding a new
             // attribute to a fragment
@@ -552,8 +551,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         for (Map.Entry<String, List<AttributeModel>> entry : fragmentAttMap.entrySet()) {
             if (!containsExactly(entry.getKey(), entry.getValue())) {
-                String errorMessage = String
-                        .format("Imported fragment \"%s\" not compatible with existing one.", entry.getKey());
+                String errorMessage = String.format("Imported fragment \"%s\" not compatible with existing one.",
+                                                    entry.getKey());
                 LOGGER.error(errorMessage);
                 throw new ImportException(errorMessage);
             }
@@ -613,15 +612,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Check attributes
         for (AttributeModel attMod : attModels) {
             if (!fragmentName.equals(attMod.getFragment().getName())) {
-                LOGGER.error(
-                        String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)", attMod.getName(),
-                                      fragmentName, attMod.getFragment().getName()));
+                LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
+                                           attMod.getName(), fragmentName, attMod.getFragment().getName()));
                 return false;
             }
 
             if (!existingAttModels.contains(attMod)) {
-                LOGGER.error(
-                        String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(), fragmentName));
+                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(),
+                                           fragmentName));
                 return false;
             }
         }
@@ -675,9 +673,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 } catch (ClassNotFoundException e) {
                     // This is only possible in case a plugin is still configured but the implementation is no longer
                     // available
-                    LOGGER.warn(
-                            "Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
-                            conf.getPluginClassName());
+                    LOGGER.warn("Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
+                                conf.getPluginClassName());
                     LOGGER.debug(e.getMessage(), e);
                 }
             }

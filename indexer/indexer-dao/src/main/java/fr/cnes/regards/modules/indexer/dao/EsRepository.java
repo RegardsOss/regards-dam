@@ -259,8 +259,8 @@ public class EsRepository implements IEsRepository {
         String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
-        String connectionInfoMessage = String
-                .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
+        String connectionInfoMessage = String.format("Elastic search connection properties : host \"%s\", port \"%d\"",
+                                                     esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
         // Timeouts are set to 20 minutes particulary for bulk save containing geo_shape
@@ -766,8 +766,8 @@ public class EsRepository implements IEsRepository {
                 if (searchKey.getCrs() == Crs.ASTRO) {
                     CircleCriterion initialCircleCriterion = GeoHelper.findCircleCriterion(crit);
                     // Radius MUST NOT HAVE A UNIT
-                    initialCircleCriterion.setRadius(
-                            FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
+                    initialCircleCriterion
+                            .setRadius(FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
                                     * AUTHALIC_SPHERE_RADIUS);
                 }
                 return searchWithCircleCriterionInProjectedCrs(searchKey, pageRequest, facetsMap, criterion);
@@ -1063,8 +1063,8 @@ public class EsRepository implements IEsRepository {
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
                         PageRequest.of(offset / MAX_RESULT_WINDOW, MAX_RESULT_WINDOW).next());
                 reminder.setExpirationDate(expirationDate);
-                reminder.setSearchAfterSortValues(
-                        response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
+                reminder.setSearchAfterSortValues(response.getHits().getAt(response.getHits().getHits().length - 1)
+                        .getSortValues());
 
                 save(REMINDER_IDX, reminder);
                 offset += MAX_RESULT_WINDOW;
@@ -1380,9 +1380,8 @@ public class EsRepository implements IEsRepository {
      * @return true is first type mapping found fro given attribute is of type "text"
      */
     private static boolean isTextMapping(Map<String, Object> map, String attribute) {
-        String lastPathAttName = attribute.contains(".") ?
-                attribute.substring(attribute.lastIndexOf('.') + 1) :
-                attribute;
+        String lastPathAttName = attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
+                : attribute;
         try {
             // Mapping map contain only one value, the concerned index mapping BUT in case index is an alias, map key
             // is true index name, not alias one so DON'T retrieve mapping from its name !!!
@@ -1436,10 +1435,7 @@ public class EsRepository implements IEsRepository {
 
                 // Add sort to request
                 updatedAscSortMap.entrySet().forEach(entry -> builder.sort(SortBuilders.fieldSort(entry.getKey())
-                                                                                   .order(entry.getValue() ?
-                                                                                                  SortOrder.ASC :
-                                                                                                  SortOrder.DESC)
-                                                                                   .unmappedType("double")));
+                        .order(entry.getValue() ? SortOrder.ASC : SortOrder.DESC).unmappedType("double")));
                 // "double" because a type is necessary. This has only an impact when seaching on several indices if
                 // property is mapped on one and no on the other(s). Will see this when it happens (if it happens a day)
                 // entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
@@ -1609,8 +1605,8 @@ public class EsRepository implements IEsRepository {
                         // Better not return a facet
                         return;
                     } // (-∞ -> value [
-                    // range is then [min -> value [, because min value is scaled it is necessary to choose a little
-                    // less
+                      // range is then [min -> value [, because min value is scaled it is necessary to choose a little
+                      // less
                     valueRange = Range.closedOpen(EsHelper.scaledDown(min.getValue()), (Double) bucket.getTo());
                 } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                     // range is then [value, max], because max value is scaled it is necessary to choose a little more
@@ -1750,11 +1746,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                                        .field("feature.files." + fileType
-                                                       + ".filesize")); // Only count files with a size
+                    .field("feature.files." + fileType + ".filesize")); // Only count files with a size
             // file size sum
             builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                                        .field("feature.files." + fileType + ".filesize"));
+                    .field("feature.files." + fileType + ".filesize"));
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1768,10 +1763,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                                                   .field("feature.files." + fileType + ".filesize"));
+                    .field("feature.files." + fileType + ".filesize"));
             // file size sum
-            termsAggBuilder.subAggregation(
-                    AggregationBuilders.sum(fileType + "_files_size").field("feature.files." + fileType + ".filesize"));
+            termsAggBuilder.subAggregation(AggregationBuilders.sum(fileType + "_files_size")
+                    .field("feature.files." + fileType + ".filesize"));
         }
         builder.aggregation(termsAggBuilder);
     }

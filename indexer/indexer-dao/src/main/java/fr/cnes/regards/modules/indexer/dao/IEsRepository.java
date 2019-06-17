@@ -141,8 +141,6 @@ public interface IEsRepository {
         return this.saveBulk(index, null, documents);
     }
 
-
-
     /**
      * {@link #saveBulk(String, BulkSaveResult, StringBuilder, IIndexable[])}
      */
