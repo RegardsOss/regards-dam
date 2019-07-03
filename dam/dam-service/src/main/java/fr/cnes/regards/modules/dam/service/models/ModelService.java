@@ -216,7 +216,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModelsByName(List<String> modelNames, Pageable pageable) {
+    public Page<AttributeModel> getAttributeModelsByName(Collection<String> modelNames, Pageable pageable) {
         if (modelNames.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }

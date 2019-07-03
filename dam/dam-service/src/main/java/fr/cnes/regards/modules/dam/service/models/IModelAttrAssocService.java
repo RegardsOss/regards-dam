@@ -91,7 +91,8 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @return a page of attribute which are associated to at least one of the models
      * @throws ModuleException
      */
-    Page<AttributeModel> getAttributeModelsByName(List<String> pModelNames, Pageable pPageable) throws ModuleException;
+    Page<AttributeModel> getAttributeModelsByName(Collection<String> pModelNames, Pageable pPageable)
+            throws ModuleException;
 
     /**
      * Find the model attribute associations for a given entity type(or all if none is given)
