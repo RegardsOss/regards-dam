@@ -225,7 +225,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(Collection<Dataset> datasets, Pageable pageable)
             throws ModuleException {
-        List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
+        Set<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toSet());
         Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         return attModelPage;
     }
