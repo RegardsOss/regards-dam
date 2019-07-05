@@ -74,8 +74,8 @@
 			<artifactId>plugins-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.notification</groupId>
-			<artifactId>notification-client</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>notification-regards-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.storage</groupId>

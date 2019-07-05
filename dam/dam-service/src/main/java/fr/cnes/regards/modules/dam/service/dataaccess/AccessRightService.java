@@ -45,6 +45,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
@@ -59,7 +60,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 
 /**
  * Access right service implementation

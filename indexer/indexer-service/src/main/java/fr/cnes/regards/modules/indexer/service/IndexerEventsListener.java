@@ -27,9 +27,9 @@ import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionRe
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.IInstanceNotificationClient;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.notification.client.IInstanceNotificationClient;
 
 /**
  * Listening for tenant creation and application ready to manage Elasticsearch index creation
