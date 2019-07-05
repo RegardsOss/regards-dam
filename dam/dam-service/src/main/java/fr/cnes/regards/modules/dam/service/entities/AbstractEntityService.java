@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -61,6 +63,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.EntitySpecifications;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
@@ -97,6 +100,8 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  */
 public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
         implements IEntityService<U> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
     /**
      * {@link IModelService} instance
@@ -231,7 +236,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
         // Load model by name if id not specified
-        if (model.getId() == null && model.getName() != null) {
+        if ((model.getId() == null) && (model.getName() != null)) {
             model = modelService.getModelByName(model.getName());
             entity.setModel(model);
         }
@@ -397,14 +402,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (entity instanceof Collection) {
             List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
             for (AbstractEntity<?> e : taggingEntities) {
-                if (e instanceof Dataset || e instanceof Collection) {
+                if ((e instanceof Dataset) || (e instanceof Collection)) {
                     entity.getGroups().addAll(e.getGroups());
                 }
             }
         }
 
         // If entity is a collection or a dataset => propagate its groups to tagged collections (recursively)
-        if ((entity instanceof Collection || entity instanceof Dataset) && !entity.getTags().isEmpty()) {
+        if (((entity instanceof Collection) || (entity instanceof Dataset)) && !entity.getTags().isEmpty()) {
             List<AbstractEntity<?>> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
             for (AbstractEntity<?> coll : taggedColls) {
@@ -584,7 +589,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // Manage all impacted datasets groups from scratch
         datasets.forEach(ds -> this.manageGroups(ds, updatedIpIds));
 
-        deleteAipStorage(toDelete);
+        try {
+            deleteAipStorage(toDelete);
+        } catch (NotAvailablePluginConfigurationException e1) {
+            LOGGER.warn("Enabled to delete AIP storage cause storage plugin is not active", e1);
+        }
 
         deletedEntityRepository.save(createDeletedEntity(toDelete));
 
@@ -718,8 +727,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     /**
      * @return a {@link Plugin} implementation of {@link IStorageService}
+     * @throws NotAvailablePluginConfigurationException
      */
-    private IStorageService getStorageService() {
+    private IStorageService getStorageService() throws NotAvailablePluginConfigurationException {
         if (postAipEntitiesToStorage == null) {
             return null;
         }
@@ -736,8 +746,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         return null;
     }
 
-    private void deleteAipStorage(U entity) {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+    private void deleteAipStorage(U entity) throws NotAvailablePluginConfigurationException {
+        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
             return;
         }
         IStorageService storageService = getStorageService();

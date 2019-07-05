@@ -47,6 +47,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
@@ -151,7 +152,7 @@ public class AccessRightService implements IAccessRightService {
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
                     boolean dataAccess = datasetAccess
-                            && accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS;
+                            && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });
@@ -261,7 +262,7 @@ public class AccessRightService implements IAccessRightService {
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
         repository.deleteById(id);
 
-        if (confToDelete != null && confToDelete.getId() != null) {
+        if ((confToDelete != null) && (confToDelete.getId() != null)) {
             pluginService.deletePluginConfiguration(confToDelete.getId());
         }
 
@@ -315,7 +316,7 @@ public class AccessRightService implements IAccessRightService {
                         datasetsToUpdate.add(ar.getDataset().getIpId());
                     }
                 }
-            } catch (ModuleException e) {
+            } catch (ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error(String.format(
                                            "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
                                                    + "dataset %s and group %s. Does plugin exist anymore ?",

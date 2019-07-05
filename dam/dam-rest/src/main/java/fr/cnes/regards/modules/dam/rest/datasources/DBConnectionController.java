@@ -41,6 +41,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.representation.GenericResponseBody;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
@@ -162,11 +163,14 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @param connectionId {@link PluginConfiguration} identifier
      * @return a {@link Map} that contains the database's tables
      * @throws ModuleException if problem occurs during retrieve the database's tables
+     * @throws NotAvailablePluginConfigurationException
      */
     @ResourceAccess(description = "Get the tables of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables")
-    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long connectionId) throws ModuleException {
-        Map<String, Table> tables = dbConnectionService.getTables(connectionId);
+    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long connectionId)
+            throws ModuleException, NotAvailablePluginConfigurationException {
+        Map<String, Table> tables;
+        tables = dbConnectionService.getTables(connectionId);
         return ResponseEntity.ok(tables);
     }
 
@@ -176,11 +180,12 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @param tableName a database table name
      * @return a {@link Map} that contains the columns of a table
      * @throws ModuleException if problem occurs during retrieve the columns of a table
+     * @throws NotAvailablePluginConfigurationException
      */
     @ResourceAccess(description = "Get the columns of a specific table of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables/{tableName}/columns")
     public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long connectionId,
-            @PathVariable String tableName) throws ModuleException {
+            @PathVariable String tableName) throws ModuleException, NotAvailablePluginConfigurationException {
         return ResponseEntity.ok(dbConnectionService.getColumns(connectionId, tableName));
     }
 

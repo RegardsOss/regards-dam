@@ -55,6 +55,7 @@ import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -147,10 +148,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
         Long dsiId = dsi.getId();
 
-        if (!pluginConf.isActive()) {
+        IDataSourcePlugin dsPlugin;
+        try {
+            dsPlugin = pluginService.getPlugin(pluginConf.getId());
+        } catch (NotAvailablePluginConfigurationException e) {
             throw new InactiveDatasourceException();
         }
-        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf.getId());
 
         BulkSaveLightResult saveResult;
         OffsetDateTime now = OffsetDateTime.now();
