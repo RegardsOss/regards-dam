@@ -42,6 +42,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
@@ -152,6 +153,9 @@ public class EntitiesService implements IEntitiesService {
                     // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we
                     // just don't consider this plugin
                     // FIXME trace something!
+                } catch (NotAvailablePluginConfigurationException e) {
+                    LOGGER.warn("Unable to compute dataset attribute value cause IComputedAttribute plugin is not avtive.",
+                                e);
                 }
             }
         } catch (ModuleException e) {
@@ -181,6 +185,7 @@ public class EntitiesService implements IEntitiesService {
 
     /**
      * @return a {@link Plugin} implementation of {@link IStorageService}
+     * @throws NotAvailablePluginConfigurationException
      */
     private IStorageService getStorageService() {
         if (postAipEntitiesToStorage == null) {
@@ -195,6 +200,9 @@ public class EntitiesService implements IEntitiesService {
         } catch (ClassNotFoundException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalArgumentException(e.getMessage());
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.warn(e.getMessage(), e);
+            return null;
         }
     }
 

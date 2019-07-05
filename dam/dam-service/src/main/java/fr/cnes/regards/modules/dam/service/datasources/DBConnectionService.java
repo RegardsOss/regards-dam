@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.dam.service.datasources;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -28,6 +30,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
@@ -43,6 +46,8 @@ public class DBConnectionService implements IDBConnectionService {
      * Attribute plugin service
      */
     private final IPluginService pluginService;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionService.class);
 
     /**
      * The constructor with an instance of the {@link PluginService}
@@ -84,25 +89,34 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public Boolean testDBConnection(Long configurationId) throws ModuleException {
-        // Instanciate plugin
-        IDBConnectionPlugin plg = pluginService.getPlugin(configurationId);
-        // Test connection
-        Boolean result = plg.testConnection();
-        // Remove plugin instance from cache after closing connection
-        if (!result) {
-            pluginService.cleanPluginCache(configurationId);
+
+        Boolean result = false;
+        IDBConnectionPlugin plg;
+        try {
+            // Instanciate plugin
+            plg = pluginService.getPlugin(configurationId);
+            // Test connection
+            result = plg.testConnection();
+            // Remove plugin instance from cache after closing connection
+            if (!result) {
+                pluginService.cleanPluginCache(configurationId);
+            }
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.error(e.getMessage(), e);
         }
+
         return result;
     }
 
     @Override
-    public Map<String, Table> getTables(Long id) throws ModuleException {
+    public Map<String, Table> getTables(Long id) throws ModuleException, NotAvailablePluginConfigurationException {
         IDBConnectionPlugin plg = pluginService.getPlugin(id);
         return (plg == null) ? null : plg.getTables(null, null);
     }
 
     @Override
-    public Map<String, Column> getColumns(Long id, String tableName) throws ModuleException {
+    public Map<String, Column> getColumns(Long id, String tableName)
+            throws ModuleException, NotAvailablePluginConfigurationException {
         IDBConnectionPlugin plg = pluginService.getPlugin(id);
         return (plg == null) ? null : plg.getColumns(tableName);
     }

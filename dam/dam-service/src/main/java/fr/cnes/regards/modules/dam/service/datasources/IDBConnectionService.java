@@ -24,6 +24,7 @@ import java.util.Map;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
@@ -86,8 +87,9 @@ public interface IDBConnectionService {
      * @param dbConnectionId identifier of DB connection plugin
      * @return a map of { table name, table }
      * @throws ModuleException
+     * @throws NotAvailablePluginConfigurationException
      */
-    Map<String, Table> getTables(Long dbConnectionId) throws ModuleException;
+    Map<String, Table> getTables(Long dbConnectionId) throws ModuleException, NotAvailablePluginConfigurationException;
 
     /**
      * Retrieve all columns from DB connection plugin and given table name
@@ -95,7 +97,9 @@ public interface IDBConnectionService {
      * @param tableName table name whom columns belong to
      * @return a map of { column name, column }
      * @throws ModuleException
+     * @throws NotAvailablePluginConfigurationException
      */
-    Map<String, Column> getColumns(Long dbConnectionId, String tableName) throws ModuleException;
+    Map<String, Column> getColumns(Long dbConnectionId, String tableName)
+            throws ModuleException, NotAvailablePluginConfigurationException;
 
 }

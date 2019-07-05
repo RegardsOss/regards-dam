@@ -58,6 +58,7 @@ import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -287,38 +288,29 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
             switch (dsIngestion.getStatus()) {
                 case ERROR:
                     notifClient.notify(String.format("Indexation error. Cause : %s", dsIngestion.getStackTrace()),
-                                       title,
-                                       NotificationLevel.ERROR,
-                                       DefaultRole.PROJECT_ADMIN);
+                                       title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
                     break;
                 case FINISHED_WITH_WARNINGS:
-                    notifClient.notify(String.format("Indexation ends with %s new indexed objects and %s errors.",
+                    notifClient.notify(
+                                       String.format("Indexation ends with %s new indexed objects and %s errors.",
                                                      dsIngestion.getSavedObjectsCount(),
                                                      dsIngestion.getInErrorObjectsCount()),
-                                       title,
-                                       NotificationLevel.WARNING,
-                                       DefaultRole.PROJECT_ADMIN);
+                                       title, NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
                     break;
                 case NOT_FINISHED:
-                    notifClient.notify(String.format(
-                            "Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
+                    notifClient.notify(String
+                            .format("Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
                                     + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
                                     + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
                                     + "soon as possible or will continue at its planned date",
-                            dsIngestion.getSavedObjectsCount(),
-                            dsIngestion.getInErrorObjectsCount()),
-                                       title,
-                                       NotificationLevel.WARNING,
-                                       DefaultRole.PROJECT_ADMIN);
+                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
+                                       NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
                     break;
                 default:
-                    notifClient
-                            .notify(String.format("Indexation finished. %s new objects indexed. %s objects in error.",
-                                                  dsIngestion.getSavedObjectsCount(),
-                                                  dsIngestion.getInErrorObjectsCount()),
-                                    title,
-                                    NotificationLevel.INFO,
-                                    DefaultRole.PROJECT_ADMIN);
+                    notifClient.notify(String
+                            .format("Indexation finished. %s new objects indexed. %s objects in error.",
+                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
+                                       NotificationLevel.INFO, DefaultRole.PROJECT_ADMIN);
                     break;
             }
         }
@@ -351,7 +343,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         pluginConfs.forEach(pluginConf -> {
             try {
                 self.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()), pluginConf.getId());
-            } catch (RuntimeException | ModuleException e) {
+            } catch (RuntimeException | ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
         });
@@ -378,10 +370,12 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     /**
      * Compute next ingestion planned date if needed in its own transaction to prevent making
      * updateAndCleanTenantDatasourceIngestions failing and rollbacking its transaction
+     * @throws NotAvailablePluginConfigurationException
      */
     @Override
     @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
-    public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
+    public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId)
+            throws ModuleException, NotAvailablePluginConfigurationException {
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         // Take into account ONLY data source with null nextPlannedIngestDate
         if (dsIngestion.getNextPlannedIngestDate() == null) {
@@ -397,8 +391,8 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                     break;
                 case FINISHED: // last ingest + refreshRate
                 case FINISHED_WITH_WARNINGS: // last ingest + refreshRate
-                    dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate()
-                                                                 .plus(refreshRate, ChronoUnit.SECONDS));
+                    dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                              ChronoUnit.SECONDS));
                     dsIngestionRepos.save(dsIngestion);
                     break;
                 case STARTED: // Already in progress

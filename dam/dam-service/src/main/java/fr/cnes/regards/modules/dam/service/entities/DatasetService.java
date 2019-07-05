@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +49,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
@@ -75,6 +78,8 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
 @Service
 @MultitenantTransactional
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatasetService.class);
 
     /**
      * {@link IOpenSearchService} instance
@@ -108,8 +113,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * Control the DataSource associated to the {@link Dataset} in parameter if needed.</br>
      * If any DataSource is associated, sets the default DataSource.
      * @throws ModuleException if error occurs!
+     * @throws NotAvailablePluginConfigurationException
      */
-    private Dataset checkDataSource(Dataset dataset) throws ModuleException {
+    private Dataset checkDataSource(Dataset dataset) throws ModuleException, NotAvailablePluginConfigurationException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
             IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
@@ -165,17 +171,23 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     protected void doCheck(Dataset entity, Dataset entityInDB) throws ModuleException {
-        Dataset ds = checkDataSource(entity);
-        checkSubsettingCriterion(ds);
-        // check for updates on data model or datasource
-        // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
-        if (entityInDB != null) {
-            if (!Objects.equal(entity.getDataSource(), entityInDB.getDataSource())) {
-                throw new EntityOperationForbiddenException("Datasources of datasets cannot be updated");
+        try {
+            Dataset ds = checkDataSource(entity);
+            checkSubsettingCriterion(ds);
+            // check for updates on data model or datasource
+            // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
+            if (entityInDB != null) {
+                if (!Objects.equal(entity.getDataSource(), entityInDB.getDataSource())) {
+                    throw new EntityOperationForbiddenException("Datasources of datasets cannot be updated");
+                }
+                if (!Objects.equal(entity.getDataModel(), entityInDB.getDataModel())) {
+                    throw new EntityOperationForbiddenException("Data models of datasets cannot be updated");
+                }
             }
-            if (!Objects.equal(entity.getDataModel(), entityInDB.getDataModel())) {
-                throw new EntityOperationForbiddenException("Data models of datasets cannot be updated");
-            }
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new EntityOperationForbiddenException(
+                    String.format("Datasources of datasets cannot be updated cause %s", e.getMessage()));
         }
     }
 
