@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Profile;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.notification.client.IInstanceNotificationClient;
-import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
@@ -76,16 +75,6 @@ public class CrawlerConfiguration {
     @Bean
     public IProjectUsersClient projectUsersClient() {
         return Mockito.mock(IProjectUsersClient.class);
-    }
-
-    @Bean
-    public INotificationClient notifClient() {
-        return Mockito.mock(INotificationClient.class);
-    }
-
-    @Bean
-    public IInstanceNotificationClient instanceNotifClient() {
-        return Mockito.mock(IInstanceNotificationClient.class);
     }
 
     @Bean
