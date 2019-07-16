@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.notification.client.IInstanceNotificationClient;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
@@ -36,8 +37,6 @@ import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
-import fr.cnes.regards.modules.notification.client.IInstanceNotificationClient;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
@@ -76,16 +75,6 @@ public class CrawlerConfiguration {
     @Bean
     public IProjectUsersClient projectUsersClient() {
         return Mockito.mock(IProjectUsersClient.class);
-    }
-
-    @Bean
-    public INotificationClient notifClient() {
-        return Mockito.mock(INotificationClient.class);
-    }
-
-    @Bean
-    public IInstanceNotificationClient instanceNotifClient() {
-        return Mockito.mock(IInstanceNotificationClient.class);
     }
 
     @Bean

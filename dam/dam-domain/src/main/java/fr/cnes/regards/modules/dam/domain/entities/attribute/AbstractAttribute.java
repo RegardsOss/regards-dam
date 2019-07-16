@@ -37,7 +37,6 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
     /**
      * Attribute value
      */
-    @NotNull
     private T value;
 
     @Override
