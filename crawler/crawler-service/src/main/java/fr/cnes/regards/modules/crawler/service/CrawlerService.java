@@ -79,7 +79,6 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
