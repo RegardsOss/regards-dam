@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.crawler.service;
 import java.util.Optional;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
@@ -26,7 +27,8 @@ public interface IIngesterService {
      */
     void setConsumeOnlyMode(boolean b);
 
-    void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException;
+    void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId)
+            throws ModuleException, NotAvailablePluginConfigurationException;
 
     void handleApplicationReadyEvent(DamGsonReadyEvent event);
 
