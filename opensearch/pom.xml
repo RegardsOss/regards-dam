@@ -21,7 +21,7 @@
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>opensearch</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.1</version>
 	<packaging>pom</packaging>
 
 	<description>Module responsible for treating the OpenSearch requests performed when searching indexed data</description>
@@ -49,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>0.4.0</version>
+		<version>0.4.1</version>
 		<relativePath/>
 	</parent>
 	

@@ -56,8 +56,10 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -69,7 +71,6 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
@@ -351,7 +352,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         pluginConfs.forEach(pluginConf -> {
             try {
                 self.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()), pluginConf.getId());
-            } catch (RuntimeException | ModuleException e) {
+            } catch (RuntimeException | ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
         });
@@ -378,10 +379,12 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     /**
      * Compute next ingestion planned date if needed in its own transaction to prevent making
      * updateAndCleanTenantDatasourceIngestions failing and rollbacking its transaction
+     * @throws NotAvailablePluginConfigurationException
      */
     @Override
     @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
-    public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
+    public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId)
+            throws ModuleException, NotAvailablePluginConfigurationException {
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         // Take into account ONLY data source with null nextPlannedIngestDate
         if (dsIngestion.getNextPlannedIngestDate() == null) {

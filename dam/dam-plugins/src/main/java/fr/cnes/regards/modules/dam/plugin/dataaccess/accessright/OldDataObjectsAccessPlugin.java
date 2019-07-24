@@ -43,7 +43,7 @@ public class OldDataObjectsAccessPlugin implements IDataObjectAccessFilterPlugin
     private long numberOfDays;
 
     @PluginParameter(name = DATE_ATTR_PARAM, label = "Date attribute",
-            description = "In order to use an attribute from the meta of your datas, use the prefix \"feature.properties\" like \"feature.properties.myDateProperty\". Without this prefix you can access regards internal meta attributes like default selected date attribute \"creationDate\"",
+            description = "It's the model's attribute's name with the fragment if there is. The model contains the date. In order to use an attribute from the meta of your datas, use the prefix \"feature.properties\" like \"feature.properties.DataStartDate\". Without this prefix you can access regards internal meta attributes like default selected date attribute \"creationDate\"",
             defaultValue = "creationDate", optional = true)
     private String dateAttribute;
 

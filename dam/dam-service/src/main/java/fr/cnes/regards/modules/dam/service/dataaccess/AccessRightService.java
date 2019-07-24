@@ -45,8 +45,10 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
@@ -59,7 +61,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.notification.client.INotificationClient;
 
 /**
  * Access right service implementation
@@ -315,7 +316,7 @@ public class AccessRightService implements IAccessRightService {
                         datasetsToUpdate.add(ar.getDataset().getIpId());
                     }
                 }
-            } catch (ModuleException e) {
+            } catch (ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error(String.format(
                                            "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
                                                    + "dataset %s and group %s. Does plugin exist anymore ?",

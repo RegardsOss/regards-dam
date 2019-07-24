@@ -18,7 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.service.dataaccess;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,22 +72,17 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
         for (Dataset ds : datasets.getContent()) {
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
-                // There is only one possible AccessRight for a given dataset and a given accessGroup.
-                // We set the pagination to 1 element max
-                Page<AccessRight> accessRights = accessRightService
-                        .retrieveAccessRights(accessGroupName, ds.getIpId(),
-                                              PageRequest.of(0, 1, Sort.by(Direction.ASC, "id")));
-                if (accessRights.hasContent()) {
-                    datasetWithAR.setAccessRight(accessRights.getContent().get(0));
-                }
+                Optional<AccessRight> oAccessRight = accessRightService
+                        .retrieveAccessRight(accessGroupName, ds.getIpId());
+                oAccessRight.ifPresent(datasetWithAR::setAccessRight);
             } catch (EntityNotFoundException e) {
                 // Nothing to do.
             }
             datasetsWithAR.add(datasetWithAR);
         }
 
-        return new PageImpl<>(datasetsWithAR.stream().collect(Collectors.toList()), pageRequest,
-                datasets.getTotalElements());
+        return new PageImpl<>(new ArrayList<>(datasetsWithAR), pageRequest,
+                              datasets.getTotalElements());
     }
 
 }
