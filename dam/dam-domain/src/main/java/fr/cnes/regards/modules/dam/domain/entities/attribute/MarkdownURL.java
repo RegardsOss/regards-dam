@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  */
 public class MarkdownURL {
 
-    private static Pattern pattern = Pattern.compile("\\((.*)\\)\\[(.*)\\]");
+    private static Pattern pattern = Pattern.compile("\\[(.*)\\]\\((.*)\\)");
 
     private String label;
 
@@ -65,7 +65,7 @@ public class MarkdownURL {
         if (label == null) {
             return url.toString();
         }
-        return String.format("(%s)[%s]", label, url.toString());
+        return String.format("[%s](%s)", label, url.toString());
     }
 
     public static MarkdownURL build(String stringValue) throws MalformedURLException {
