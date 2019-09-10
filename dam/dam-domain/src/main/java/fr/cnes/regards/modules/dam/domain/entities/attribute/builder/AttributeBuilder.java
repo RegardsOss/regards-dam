@@ -18,21 +18,45 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.attribute.builder;
 
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.*;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.DateTimeException;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
+
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.BooleanAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DateIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.LongArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.LongAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.LongIntervalAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.MarkdownURL;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.StringArrayAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.StringAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.UrlAttribute;
+import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 
 /**
  * Attribute builder
@@ -61,7 +85,8 @@ public final class AttributeBuilder {
         if (value instanceof String) {
             return Boolean.valueOf((String) value); // always returns a value
         }
-        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a boolean", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Value '%s' cannot be converted into a boolean", value.toString()));
     }
 
     /**
@@ -73,10 +98,10 @@ public final class AttributeBuilder {
      */
     private static OffsetDateTime toDateValue(Object value) throws IllegalArgumentException {
         // only strings are accepted here as valid input
-        if (value instanceof TemporalAccessor){
+        if (value instanceof TemporalAccessor) {
             return OffsetDateTime.from(((TemporalAccessor) value));
         }
-        if (value instanceof  Date){
+        if (value instanceof Date) {
             return OffsetDateTime.from(((Date) value).toInstant());
         }
         if (value instanceof String) {
@@ -86,7 +111,8 @@ public final class AttributeBuilder {
                 // do nothing, raise final exception instead
             }
         }
-        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a date", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Value '%s' cannot be converted into a date", value.toString()));
     }
 
     /**
@@ -107,7 +133,8 @@ public final class AttributeBuilder {
                 // do nothing, raise final exception instead
             }
         }
-        throw new IllegalArgumentException(String.format("Value '%s' cannot be converted into a double number", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Value '%s' cannot be converted into a double number", value.toString()));
     }
 
     /**
@@ -128,7 +155,8 @@ public final class AttributeBuilder {
                 // do nothing, raise final exception instead
             }
         }
-        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an integer number", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Input value '%s' cannot be converted into an integer number", value.toString()));
     }
 
     /**
@@ -149,7 +177,8 @@ public final class AttributeBuilder {
                 // do nothing, raise final exception instead
             }
         }
-        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into a long number", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Input value '%s' cannot be converted into a long number", value.toString()));
     }
 
     /**
@@ -169,20 +198,20 @@ public final class AttributeBuilder {
      * @return converted attribute value
      * @throws IllegalArgumentException when conversion is not possible
      */
-    static URL toURLValue(Object value) throws IllegalArgumentException {
-        if (value instanceof URL) {
-            return (URL) value;
+    static MarkdownURL toURLValue(Object value) throws IllegalArgumentException {
+        if (value instanceof MarkdownURL) {
+            return (MarkdownURL) value;
         }
         if (value instanceof String) {
             try {
-                return new URL((String) value);
+                return MarkdownURL.build((String) value);
             } catch (MalformedURLException e) {
                 // do nothing, raise final exception instead
             }
         }
-        throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an URL", value.toString()));
+        throw new IllegalArgumentException(
+                String.format("Input value '%s' cannot be converted into an URL", value.toString()));
     }
-
 
     /**
      * Converts value into typed array value.
@@ -194,7 +223,8 @@ public final class AttributeBuilder {
      * @return converted list
      * @throws IllegalArgumentException when conversion is not possible
      */
-    static <T> T[] toArrayValue(Object value, Function<Object, T> elementsConverter, Class<T> elementsClass) throws IllegalArgumentException {
+    static <T> T[] toArrayValue(Object value, Function<Object, T> elementsConverter, Class<T> elementsClass)
+            throws IllegalArgumentException {
         Collection<?> sourceList = null;
         List<String> invalidValues = new ArrayList<>();
 
@@ -205,7 +235,9 @@ public final class AttributeBuilder {
         } else if (value instanceof Collection) {
             sourceList = (Collection<?>) value;
         } else {
-            throw new IllegalArgumentException(String.format("Input value '%s' cannot be converted into an %s[] (expected array or collection types)", value.toString(), elementsClass.getName()));
+            throw new IllegalArgumentException(String
+                    .format("Input value '%s' cannot be converted into an %s[] (expected array or collection types)",
+                            value.toString(), elementsClass.getName()));
         }
         // 2 - convert each element
         ArrayList<T> converted = new ArrayList<>(sourceList.size());
@@ -221,7 +253,9 @@ public final class AttributeBuilder {
             //noinspection unchecked
             return converted.toArray((T[]) Array.newInstance(elementsClass, converted.size()));
         } else {
-            throw new IllegalArgumentException(String.format("In input array, the values '%s' could not be converted into %s", String.join(",", invalidValues), elementsClass.getName()));
+            throw new IllegalArgumentException(
+                    String.format("In input array, the values '%s' could not be converted into %s",
+                                  String.join(",", invalidValues), elementsClass.getName()));
         }
     }
 
@@ -237,8 +271,9 @@ public final class AttributeBuilder {
      * @throws IllegalArgumentException when the value cannot converted into expected type for attribute
      */
     @SuppressWarnings("unchecked")
-    public static AbstractAttribute<?> forType(AttributeType attributeType, String name, Object value) throws IllegalArgumentException {
-        if (name == null || attributeType == null) {
+    public static AbstractAttribute<?> forType(AttributeType attributeType, String name, Object value)
+            throws IllegalArgumentException {
+        if ((name == null) || (attributeType == null)) {
             throw new IllegalArgumentException("An attribute cannot have a null name");
         }
         if (value == null) {
@@ -302,7 +337,7 @@ public final class AttributeBuilder {
      */
     @SuppressWarnings("unchecked")
     public static <U, T extends AbstractAttribute<U>> T forType(AttributeType attributeType, String name, U lowerBound,
-                                                                U upperBound) {
+            U upperBound) {
 
         if (!attributeType.isInterval()) {
             throw new IllegalArgumentException(attributeType + " with name " + name + " is not an interval type");
@@ -423,7 +458,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static UrlAttribute buildUrl(String name, URL value) {
+    public static UrlAttribute buildUrl(String name, MarkdownURL value) {
         UrlAttribute att = new UrlAttribute();
         att.setName(name);
         att.setValue(value);
@@ -441,7 +476,7 @@ public final class AttributeBuilder {
         UrlAttribute att = new UrlAttribute();
         att.setName(name);
         try {
-            att.setValue(new URL(value));
+            att.setValue(MarkdownURL.build(value));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(name + " is not a handled value of " + URL.class.getName());
         }
@@ -462,7 +497,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static DateArrayAttribute buildDateCollection(String name, Collection offsetDateTimes) {
         DateArrayAttribute att = new DateArrayAttribute();
         att.setName(name);
@@ -482,7 +517,7 @@ public final class AttributeBuilder {
     }
 
     public static DateIntervalAttribute buildDateInterval(String name, OffsetDateTime lowerBoundDate,
-                                                          OffsetDateTime upperBoundDate) {
+            OffsetDateTime upperBoundDate) {
         DateIntervalAttribute att = new DateIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundDate, upperBoundDate));
@@ -496,7 +531,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static DoubleArrayAttribute buildDoubleCollection(String name, Collection values) {
         DoubleArrayAttribute att = new DoubleArrayAttribute();
         att.setName(name);
@@ -516,7 +551,7 @@ public final class AttributeBuilder {
     }
 
     public static DoubleIntervalAttribute buildDoubleInterval(String name, Double lowerBoundDouble,
-                                                              Double upperBoundDouble) {
+            Double upperBoundDouble) {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundDouble, upperBoundDouble));
@@ -530,7 +565,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static IntegerArrayAttribute buildIntegerCollection(String name, Collection values) {
         IntegerArrayAttribute att = new IntegerArrayAttribute();
         att.setName(name);
@@ -550,7 +585,7 @@ public final class AttributeBuilder {
     }
 
     public static IntegerIntervalAttribute buildIntegerInterval(String name, Integer lowerBoundInteger,
-                                                                Integer upperBoundInteger) {
+            Integer upperBoundInteger) {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
         att.setName(name);
         att.setValue(Range.closed(lowerBoundInteger, upperBoundInteger));
@@ -564,7 +599,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static LongArrayAttribute buildLongCollection(String name, Collection values) {
         LongArrayAttribute att = new LongArrayAttribute();
         att.setName(name);
@@ -604,7 +639,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static StringArrayAttribute buildStringCollection(String name, Collection values) {
         StringArrayAttribute att = new StringArrayAttribute();
         att.setName(name);

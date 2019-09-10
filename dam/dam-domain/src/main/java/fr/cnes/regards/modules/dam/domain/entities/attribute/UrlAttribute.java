@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.attribute;
 
-import java.net.URL;
-
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 
 /**
@@ -28,7 +26,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
  * @author Marc Sordi
  *
  */
-public class UrlAttribute extends AbstractAttribute<URL> {
+public class UrlAttribute extends AbstractAttribute<MarkdownURL> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {
