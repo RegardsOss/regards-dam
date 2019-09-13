@@ -104,9 +104,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Get a plugin configuration for a plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}")
-    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable Long connectionId)
+    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable String plgBusinessId)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(dbConnectionService.getDBConnection(connectionId)));
+        return ResponseEntity.ok(toResource(dbConnectionService.getDBConnection(plgBusinessId)));
     }
 
     /**
@@ -135,8 +135,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{connectionId}")
-    public ResponseEntity<Void> deleteDBConnection(@PathVariable Long connectionId) throws ModuleException {
-        dbConnectionService.deleteDBConnection(connectionId);
+    public ResponseEntity<Void> deleteDBConnection(@PathVariable String plgBusinessId) throws ModuleException {
+        dbConnectionService.deleteDBConnection(plgBusinessId);
         return ResponseEntity.noContent().build();
     }
 
@@ -148,10 +148,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Test the connection to the database")
     @RequestMapping(method = RequestMethod.POST, value = "/{connectionId}")
-    public ResponseEntity<GenericResponseBody> testDBConnection(@PathVariable Long connectionId)
+    public ResponseEntity<GenericResponseBody> testDBConnection(@PathVariable String plgBusinessId)
             throws ModuleException {
 
-        if (dbConnectionService.testDBConnection(connectionId)) {
+        if (dbConnectionService.testDBConnection(plgBusinessId)) {
             return ResponseEntity.ok(new GenericResponseBody("Valid connection"));
         } else {
             return ResponseEntity.badRequest().body(new GenericResponseBody("Invalid connection"));
@@ -167,10 +167,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Get the tables of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables")
-    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long connectionId)
+    public ResponseEntity<Map<String, Table>> getTables(@PathVariable String plgBusinessId)
             throws ModuleException, NotAvailablePluginConfigurationException {
         Map<String, Table> tables;
-        tables = dbConnectionService.getTables(connectionId);
+        tables = dbConnectionService.getTables(plgBusinessId);
         return ResponseEntity.ok(tables);
     }
 
@@ -184,9 +184,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Get the columns of a specific table of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables/{tableName}/columns")
-    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long connectionId,
+    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable String plgBusinessId,
             @PathVariable String tableName) throws ModuleException, NotAvailablePluginConfigurationException {
-        return ResponseEntity.ok(dbConnectionService.getColumns(connectionId, tableName));
+        return ResponseEntity.ok(dbConnectionService.getColumns(plgBusinessId, tableName));
     }
 
     @Override

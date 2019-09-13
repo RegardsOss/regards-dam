@@ -28,22 +28,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.encryption.exception.EncryptionException;
 import fr.cnes.regards.framework.module.manager.AbstractModuleManager;
 import fr.cnes.regards.framework.module.manager.ModuleConfiguration;
 import fr.cnes.regards.framework.module.manager.ModuleConfigurationItem;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IConnectionPlugin;
@@ -98,13 +92,13 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
         // export connections
         for (PluginConfiguration connection : pluginService.getPluginConfigurationsByType(IConnectionPlugin.class)) {
             // All connection should be active
-            PluginConfiguration exportedConnection = pluginService.exportConfiguration(connection);
+            PluginConfiguration exportedConnection = pluginService.prepareForExport(connection);
             exportedConnection.setIsActive(true);
             configurations.add(ModuleConfigurationItem.build(exportedConnection));
         }
         // export datasources
         for (PluginConfiguration dataSource : pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)) {
-            configurations.add(ModuleConfigurationItem.build(pluginService.exportConfiguration(dataSource)));
+            configurations.add(ModuleConfigurationItem.build(pluginService.prepareForExport(dataSource)));
         }
         return ModuleConfiguration.build(info, configurations);
     }
@@ -114,7 +108,7 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
         if (pluginService.findPluginConfigurationByLabel(plgConf.getLabel()).isPresent()) {
             importErrors.add(String.format(PLUGIN_CONFIGURATION_ALREADY_EXISTS, plgConf.getLabel()));
         } else {
-            EntityInvalidException validationIssues = PluginUtils.validate(plgConf);
+            List<String> validationIssues = PluginUtils.validateOnCreate(plgConf);
             if (validationIssues == null) {
                 try {
                     // Force activation of all connections.
@@ -126,9 +120,8 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                     logger.error(e.getMessage(), e);
                 }
             } else {
-                importErrors.add(String
-                        .format(VALIDATION_ISSUES, plgConf.getLabel(),
-                                validationIssues.getMessages().stream().collect(Collectors.joining(",", "", "."))));
+                importErrors.add(String.format(VALIDATION_ISSUES, plgConf.getLabel(),
+                                               validationIssues.stream().collect(Collectors.joining(",", "", "."))));
             }
 
         }
@@ -140,13 +133,9 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
         if (pluginService.findPluginConfigurationByLabel(plgConf.getLabel()).isPresent()) {
             importErrors.add(String.format(PLUGIN_CONFIGURATION_ALREADY_EXISTS, plgConf.getLabel()));
         } else {
-            EntityInvalidException validationIssues = PluginUtils.validate(plgConf);
+            List<String> validationIssues = PluginUtils.validateOnCreate(plgConf);
             if (validationIssues == null) {
                 try {
-                    // Firsts create missing linked plugin confs
-                    plgConf.getParameters().stream().filter(p -> p.getPluginConfiguration() != null)
-                            .forEach(this::createOrLinkDatasourceToConnection);
-                    // Then create plugin conf
                     dataSourceService.createDataSource(plgConf);
                 } catch (ModuleException e) {
                     // This should not occurs, but we never know
@@ -155,36 +144,12 @@ public class DamConfigurationManager extends AbstractModuleManager<Void> {
                     logger.error(e.getMessage(), e);
                 }
             } else {
-                importErrors.add(String
-                        .format(VALIDATION_ISSUES, plgConf.getLabel(),
-                                validationIssues.getMessages().stream().collect(Collectors.joining(",", "", "."))));
+                importErrors.add(String.format(VALIDATION_ISSUES, plgConf.getLabel(),
+                                               validationIssues.stream().collect(Collectors.joining(",", "", "."))));
             }
 
         }
         return importErrors;
-    }
-
-    /**
-     * Allow to link existing connection {@link PluginConfiguration} as a {@link PluginParameter} to a datasource {@link PluginConfiguration}.
-     * As exported configuration does not export ids, we have to do this link before saving datasources.
-     * Indeed some datasource are linked to a connection {@link PluginConfiguration}. This connection {@link PluginConfiguration} needs
-     * to be created before.
-     * @param p {@link PluginParameter} {@link PluginConfiguration} to link as a plugin parameter
-     */
-    private void createOrLinkDatasourceToConnection(PluginParameter p) {
-        try {
-            PluginConfiguration linked = pluginService
-                    .getPluginConfigurationByLabel(p.getPluginConfiguration().getLabel());
-            p.setPluginConfiguration(linked);
-        } catch (EntityNotFoundException e) {
-            // Plugin conf does not exists, create it
-            try {
-                PluginConfiguration linked = pluginService.savePluginConfiguration(p.getPluginConfiguration());
-                p.setPluginConfiguration(linked);
-            } catch (EntityInvalidException | EntityNotFoundException | EncryptionException e1) {
-                logger.error("Error creating pluging parameter.", e1);
-            }
-        }
     }
 
     /**

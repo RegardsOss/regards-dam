@@ -54,7 +54,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
@@ -464,15 +464,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 throw new ImportException(msg);
             }
             // Now lets check that parameters are consistent
-            for (PluginParameter param : plgConf.getParameters()) {
-                String curValue = currentPlgConf.getStripParameterValue(param.getName());
+            for (IPluginParam param : plgConf.getParameters()) {
+                String curValue = (String) currentPlgConf.getParameterValue(param.getName());
                 // Plugin parameter found
                 if (curValue != null) {
-                    if (!Objects.equals(param.getStripParameterValue(), curValue)) {
+                    if (!Objects.equals(param.getValue(), curValue)) {
                         String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
                                 + "plugin parameter %s with value %s differs from existing value (%s)",
-                                                   plgConf.getLabel(), param.getName(), curValue,
-                                                   param.getStripParameterValue());
+                                                   plgConf.getLabel(), param.getName(), curValue, param.getValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }

@@ -141,7 +141,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId)
+    public ResponseEntity<Void> deleteDataSource(@PathVariable String pluginConfId)
             throws AssociatedDatasetExistsException, ModuleException {
         try {
             dataSourceService.deleteDataSource(pluginConfId);

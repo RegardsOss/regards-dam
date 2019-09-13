@@ -35,12 +35,11 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
@@ -134,13 +133,12 @@ public class EntitiesService implements IEntitiesService {
         try {
             for (ModelAttrAssoc attr : computedAttributes) {
                 try {
-                    PluginParameter resultFragmentName = new PluginParameter(IComputedAttribute.RESULT_FRAGMENT_NAME,
-                            attr.getAttribute().getFragment().getName());
-                    resultFragmentName.setOnlyDynamic(true);
-                    PluginParameter resultAttrName = new PluginParameter(IComputedAttribute.RESULT_ATTRIBUTE_NAME,
-                            attr.getAttribute().getName());
-                    resultAttrName.setOnlyDynamic(true);
-                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId(),
+                    IPluginParam resultFragmentName = IPluginParam
+                            .build(IComputedAttribute.RESULT_FRAGMENT_NAME, attr.getAttribute().getFragment().getName())
+                            .dynamic();
+                    IPluginParam resultAttrName = IPluginParam
+                            .build(IComputedAttribute.RESULT_ATTRIBUTE_NAME, attr.getAttribute().getName()).dynamic();
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getBusinessId(),
                                                                               resultAttrName, resultFragmentName);
                     // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
                     // method, lets check that it is a IComputedAttribute<Dataset,?>
@@ -192,11 +190,10 @@ public class EntitiesService implements IEntitiesService {
             return null;
         }
 
-        Set<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, new HashMap<>());
+            return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
         } catch (ClassNotFoundException e) {
             LOGGER.error(e.getMessage(), e);
             throw new IllegalArgumentException(e.getMessage());

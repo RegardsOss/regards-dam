@@ -35,7 +35,8 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.module.manager.ConfigIgnore;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.PluginParamType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.schema.Attribute;
 import fr.cnes.regards.modules.dam.domain.models.schema.Computation;
@@ -178,14 +179,15 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                 // For plugins which are calculated according to a data object property, let's set the parameters and
                 // then the type
                 ParamPluginType paramPluginType = new ParamPluginType();
-                String parameterAttributeName = computationConf.getParameter("parameterAttributeName").getValue();
+                String parameterAttributeName = (String) computationConf.getParameter("parameterAttributeName")
+                        .getValue();
                 if (parameterAttributeName.matches("^\"[^\"]*\"$")) {
                     parameterAttributeName = parameterAttributeName.substring(1, parameterAttributeName.length() - 1);
                 }
                 paramPluginType.setParameterAttributeName(parameterAttributeName);
-                PluginParameter paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
-                if (paramAttrFragment != null) {
-                    String paramAttrFragmentName = paramAttrFragment.getValue();
+                IPluginParam paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
+                if ((paramAttrFragment != null) && (paramAttrFragment.getType() == PluginParamType.STRING)) {
+                    String paramAttrFragmentName = (String) paramAttrFragment.getValue();
                     if (paramAttrFragmentName != null) {
                         if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
                             paramAttrFragmentName = paramAttrFragmentName.substring(1,

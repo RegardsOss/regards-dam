@@ -56,7 +56,7 @@ public interface IDBConnectionService {
      * @return a {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
-    PluginConfiguration getDBConnection(Long configurationId) throws ModuleException;
+    PluginConfiguration getDBConnection(String businessId) throws ModuleException;
 
     /**
      * Update a DB connection {@link PluginConfiguration}
@@ -64,14 +64,14 @@ public interface IDBConnectionService {
      * @return the updated {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
-    PluginConfiguration updateDBConnection(PluginConfiguration dbConnection) throws ModuleException;
+    PluginConfiguration updateDBConnection(PluginConfiguration connConfbusinessId) throws ModuleException;
 
     /**
      * Delete a DB connection {@link PluginConfiguration}
-     * @param configurationId a {@link PluginConfiguration} identifier
+     * @param businessId a {@link PluginConfiguration} business identifier
      * @throws ModuleException throw if an error occurs
      */
-    void deleteDBConnection(Long configurationId) throws ModuleException;
+    void deleteDBConnection(String connConfbusinessId) throws ModuleException;
 
     /**
      * Querying the status of a database connection pools.
@@ -80,7 +80,7 @@ public interface IDBConnectionService {
      *         false unable to connect to the database
      * @throws ModuleException throw if an error occurs
      */
-    Boolean testDBConnection(Long configurationId) throws ModuleException;
+    Boolean testDBConnection(String connConfbusinessId) throws ModuleException;
 
     /**
      * Retrieve all tables from DB connection plugin
@@ -89,7 +89,8 @@ public interface IDBConnectionService {
      * @throws ModuleException
      * @throws NotAvailablePluginConfigurationException
      */
-    Map<String, Table> getTables(Long dbConnectionId) throws ModuleException, NotAvailablePluginConfigurationException;
+    Map<String, Table> getTables(String connConfbusinessId)
+            throws ModuleException, NotAvailablePluginConfigurationException;
 
     /**
      * Retrieve all columns from DB connection plugin and given table name
@@ -99,7 +100,7 @@ public interface IDBConnectionService {
      * @throws ModuleException
      * @throws NotAvailablePluginConfigurationException
      */
-    Map<String, Column> getColumns(Long dbConnectionId, String tableName)
+    Map<String, Column> getColumns(String connConfbusinessId, String tableName)
             throws ModuleException, NotAvailablePluginConfigurationException;
 
 }

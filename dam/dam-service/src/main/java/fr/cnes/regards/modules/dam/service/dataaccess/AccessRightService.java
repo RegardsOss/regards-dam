@@ -152,7 +152,7 @@ public class AccessRightService implements IAccessRightService {
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
                     boolean dataAccess = datasetAccess
-                            && accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS;
+                            && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });
@@ -238,7 +238,7 @@ public class AccessRightService implements IAccessRightService {
 
         // Remove unused plugin conf id any
         if (toRemove.isPresent()) {
-            pluginService.deletePluginConfiguration(toRemove.get().getId());
+            pluginService.deletePluginConfiguration(toRemove.get().getBusinessId());
         }
 
         eventPublisher.publish(new AccessRightEvent(accessRight.getDataset().getIpId(), AccessRightEventType.UPDATE));
@@ -262,8 +262,8 @@ public class AccessRightService implements IAccessRightService {
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
         repository.deleteById(id);
 
-        if (confToDelete != null && confToDelete.getId() != null) {
-            pluginService.deletePluginConfiguration(confToDelete.getId());
+        if ((confToDelete != null) && (confToDelete.getId() != null)) {
+            pluginService.deletePluginConfiguration(confToDelete.getBusinessId());
         }
 
         if (dataset != null) {

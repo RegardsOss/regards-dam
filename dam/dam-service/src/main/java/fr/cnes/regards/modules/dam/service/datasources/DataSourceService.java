@@ -21,8 +21,6 @@
 package fr.cnes.regards.modules.dam.service.datasources;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +31,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 
 /**
@@ -71,62 +67,13 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public PluginConfiguration updateDataSource(PluginConfiguration dataSource) throws ModuleException {
         LOGGER.info("updateDataSource : id = {}, [new] label = {}", dataSource.getId(), dataSource.getLabel());
-
-        // Get current datasource PluginConfiguration
-        PluginConfiguration dataSourceFromDb = service.getPluginConfiguration(dataSource.getId());
-
-        // Manage the label change
-        dataSourceFromDb.setLabel(dataSource.getLabel());
-
-        // Manage the activation change
-        dataSourceFromDb.setIsActive(dataSource.isActive());
-
-        // Update all existing PluginParameters
-        Set<PluginParameter> mergedParams = dataSourceFromDb.getParameters().stream()
-                .map(param -> mergeParameter(param, dataSource)).collect(Collectors.toSet());
-        dataSourceFromDb.setParameters(mergedParams);
-        // Add new PluginParameters
-        dataSource.getParameters().removeAll(dataSourceFromDb.getParameters());
-        dataSource.getParameters().forEach(p -> dataSourceFromDb.getParameters().add(p));
-        return service.updatePluginConfiguration(dataSourceFromDb);
+        return service.updatePluginConfiguration(dataSource);
     }
 
     @Override
-    public void deleteDataSource(Long id) throws ModuleException {
-        LOGGER.info("deleting DataSource {}", id);
-        service.deletePluginConfiguration(id);
-    }
-
-    /**
-     * Update the {@link PluginParameter} with the appropriate {@link PluginConfiguration} datasource attribute
-     * @param pluginParam a {@link PluginParameter} to update
-     * @param dataSource a data source
-     * @return a {{@link PluginParameter}
-     */
-    private PluginParameter mergeParameter(PluginParameter pluginParam, PluginConfiguration dataSource) {
-        if (pluginParam.getName().equals(DataSourcePluginConstants.CONNECTION_PARAM)) {
-            mergePluginConfigurationParameter(pluginParam, dataSource);
-        } else {
-            // BEWARE : DataSource comes from frontend, its value is already gson-normalized SO don't use
-            // PluginParametersFactory.updateParameter(...) method
-            pluginParam.setValue(dataSource.getParameterValue(pluginParam.getName()));
-        }
-        return pluginParam;
-    }
-
-    /**
-     * Update a {@link PluginParameter} of type connection
-     * @param connectionPluginParam a {@link PluginParameter} to update
-     * @param dataSource a {@link PluginConfiguration}
-     */
-    private void mergePluginConfigurationParameter(PluginParameter connectionPluginParam,
-            PluginConfiguration dataSource) {
-        PluginConfiguration dbConf = connectionPluginParam.getPluginConfiguration();
-        PluginConfiguration currentDbConf = dataSource
-                .getParameterConfiguration(DataSourcePluginConstants.CONNECTION_PARAM);
-        if ((dbConf == null) || !dbConf.getId().equals(currentDbConf.getId())) {
-            connectionPluginParam.setPluginConfiguration(currentDbConf);
-        }
+    public void deleteDataSource(String businessId) throws ModuleException {
+        LOGGER.info("deleting DataSource {}", businessId);
+        service.deletePluginConfiguration(businessId);
     }
 
 }

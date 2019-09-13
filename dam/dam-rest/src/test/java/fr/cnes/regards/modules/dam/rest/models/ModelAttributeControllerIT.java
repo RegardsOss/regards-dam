@@ -40,14 +40,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
@@ -337,12 +336,12 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
     @Test
     public void testGetMappingForComputedAttribute() throws ModuleException {
         // lets add a package where we know there is plugin to get some results
-        Set<PluginParameter> params = PluginParametersFactory.build()
-                .addParameter(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto")
-                .addParameter(AbstractDataObjectComputePlugin.RESULT_ATTRIBUTE_NAME, "titi").getParameters();
-        PluginConfiguration confWithUnknownParameter = PluginUtils.getPluginConfiguration(params,
-                                                                                          IntSumComputePlugin.class);
-        pluginService.savePluginConfiguration(confWithUnknownParameter);
+        Set<IPluginParam> params = IPluginParam
+                .set(IPluginParam.build(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto"),
+                     IPluginParam.build(AbstractDataObjectComputePlugin.RESULT_ATTRIBUTE_NAME, "titi"));
+
+        PluginConfiguration conf = PluginUtils.getPluginConfiguration(params, IntSumComputePlugin.class);
+        conf = pluginService.savePluginConfiguration(conf);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();
         requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());
         requestBuilderCustomizer

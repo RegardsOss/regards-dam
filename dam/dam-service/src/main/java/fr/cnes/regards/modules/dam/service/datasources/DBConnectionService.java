@@ -71,8 +71,8 @@ public class DBConnectionService implements IDBConnectionService {
     }
 
     @Override
-    public PluginConfiguration getDBConnection(Long configurationId) throws ModuleException {
-        return pluginService.getPluginConfiguration(configurationId);
+    public PluginConfiguration getDBConnection(String connConfbusinessId) throws ModuleException {
+        return pluginService.getPluginConfiguration(connConfbusinessId);
     }
 
     @Override
@@ -83,23 +83,23 @@ public class DBConnectionService implements IDBConnectionService {
     }
 
     @Override
-    public void deleteDBConnection(Long configurationId) throws ModuleException {
-        pluginService.deletePluginConfiguration(configurationId);
+    public void deleteDBConnection(String businessId) throws ModuleException {
+        pluginService.deletePluginConfiguration(businessId);
     }
 
     @Override
-    public Boolean testDBConnection(Long configurationId) throws ModuleException {
+    public Boolean testDBConnection(String businessId) throws ModuleException {
 
         Boolean result = false;
         IDBConnectionPlugin plg;
         try {
             // Instanciate plugin
-            plg = pluginService.getPlugin(configurationId);
+            plg = pluginService.getPlugin(businessId);
             // Test connection
             result = plg.testConnection();
             // Remove plugin instance from cache after closing connection
             if (!result) {
-                pluginService.cleanPluginCache(configurationId);
+                pluginService.cleanPluginCache(businessId);
             }
         } catch (NotAvailablePluginConfigurationException e) {
             LOGGER.error(e.getMessage(), e);
@@ -109,15 +109,16 @@ public class DBConnectionService implements IDBConnectionService {
     }
 
     @Override
-    public Map<String, Table> getTables(Long id) throws ModuleException, NotAvailablePluginConfigurationException {
-        IDBConnectionPlugin plg = pluginService.getPlugin(id);
+    public Map<String, Table> getTables(String businessId)
+            throws ModuleException, NotAvailablePluginConfigurationException {
+        IDBConnectionPlugin plg = pluginService.getPlugin(businessId);
         return (plg == null) ? null : plg.getTables(null, null);
     }
 
     @Override
-    public Map<String, Column> getColumns(Long id, String tableName)
+    public Map<String, Column> getColumns(String businessId, String tableName)
             throws ModuleException, NotAvailablePluginConfigurationException {
-        IDBConnectionPlugin plg = pluginService.getPlugin(id);
+        IDBConnectionPlugin plg = pluginService.getPlugin(businessId);
         return (plg == null) ? null : plg.getColumns(tableName);
     }
 

@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.dam.rest.datasources;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -38,13 +39,13 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IConnectionPlugin;
@@ -113,7 +114,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         Assert.assertNotNull(dbConfs);
         Assert.assertTrue(dbConfs.size() == 1);
 
-        PluginConfiguration dbConf = pluginService.loadPluginConfiguration(dbConfs.get(0).getId());
+        PluginConfiguration dbConf = pluginService.loadPluginConfiguration(dbConfs.get(0).getBusinessId());
 
         performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{connectionId}", dbConf, customizer,
                           "Configuration should be saved!", dbConf.getId());
@@ -131,7 +132,10 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createDBConnectionBadPluginClassName() {
         final PluginConfiguration dbConn = new PluginConfiguration();
-        dbConn.setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgrConnectionPlugin");
+        PluginMetaData meta = new PluginMetaData();
+        meta.setPluginId("test");
+        meta.setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgrConnectionPlugin");
+        dbConn.setMetaData(meta);
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConn,
                            customizer().expect(MockMvcResultMatchers.status().isUnprocessableEntity()),
@@ -143,7 +147,10 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("If a HTTP request POST is unsupported or mal-formatted, the HTTP return code is 503")
     public void createEmptyDBConnectionWithPluginClassName() {
         PluginConfiguration dbConn = new PluginConfiguration();
-        dbConn.setPluginClassName(POSTGRESQL_PLUGIN_CONNECTION);
+        PluginMetaData meta = new PluginMetaData();
+        meta.setPluginId("test");
+        meta.setPluginClassName(POSTGRESQL_PLUGIN_CONNECTION);
+        dbConn.setMetaData(meta);
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConn,
                            customizer().expect(MockMvcResultMatchers.status().isUnprocessableEntity()),
@@ -248,7 +255,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         PluginConfiguration plgCondDelete = null;
         try {
-            plgCondDelete = service.getDBConnection(plgConf.getId());
+            plgCondDelete = service.getDBConnection(plgConf.getBusinessId());
             Assert.fail();
         } catch (ModuleException e) {
             Assert.assertTrue(true);
@@ -285,8 +292,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testConnectionFailed() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM),
-                                                "daredevil");
+        dbConnection.getParameter(DBConnectionPluginConstants.USER_PARAM).value("daredevil");
 
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
@@ -327,14 +333,18 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
-        dbConnection.setParameters(PluginParametersFactory.build()
-                .addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
-                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
-                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
-                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
-                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName).getParameters());
+        Set<IPluginParam> parameters = IPluginParam
+                .set(IPluginParam.build(DBConnectionPluginConstants.USER_PARAM, dbUser),
+                     IPluginParam.build(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword),
+                     IPluginParam.build(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost),
+                     IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort),
+                     IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, dbName));
+        dbConnection.setParameters(parameters);
         dbConnection.setLabel(label);
-        dbConnection.setPluginClassName(pluginClassName);
+        PluginMetaData meta = new PluginMetaData();
+        meta.setPluginId("test");
+        meta.setPluginClassName(pluginClassName);
+        dbConnection.setMetaData(meta);
         return dbConnection;
     }
 

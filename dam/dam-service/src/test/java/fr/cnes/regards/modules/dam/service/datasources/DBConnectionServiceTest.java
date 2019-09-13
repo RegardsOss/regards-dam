@@ -34,13 +34,12 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType.ParamType;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParamDescriptor;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.PluginParamType;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
 
@@ -95,7 +94,7 @@ public class DBConnectionServiceTest {
         dbConnectionServiceMock = new DBConnectionService(pluginServiceMock);
 
         // create PluginConfiguration
-        Set<PluginParameter> parameters = initializePluginParameters();
+        Set<IPluginParam> parameters = initializePluginParameters();
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
                 parameters));
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
@@ -118,7 +117,10 @@ public class DBConnectionServiceTest {
     public void createConnection() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
         String className = "fr.cnes.regards.modules.dam.plugins.datasources.DefaultPostgreConnectionPlugin";
-        dbConnection.setPluginClassName(className);
+        PluginMetaData metaData = new PluginMetaData();
+        metaData.setPluginClassName(className);
+        metaData.setPluginId("test");
+        dbConnection.setMetaData(metaData);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
@@ -131,9 +133,12 @@ public class DBConnectionServiceTest {
     public void createConnectionUnknownPluginClassName() throws ModuleException {
         PluginConfiguration dbConnection = new PluginConfiguration();
         String className = "fr.cnes.regards.modules.dam.plugins.datasources.DefaultPostgreConnectionPlugin";
-        dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
         dbConnection.setLabel("the label of the new connection failed");
+        PluginMetaData metaData = new PluginMetaData();
+        metaData.setPluginClassName(className);
+        metaData.setPluginId("test");
+        dbConnection.setMetaData(metaData);
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
                 .thenThrow(EntityInvalidException.class);
         dbConnectionServiceMock.createDBConnection(dbConnection);
@@ -151,22 +156,21 @@ public class DBConnectionServiceTest {
         return pluginMetaData;
     }
 
-    private Set<PluginParameter> initializePluginParameters() {
-        return PluginParametersFactory.build().addParameter(DBConnectionPluginConstants.USER_PARAM, dbUser)
-                .addParameter(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword)
-                .addParameter(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost)
-                .addParameter(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort)
-                .addParameter(DBConnectionPluginConstants.DB_NAME_PARAM, dbName)
-                .addParameter(DBConnectionPluginConstants.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER).getParameters();
+    private Set<IPluginParam> initializePluginParameters() {
+        return IPluginParam.set(IPluginParam.build(DBConnectionPluginConstants.USER_PARAM, dbUser),
+                                IPluginParam.build(DBConnectionPluginConstants.PASSWORD_PARAM, dbPassword),
+                                IPluginParam.build(DBConnectionPluginConstants.DB_HOST_PARAM, dbHost),
+                                IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort),
+                                IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, dbName),
+                                IPluginParam.build(DBConnectionPluginConstants.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER));
     }
 
-    private List<PluginParameterType> initializePluginParameterType() {
-
+    private List<PluginParamDescriptor> initializePluginParameterType() {
         return Arrays.asList(
-                             PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE,
-                                                        false, false, false),
-                             PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
-                                                        ParamType.PLUGIN, false, false, false));
+                             PluginParamDescriptor.create("model", "model", null, PluginParamType.STRING, false, false,
+                                                          false),
+                             PluginParamDescriptor.create("connection", "connection", null, PluginParamType.PLUGIN,
+                                                          false, false, false));
     }
 
 }

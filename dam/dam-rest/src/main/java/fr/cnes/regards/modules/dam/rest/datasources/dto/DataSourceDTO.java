@@ -37,8 +37,7 @@ public class DataSourceDTO extends PluginConfiguration {
         this.setVersion(dataSourceConf.getVersion());
         this.setPriorityOrder(dataSourceConf.getPriorityOrder());
         this.setIsActive(dataSourceConf.isActive());
-        this.setPluginClassName(dataSourceConf.getPluginClassName());
-        this.setInterfaceNames(dataSourceConf.getInterfaceNames());
+        this.setMetaData(dataSourceConf.getMetaData());
         this.setParameters(dataSourceConf.getParameters());
         this.setIconUrl(dataSourceConf.getIconUrl());
     }

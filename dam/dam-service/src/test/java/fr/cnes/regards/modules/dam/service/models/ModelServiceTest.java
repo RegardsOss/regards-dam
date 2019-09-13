@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,18 +35,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.models.Model;
@@ -54,6 +55,7 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
+import fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin;
 import fr.cnes.regards.modules.dam.service.models.exception.FragmentAttributeException;
 
 /**
@@ -288,6 +290,8 @@ public class ModelServiceTest {
     @Test
     public void exportModelTest() throws ModuleException {
 
+        PluginUtils.setup();
+
         Long modelId = 1L;
         String modelName = "sample";
         Model model = new Model();
@@ -338,13 +342,10 @@ public class ModelServiceTest {
         attMod = AttributeModelBuilder.build("value_sum", AttributeType.LONG, "ForTests").defaultFragment()
                 .withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
-        PluginConfiguration sumComputeConf = new PluginConfiguration();
-        sumComputeConf.setLabel("SumComputeValue");
-        sumComputeConf.setPluginClassName("fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin");
-        sumComputeConf.setParameters(Sets.newHashSet(new PluginParameter("parameterAttributeName", "\"paramName\""),
-                                                     // No parameter fragment => default value => "" => stripped as
-                                                     // """"
-                                                     new PluginParameter("parameterAttributeFragmentName", "\"\"")));
+        Set<IPluginParam> parameters = IPluginParam.set(IPluginParam.build("parameterAttributeName", "paramName"),
+                                                        IPluginParam.build("parameterAttributeFragmentName", ""));
+
+        PluginConfiguration sumComputeConf = PluginUtils.getPluginConfiguration(parameters, LongSumComputePlugin.class);
 
         modAtt.setComputationConf(sumComputeConf);
         modelAttrAssocs.add(modAtt);

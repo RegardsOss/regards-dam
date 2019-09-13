@@ -54,14 +54,13 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.EntitySpecifications;
@@ -734,11 +733,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             return null;
         }
 
-        Set<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, new HashMap<>());
+            return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
         } catch (ClassNotFoundException e) {
             logger.error(e.getMessage());
         }
