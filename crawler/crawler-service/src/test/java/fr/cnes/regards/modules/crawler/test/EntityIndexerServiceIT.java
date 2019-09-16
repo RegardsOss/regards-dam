@@ -42,12 +42,12 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
@@ -238,30 +238,28 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     }
 
     private PluginConfiguration createDataSource() throws ModuleException {
-        Set<PluginParameter> param = PluginParametersFactory.build().addParameter(TestDataSourcePlugin.MODEL, model)
-                .getParameters();
+        Set<IPluginParam> param = IPluginParam
+                .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(model)));
         return datasourceService
                 .createDataSource(PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class));
     }
 
     private PluginConfiguration createDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
-        Set<PluginParameter> param = PluginParametersFactory.build()
-                .addParameter(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()).getParameters();
+        Set<IPluginParam> param = IPluginParam
+                .set(IPluginParam.build(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()));
         return PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class);
     }
 
     private PluginConfiguration createNewDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
-        Set<PluginParameter> param = PluginParametersFactory.build()
-                .addParameter(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5).getParameters();
+        Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
         return PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class);
     }
 
     private PluginConfiguration createOldDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
-        Set<PluginParameter> param = PluginParametersFactory.build()
-                .addParameter(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5).getParameters();
+        Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
         return pluginService
                 .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
     }
@@ -374,7 +372,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // 7. Update the third accessRight filter and check that no dataObject is associated to the new GROUP3
         //    Filter doesn't match any existing data : label=unknown
         // -------------------------------------------------------------------------------
-        dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).setValue("unknown");
+        dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).value("unknown");
         dataAccessPlugin = pluginService.updatePluginConfiguration(dataAccessPlugin);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         // All data should be in group2 and only one (DO1) in group3
@@ -391,7 +389,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // 8. Update the third accessRight filter and check that only one dataObject is associated to the new GROUP3
         //    Filter match only one existing data : label=DataObject 2
         // -------------------------------------------------------------------------------
-        dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).setValue("\"DataObject 2\"");
+        dataAccessPlugin.getParameter(TestDataAccessRightPlugin.LABEL_PARAM).value("DataObject 2");
         dataAccessPlugin = pluginService.updatePluginConfiguration(dataAccessPlugin);
         pluginService.cleanPluginCache();
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);

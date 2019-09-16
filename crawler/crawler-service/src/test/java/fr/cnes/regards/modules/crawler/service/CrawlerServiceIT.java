@@ -164,8 +164,8 @@ public class CrawlerServiceIT {
         Utils.execute(modelService::deleteModel, modelColl.getName());
         Utils.execute(modelService::deleteModel, modelDataset.getName());
         Utils.execute(modelService::deleteModel, dataModel.getName());
-        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getBusinessId());
+        Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getBusinessId());
 
     }
 

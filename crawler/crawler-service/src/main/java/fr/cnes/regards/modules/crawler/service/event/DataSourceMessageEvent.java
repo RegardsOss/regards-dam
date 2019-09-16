@@ -25,27 +25,27 @@ import org.springframework.context.ApplicationEvent;
  * ingester updating DatasourceIngestion (these messages are enqueued into stacktrace attribute)
  * @author oroussel
  */
-public class MessageEvent extends ApplicationEvent {
+public class DataSourceMessageEvent extends ApplicationEvent {
+
     private final String tenant;
 
     private final String message;
 
-    // Entity concerned by the message
-    private final Long entityId;
+    private final String dataSourceId;
 
-    public MessageEvent(Object source, String tenant, String message, Long entityId) {
+    public DataSourceMessageEvent(Object source, String tenant, String message, String dataSourceId) {
         super(source);
         this.tenant = tenant;
         this.message = message;
-        this.entityId = entityId;
+        this.dataSourceId = dataSourceId;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public Long getEntityId() {
-        return entityId;
+    public String getDataSourceId() {
+        return dataSourceId;
     }
 
     public String getTenant() {

@@ -60,7 +60,7 @@ import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfi
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
-import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
+import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IAipDataSourcePlugin;
@@ -146,11 +146,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
         // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
         int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
-        Long dsiId = dsi.getId();
+        String dsiId = dsi.getId();
 
         IDataSourcePlugin dsPlugin;
         try {
-            dsPlugin = pluginService.getPlugin(pluginConf.getId());
+            dsPlugin = pluginService.getPlugin(pluginConf.getBusinessId());
         } catch (NotAvailablePluginConfigurationException e) {
             throw new InactiveDatasourceException();
         }
@@ -194,7 +194,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private BulkSaveLightResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -254,7 +254,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private BulkSaveLightResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -318,7 +318,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Get Callable to be used by parallel tasks to create a bulk of data objects
      */
     private Callable<BulkSaveResult> createDataObjectsCallable(String tenant, OffsetDateTime now, String datasourceId,
-            Long dsiId, List<DataObject> list) {
+            String dsiId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
@@ -338,7 +338,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Get Callable to be used by parallel tasks to merge a bulk of data objects
      */
     private Callable<BulkSaveResult> mergeDataObjectCallable(String tenant, OffsetDateTime now, String datasourceId,
-            Long dsiId, List<DataObject> list) {
+            String dsiId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
@@ -427,12 +427,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public void deleteDatasourceIngestion(Long id) {
+    public void deleteDatasourceIngestion(String id) {
         datasourceIngestionRepo.deleteById(id);
     }
 
     @Override
-    public void scheduleNowDatasourceIngestion(Long id) {
+    public void scheduleNowDatasourceIngestion(String id) {
         DatasourceIngestion dsi = datasourceIngestionRepo.findById(id).get();
         dsi.setNextPlannedIngestDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         datasourceIngestionRepo.save(dsi);
@@ -441,10 +441,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
      */
-    public void sendMessage(String message, Long dsId) {
+    public void sendMessage(String message, String dsId) {
         String msg = String.format("%s: %s",
                                    ISO_TIME_UTC.format(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)),
                                    message);
-        eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
+        eventPublisher.publishEvent(new DataSourceMessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
     }
 }

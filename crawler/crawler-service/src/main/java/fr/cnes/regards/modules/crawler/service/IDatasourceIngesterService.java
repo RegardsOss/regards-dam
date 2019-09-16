@@ -33,10 +33,10 @@ public interface IDatasourceIngesterService {
      * Delete given {@link DatasourceIngestion}
      * @param id DatasourceIngestion id
      */
-    void deleteDatasourceIngestion(Long id);
+    void deleteDatasourceIngestion(String id);
 
     /**
      * Schedule datasource ingestion to be executed as soon as possible
      */
-    void scheduleNowDatasourceIngestion(Long id);
+    void scheduleNowDatasourceIngestion(String id);
 }

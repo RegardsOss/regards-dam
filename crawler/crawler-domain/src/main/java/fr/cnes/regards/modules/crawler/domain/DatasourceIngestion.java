@@ -1,5 +1,9 @@
 package fr.cnes.regards.modules.crawler.domain;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -7,9 +11,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import org.hibernate.annotations.Type;
 
@@ -24,11 +25,11 @@ import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter
 public class DatasourceIngestion {
 
     /**
-     * Id is datasource id (see table pluginConf)
+     * Id is datasource id (see table pluginConf businnessId)
      */
     @Id
-    @Column(name = "ds_id")
-    private Long id;
+    @Column(name = "ds_id", length = 36)
+    private String id;
 
     @Column(name = "label", length = 255)
     private String label;
@@ -97,22 +98,22 @@ public class DatasourceIngestion {
     private DatasourceIngestion() {
     }
 
-    public DatasourceIngestion(Long id) {
+    public DatasourceIngestion(String id) {
         super();
         this.id = id;
     }
 
-    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate, String label) {
+    public DatasourceIngestion(String id, OffsetDateTime nextPlannedIngestDate, String label) {
         this(id);
         this.nextPlannedIngestDate = nextPlannedIngestDate;
         this.label = label;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

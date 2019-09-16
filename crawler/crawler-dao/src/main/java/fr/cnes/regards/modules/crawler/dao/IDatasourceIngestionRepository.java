@@ -1,8 +1,9 @@
 package fr.cnes.regards.modules.crawler.dao;
 
-import javax.persistence.LockModeType;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+
+import javax.persistence.LockModeType;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -13,7 +14,7 @@ import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
 /**
  * @author oroussel
  */
-public interface IDatasourceIngestionRepository extends JpaRepository<DatasourceIngestion, Long> {
+public interface IDatasourceIngestionRepository extends JpaRepository<DatasourceIngestion, String> {
 
     /**
      * Find a DatasourceIngestion (any of them) whom next planned ingest date is less than given date

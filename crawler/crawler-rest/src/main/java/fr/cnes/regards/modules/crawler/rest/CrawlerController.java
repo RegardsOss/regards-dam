@@ -78,7 +78,7 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
      */
     @ResourceAccess(description = "Delete selected datasource.")
     @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
-    public ResponseEntity<Void> deleteDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
+    public ResponseEntity<Void> deleteDatasourceIngestion(@PathVariable("ingestion_id") String ingestionId) {
         crawlerService.deleteDatasourceIngestion(ingestionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -90,7 +90,7 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
      */
     @ResourceAccess(description = "Schedule datasource to be ingested as soon as possible.")
     @RequestMapping(method = RequestMethod.PUT, value = INGESTION_ID)
-    public ResponseEntity<Void> scheduleNowDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
+    public ResponseEntity<Void> scheduleNowDatasourceIngestion(@PathVariable("ingestion_id") String ingestionId) {
         crawlerService.scheduleNowDatasourceIngestion(ingestionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -99,9 +99,9 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
         Resource<DatasourceIngestion> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, element.getId()));
+                                MethodParamFactory.build(String.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion", "SCHEDULE",
-                                MethodParamFactory.build(Long.class, element.getId()));
+                                MethodParamFactory.build(String.class, element.getId()));
         return resource;
     }
 

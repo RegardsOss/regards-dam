@@ -72,13 +72,13 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -288,8 +288,9 @@ public class IndexerServiceDataSourceIT {
     }
 
     private PluginConfiguration getPostgresDataSource() {
-        Set<PluginParameter> param = PluginParametersFactory.build().addParameter(TestDataSourcePlugin.MODEL, dataModel)
-                .addParameter(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
+        Set<IPluginParam> param = IPluginParam
+                .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(dataModel)),
+                     IPluginParam.build(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()));
         return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class);
     }
 
@@ -301,7 +302,7 @@ public class IndexerServiceDataSourceIT {
 
         // Creation
         long start = System.currentTimeMillis();
-        DatasourceIngestion dsi = new DatasourceIngestion(dataSourcePluginConf.getId());
+        DatasourceIngestion dsi = new DatasourceIngestion(dataSourcePluginConf.getBusinessId());
         dsi.setLabel("Label");
         dsIngestionRepos.save(dsi);
 
