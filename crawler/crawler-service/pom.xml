@@ -77,11 +77,6 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>notification-regards-starter</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.storage</groupId>
-			<artifactId>storage-domain</artifactId>
-		</dependency>
-
 
 		<!-- Test dependencies -->
 		<dependency>

@@ -58,8 +58,6 @@ import com.google.common.base.Strings;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.amqp.domain.IHandler;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -70,7 +68,6 @@ import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -106,8 +103,6 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.storage.domain.AIPState;
-import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
 /**
  * @author oroussel
@@ -202,7 +197,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     @EventListener
     public void handleApplicationReady(DamGsonReadyEvent event) {
-        subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
+        // TODO : subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
     /**
@@ -878,8 +873,10 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
     }
 
+    /**
+    TODO
     private class AIPEventHandler implements IHandler<AIPEvent> {
-
+    
         @Override
         public void handle(TenantWrapper<AIPEvent> wrapper) {
             AIPEvent event = wrapper.getContent();
@@ -891,8 +888,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                     String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
-
+    
             }
         }
     }
+    */
 }
