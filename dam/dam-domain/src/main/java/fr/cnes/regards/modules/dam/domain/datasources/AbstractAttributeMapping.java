@@ -64,6 +64,11 @@ public abstract class AbstractAttributeMapping {
     public static final String GEOMETRY = "geometry";
 
     /**
+     * attributeType field property name
+     */
+    public static final String ATTRIBUTE_TYPE = "attributeType";
+
+    /**
      * The attribute name in the model
      */
     protected String name;
