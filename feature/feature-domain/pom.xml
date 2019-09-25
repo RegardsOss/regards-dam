@@ -17,17 +17,17 @@
  You should have received a copy of the GNU General Public License
  along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.microservices</groupId>
-	<artifactId>dam</artifactId>
-	<packaging>pom</packaging>
+	<groupId>fr.cnes.regards.modules.feature</groupId>
+	<artifactId>feature-domain</artifactId>
 
-	<description>Microservice managing the systems's indexed data</description>
+	<description>Feature domain layer</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-	<inceptionYear>2016</inceptionYear>
+	<inceptionYear>2019</inceptionYear>
 	<licenses>
 		<license>
 			<name>GNU General Public License (GNU GPL)</name>
@@ -48,19 +48,27 @@
 	</developers>
 
 	<parent>
-		<groupId>fr.cnes.regards</groupId>
-		<artifactId>regards-aggregator-parent</artifactId>
+		<groupId>fr.cnes.regards.modules</groupId>
+		<artifactId>feature</artifactId>
 		<version>0.5.0-SNAPSHOT</version>
-		<relativePath />
 	</parent>
 
-	<modules>
-		<module>bootstrap-dam</module>
-		<module>dam</module>
-		<module>crawler</module>
-		<module>indexer</module>
-		<module>opensearch</module>
-		<module>feature</module>
-	</modules>
-
+	<dependencies>
+		<dependency>
+        	<groupId>org.mapstruct</groupId>
+        	<artifactId>mapstruct</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>geojson-regards</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>plugins-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-data-regards</artifactId>
+		</dependency>
+	</dependencies>
 </project>
