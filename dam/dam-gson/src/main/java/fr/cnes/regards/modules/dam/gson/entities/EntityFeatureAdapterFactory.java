@@ -34,7 +34,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
-import fr.cnes.regards.modules.dam.domain.entities.feature.DocumentFeature;
 import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 
 /**
@@ -54,7 +53,6 @@ public class EntityFeatureAdapterFactory extends PolymorphicTypeAdapterFactory<E
         super(EntityFeature.class, "entityType");
         registerSubtype(CollectionFeature.class, EntityType.COLLECTION);
         registerSubtype(DatasetFeature.class, EntityType.DATASET);
-        registerSubtype(DocumentFeature.class, EntityType.DOCUMENT);
         registerSubtype(DataObjectFeature.class, EntityType.DATA, true);
     }
 

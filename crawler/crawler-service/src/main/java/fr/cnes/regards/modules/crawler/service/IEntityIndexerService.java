@@ -28,7 +28,6 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 
@@ -114,14 +113,6 @@ public interface IEntityIndexerService {
      * @throws ModuleException
      */
     void updateAllDatasets(String tenant) throws ModuleException;
-
-    /**
-     * Force update of all {@link Document}s
-     *
-     * @param tenant
-     * @throws ModuleException
-     */
-    void updateAllDocuments(String tenant) throws ModuleException;
 
     /**
      * Force update of all {@link fr.cnes.regards.modules.dam.domain.entities.Collection}s

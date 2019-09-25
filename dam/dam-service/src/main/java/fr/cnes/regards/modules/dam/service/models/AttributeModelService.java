@@ -41,7 +41,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenE
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.dao.models.AttributeModelSpecifications;
 import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
@@ -99,8 +98,6 @@ public class AttributeModelService implements IAttributeModelService {
 
     private final ICollectionRepository collectionRepository;
 
-    private final IDocumentRepository documentRepository;
-
     /**
      * Publish for model changes
      */
@@ -115,7 +112,7 @@ public class AttributeModelService implements IAttributeModelService {
             IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
             IAttributePropertyRepository pAttPropertyRepository, IModelAttrAssocRepository modelAttrAssocRepository,
             IDatasetRepository datasetRepository, ICollectionRepository collectionRepository,
-            IDocumentRepository documentRepository, IPublisher pPublisher, ApplicationEventPublisher eventPublisher) {
+            IPublisher pPublisher, ApplicationEventPublisher eventPublisher) {
         attModelRepository = pAttModelRepository;
         restrictionRepository = pRestrictionRepository;
         fragmentRepository = pFragmentRepository;
@@ -123,7 +120,6 @@ public class AttributeModelService implements IAttributeModelService {
         this.modelAttrAssocRepository = modelAttrAssocRepository;
         this.datasetRepository = datasetRepository;
         this.collectionRepository = collectionRepository;
-        this.documentRepository = documentRepository;
         publisher = pPublisher;
         this.eventPublisher = eventPublisher;
     }
@@ -211,7 +207,7 @@ public class AttributeModelService implements IAttributeModelService {
             });
             // Check if linked models not already used, so attribute must not be deleted
             if (datasetRepository.isLinkedToEntities(modelIds) || collectionRepository.isLinkedToEntities(modelIds)
-                    || documentRepository.isLinkedToEntities(modelIds) || datasetRepository
+                    || datasetRepository
                     .isLinkedToDatasetsAsDataModel(modelNames)) {
                 return false;
             }

@@ -410,8 +410,6 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
                 return EntityType.DATA;
             case 2:
                 return EntityType.DATASET;
-            case 3:
-                return EntityType.DOCUMENT;
             default:
                 throw new RuntimeException("learn to dev!");
         }
