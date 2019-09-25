@@ -402,7 +402,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
     }
 
     private EntityType getEntityType(int pI) {
-        int mod = pI % 4;
+        int mod = pI % 3;
         switch (mod) {
             case 0:
                 return EntityType.COLLECTION;
