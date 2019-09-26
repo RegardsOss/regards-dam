@@ -34,7 +34,7 @@ public final class GeoQueries {
     /**
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
-    public static ShapeBuilder computeShapeBuilder(PolygonCriterion criterion) {
+    public static ShapeBuilder<?, ?> computeShapeBuilder(PolygonCriterion criterion) {
         // Only shell can be taken into account (external emprise)
         double[][] shell = GeoHelper.normalizePolygonAsArray(criterion.getCoordinates())[0];
 

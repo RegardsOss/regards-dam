@@ -33,10 +33,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableTable;
 
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
@@ -60,78 +60,78 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
     // Define a static two-entries table storing the different criterion builders based on the type of attribute and the
     // type of comparison performed
     // @formatter:off
-    private static final ImmutableTable<AttributeType, RangeComparison, Function<TermRangeQueryNodeFacade, ICriterion>> CRITERION_TABLE = new ImmutableTable.Builder<AttributeType, RangeComparison, Function<TermRangeQueryNodeFacade, ICriterion>>()
-            .put(AttributeType.INTEGER, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.INTEGER, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.INTEGER, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.INTEGER, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.INTEGER, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive() ,pFacade.getUpperBoundAsDouble(), pFacade.isUpperInclusive()))
+    private static final ImmutableTable<PropertyType, RangeComparison, Function<TermRangeQueryNodeFacade, ICriterion>> CRITERION_TABLE = new ImmutableTable.Builder<PropertyType, RangeComparison, Function<TermRangeQueryNodeFacade, ICriterion>>()
+            .put(PropertyType.INTEGER, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.INTEGER, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.INTEGER, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.INTEGER, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.INTEGER, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive() ,pFacade.getUpperBoundAsDouble(), pFacade.isUpperInclusive()))
 
-//            .put(AttributeType.INTEGER_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
-//            .put(AttributeType.INTEGER_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
-//            .put(AttributeType.INTEGER_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
-//            .put(AttributeType.INTEGER_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
-//            .put(AttributeType.INTEGER_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
+//            .put(PropertyType.INTEGER_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
+//            .put(PropertyType.INTEGER_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger(), pFacade.getUpperBoundAsInteger()))
 //
-//            .put(AttributeType.INTEGER_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
-//            .put(AttributeType.INTEGER_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
-//            .put(AttributeType.INTEGER_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
-//            .put(AttributeType.INTEGER_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
-//            .put(AttributeType.INTEGER_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
+//            .put(PropertyType.INTEGER_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger()))
+//            .put(PropertyType.INTEGER_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsInteger()))
+//            .put(PropertyType.INTEGER_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsInteger(), pFacade.getUpperBoundAsInteger()))
 
-            .put(AttributeType.DOUBLE, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.DOUBLE, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.DOUBLE, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.DOUBLE, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.DOUBLE, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
+            .put(PropertyType.DOUBLE, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.DOUBLE, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.DOUBLE, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.DOUBLE, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.DOUBLE, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
 
-//            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
 //
-//            .put(AttributeType.DOUBLE_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-//            .put(AttributeType.DOUBLE_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+//            .put(PropertyType.DOUBLE_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
 
-            .put(AttributeType.LONG, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.LONG, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
-            .put(AttributeType.LONG, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.LONG, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.LONG, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
+            .put(PropertyType.LONG, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.LONG, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble()))
+            .put(PropertyType.LONG, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.LONG, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDouble()))
+            .put(PropertyType.LONG, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
 
-//            .put(AttributeType.LONG_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
-//            .put(AttributeType.LONG_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
-//            .put(AttributeType.LONG_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
-//            .put(AttributeType.LONG_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
-//            .put(AttributeType.LONG_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsLong(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
+//            .put(PropertyType.LONG_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
+//            .put(PropertyType.LONG_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsLong(), pFacade.getUpperBoundAsLong()))
 //
-//            .put(AttributeType.LONG_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
-//            .put(AttributeType.LONG_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
-//            .put(AttributeType.LONG_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
-//            .put(AttributeType.LONG_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
-//            .put(AttributeType.LONG_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsLong(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
+//            .put(PropertyType.LONG_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsLong()))
+//            .put(PropertyType.LONG_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsLong()))
+//            .put(PropertyType.LONG_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsLong(), pFacade.getUpperBoundAsLong()))
 
-            .put(AttributeType.DATE_ISO8601, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-            .put(AttributeType.DATE_ISO8601, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-            .put(AttributeType.DATE_ISO8601, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-            .put(AttributeType.DATE_ISO8601, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-            .put(AttributeType.DATE_ISO8601, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDateTime(),pFacade.isUpperInclusive()))
+            .put(PropertyType.DATE_ISO8601, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+            .put(PropertyType.DATE_ISO8601, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+            .put(PropertyType.DATE_ISO8601, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+            .put(PropertyType.DATE_ISO8601, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+            .put(PropertyType.DATE_ISO8601, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDateTime(),pFacade.isUpperInclusive()))
 
-//            .put(AttributeType.DATE_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-//            .put(AttributeType.DATE_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-//            .put(AttributeType.DATE_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-//            .put(AttributeType.DATE_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-//            .put(AttributeType.DATE_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_ARRAY, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+//            .put(PropertyType.DATE_ARRAY, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+//            .put(PropertyType.DATE_ARRAY, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_ARRAY, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_ARRAY, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
 //
-//            .put(AttributeType.DATE_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-//            .put(AttributeType.DATE_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
-//            .put(AttributeType.DATE_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-//            .put(AttributeType.DATE_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
-//            .put(AttributeType.DATE_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_INTERVAL, RangeComparison.GE, pFacade -> IFeatureCriterion.ge(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+//            .put(PropertyType.DATE_INTERVAL, RangeComparison.GT, pFacade -> IFeatureCriterion.gt(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime()))
+//            .put(PropertyType.DATE_INTERVAL, RangeComparison.LE, pFacade -> IFeatureCriterion.le(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_INTERVAL, RangeComparison.LT, pFacade -> IFeatureCriterion.lt(pFacade.getAttModel(), pFacade.getUpperBoundAsDateTime()))
+//            .put(PropertyType.DATE_INTERVAL, RangeComparison.BETWEEN, pFacade -> IFeatureCriterion.between(pFacade.getAttModel(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
 
             .build();
     // @formatter:on

@@ -35,12 +35,12 @@ import com.google.common.cache.LoadingCache;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.service.entities.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.ComputationModeValidator;
+import fr.cnes.regards.modules.dam.service.entities.validator.PropertyTypeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 
 /**
  * Specific EntityService for data objects.
@@ -89,7 +89,7 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
         // Use cache when calling for getModelAttrAssocs with modelName
         InvocationHandler invocationHandler = (InvocationHandler) (proxy, method, args) -> {
             if (method.getName().equals("getModelAttrAssocs") && method.getReturnType().equals(List.class)
-                    && (args.length == 1) && (args[0] instanceof String)) {
+                    && args.length == 1 && args[0] instanceof String) {
                 return modelServiceCache.get((String) args[0]);
             } else { // else call "true" modelService
                 return method.invoke(modelAttrAssocServiceNoProxy, args);
@@ -118,7 +118,7 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
         // Check computation mode
         validators.add(new ComputationModeValidator(modelAttrAssoc.getMode(), attributeKey));
         // Check attribute type
-        validators.add(new AttributeTypeValidator(attModel.getType(), attributeKey));
+        validators.add(new PropertyTypeValidator(attModel.getType(), attributeKey));
         // Check restriction
         if (attModel.hasRestriction()) {
             validators.add(RestrictionValidatorFactory.getValidator(attModel.getRestriction(), attributeKey));

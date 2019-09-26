@@ -61,6 +61,7 @@
 		<module>indexer</module>
 		<module>opensearch</module>
 		<module>feature</module>
+		<module>model</module>
 	</modules>
 
 </project>

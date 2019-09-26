@@ -45,11 +45,9 @@ import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfi
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugin;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.service.datasources.IDBConnectionService;
 
 /**
- * REST interface for managing data {@link Model}
  * @author Christophe Mertz
  */
 @RestController
@@ -98,7 +96,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get a {@link PluginConfiguration}
-     * @param connectionId a {@link PluginConfiguration} identifier
+     * @param plgBusinessId a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException if plugin configuration cannot be retrieved
      */
@@ -129,7 +127,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDBConnectionPlugin}
-     * @param connectionId {@link PluginConfiguration} identifier
+     * @param plgBusinessId {@link PluginConfiguration} identifier
      * @return nothing
      * @throws ModuleException if plugin configuration cannot be deleted
      */
@@ -142,7 +140,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Test a {@link PluginConfiguration} defined for the plugin type {@link IDBConnectionPlugin}
-     * @param connectionId {@link PluginConfiguration} identifier
+     * @param plgBusinessId {@link PluginConfiguration} identifier
      * @return nothing
      * @throws ModuleException if problem occurs during test of the connection
      */
@@ -160,7 +158,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the database's tables
-     * @param connectionId {@link PluginConfiguration} identifier
+     * @param plgBusinessId {@link PluginConfiguration} identifier
      * @return a {@link Map} that contains the database's tables
      * @throws ModuleException if problem occurs during retrieve the database's tables
      * @throws NotAvailablePluginConfigurationException
@@ -176,7 +174,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the column of a table
-     * @param connectionId {@link PluginConfiguration} identifier
+     * @param plgBusinessId {@link PluginConfiguration} identifier
      * @param tableName a database table name
      * @return a {@link Map} that contains the columns of a table
      * @throws ModuleException if problem occurs during retrieve the columns of a table

@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.dam.service.entities.validator;
 
 import org.springframework.validation.Errors;
 
-import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
+import fr.cnes.regards.modules.model.domain.ComputationMode;
 
 /**
  * Validate computation mode
@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
  * @author Marc Sordi
  *
  */
-public class ComputationModeValidator extends AbstractAttributeValidator {
+public class ComputationModeValidator extends AbstractPropertyValidator {
 
     /**
      * {@link ComputationMode}
@@ -44,7 +44,7 @@ public class ComputationModeValidator extends AbstractAttributeValidator {
     public void validate(Object target, Errors errors) {
         if (!ComputationMode.GIVEN.equals(computationMode)) {
             errors.reject("error.computed.attribute.given.message",
-                           String.format("Computed value for attribute \"%s\" must not be set.", attributeKey));
+                          String.format("Computed value for attribute \"%s\" must not be set.", attributeKey));
         }
     }
 

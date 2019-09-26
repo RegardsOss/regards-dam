@@ -30,8 +30,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
 
 /**
  * Crawler initializer.

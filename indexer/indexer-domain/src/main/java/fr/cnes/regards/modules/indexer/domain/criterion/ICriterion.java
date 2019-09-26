@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
-import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 
 /**

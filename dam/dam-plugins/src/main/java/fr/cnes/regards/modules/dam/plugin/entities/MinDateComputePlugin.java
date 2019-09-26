@@ -28,14 +28,14 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
-import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.DateProperty;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
- * This IComputedAttribute implementation allows to compute the minimum of a {@link DateAttribute} according to a
+ * This IComputedAttribute implementation allows to compute the minimum of a {@link DateProperty} according to a
  * collection of {@link DataObject} using the same DateAttribute name
  *
  * @author Sylvain Vissiere-Guerinet
@@ -44,7 +44,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
         description = "allows to compute the minimum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
-@ComputationPlugin(supportedType = AttributeType.DATE_ISO8601)
+@ComputationPlugin(supportedType = PropertyType.DATE_ISO8601)
 public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {
 
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
@@ -81,7 +81,7 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
                   dataset.getIpId().toString(), result);
     }
 
-    private void getMinDate(Optional<AbstractAttribute<?>> parameterOpt) {
+    private void getMinDate(Optional<AbstractProperty<?>> parameterOpt) {
         if (parameterOpt.isPresent()) {
             OffsetDateTime value = (OffsetDateTime) parameterOpt.get().getValue();
             if (value != null) {

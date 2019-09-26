@@ -22,14 +22,14 @@ import java.util.Objects;
 
 import org.springframework.validation.Errors;
 
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 
 /**
  * Validate not alterable attribute
  * @author Marc Sordi
  */
-public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
+public class NotAlterableAttributeValidator extends AbstractPropertyValidator {
 
     /**
      * Attribute model
@@ -39,12 +39,12 @@ public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
     /**
      * old attribute
      */
-    private final AbstractAttribute<?> oldValue;
+    private final AbstractProperty<?> oldValue;
 
     /**
      * new attribute
      */
-    private final AbstractAttribute<?> newValue;
+    private final AbstractProperty<?> newValue;
 
     /**
      * Constructor
@@ -53,8 +53,8 @@ public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
      * @param oldValue
      * @param newValue
      */
-    public NotAlterableAttributeValidator(String attributeKey, AttributeModel attribute, AbstractAttribute<?> oldValue,
-            AbstractAttribute<?> newValue) {
+    public NotAlterableAttributeValidator(String attributeKey, AttributeModel attribute, AbstractProperty<?> oldValue,
+            AbstractProperty<?> newValue) {
         super(attributeKey);
         this.oldValue = oldValue;
         this.newValue = newValue;
@@ -64,13 +64,13 @@ public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
     @Override
     public void validate(Object target, Errors errors) {
         //if the attribute should be present then lets reject if any of them doesn't exist
-        if (!attribute.isOptional() && (newValue == null)) {
+        if (!attribute.isOptional() && newValue == null) {
             errors.reject("error.attribute.not.alterable.not.present.message",
                           String.format("Attribute \"%s\" is required", attributeKey));
         } else {
             if (newValue != null) {
                 //if the attribute is optional and there was no value before, lets accept the new one
-                if (attribute.isOptional() && (oldValue == null)) {
+                if (attribute.isOptional() && oldValue == null) {
                     return;
                 }
                 if (!Objects.equals(oldValue.getValue(), newValue.getValue())) {

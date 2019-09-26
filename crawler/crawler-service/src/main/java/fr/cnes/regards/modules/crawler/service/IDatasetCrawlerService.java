@@ -1,7 +1,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
+import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
 
 /**
  * @author oroussel

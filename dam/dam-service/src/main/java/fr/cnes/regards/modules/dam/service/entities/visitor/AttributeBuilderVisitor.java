@@ -18,33 +18,32 @@
  */
 package fr.cnes.regards.modules.dam.service.entities.visitor;
 
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttributeVisitor;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
+import fr.cnes.regards.modules.model.domain.IComputedAttributeVisitor;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
- * Visitor handling the logic of creating an AbstractAttribute according to the AttributeModel computed by the
+ * Visitor handling the logic of creating an AbstractProperty according to the AttributeModel computed by the
  * ICalculationModel plugin
  *
  * @author Sylvain Vissiere-Guerinet
  */
-public class AttributeBuilderVisitor implements IComputedAttributeVisitor<AbstractAttribute<?>> {
+public class AttributeBuilderVisitor implements IComputedAttributeVisitor<AbstractProperty<?>> {
 
     @Override
-    public <P, U> AbstractAttribute<?> visit(IComputedAttribute<P, U> plugin) {
+    public <P, U> AbstractProperty<?> visit(IComputedAttribute<P, U> plugin) {
         AttributeModel attr = plugin.getAttributeToCompute();
         ComputationPlugin computationPlugin = plugin.getClass().getAnnotation(ComputationPlugin.class);
-        AttributeType attributeType = computationPlugin.supportedType();
+        PropertyType attributeType = computationPlugin.supportedType();
         if (attr.getFragment().isDefaultFragment()) {
-            return AttributeBuilder.forType(attributeType, attr.getName(), plugin.getResult());
+            return IProperty.forType(attributeType, attr.getName(), plugin.getResult());
         } else {
-            return AttributeBuilder.buildObject(attr.getFragment().getName(),
-                                                AttributeBuilder
-                                                        .forType(attributeType, attr.getName(), plugin.getResult()));
+            return IProperty.buildObject(attr.getFragment().getName(),
+                                         IProperty.forType(attributeType, attr.getName(), plugin.getResult()));
         }
     }
 

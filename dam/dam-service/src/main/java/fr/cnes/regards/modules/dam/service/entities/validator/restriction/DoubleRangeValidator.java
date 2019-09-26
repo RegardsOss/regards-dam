@@ -24,20 +24,20 @@ import org.springframework.validation.Errors;
 
 import com.google.common.collect.Range;
 
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.DoubleRangeRestriction;
-import fr.cnes.regards.modules.dam.service.entities.validator.AbstractAttributeValidator;
+import fr.cnes.regards.modules.dam.service.entities.validator.AbstractPropertyValidator;
+import fr.cnes.regards.modules.model.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.model.dto.properties.DoubleArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.DoubleIntervalProperty;
+import fr.cnes.regards.modules.model.dto.properties.DoubleProperty;
 
 /**
- * Validate {@link DoubleAttribute}, {@link DoubleArrayAttribute} or {@link DoubleIntervalAttribute} value with a
+ * Validate {@link DoubleProperty}, {@link DoubleArrayProperty} or {@link DoubleIntervalProperty} value with a
  * {@link DoubleRangeRestriction}
  *
  * @author Marc Sordi
  *
  */
-public class DoubleRangeValidator extends AbstractAttributeValidator {
+public class DoubleRangeValidator extends AbstractPropertyValidator {
 
     /**
      * Class logger
@@ -57,36 +57,34 @@ public class DoubleRangeValidator extends AbstractAttributeValidator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return (clazz == DoubleAttribute.class) || (clazz == DoubleArrayAttribute.class)
-                || (clazz == DoubleIntervalAttribute.class);
+        return clazz == DoubleProperty.class || clazz == DoubleArrayProperty.class
+                || clazz == DoubleIntervalProperty.class;
     }
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        if (pTarget instanceof DoubleAttribute) {
-            validate((DoubleAttribute) pTarget, pErrors);
-        } else
-            if (pTarget instanceof DoubleArrayAttribute) {
-                validate((DoubleArrayAttribute) pTarget, pErrors);
-            } else
-                if (pTarget instanceof DoubleIntervalAttribute) {
-                    validate((DoubleIntervalAttribute) pTarget, pErrors);
-                } else {
-                    rejectUnsupported(pErrors);
-                }
+        if (pTarget instanceof DoubleProperty) {
+            validate((DoubleProperty) pTarget, pErrors);
+        } else if (pTarget instanceof DoubleArrayProperty) {
+            validate((DoubleArrayProperty) pTarget, pErrors);
+        } else if (pTarget instanceof DoubleIntervalProperty) {
+            validate((DoubleIntervalProperty) pTarget, pErrors);
+        } else {
+            rejectUnsupported(pErrors);
+        }
     }
 
-    public void validate(DoubleAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleProperty pTarget, Errors pErrors) {
         checkRange(pTarget.getValue(), pErrors);
     }
 
-    public void validate(DoubleArrayAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleArrayProperty pTarget, Errors pErrors) {
         for (Double value : pTarget.getValue()) {
             checkRange(value, pErrors);
         }
     }
 
-    public void validate(DoubleIntervalAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleIntervalProperty pTarget, Errors pErrors) {
         // Interval<Double> interval = pTarget.getValue();
         Range<Double> interval = pTarget.getValue();
         // checkRange(interval.getLowerBound(), pErrors);

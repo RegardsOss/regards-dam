@@ -39,10 +39,6 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
-import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
@@ -52,8 +48,12 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessRight
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityFilter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
+import fr.cnes.regards.modules.model.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.model.dao.IAttributePropertyRepository;
+import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
+import fr.cnes.regards.modules.model.dao.IModelRepository;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author Sylvain Vissiere-Guerinet

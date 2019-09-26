@@ -49,7 +49,7 @@ public class BulkSaveLightResult {
 
     /**
      * Append another bulk save result
-     * @param otherBulkSaveResult another bulk save result
+     * @param bulkSaveResult another bulk save result
      * @return this
      */
     public BulkSaveLightResult append(BulkSaveResult bulkSaveResult) {

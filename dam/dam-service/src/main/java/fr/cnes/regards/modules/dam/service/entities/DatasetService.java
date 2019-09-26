@@ -60,13 +60,13 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.service.entities.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
@@ -194,11 +194,11 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds,
             Pageable pageable) throws ModuleException {
-        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+        if ((modelIds == null || modelIds.isEmpty()) && (urns == null || urns.isEmpty())) {
             List<Dataset> datasets = datasetRepository.findAll();
             return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
-            if ((modelIds == null) || modelIds.isEmpty()) {
+            if (modelIds == null || modelIds.isEmpty()) {
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
@@ -212,13 +212,13 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
             throws ModuleException {
         Page<AttributeModel> attModelPage;
-        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+        if ((modelIds == null || modelIds.isEmpty()) && (urns == null || urns.isEmpty())) {
             // Retrieve all dataset models attributes
             List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
             Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
             attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
         } else {
-            if ((modelIds == null) || modelIds.isEmpty()) {
+            if (modelIds == null || modelIds.isEmpty()) {
                 // Retrieve all attributes associated to the given datasets
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());

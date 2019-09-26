@@ -24,20 +24,20 @@ import org.springframework.validation.Errors;
 
 import com.google.common.collect.Range;
 
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.IntegerRangeRestriction;
-import fr.cnes.regards.modules.dam.service.entities.validator.AbstractAttributeValidator;
+import fr.cnes.regards.modules.dam.service.entities.validator.AbstractPropertyValidator;
+import fr.cnes.regards.modules.model.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.model.dto.properties.IntegerArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerIntervalProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerProperty;
 
 /**
- * Validate {@link IntegerAttribute}, {@link IntegerArrayAttribute} or {@link IntegerIntervalAttribute} with a
+ * Validate {@link IntegerProperty}, {@link IntegerArrayProperty} or {@link IntegerIntervalProperty} with a
  * {@link IntegerRangeRestriction}
  *
  * @author Marc Sordi
  *
  */
-public class IntegerRangeValidator extends AbstractAttributeValidator {
+public class IntegerRangeValidator extends AbstractPropertyValidator {
 
     /**
      * Class logger
@@ -57,36 +57,34 @@ public class IntegerRangeValidator extends AbstractAttributeValidator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return (clazz == IntegerAttribute.class) || (clazz == IntegerArrayAttribute.class)
-                || (clazz == IntegerIntervalAttribute.class);
+        return clazz == IntegerProperty.class || clazz == IntegerArrayProperty.class
+                || clazz == IntegerIntervalProperty.class;
     }
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        if (pTarget instanceof IntegerAttribute) {
-            validate((IntegerAttribute) pTarget, pErrors);
-        } else
-            if (pTarget instanceof IntegerArrayAttribute) {
-                validate((IntegerArrayAttribute) pTarget, pErrors);
-            } else
-                if (pTarget instanceof IntegerIntervalAttribute) {
-                    validate((IntegerIntervalAttribute) pTarget, pErrors);
-                } else {
-                    rejectUnsupported(pErrors);
-                }
+        if (pTarget instanceof IntegerProperty) {
+            validate((IntegerProperty) pTarget, pErrors);
+        } else if (pTarget instanceof IntegerArrayProperty) {
+            validate((IntegerArrayProperty) pTarget, pErrors);
+        } else if (pTarget instanceof IntegerIntervalProperty) {
+            validate((IntegerIntervalProperty) pTarget, pErrors);
+        } else {
+            rejectUnsupported(pErrors);
+        }
     }
 
-    public void validate(IntegerAttribute pTarget, Errors pErrors) {
+    public void validate(IntegerProperty pTarget, Errors pErrors) {
         checkRange(pTarget.getValue(), pErrors);
     }
 
-    public void validate(IntegerArrayAttribute pTarget, Errors pErrors) {
+    public void validate(IntegerArrayProperty pTarget, Errors pErrors) {
         for (Integer value : pTarget.getValue()) {
             checkRange(value, pErrors);
         }
     }
 
-    public void validate(IntegerIntervalAttribute pTarget, Errors pErrors) {
+    public void validate(IntegerIntervalProperty pTarget, Errors pErrors) {
         Range<Integer> range = pTarget.getValue();
         checkRange(range.lowerEndpoint(), pErrors);
         checkRange(range.upperEndpoint(), pErrors);

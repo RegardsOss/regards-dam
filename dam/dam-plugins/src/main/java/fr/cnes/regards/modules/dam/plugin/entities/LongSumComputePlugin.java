@@ -27,14 +27,14 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.LongAttribute;
-import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.LongProperty;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
- * This Implementation of IComputedAttribute allows to compute the sum of {@link LongAttribute} according to a
+ * This Implementation of IComputedAttribute allows to compute the sum of {@link LongProperty} according to a
  * collection of {@link DataObject} using the same LongAttribute name
  *
  * @author Sylvain Vissiere-Guerinet
@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
         description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-@ComputationPlugin(supportedType = AttributeType.LONG)
+@ComputationPlugin(supportedType = PropertyType.LONG)
 public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> {
 
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
@@ -65,7 +65,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
         super.result = 0L;
     }
 
-    private void doSum(Optional<AbstractAttribute<?>> propertyOpt) {
+    private void doSum(Optional<AbstractProperty<?>> propertyOpt) {
         if (propertyOpt.isPresent()) {
             Long value = ((Number) propertyOpt.get().getValue()).longValue();
             if (value != null) {

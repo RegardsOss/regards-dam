@@ -6,7 +6,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
 
 /**
  * Ingester service interface.<br/>

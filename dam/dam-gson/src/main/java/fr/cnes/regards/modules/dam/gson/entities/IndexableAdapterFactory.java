@@ -32,7 +32,6 @@ import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
  * IIndexable document adapter factory
  * @author Marc Sordi
  */
-@SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactory
 public class IndexableAdapterFactory extends PolymorphicTypeAdapterFactory<IIndexable> {
 

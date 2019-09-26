@@ -22,10 +22,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * Define sample data for tests.
@@ -73,55 +73,55 @@ public class SampleDataUtils {
 
     // Build some attribute models for all attribute types
     public static final AttributeModel BOOLEAN_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(BOOLEAN_FIELD, AttributeType.BOOLEAN, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(BOOLEAN_FIELD, PropertyType.BOOLEAN, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel INTEGER_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_FIELD, AttributeType.INTEGER, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(INTEGER_FIELD, PropertyType.INTEGER, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel DOUBLE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_FIELD, AttributeType.DOUBLE, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(DOUBLE_FIELD, PropertyType.DOUBLE, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LONG_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_FIELD, AttributeType.LONG, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LONG_FIELD, PropertyType.LONG, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel STRING_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(STRING_FIELD, AttributeType.STRING, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(STRING_FIELD, PropertyType.STRING, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel STRING_ATTRIBUTE_MODEL_1 = AttributeModelBuilder
-            .build(STRING_FIELD_1, AttributeType.STRING, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(STRING_FIELD_1, PropertyType.STRING, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LOCAL_DATE_TIME_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_FIELD, AttributeType.DATE_ISO8601, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LOCAL_DATE_TIME_FIELD, PropertyType.DATE_ISO8601, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel INTEGER_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_RANGE_FIELD, AttributeType.INTEGER_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(INTEGER_RANGE_FIELD, PropertyType.INTEGER_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel DOUBLE_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_RANGE_FIELD, AttributeType.DOUBLE_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(DOUBLE_RANGE_FIELD, PropertyType.DOUBLE_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LONG_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_RANGE_FIELD, AttributeType.LONG_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LONG_RANGE_FIELD, PropertyType.LONG_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_RANGE_FIELD, AttributeType.DATE_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LOCAL_DATE_TIME_RANGE_FIELD, PropertyType.DATE_INTERVAL, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel INTEGER_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_ARRAY_FIELD, AttributeType.INTEGER_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(INTEGER_ARRAY_FIELD, PropertyType.INTEGER_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel DOUBLE_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_ARRAY_FIELD, AttributeType.DOUBLE_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(DOUBLE_ARRAY_FIELD, PropertyType.DOUBLE_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LONG_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_ARRAY_FIELD, AttributeType.LONG_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LONG_ARRAY_FIELD, PropertyType.LONG_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel STRING_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(STRING_ARRAY_FIELD, AttributeType.STRING_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(STRING_ARRAY_FIELD, PropertyType.STRING_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel LOCAL_DATE_TIME_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_ARRAY, AttributeType.DATE_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(LOCAL_DATE_TIME_ARRAY, PropertyType.DATE_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     public static final AttributeModel TAGS_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(TAGS_FIELD, AttributeType.STRING_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
+            .build(TAGS_FIELD, PropertyType.STRING_ARRAY, "ForTests").fragment(TEST_FRAGMENT).get();
 
     /**
      * For mocking result of a call to {@link IAttributeModelService#getAttributes(null, null)}

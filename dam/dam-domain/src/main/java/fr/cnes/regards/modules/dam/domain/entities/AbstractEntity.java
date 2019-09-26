@@ -66,14 +66,14 @@ import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 /**
  * Base entity feature decorator
@@ -301,9 +301,9 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     /**
      * Get an immutable copy of feature properties.
      * If this set should be modified, please use addProperty or removeProperty
-     * @return {@link AbstractAttribute}s
+     * @return {@link AbstractProperty}s
      */
-    public ImmutableSet<AbstractAttribute<?>> getProperties() {
+    public ImmutableSet<AbstractProperty<?>> getProperties() {
         return ImmutableSet.copyOf(feature.getProperties());
     }
 
@@ -313,11 +313,11 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      */
     public Set<String> getMutableCopyOfPropertiesPaths() {
         Set<String> propertiesPaths = new HashSet<>();
-        for (AbstractAttribute<?> prop : feature.getProperties()) {
+        for (AbstractProperty<?> prop : feature.getProperties()) {
             // Fragment
-            if (prop instanceof ObjectAttribute) {
+            if (prop instanceof ObjectProperty) {
                 String fragmentName = prop.getName();
-                ((ObjectAttribute) prop).getValue()
+                ((ObjectProperty) prop).getValue()
                         .forEach(fProp -> propertiesPaths.add(fragmentName + "." + fProp.getName()));
             } else {
                 propertiesPaths.add(prop.getName());
@@ -329,17 +329,17 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
 
     /**
      * Add feature property
-     * @param property {@link AbstractAttribute}
+     * @param property {@link AbstractProperty}
      */
-    public void addProperty(AbstractAttribute<?> property) {
+    public void addProperty(AbstractProperty<?> property) {
         feature.addProperty(property);
     }
 
-    public void removeProperty(AbstractAttribute<?> property) {
+    public void removeProperty(AbstractProperty<?> property) {
         feature.removeProperty(property);
     }
 
-    public AbstractAttribute<?> getProperty(String name) {
+    public AbstractProperty<?> getProperty(String name) {
         return feature.getProperty(name);
     }
 
@@ -347,7 +347,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Set the properties
      * @param attributes
      */
-    public void setProperties(Set<AbstractAttribute<?>> attributes) {
+    public void setProperties(Set<AbstractProperty<?>> attributes) {
         feature.setProperties(attributes);
     }
 
@@ -417,7 +417,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = (prime * result) + (getIpId() == null ? 0 : getIpId().hashCode());
+        result = prime * result + (getIpId() == null ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }

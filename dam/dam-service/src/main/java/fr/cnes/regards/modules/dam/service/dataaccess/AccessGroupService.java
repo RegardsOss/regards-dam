@@ -60,7 +60,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGro
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupPublicEvent;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
 
 /**
  *
