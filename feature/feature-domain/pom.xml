@@ -59,6 +59,10 @@
 			<artifactId>model-dto</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>oais-regards</artifactId>
+		</dependency>
+		<dependency>
         	<groupId>org.mapstruct</groupId>
         	<artifactId>mapstruct</artifactId>
 		</dependency>

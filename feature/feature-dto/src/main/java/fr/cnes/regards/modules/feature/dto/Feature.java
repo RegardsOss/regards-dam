@@ -16,19 +16,40 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.domain;
+package fr.cnes.regards.modules.feature.dto;
 
+import java.util.List;
 import java.util.Set;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 import fr.cnes.regards.framework.geojson.AbstractFeature;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 
 /**
- * @author Marc SORDI
+ * GeoJson feature with dynamic properties based on data model definition<br/>
+ * Feature id corresponds to input provider identifier
  *
- * TODO get dynamic properties
+ * @author Marc SORDI
  *
  */
 public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
 
+    /**
+     * Unique feature identifer based on provider identifier with versionning
+     */
+    private UniformResourceName urn;
+
+    @NotNull(message = "Feature type is required")
+    private EntityType entityType;
+
+    @NotBlank(message = "Model name is required")
+    protected String model;
+
+    @Valid
+    protected List<FeatureFile> files;
 }

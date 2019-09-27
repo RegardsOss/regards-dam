@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -35,14 +34,12 @@ import fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.MaxDateComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
 import fr.cnes.regards.modules.dam.service.models.xml.IComputationPluginService;
-import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.domain.schema.Attribute;
 import fr.cnes.regards.modules.model.domain.schema.Computation;
 import fr.cnes.regards.modules.model.domain.schema.ParamPluginType;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * Initialize computation plugin for DAM module
@@ -53,11 +50,8 @@ public class DamComputationPluginService implements IComputationPluginService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DamComputationPluginService.class);
 
-    @Autowired
-    private IAttributeModelService attModelService;
-
     @Override
-    public PluginConfiguration getPlugin(Attribute xmlAtt) throws ImportException {
+    public PluginConfiguration getPlugin(Attribute xmlAtt, PropertyType type) throws ImportException {
 
         Computation computation = xmlAtt.getComputation();
 
@@ -71,10 +65,8 @@ public class DamComputationPluginService implements IComputationPluginService {
         } else if (computation.getSumCompute() != null) {
             xmlParamPluginType = computation.getSumCompute();
 
-            AttributeModel att = findAttribute(xmlParamPluginType.getParameterAttributeFragmentName(),
-                                               xmlParamPluginType.getParameterAttributeName());
-            // Depends on attribute type
-            switch (att.getType()) {
+            // Depends on property type
+            switch (type) {
                 case INTEGER:
                     pluginClass = IntSumComputePlugin.class;
                     break;
@@ -91,10 +83,8 @@ public class DamComputationPluginService implements IComputationPluginService {
         } else if (computation.getMinCompute() != null) {
             xmlParamPluginType = computation.getMinCompute();
 
-            AttributeModel att = findAttribute(xmlParamPluginType.getParameterAttributeFragmentName(),
-                                               xmlParamPluginType.getParameterAttributeName());
             // Depends on attribute type
-            switch (att.getType()) {
+            switch (type) {
                 case DATE_ISO8601:
                     pluginClass = MinDateComputePlugin.class;
                     break;
@@ -109,10 +99,8 @@ public class DamComputationPluginService implements IComputationPluginService {
         } else if (computation.getMaxCompute() != null) {
             xmlParamPluginType = computation.getMaxCompute();
 
-            AttributeModel att = findAttribute(xmlParamPluginType.getParameterAttributeFragmentName(),
-                                               xmlParamPluginType.getParameterAttributeName());
             // Depends on attribute type
-            switch (att.getType()) {
+            switch (type) {
                 case DATE_ISO8601:
                     pluginClass = MaxDateComputePlugin.class;
                     break;
@@ -130,18 +118,6 @@ public class DamComputationPluginService implements IComputationPluginService {
             throw new ImportException(message);
         }
         return createPluginConfiguration(xmlAtt, pluginClass, xmlParamPluginType);
-    }
-
-    private AttributeModel findAttribute(String fragment, String name) throws ImportException {
-        AttributeModel attModel = attModelService
-                .findByNameAndFragmentName(name, fragment != null ? fragment : Fragment.getDefaultName());
-        if (attModel == null) {
-            String message = String.format("Unknown attribute with name %s and fragment %s", name,
-                                           fragment != null ? fragment : Fragment.getDefaultName());
-            LOGGER.error(message);
-            throw new ImportException(message);
-        }
-        return attModel;
     }
 
     private PluginConfiguration createPluginConfiguration(Attribute xmlAtt, Class<?> pluginClass,

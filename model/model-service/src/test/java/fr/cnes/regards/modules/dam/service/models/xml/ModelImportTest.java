@@ -26,14 +26,17 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
 import fr.cnes.regards.modules.model.domain.ComputationMode;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
@@ -50,9 +53,13 @@ public class ModelImportTest {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelImportTest.class);
 
+    private IComputationPluginService cps = Mockito.mock(IComputationPluginService.class);
+
     @Before
-    public void setup() {
+    public void setup() throws ImportException {
         PluginUtils.setup();
+
+        Mockito.when(cps.getPlugin(Mockito.any(), Mockito.any())).thenReturn(new PluginConfiguration());
     }
 
     /**
@@ -65,7 +72,7 @@ public class ModelImportTest {
     private Iterable<ModelAttrAssoc> importModel(String pFilename) throws ModuleException {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
-            return XmlImportHelper.importModel(input, null);
+            return XmlImportHelper.importModel(input, cps);
         } catch (IOException e) {
             String errorMessage = "Cannot import minimal model";
             LOGGER.debug(errorMessage);

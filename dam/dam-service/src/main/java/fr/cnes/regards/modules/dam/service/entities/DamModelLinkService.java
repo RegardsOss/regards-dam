@@ -26,12 +26,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.service.models.IModelLinkService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.dao.IModelRepository;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author Marc SORDI
@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.dam.service.models.IModelService;
 @Service
 public class DamModelLinkService implements IModelLinkService {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(DamModelLinkService.class);
 
     @Autowired
@@ -52,7 +53,7 @@ public class DamModelLinkService implements IModelLinkService {
     private IDocumentRepository documentRepository;
 
     @Autowired
-    private IModelService modelService;
+    private IModelRepository modelRepository;
 
     @Override
     public boolean isAttributeDeletable(Set<String> modelNames) {
@@ -60,10 +61,9 @@ public class DamModelLinkService implements IModelLinkService {
         Set<Long> modelIds = new HashSet<>();
         if (modelNames != null) {
             for (String name : modelNames) {
-                try {
-                    modelIds.add(modelService.getModelByName(name).getId());
-                } catch (ModuleException e) {
-                    LOGGER.warn("Model name does not exists ... skipping!", e);
+                Model model = modelRepository.findByName(name);
+                if (model != null) {
+                    modelIds.add(model.getId());
                 }
             }
         }

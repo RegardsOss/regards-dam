@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dam.service.models.xml;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
 import fr.cnes.regards.modules.model.domain.schema.Attribute;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  *
@@ -34,5 +35,5 @@ public interface IComputationPluginService {
      * @return {@link PluginConfiguration}
      * @throws ImportException if plugin cannot be initialized
      */
-    PluginConfiguration getPlugin(Attribute xmlAtt) throws ImportException;
+    PluginConfiguration getPlugin(Attribute xmlAtt, PropertyType type) throws ImportException;
 }
