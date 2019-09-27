@@ -16,34 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dto;
+package fr.cnes.regards.modules.feature.dto.attributes;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-import fr.cnes.regards.modules.feature.dto.attributes.IFeatureFileAttributes;
+import fr.cnes.regards.framework.oais.urn.DataType;
 
 /**
- * @author Marc SORDI
+ * File attributes
  *
+ * @author Marc SORDI
  */
-public class FeatureFile {
+public interface IFeatureFileAttributes {
 
-    /**
-     * File locations (a file can be stored at several locations)
-     */
-    @Valid
-    @NotEmpty(message = "At least one location is required")
-    private Set<FeatureFileLocation> locations = new HashSet<>();
+    DataType getType();
 
-    /**
-     * File attributes
-     */
-    @Valid
-    @NotNull(message = "File attributes is requred")
-    private IFeatureFileAttributes attributes;
+    String getFilename();
+
+    // FIXME add polymorphic (de)serialization
 }
