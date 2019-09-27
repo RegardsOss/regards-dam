@@ -30,7 +30,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.AttributeType;
 
 import fr.cnes.regards.framework.gson.adapters.MultitenantPolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
@@ -185,7 +184,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
 
     /**
      * @param pAttributeType
-     *            {@link AttributeType}
+     *            {@link PropertyType}
      * @return corresponding {@link Serializable} class
      */
     public Class<?> getClassByType(PropertyType pAttributeType) { // NOSONAR

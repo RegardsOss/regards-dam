@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -89,7 +88,7 @@ public class AttributeSerializationDebugger extends AbstractDaoTest {
      */
     private List<ModelAttrAssoc> importModel(Path xmlFilePath) {
         try {
-            return XmlImportHelper.importModel(Files.newInputStream(xmlFilePath), new ArrayList<>(), null);
+            return XmlImportHelper.importModel(Files.newInputStream(xmlFilePath), null);
         } catch (IOException | ImportException e) {
             LOGGER.debug("Import of model failed", e);
             Assert.fail();
