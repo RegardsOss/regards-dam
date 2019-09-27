@@ -25,7 +25,7 @@
 	<groupId>fr.cnes.regards.modules.model</groupId>
 	<artifactId>model-dao</artifactId>
 
-	<description>DAM DAO layer</description>
+	<description>Model DAO layer</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
 	<licenses>
@@ -56,7 +56,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.model</groupId>
-			<artifactId>model-domain</artifactId>
+			<artifactId>model-gson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
@@ -71,11 +71,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>geojson-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.model</groupId>
-			<artifactId>model-gson</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

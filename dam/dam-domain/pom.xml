@@ -47,10 +47,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.model</groupId>
-			<artifactId>model-dto</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.model</groupId>
 			<artifactId>model-domain</artifactId>
 		</dependency>
 		<dependency>
