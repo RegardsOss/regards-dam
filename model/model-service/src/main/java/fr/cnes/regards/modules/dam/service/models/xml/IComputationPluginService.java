@@ -19,14 +19,20 @@
 package fr.cnes.regards.modules.dam.service.models.xml;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.modules.model.domain.schema.Computation;
+import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
+import fr.cnes.regards.modules.model.domain.schema.Attribute;
 
 /**
  *
- * Delegate computation to module implementing computation plugins related to model configuration
+ * Delegate plugin configuration initialization to module implementing computation plugins related to model configuration
  * @author Marc SORDI
  */
 public interface IComputationPluginService {
 
-    PluginConfiguration getPlugin(Computation computation);
+    /**
+     * Initialize a plugin configuration according to XML imported configuration
+     * @return {@link PluginConfiguration}
+     * @throws ImportException if plugin cannot be initialized
+     */
+    PluginConfiguration getPlugin(Attribute xmlAtt) throws ImportException;
 }

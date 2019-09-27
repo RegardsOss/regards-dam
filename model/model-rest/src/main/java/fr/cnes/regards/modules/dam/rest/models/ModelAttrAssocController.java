@@ -43,11 +43,8 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -103,9 +100,6 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @Autowired
     private IResourceService resourceService;
 
-    @Autowired
-    private IDatasetService datasetService;
-
     /**
      * Retrieve model attribute associations for a given entity type (optional)
      * @param type
@@ -117,15 +111,6 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
             @RequestParam(name = "type", required = false) EntityType type) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(type);
-        return ResponseEntity.ok(assocs);
-    }
-
-    @ResourceAccess(description = "Retrieve all attributes related to given entity")
-    @RequestMapping(path = ENTITY_ASSOCS_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(
-            @RequestParam(name = "datasetUrn") UniformResourceName datasetUrn) throws ModuleException {
-        Dataset dataset = datasetService.load(datasetUrn);
-        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocs(dataset.getDataModel());
         return ResponseEntity.ok(assocs);
     }
 

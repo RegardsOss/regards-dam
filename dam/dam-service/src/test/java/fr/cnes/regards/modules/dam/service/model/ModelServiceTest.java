@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.models;
+package fr.cnes.regards.modules.dam.service.model;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,6 +48,8 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin;
+import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
+import fr.cnes.regards.modules.dam.service.models.ModelService;
 import fr.cnes.regards.modules.dam.service.models.exception.FragmentAttributeException;
 import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.model.dao.IModelRepository;

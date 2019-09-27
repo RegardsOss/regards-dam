@@ -427,14 +427,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public Model importModel(InputStream is) throws ModuleException {
-        List<PluginConfiguration> plgConfigurations = new ArrayList<>();
         // Import model from input stream
-        List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, plgConfigurations, computationPluginService);
-        // Create/update PluginConfigurations if there are some
-        //        if (!plgConfigurations.isEmpty()) {
-        //            this.eventualyCreateComputationConfigurations(plgConfigurations);
-        //        }
-
+        List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, computationPluginService);
         // Create model once
         Model newModel = createModel(modelAtts.get(0).getModel()); // List of model attributes cannot be empty here
         // Create or control model attributes

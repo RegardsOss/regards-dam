@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.rest.models;
+package fr.cnes.regards.modules.dam.rest.model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +48,7 @@ import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.dam.rest.models.FragmentController;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
 import fr.cnes.regards.modules.model.dao.IFragmentRepository;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;

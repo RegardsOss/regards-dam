@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,7 +65,7 @@ public class ModelImportTest {
     private Iterable<ModelAttrAssoc> importModel(String pFilename) throws ModuleException {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
-            return XmlImportHelper.importModel(input, new ArrayList<>(), null);
+            return XmlImportHelper.importModel(input, null);
         } catch (IOException e) {
             String errorMessage = "Cannot import minimal model";
             LOGGER.debug(errorMessage);

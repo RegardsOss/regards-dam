@@ -19,8 +19,8 @@
 package fr.cnes.regards.modules.dam.rest.models;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 

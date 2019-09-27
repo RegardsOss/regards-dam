@@ -34,12 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.schema.Attribute;
-import fr.cnes.regards.modules.model.domain.schema.Computation;
 import fr.cnes.regards.modules.model.domain.schema.Fragment;
 import fr.cnes.regards.modules.model.domain.schema.Model;
 
@@ -94,13 +92,12 @@ public final class XmlImportHelper {
     /**
      * Import model {@link ModelAttrAssoc} from input stream
      * @param pInputStream input stream
-     * @param plgConfigurations  {@link PluginConfiguration}s
-     * @param helper initialize computation plugins
+     * @param computationPluginService initialize computation plugins
      * @return list of {@link ModelAttrAssoc}
      * @throws ImportException if error occurs!
      */
     public static List<ModelAttrAssoc> importModel(InputStream pInputStream,
-            List<PluginConfiguration> plgConfigurations, IComputationPluginService helper) throws ImportException {
+            IComputationPluginService computationPluginService) throws ImportException {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
@@ -123,11 +120,9 @@ public final class XmlImportHelper {
             modelAtt.setModel(model);
             modelAtt.getAttribute()
                     .setFragment(fr.cnes.regards.modules.model.domain.attributes.Fragment.buildDefault());
-            // Try managing computation
-            Computation computation = xmlAtt.getComputation();
             // A computation plugin has been specified
-            if (computation != null) {
-                plgConfigurations.add(helper.getPlugin(computation));
+            if (xmlAtt.getComputation() != null) {
+                modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt));
             }
             modelAtts.add(modelAtt);
         }
@@ -144,11 +139,9 @@ public final class XmlImportHelper {
                 modelAtt.fromXml(xmlAtt);
                 modelAtt.setModel(model);
                 modelAtt.getAttribute().setFragment(fragment);
-                // Manage computation
-                Computation computation = xmlAtt.getComputation();
                 // A computation plugin has been specified
-                if (computation != null) {
-                    plgConfigurations.add(helper.getPlugin(computation));
+                if (xmlAtt.getComputation() != null) {
+                    modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt));
                 }
                 modelAtts.add(modelAtt);
             }
