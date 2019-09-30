@@ -55,9 +55,9 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPlugin
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Test sata source PluginConfiguration controller

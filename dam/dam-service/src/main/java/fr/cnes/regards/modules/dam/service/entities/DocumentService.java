@@ -32,8 +32,8 @@ import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Specific EntityService for documents

@@ -34,12 +34,12 @@ import fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.MaxDateComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin;
-import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
-import fr.cnes.regards.modules.dam.service.models.xml.IComputationPluginService;
 import fr.cnes.regards.modules.model.domain.schema.Attribute;
 import fr.cnes.regards.modules.model.domain.schema.Computation;
 import fr.cnes.regards.modules.model.domain.schema.ParamPluginType;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.service.exception.ImportException;
+import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 
 /**
  * Initialize computation plugin for DAM module

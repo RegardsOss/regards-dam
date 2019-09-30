@@ -29,9 +29,9 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
-import fr.cnes.regards.modules.dam.service.models.IModelLinkService;
 import fr.cnes.regards.modules.model.dao.IModelRepository;
 import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelLinkService;
 
 /**
  * @author Marc SORDI

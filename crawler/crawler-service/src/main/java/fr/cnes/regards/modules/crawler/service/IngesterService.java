@@ -70,7 +70,7 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceExceptio
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
@@ -144,7 +144,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
 
     @Override
     @EventListener
-    public void handleApplicationReadyEvent(DamGsonReadyEvent event) {
+    public void handleApplicationReadyEvent(ModelGsonReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
     }
 

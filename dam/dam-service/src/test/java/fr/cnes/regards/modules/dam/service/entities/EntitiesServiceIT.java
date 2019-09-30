@@ -40,10 +40,10 @@ import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationReposit
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.model.dao.IModelRepository;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet

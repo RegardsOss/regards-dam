@@ -95,7 +95,7 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
             factory.registerAttributes(tenant, atts);
             LOGGER.info("Registering attributes for tenant {} done", tenant);
         }
-        applicationEventPublisher.publishEvent(new DamGsonReadyEvent(this));
+        applicationEventPublisher.publishEvent(new ModelGsonReadyEvent(this));
     }
 
     /**

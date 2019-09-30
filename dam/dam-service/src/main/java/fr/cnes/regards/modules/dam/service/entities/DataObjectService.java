@@ -38,9 +38,9 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.service.entities.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.PropertyTypeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 
 /**
  * Specific EntityService for data objects.

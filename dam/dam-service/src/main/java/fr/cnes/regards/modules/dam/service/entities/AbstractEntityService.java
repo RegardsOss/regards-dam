@@ -82,8 +82,6 @@ import fr.cnes.regards.modules.dam.service.entities.validator.ComputationModeVal
 import fr.cnes.regards.modules.dam.service.entities.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.PropertyTypeValidator;
 import fr.cnes.regards.modules.dam.service.entities.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -91,6 +89,8 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Abstract parameterized entity service

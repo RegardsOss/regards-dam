@@ -38,9 +38,9 @@ import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * @author lmieulet
