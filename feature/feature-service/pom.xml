@@ -59,6 +59,10 @@
 			<artifactId>module-regards</artifactId>
 		</dependency>
 		<dependency>
+		    <groupId>fr.cnes.regards.framework.utils</groupId>
+    		<artifactId>request-utils</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dto</artifactId>
 		</dependency>

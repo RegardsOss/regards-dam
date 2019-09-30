@@ -22,6 +22,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.amqp.event.Event;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -32,7 +33,7 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  * @author Marc SORDI
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-public class FeatureCreationRequestEvent extends AbstractRequestEvent {
+public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @Valid
     @NotNull(message = "Feature is required")
