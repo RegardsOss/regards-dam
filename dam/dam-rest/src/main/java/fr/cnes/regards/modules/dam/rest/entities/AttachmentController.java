@@ -52,7 +52,6 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DataFileReference;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntityService;
 import fr.cnes.regards.modules.dam.service.entities.LocalStorageService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
@@ -85,9 +84,6 @@ public class AttachmentController {
 
     @Autowired
     private IDatasetService datasetService;
-
-    @Autowired
-    private IDocumentService documentService;
 
     @RequestMapping(method = RequestMethod.POST, value = ATTACHMENTS_MAPPING)
     @ResourceAccess(description = "Attach files of a same data type to an entity")
@@ -177,8 +173,6 @@ public class AttachmentController {
                 return (S) collectionService;
             case DATASET:
                 return (S) datasetService;
-            case DOCUMENT:
-                return (S) documentService;
             default:
                 throw new IllegalArgumentException("Unsupported entity type " + urn.getEntityType());
         }

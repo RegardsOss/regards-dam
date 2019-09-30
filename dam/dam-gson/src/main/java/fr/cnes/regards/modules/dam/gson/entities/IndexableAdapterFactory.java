@@ -24,7 +24,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
 
@@ -44,7 +43,6 @@ public class IndexableAdapterFactory extends PolymorphicTypeAdapterFactory<IInde
         // AbstractEntities
         registerSubtype(Collection.class, EntityType.COLLECTION);
         registerSubtype(Dataset.class, EntityType.DATASET);
-        registerSubtype(Document.class, EntityType.DOCUMENT);
         registerSubtype(DataObject.class, EntityType.DATA, true);
         // Reminder
         registerSubtype(SearchAfterReminder.class, SearchAfterReminder.TYPE);
