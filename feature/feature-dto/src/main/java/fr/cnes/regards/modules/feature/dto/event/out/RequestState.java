@@ -16,24 +16,36 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dto.attributes;
-
-import org.springframework.util.MimeType;
-
-import fr.cnes.regards.framework.oais.urn.DataType;
+package fr.cnes.regards.modules.feature.dto.event.out;
 
 /**
- * File attributes
+ *         o
+ *         |______DENIED
+ *         |
+ *      GRANTED
+ *         |______ERROR
+ *         |
+ *       DONE
  *
+ * Available request states
  * @author Marc SORDI
  */
-public interface IFeatureFileAttributes {
+public enum RequestState {
 
-    DataType getType();
-
-    MimeType getMimeType();
-
-    String getFilename();
-
-    // FIXME add polymorphic (de)serialization
+    /**
+     * Request is registered and handled
+     */
+    GRANTED,
+    /**
+     * Request cannot be registered so it's denied
+     */
+    DENIED,
+    /**
+     * Request properly done
+     */
+    SUCCESS,
+    /**
+     * Request error during its processing
+     */
+    ERROR;
 }

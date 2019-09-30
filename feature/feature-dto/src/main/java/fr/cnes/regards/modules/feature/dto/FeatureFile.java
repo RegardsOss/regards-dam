@@ -25,8 +25,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
-import fr.cnes.regards.modules.feature.dto.attributes.IFeatureFileAttributes;
-
 /**
  *
  * File description
@@ -48,5 +46,59 @@ public class FeatureFile {
      */
     @Valid
     @NotNull(message = "File attributes is requred")
-    private IFeatureFileAttributes attributes;
+    private FeatureFileAttributes attributes;
+
+    public Set<FeatureFileLocation> getLocations() {
+        return locations;
+    }
+
+    public void setLocations(Set<FeatureFileLocation> locations) {
+        this.locations = locations;
+    }
+
+    public FeatureFileAttributes getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(FeatureFileAttributes attributes) {
+        this.attributes = attributes;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (attributes == null ? 0 : attributes.hashCode());
+        result = prime * result + (locations == null ? 0 : locations.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        FeatureFile other = (FeatureFile) obj;
+        if (attributes == null) {
+            if (other.attributes != null) {
+                return false;
+            }
+        } else if (!attributes.equals(other.attributes)) {
+            return false;
+        }
+        if (locations == null) {
+            if (other.locations != null) {
+                return false;
+            }
+        } else if (!locations.equals(other.locations)) {
+            return false;
+        }
+        return true;
+    }
 }

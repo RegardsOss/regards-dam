@@ -16,17 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.domain;
+package fr.cnes.regards.modules.feature.dto.event.in;
+
+import java.util.UUID;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 /**
- * Validation messages
- *
  * @author Marc SORDI
  *
  */
-public final class FeatureValidationMessages {
+public abstract class AbstractRequestEvent {
 
-    private FeatureValidationMessages() {
-        // Nothing to do
+    @NotBlank(message = "Request identifier is required")
+    @Size(max = 36)
+    protected String requestId;
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    /**
+     * Generate a request ID
+     */
+    public static String generateRequestId() {
+        return UUID.randomUUID().toString();
     }
 }
