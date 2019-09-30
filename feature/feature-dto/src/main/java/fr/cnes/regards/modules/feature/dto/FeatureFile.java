@@ -16,19 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.domain;
+package fr.cnes.regards.modules.feature.dto;
 
+import java.util.HashSet;
 import java.util.Set;
 
-import fr.cnes.regards.framework.geojson.AbstractFeature;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import fr.cnes.regards.modules.feature.dto.attributes.IFeatureFileAttributes;
 
 /**
+ *
+ * File description
+ *
  * @author Marc SORDI
  *
- * TODO get dynamic properties
- *
  */
-public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
+public class FeatureFile {
 
+    /**
+     * File locations (a file can be stored at several locations)
+     */
+    @Valid
+    @NotEmpty(message = "At least one location is required")
+    private Set<FeatureFileLocation> locations = new HashSet<>();
+
+    /**
+     * File attributes
+     */
+    @Valid
+    @NotNull(message = "File attributes is requred")
+    private IFeatureFileAttributes attributes;
 }

@@ -55,10 +55,6 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-gson</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
 			<artifactId>dam-plugins</artifactId>
 		</dependency>
 		<dependency>
@@ -94,11 +90,6 @@
 			<artifactId>geojson-starter</artifactId>
 		</dependency>
 		<!-- Test -->
-		<dependency>
-			<groupId>fr.cnes.regards.modules.model</groupId>
-			<artifactId>model-dao</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>

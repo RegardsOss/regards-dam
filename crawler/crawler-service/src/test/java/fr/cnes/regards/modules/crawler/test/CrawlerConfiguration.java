@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 @Profile("!indexer-service")
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
-        "fr.cnes.regards.modules.dam", "fr.cnes.regards.modules.search",
+        "fr.cnes.regards.modules.dam", "fr.cnes.regards.modules.model", "fr.cnes.regards.modules.search",
         "fr.cnes.regards.framework.modules.plugins.service", "fr.cnes.regards.framework.utils.spring" })
 @EnableAutoConfiguration(
         exclude = { MethodAuthorizationServiceAutoConfiguration.class, MethodSecurityAutoConfiguration.class,

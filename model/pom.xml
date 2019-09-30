@@ -56,30 +56,13 @@
 	</parent>
 
 	<modules>
-	<module>model-dto</module>
-	<module>model-gson</module>
-	<module>model-domain</module>
-	<module>model-client</module>
-	<module>model-dao</module>
-	<module>model-service</module>
-	<module>model-rest</module>
-	<module>model-plugin</module>
+		<module>model-dto</module>
+		<module>model-gson</module>
+		<module>model-domain</module>
+		<module>model-client</module>
+		<module>model-dao</module>
+		<module>model-service</module>
+		<module>model-rest</module>
 	</modules>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.model</groupId>
-				<artifactId>model-gson</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.model</groupId>
-				<artifactId>model-dto</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 </project>
 	

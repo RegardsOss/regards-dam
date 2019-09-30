@@ -77,6 +77,7 @@ public class EntitiesServiceIT extends AbstractMultitenantServiceTest {
 
     @Before
     public void init() throws ModuleException {
+
         datasetRepository.deleteAll();
         modelRepository.deleteAll();
         pluginConfRepos.deleteAll();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,34 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.client.dataaccess;
+package fr.cnes.regards.modules.dam.rest.models;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
-import fr.cnes.regards.modules.model.client.IAttributeModelClient;
-import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.dam.service.models.xml.IComputationPluginService;
+import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 
 /**
  * @author Marc SORDI
+ *
  */
 @Configuration
-public class ClientConfiguration {
+public class TestConfiguration {
 
     @Bean
-    public IAttributeModelClient attributeModelClient() {
-        return Mockito.mock(IAttributeModelClient.class);
+    public IComputationPluginService computationPluginService() {
+        return Mockito.mock(IComputationPluginService.class);
     }
 
     @Bean
-    public IProjectsClient projectsClient() {
-        return Mockito.mock(IProjectsClient.class);
-    }
-
-    @Bean
-    public IProjectUsersClient mockProjectUsersClient() {
-        return Mockito.mock(IProjectUsersClient.class);
+    public IAttributeHelper attributeHelper() {
+        return Mockito.mock(IAttributeHelper.class);
     }
 }

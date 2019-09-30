@@ -111,7 +111,8 @@ public class ModelServiceTest {
         mockAttModelS = Mockito.mock(IAttributeModelService.class);
         mockPluginService = Mockito.mock(IPluginService.class);
         mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService, mockPublisher, null);
+        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService, mockPublisher,
+                null);
     }
 
     @Test(expected = EntityInvalidException.class)

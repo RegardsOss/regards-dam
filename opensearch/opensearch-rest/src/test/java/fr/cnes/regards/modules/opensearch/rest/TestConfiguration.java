@@ -39,13 +39,12 @@ public class TestConfiguration {
     }
 
     @Bean
-    IAttributeModelClient attMClient() {
+    IAttributeModelClient attributeModelClient() {
         return Mockito.mock(IAttributeModelClient.class);
     }
 
     @Bean
-    IAttributeHelper helper() {
+    IAttributeHelper attributeHelper() {
         return Mockito.mock(IAttributeHelper.class);
     }
-
 }

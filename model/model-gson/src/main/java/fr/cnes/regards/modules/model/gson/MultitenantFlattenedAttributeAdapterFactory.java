@@ -184,7 +184,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
 
     /**
      * @param pAttributeType
-     *            {@link AttributeType}
+     *            {@link PropertyType}
      * @return corresponding {@link Serializable} class
      */
     public Class<?> getClassByType(PropertyType pAttributeType) { // NOSONAR

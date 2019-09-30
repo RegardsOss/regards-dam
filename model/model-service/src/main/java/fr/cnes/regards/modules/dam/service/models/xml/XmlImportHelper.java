@@ -122,7 +122,8 @@ public final class XmlImportHelper {
                     .setFragment(fr.cnes.regards.modules.model.domain.attributes.Fragment.buildDefault());
             // A computation plugin has been specified
             if (xmlAtt.getComputation() != null) {
-                modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt));
+                modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt,
+                                                                               modelAtt.getAttribute().getType()));
             }
             modelAtts.add(modelAtt);
         }
@@ -141,7 +142,8 @@ public final class XmlImportHelper {
                 modelAtt.getAttribute().setFragment(fragment);
                 // A computation plugin has been specified
                 if (xmlAtt.getComputation() != null) {
-                    modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt));
+                    modelAtt.setComputationConf(computationPluginService.getPlugin(xmlAtt,
+                                                                                   modelAtt.getAttribute().getType()));
                 }
                 modelAtts.add(modelAtt);
             }
