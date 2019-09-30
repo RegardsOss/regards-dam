@@ -53,9 +53,6 @@ import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.plugin.entities.AbstractDataObjectComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin;
-import fr.cnes.regards.modules.dam.rest.models.ModelAttrAssocController;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.model.dao.IFragmentRepository;
 import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
@@ -66,6 +63,9 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.rest.ModelAttrAssocController;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 
 /**
  * Test {@link ModelAttrAssoc} API

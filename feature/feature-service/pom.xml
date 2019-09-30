@@ -71,6 +71,10 @@
 			<artifactId>plugins-service</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.jobs</groupId>
+			<artifactId>jobs-service</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.storage-light</groupId>
 			<artifactId>storage-light-client</artifactId>
 		</dependency>

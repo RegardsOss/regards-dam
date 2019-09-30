@@ -99,7 +99,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
-import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 /**
  * @author oroussel
@@ -190,7 +190,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     @EventListener
-    public void handleApplicationReady(DamGsonReadyEvent event) {
+    public void handleApplicationReady(ModelGsonReadyEvent event) {
         // TODO : subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 

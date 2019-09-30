@@ -55,8 +55,6 @@ import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.dam.rest.models.AttributeModelController;
-import fr.cnes.regards.modules.dam.rest.models.ModelAttrAssocController;
 import fr.cnes.regards.modules.model.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.model.dao.IFragmentRepository;
 import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
@@ -72,6 +70,8 @@ import fr.cnes.regards.modules.model.domain.attributes.restriction.IntegerRangeR
 import fr.cnes.regards.modules.model.domain.attributes.restriction.LongRangeRestriction;
 import fr.cnes.regards.modules.model.domain.attributes.restriction.RestrictionType;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.rest.AttributeModelController;
+import fr.cnes.regards.modules.model.rest.ModelAttrAssocController;
 
 /**
  * Test module API

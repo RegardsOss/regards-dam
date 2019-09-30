@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
-import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.
@@ -38,7 +38,7 @@ import fr.cnes.regards.modules.model.gson.DamGsonReadyEvent;
  */
 public interface IEntityIndexerService {
 
-    void handleApplicationReady(DamGsonReadyEvent event);
+    void handleApplicationReady(ModelGsonReadyEvent event);
 
     /**
      * Update entity into Elasticsearch
