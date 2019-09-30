@@ -172,16 +172,6 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     /**
-     * Create a dataset model
-     */
-    @Test
-    @Requirement("REGARDS_DSL_DAM_MOD_010")
-    @Purpose("Create document model")
-    public void createDocumentModelTest() {
-        createModel("DOCUMENT", "Document description", EntityType.DOCUMENT);
-    }
-
-    /**
      * Create a model
      *
      * @param pName name
@@ -289,7 +279,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     public void deleteModelTest_shouldDeleteModel() throws ModuleException {
         // Prepare test
         final Model model = modelService
-                .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DOCUMENT));
+                .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DATA));
 
         // Define expectations
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();

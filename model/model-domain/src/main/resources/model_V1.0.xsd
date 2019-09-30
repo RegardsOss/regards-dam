@@ -15,7 +15,6 @@
                             <xs:enumeration value="COLLECTION"/>
                             <xs:enumeration value="DATA"/>
                             <xs:enumeration value="DATASET"/>
-                            <xs:enumeration value="DOCUMENT"/>
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>

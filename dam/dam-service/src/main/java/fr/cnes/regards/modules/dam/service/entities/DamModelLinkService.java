@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.service.models.IModelLinkService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 
@@ -49,9 +48,6 @@ public class DamModelLinkService implements IModelLinkService {
     private ICollectionRepository collectionRepository;
 
     @Autowired
-    private IDocumentRepository documentRepository;
-
-    @Autowired
     private IModelService modelService;
 
     @Override
@@ -69,7 +65,6 @@ public class DamModelLinkService implements IModelLinkService {
         }
 
         if (datasetRepository.isLinkedToEntities(modelIds) || collectionRepository.isLinkedToEntities(modelIds)
-                || documentRepository.isLinkedToEntities(modelIds)
                 || datasetRepository.isLinkedToDatasetsAsDataModel(modelNames)) {
             return false;
         }

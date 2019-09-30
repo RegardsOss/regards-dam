@@ -68,7 +68,6 @@ public class IndexController {
 
         //2. Then re-create all entities
         entityIndexerService.updateAllDatasets(tenant);
-        entityIndexerService.updateAllDocuments(tenant);
         entityIndexerService.updateAllCollections(tenant);
 
         //3. Clear all datasources ingestion
