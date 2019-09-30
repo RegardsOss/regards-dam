@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.dto.attributes;
 
+import org.springframework.util.MimeType;
+
 import fr.cnes.regards.framework.oais.urn.DataType;
 
 /**
@@ -28,6 +30,8 @@ import fr.cnes.regards.framework.oais.urn.DataType;
 public interface IFeatureFileAttributes {
 
     DataType getType();
+
+    MimeType getMimeType();
 
     String getFilename();
 

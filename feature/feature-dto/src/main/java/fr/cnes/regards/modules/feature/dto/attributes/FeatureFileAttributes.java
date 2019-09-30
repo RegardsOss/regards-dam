@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.feature.dto.attributes;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import org.springframework.util.MimeType;
+
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.utils.file.validation.HandledMessageDigestAlgorithm;
 
@@ -32,6 +34,12 @@ public class FeatureFileAttributes implements IFeatureFileAttributes {
 
     @NotNull(message = "Data type is required")
     private DataType dataType;
+
+    /**
+     * Required {@link MimeType}
+     */
+    @NotNull(message = "MIME type is required")
+    private MimeType mimeType;
 
     /**
      * The file name
@@ -63,6 +71,11 @@ public class FeatureFileAttributes implements IFeatureFileAttributes {
     @Override
     public String getFilename() {
         return filename;
+    }
+
+    @Override
+    public MimeType getMimeType() {
+        return mimeType;
     }
 
 }

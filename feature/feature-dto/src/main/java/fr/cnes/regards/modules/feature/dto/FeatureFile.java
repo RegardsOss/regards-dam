@@ -28,6 +28,9 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.modules.feature.dto.attributes.IFeatureFileAttributes;
 
 /**
+ *
+ * File description
+ *
  * @author Marc SORDI
  *
  */
