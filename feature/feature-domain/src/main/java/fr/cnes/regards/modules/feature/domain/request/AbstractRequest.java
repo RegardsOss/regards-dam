@@ -49,7 +49,7 @@ public abstract class AbstractRequest {
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
 
-    @NotNull(message = "Ingest request state is required")
+    @NotNull(message = "Feature request state is required")
     @Enumerated(EnumType.STRING)
     @Column(name = COLUMN_STATE, length = 50, nullable = false)
     private RequestState state;

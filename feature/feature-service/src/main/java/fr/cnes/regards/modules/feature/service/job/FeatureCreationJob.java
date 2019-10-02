@@ -18,12 +18,24 @@
  */
 package fr.cnes.regards.modules.feature.service.job;
 
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.gson.reflect.TypeToken;
 
 import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.service.IFeatureService;
 
 /**
  *
@@ -34,24 +46,34 @@ import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissi
  */
 public class FeatureCreationJob extends AbstractJob<Void> {
 
-    @Override
-    public void setParameters(Map<String, JobParameter> parameters)
-            throws JobParameterMissingException, JobParameterInvalidException {
+	public static final String IDS_PARAMETER = "ids";
+	public static final String FEATURES_PARAMETER = "features";
 
-        // TODO retrieve list of new feature requests
-    }
+	private List<FeatureCreationRequest> featureCreationRequests;
+	private Set<Feature> features;
 
-    @Override
-    public void run() {
+	@Autowired
+	private FeatureCreationRequestRepository featureCreationRequestRepo;
 
-        // Prepare feature
-        // TODO delegate to feature service : validation / détection des doublons
+	@Autowired
+	private IFeatureService featureService;
+	
+	@Override
+	public void setParameters(Map<String, JobParameter> parameters)
+			throws JobParameterMissingException, JobParameterInvalidException {
+        Type type = new TypeToken<Set<Long>>() {
 
-        // Register feature to insert
+        }.getType();
+		featureCreationRequests = this.featureCreationRequestRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
+		features = this.featureCreationRequests.stream().map(fcr -> fcr.getFeature()).collect(Collectors.toSet());
+	}
 
-        // Do bulk insert (for performance purpose)
-        // TODO saveAll
-
-    }
+	@Override
+	public void run() {
+    	long beginExecutionTime = System.currentTimeMillis();
+		this.featureService.createFeatures(features, featureCreationRequests);
+		long endExcecutionTime = System.currentTimeMillis();
+    	LOGGER.error("Job execution time {}", endExcecutionTime - beginExecutionTime);
+	}
 
 }

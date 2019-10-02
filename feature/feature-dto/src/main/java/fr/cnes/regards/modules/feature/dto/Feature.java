@@ -42,6 +42,7 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
     /**
      * Unique feature identifer based on provider identifier with versionning
      */
+	@NotNull
     private UniformResourceName urn;
 
     @NotNull(message = "Feature type is required")
