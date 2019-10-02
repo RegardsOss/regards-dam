@@ -31,5 +31,8 @@ import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
  */
 public interface IValidationService<U extends AbstractFeature<Set<AbstractProperty<?>>, ?>> {
 
+    /**
+     * Validate feature properties regarding the configured data model
+     */
     Errors validate(String model, U feature, boolean manageAlterable);
 }

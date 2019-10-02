@@ -34,48 +34,6 @@ import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 @Component
 public class DamModelFinder implements IModelFinder {
 
-    // FIXME add cache behaviour
-    //public DataObjectService(IModelFinder modelFinder, IModelAttrAssocService modelAttributeService,
-    //  Validator dataObjectValidator) {
-    //super(modelFinder);
-    //this.modelAttrAssocServiceNoProxy = modelAttributeService;
-    //this.dataObjectValidator = dataObjectValidator;
-    //// Init the cache to speed up model attributes from model name retrieval
-    //modelServiceCache = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
-    //      .build(new CacheLoader<String, List<ModelAttrAssoc>>() {
-    //
-    //          @Override
-    //          public List<ModelAttrAssoc> load(String modelName) throws Exception {
-    //              return modelAttributeService.getModelAttrAssocs(modelName);
-    //          }
-    //      });
-    //// Use cache when calling for getModelAttrAssocs with modelName
-    //InvocationHandler invocationHandler = (InvocationHandler) (proxy, method, args) -> {
-    //  if (method.getName().equals("getModelAttrAssocs") && method.getReturnType().equals(List.class)
-    //          && args.length == 1 && args[0] instanceof String) {
-    //      return modelServiceCache.get((String) args[0]);
-    //  } else { // else call "true" modelService
-    //      return method.invoke(modelAttrAssocServiceNoProxy, args);
-    //  }
-    //};
-    //// Replace modelAttributeService by proxy which use cache
-    //super.modelAttributeService = (IModelAttrAssocService) Proxy
-    //      .newProxyInstance(IModelAttrAssocService.class.getClassLoader(),
-    //                        new Class<?>[] { IModelAttrAssocService.class }, invocationHandler);
-    //}
-
-    //
-    ///**
-    //* Data object validation is done on all data objects from ingestion, ie for a thousands objects in a very limited
-    //* duration so a cache is used
-    //*/
-    //private LoadingCache<String, List<ModelAttrAssoc>> modelServiceCache;
-    //
-    ///**
-    //* Original IModelAttrAssocService (ie. not proxyfied)
-    //*/
-    //private IModelAttrAssocService modelAttrAssocServiceNoProxy;
-
     @Autowired
     protected IModelAttrAssocService modelAttributeService;
 

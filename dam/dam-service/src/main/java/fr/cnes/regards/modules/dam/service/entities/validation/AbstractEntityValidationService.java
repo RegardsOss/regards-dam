@@ -18,6 +18,10 @@
  */
 package fr.cnes.regards.modules.dam.service.entities.validation;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringJoiner;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -56,11 +60,22 @@ public abstract class AbstractEntityValidationService<F extends EntityFeature, U
 
         // Validate dynamic model
         Errors modelErrors = validate(model.getName(), entity.getFeature(), manageAlterable);
-        inErrors.addAllErrors(modelErrors);
 
-        if (inErrors.hasErrors()) {
-            ErrorTranslator.getErrors(inErrors).forEach(e -> LOGGER.error(e));
-            throw new EntityInvalidException(ErrorTranslator.getErrorsAsString(inErrors));
+        if (inErrors.hasErrors() || modelErrors.hasErrors()) {
+            Set<String> errs = new HashSet<>();
+            if (inErrors.hasErrors()) {
+                errs.addAll(ErrorTranslator.getErrors(inErrors));
+            }
+            if (modelErrors.hasErrors()) {
+                errs.addAll(ErrorTranslator.getErrors(modelErrors));
+            }
+
+            StringJoiner joiner = new StringJoiner(", ");
+            errs.forEach(err -> {
+                LOGGER.error(err);
+                joiner.add(err);
+            });
+            throw new EntityInvalidException(joiner.toString());
         }
     }
 }
