@@ -22,4 +22,4 @@
  * @author Marc Sordi
  *
  */
-package fr.cnes.regards.modules.dam.service.entities.validator.restriction;
+package fr.cnes.regards.modules.model.service.validation.validator.restriction;

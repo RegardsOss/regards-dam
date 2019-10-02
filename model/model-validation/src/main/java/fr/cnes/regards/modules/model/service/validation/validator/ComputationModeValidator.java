@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation.validator;
 
 import org.springframework.validation.Errors;
 
@@ -43,8 +43,8 @@ public class ComputationModeValidator extends AbstractPropertyValidator {
     @Override
     public void validate(Object target, Errors errors) {
         if (!ComputationMode.GIVEN.equals(computationMode)) {
-            errors.reject("error.computed.attribute.given.message",
-                          String.format("Computed value for attribute \"%s\" must not be set.", attributeKey));
+            errors.reject("error.computed.property.given.message",
+                          String.format("Computed value for property \"%s\" must not be set.", attributeKey));
         }
     }
 

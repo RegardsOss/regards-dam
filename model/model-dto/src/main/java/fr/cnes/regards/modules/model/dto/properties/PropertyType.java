@@ -97,7 +97,8 @@ public enum PropertyType {
         public boolean isArray() {
             return true;
         }
-    };
+    },
+    OBJECT;
 
     /**
      * Tell whether or not specified type correspond to an interval

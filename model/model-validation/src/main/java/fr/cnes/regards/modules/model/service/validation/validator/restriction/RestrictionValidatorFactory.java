@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator.restriction;
+package fr.cnes.regards.modules.model.service.validation.validator.restriction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,21 +44,21 @@ public final class RestrictionValidatorFactory {
     private RestrictionValidatorFactory() {
     }
 
-    public static Validator getValidator(AbstractRestriction pRestriction, String pAttributeKey) {
-        if (pRestriction instanceof EnumerationRestriction) {
-            return getValidator((EnumerationRestriction) pRestriction, pAttributeKey);
+    public static Validator getValidator(AbstractRestriction restriction, String attributeKey) {
+        if (restriction instanceof EnumerationRestriction) {
+            return getValidator((EnumerationRestriction) restriction, attributeKey);
         }
-        if (pRestriction instanceof DoubleRangeRestriction) {
-            return getValidator((DoubleRangeRestriction) pRestriction, pAttributeKey);
+        if (restriction instanceof DoubleRangeRestriction) {
+            return getValidator((DoubleRangeRestriction) restriction, attributeKey);
         }
-        if (pRestriction instanceof IntegerRangeRestriction) {
-            return getValidator((IntegerRangeRestriction) pRestriction, pAttributeKey);
+        if (restriction instanceof IntegerRangeRestriction) {
+            return getValidator((IntegerRangeRestriction) restriction, attributeKey);
         }
-        if (pRestriction instanceof PatternRestriction) {
-            return getValidator((PatternRestriction) pRestriction, pAttributeKey);
+        if (restriction instanceof PatternRestriction) {
+            return getValidator((PatternRestriction) restriction, attributeKey);
         }
         String errorMessage = String.format("No validator found for restriction type %s and attribute %s.",
-                                            pRestriction.getType(), pAttributeKey);
+                                            restriction.getType(), attributeKey);
         LOGGER.debug(errorMessage);
         throw new UnsupportedOperationException(errorMessage);
     }

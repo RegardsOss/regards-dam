@@ -31,6 +31,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.service.entities.validation.IEntityValidationService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
@@ -40,7 +41,7 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  * @author oroussel
  * @param <U> extends {@link AbstractEntity}
  */
-public interface IEntityService<U extends AbstractEntity<?>> extends IValidationService<U> {
+public interface IEntityService<U extends AbstractEntity<?>> extends IEntityValidationService<U> {
 
     /**
      * Load entity by IpId without relations

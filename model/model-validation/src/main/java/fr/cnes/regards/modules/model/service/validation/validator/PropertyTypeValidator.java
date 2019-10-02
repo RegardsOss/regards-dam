@@ -16,35 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation.validator;
 
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
+ * Validate attribute type
+ *
  * @author Marc Sordi
  *
  */
-public abstract class AbstractPropertyValidator implements Validator {
+public class PropertyTypeValidator extends AbstractPropertyValidator {
 
-    /**
-     * Attribute key
-     */
-    protected final String attributeKey;
+    private final PropertyType propertyType;
 
-    public AbstractPropertyValidator(String attributeKey) {
-        this.attributeKey = attributeKey;
-    }
-
-    protected void rejectUnsupported(Errors errors) {
-        errors.reject("error.unsupported.attribute.type.message", String
-                .format("Unsupported attribute \"%s\" for validator \"%s\".", attributeKey, this.getClass().getName()));
+    public PropertyTypeValidator(PropertyType PropertyType, String attributeKey) {
+        super(attributeKey);
+        this.propertyType = PropertyType;
     }
 
     @Override
-    public boolean supports(Class<?> clazz) {
-        return AbstractProperty.class.isAssignableFrom(clazz);
+    public void validate(Object target, Errors errors) {
+        AbstractProperty<?> att = (AbstractProperty<?>) target;
+        if (!att.represents(propertyType)) {
+            errors.reject("error.inconsistent.property.type.message",
+                          String.format("Property \"%s\" not consistent with model attribute type.", attributeKey));
+
+        }
     }
 }

@@ -16,15 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.service;
+package fr.cnes.regards.modules.model.service.validation;
 
-import org.springframework.validation.Errors;
+import java.util.List;
+
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 
 /**
- * @author Marc SORDI
+ * Retrieve all attributes related to a model
  *
+ * @author Marc SORDI
  */
-public interface IModelValidation {
+public interface IModelFinder {
 
-    void validate(Errors errors);
+    // TODO  implement with cache / model and tenant
+
+    List<ModelAttrAssoc> findByModel(String model);
 }

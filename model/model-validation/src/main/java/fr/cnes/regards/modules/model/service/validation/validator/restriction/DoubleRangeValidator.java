@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator.restriction;
+package fr.cnes.regards.modules.model.service.validation.validator.restriction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,11 @@ import org.springframework.validation.Errors;
 
 import com.google.common.collect.Range;
 
-import fr.cnes.regards.modules.dam.service.entities.validator.AbstractPropertyValidator;
 import fr.cnes.regards.modules.model.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.model.dto.properties.DoubleArrayProperty;
 import fr.cnes.regards.modules.model.dto.properties.DoubleIntervalProperty;
 import fr.cnes.regards.modules.model.dto.properties.DoubleProperty;
+import fr.cnes.regards.modules.model.service.validation.validator.AbstractPropertyValidator;
 
 /**
  * Validate {@link DoubleProperty}, {@link DoubleArrayProperty} or {@link DoubleIntervalProperty} value with a

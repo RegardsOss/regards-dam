@@ -152,7 +152,7 @@ public class AccessRightService implements IAccessRightService {
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
                     boolean dataAccess = datasetAccess
-                            && (accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
+                            && accessRight.getDataAccessRight().getDataAccessLevel() != DataAccessLevel.NO_ACCESS;
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });
@@ -262,7 +262,7 @@ public class AccessRightService implements IAccessRightService {
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
         repository.deleteById(id);
 
-        if ((confToDelete != null) && (confToDelete.getId() != null)) {
+        if (confToDelete != null && confToDelete.getId() != null) {
             pluginService.deletePluginConfiguration(confToDelete.getBusinessId());
         }
 
@@ -309,7 +309,8 @@ public class AccessRightService implements IAccessRightService {
         repository.findByDataAccessPluginNotNull().forEach(ar -> {
             try {
                 if (!datasetsToUpdate.contains(ar.getDataset().getIpId())) {
-                    IDataObjectAccessFilterPlugin plugin = pluginService.getPlugin(ar.getDataAccessPlugin().getId());
+                    IDataObjectAccessFilterPlugin plugin = pluginService
+                            .getPlugin(ar.getDataAccessPlugin().getBusinessId());
                     if (plugin.isDynamic()) {
                         LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
                                     ar.getDataset().getIpId());

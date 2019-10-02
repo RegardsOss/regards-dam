@@ -16,38 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation;
+
+import java.util.Set;
 
 import org.springframework.validation.Errors;
 
+import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
-import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
- * Validate attribute type
- *
- * @author Marc Sordi
- *
+ * Validation interface
+ * @param <U> {@link AbstractFeature}
  */
-public class PropertyTypeValidator extends AbstractPropertyValidator {
+public interface IValidationService<U extends AbstractFeature<Set<AbstractProperty<?>>, ?>> {
 
     /**
-     * {@link PropertyType}
+     * Validate feature properties regarding the configured data model
      */
-    private final PropertyType PropertyType;
-
-    public PropertyTypeValidator(PropertyType PropertyType, String attributeKey) {
-        super(attributeKey);
-        this.PropertyType = PropertyType;
-    }
-
-    @Override
-    public void validate(Object target, Errors errors) {
-        AbstractProperty<?> att = (AbstractProperty<?>) target;
-        if (!att.represents(PropertyType)) {
-            errors.reject("error.inconsistent.attribute.type.message",
-                          String.format("Attribute \"%s\" not consistent with model attribute type.", attributeKey));
-
-        }
-    }
+    Errors validate(String model, U feature, boolean manageAlterable);
 }

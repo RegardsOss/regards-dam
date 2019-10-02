@@ -41,6 +41,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 
 /**
  * @author lmieulet
@@ -114,8 +115,8 @@ public class CollectionServiceTest {
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
+        collectionServiceMocked = new CollectionService(Mockito.mock(IModelFinder.class), entitiesRepositoryMocked,
+                pModelService, deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
                 runtimeTenantResolver);
     }
 

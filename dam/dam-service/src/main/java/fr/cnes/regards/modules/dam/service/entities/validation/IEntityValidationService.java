@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities;
+package fr.cnes.regards.modules.dam.service.entities.validation;
 
 import org.springframework.validation.Errors;
 
@@ -24,12 +24,9 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 
 /**
- * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
- * AbstractValidationService and DataObjectService
- * @author oroussel
- * @param <U> {@link AbstractEntity}
+ * @author Marc SORDI
  */
-public interface IValidationService<U extends AbstractEntity<?>> {
+public interface IEntityValidationService<U extends AbstractEntity<?>> {
 
-    void validate(U abstractEntity, Errors errors, boolean manageAlterable) throws EntityInvalidException;
+    public void validate(U entity, Errors inErrors, boolean manageAlterable) throws EntityInvalidException;
 }

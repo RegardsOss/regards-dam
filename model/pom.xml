@@ -63,6 +63,7 @@
 		<module>model-dao</module>
 		<module>model-service</module>
 		<module>model-rest</module>
+		<module>model-validation</module>
 	</modules>
 </project>
 	

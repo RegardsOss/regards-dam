@@ -509,6 +509,19 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     }
 
     /**
+     * Build Json path for related property
+     */
+    public String getJsonPropertyPath() {
+        StringBuilder builder = new StringBuilder();
+        if (hasFragment()) {
+            builder.append(fragment.getName());
+            builder.append(GSONConstants.JSON_PATH_SEPARATOR);
+        }
+        builder.append(name);
+        return builder.toString();
+    }
+
+    /**
      * Private method to construct the public json path of the attribute.
      * The public json path is the path requested by clients to search for features.
      * if full private path is feature.properties.attribute, then the public path is properties.attribute.
