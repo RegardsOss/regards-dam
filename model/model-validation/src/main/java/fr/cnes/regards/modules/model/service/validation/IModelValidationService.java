@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,20 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities;
+package fr.cnes.regards.modules.model.service.validation;
+
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 
 /**
- * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
- * AbstractValidationService and DataObjectService
- * @author oroussel
- * @param <U> {@link AbstractEntity}
+ * Validate properties according to model definition
+ *
+ * @author Marc SORDI
  */
-public interface IValidationService<U extends AbstractEntity<?>> {
+public interface IModelValidationService {
 
-    void validate(U abstractEntity, Errors errors, boolean manageAlterable) throws EntityInvalidException;
+    /**
+     * Validate a set of properties
+     * @param model related model
+     * @param properties properties to validate
+     * @param extraValidators optional extra validators
+     */
+    Errors validate(String model, Set<AbstractProperty<?>> properties, List<Validator> extraValidators);
 }

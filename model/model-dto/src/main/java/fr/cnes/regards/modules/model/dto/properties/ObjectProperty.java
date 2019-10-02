@@ -29,7 +29,7 @@ public class ObjectProperty extends AbstractProperty<Set<AbstractProperty<?>>> {
 
     @Override
     public boolean represents(PropertyType pAttributeType) {
-        return true;
+        return PropertyType.OBJECT.equals(pAttributeType);
     }
 
     /**

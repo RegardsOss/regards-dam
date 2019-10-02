@@ -60,6 +60,7 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
 import fr.cnes.regards.modules.dam.service.entities.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.model.domain.Model;
@@ -67,6 +68,7 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.service.IAttributeModelService;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
@@ -77,7 +79,7 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
  */
 @Service
 @MultitenantTransactional
-public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
+public class DatasetService extends AbstractEntityService<DatasetFeature, Dataset> implements IDatasetService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasetService.class);
 
@@ -97,14 +99,17 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Autowired
     private IAccessRightRepository accessRightRepository;
 
-    public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
-            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
-            IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
-            ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IOpenSearchService openSearchService,
-            IPluginService pluginService) {
-        super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
-              repository, repository, em, publisher, runtimeTenantResolver);
+    @Autowired
+    private IModelAttrAssocService modelAttributeService;
+
+    public DatasetService(IModelFinder modelFinder, IDatasetRepository repository,
+            IAttributeModelService attributeService, IModelAttrAssocService modelAttributeService,
+            IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
+            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
+            EntityManager em, IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IOpenSearchService openSearchService, IPluginService pluginService) {
+        super(modelFinder, entityRepository, modelService, deletedEntityRepository, collectionRepository, repository,
+              repository, em, publisher, runtimeTenantResolver);
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }
@@ -118,13 +123,13 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Dataset checkDataSource(Dataset dataset) throws ModuleException, NotAvailablePluginConfigurationException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
-            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getBusinessId());
             String modelName = datasourcePlugin.getModelName();
             try {
                 Model model = modelService.getModelByName(modelName);
                 dataset.setDataModel(model.getName());
             } catch (ModuleException e) {
-                logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
+                LOGGER.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                 throw new EntityNotFoundException(String
                         .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
                         PluginConfiguration.class);

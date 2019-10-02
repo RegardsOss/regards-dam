@@ -16,38 +16,36 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation.validator;
 
 import org.springframework.validation.Errors;
 
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
-import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.domain.ComputationMode;
 
 /**
- * Validate attribute type
+ * Validate computation mode
  *
  * @author Marc Sordi
  *
  */
-public class PropertyTypeValidator extends AbstractPropertyValidator {
+public class ComputationModeValidator extends AbstractPropertyValidator {
 
     /**
-     * {@link PropertyType}
+     * {@link ComputationMode}
      */
-    private final PropertyType PropertyType;
+    private final ComputationMode computationMode;
 
-    public PropertyTypeValidator(PropertyType PropertyType, String attributeKey) {
+    public ComputationModeValidator(ComputationMode computationMode, String attributeKey) {
         super(attributeKey);
-        this.PropertyType = PropertyType;
+        this.computationMode = computationMode;
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        AbstractProperty<?> att = (AbstractProperty<?>) target;
-        if (!att.represents(PropertyType)) {
-            errors.reject("error.inconsistent.attribute.type.message",
-                          String.format("Attribute \"%s\" not consistent with model attribute type.", attributeKey));
-
+        if (!ComputationMode.GIVEN.equals(computationMode)) {
+            errors.reject("error.computed.property.given.message",
+                          String.format("Computed value for property \"%s\" must not be set.", attributeKey));
         }
     }
+
 }

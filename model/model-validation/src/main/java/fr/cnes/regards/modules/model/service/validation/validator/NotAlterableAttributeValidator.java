@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation.validator;
 
 import java.util.Objects;
 

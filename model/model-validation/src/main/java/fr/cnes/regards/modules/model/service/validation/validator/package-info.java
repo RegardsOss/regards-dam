@@ -23,4 +23,4 @@
  * @author Marc Sordi
  *
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation.validator;

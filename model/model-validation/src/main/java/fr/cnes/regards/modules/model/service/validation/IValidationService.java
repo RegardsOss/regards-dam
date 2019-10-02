@@ -16,35 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities.validator;
+package fr.cnes.regards.modules.model.service.validation;
+
+import java.util.Set;
 
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
+import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 
 /**
- * @author Marc Sordi
- *
+ * Validation interface
+ * @param <U> {@link AbstractFeature}
  */
-public abstract class AbstractPropertyValidator implements Validator {
+public interface IValidationService<U extends AbstractFeature<Set<AbstractProperty<?>>, ?>> {
 
-    /**
-     * Attribute key
-     */
-    protected final String attributeKey;
-
-    public AbstractPropertyValidator(String attributeKey) {
-        this.attributeKey = attributeKey;
-    }
-
-    protected void rejectUnsupported(Errors errors) {
-        errors.reject("error.unsupported.attribute.type.message", String
-                .format("Unsupported attribute \"%s\" for validator \"%s\".", attributeKey, this.getClass().getName()));
-    }
-
-    @Override
-    public boolean supports(Class<?> clazz) {
-        return AbstractProperty.class.isAssignableFrom(clazz);
-    }
+    Errors validate(String model, U feature, boolean manageAlterable);
 }

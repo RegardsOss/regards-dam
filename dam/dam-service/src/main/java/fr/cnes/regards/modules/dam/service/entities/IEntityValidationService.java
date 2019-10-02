@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,12 +18,15 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
+import org.springframework.validation.Errors;
+
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 
 /**
- * Qualified interface for Collection entity service
- * @author oroussel
+ * @author Marc SORDI
  */
-public interface ICollectionService extends IEntityService<CollectionFeature, Collection> {
+public interface IEntityValidationService<U extends AbstractEntity<?>> {
+
+    public void validate(U entity, Errors inErrors, boolean manageAlterable) throws EntityInvalidException;
 }

@@ -28,6 +28,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
@@ -37,7 +38,7 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
  *
  * @author oroussel
  */
-public interface IDatasetService extends IEntityService<Dataset> {
+public interface IDatasetService extends IEntityService<DatasetFeature, Dataset> {
 
     /**
      * Extract the AttributeModel of {@link DataObject} that can be contained into datasets. <br/>

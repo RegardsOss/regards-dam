@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,14 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.service.entities;
-
-import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
+package fr.cnes.regards.modules.feature.service;
 
 /**
- * Qualified interface for Collection entity service
- * @author oroussel
+ * @author Marc SORDI
+ *
  */
-public interface ICollectionService extends IEntityService<CollectionFeature, Collection> {
+public interface IFeatureValidationService {
+
+    // TODO
 }
