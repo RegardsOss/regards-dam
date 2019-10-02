@@ -57,6 +57,7 @@ import fr.cnes.regards.modules.model.service.IAttributeModelService;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.service.IModelService;
 import fr.cnes.regards.modules.model.service.exception.ImportException;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
@@ -155,10 +156,10 @@ public class DatasetServiceTest {
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 
         publisherMocked = Mockito.mock(IPublisher.class);
-        dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
-                emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(IOpenSearchService.class),
-                Mockito.mock(IPluginService.class));
+        dataSetServiceMocked = new DatasetService(Mockito.mock(IModelFinder.class), dataSetRepositoryMocked,
+                pAttributeModelService, pModelAttributeService, entitiesRepositoryMocked, modelService,
+                deletedEntityRepositoryMocked, null, emMocked, publisherMocked, runtimeTenantResolver,
+                Mockito.mock(IOpenSearchService.class), Mockito.mock(IPluginService.class));
     }
 
     /**

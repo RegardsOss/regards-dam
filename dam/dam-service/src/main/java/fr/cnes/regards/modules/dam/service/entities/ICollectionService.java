@@ -19,11 +19,10 @@
 package fr.cnes.regards.modules.dam.service.entities;
 
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
 
 /**
  * Qualified interface for Collection entity service
  * @author oroussel
  */
-public interface ICollectionService extends IEntityService<CollectionFeature, Collection> {
+public interface ICollectionService extends IEntityService<Collection> {
 }

@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +78,7 @@ import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidFileLocation;
+import fr.cnes.regards.modules.dam.service.entities.validation.AbstractEntityValidationService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -87,12 +87,8 @@ import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.service.IModelService;
-import fr.cnes.regards.modules.model.service.validation.AbstractValidationService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
-import fr.cnes.regards.modules.model.service.validation.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.model.service.validation.validator.NotAlterableAttributeValidator;
-import fr.cnes.regards.modules.model.service.validation.validator.PropertyTypeValidator;
-import fr.cnes.regards.modules.model.service.validation.validator.restriction.RestrictionValidatorFactory;
 
 /**
  * Abstract parameterized entity service
@@ -100,7 +96,7 @@ import fr.cnes.regards.modules.model.service.validation.validator.restriction.Re
  * @author oroussel
  */
 public abstract class AbstractEntityService<F extends EntityFeature, U extends AbstractEntity<F>>
-        extends AbstractValidationService<F> implements IEntityService<F, U> {
+        extends AbstractEntityValidationService<F, U> implements IEntityService<U> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
@@ -254,11 +250,10 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
     protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
             F feature) {
 
+        List<Validator> validators = super.getValidators(modelAttribute, attributeKey, manageAlterable, feature);
+
         AttributeModel attModel = modelAttribute.getAttribute();
 
-        List<Validator> validators = new ArrayList<>();
-        // Check computation mode
-        validators.add(new ComputationModeValidator(modelAttribute.getMode(), attributeKey));
         // Check alterable attribute
         // Update mode only :
         if (manageAlterable && !attModel.isAlterable()) {
@@ -268,12 +263,6 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
             AbstractProperty<?> valueFromEntity = extractProperty(feature, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
             validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, valueFromDb, valueFromEntity));
-        }
-        // Check attribute type
-        validators.add(new PropertyTypeValidator(attModel.getType(), attributeKey));
-        // Check restriction
-        if (attModel.hasRestriction()) {
-            validators.add(RestrictionValidatorFactory.getValidator(attModel.getRestriction(), attributeKey));
         }
         return validators;
     }

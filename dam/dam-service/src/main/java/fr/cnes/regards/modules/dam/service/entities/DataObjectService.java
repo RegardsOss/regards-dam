@@ -19,9 +19,13 @@
 package fr.cnes.regards.modules.dam.service.entities;
 
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.model.service.validation.AbstractValidationService;
+import fr.cnes.regards.modules.dam.service.entities.validation.AbstractEntityValidationService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 
 /**
@@ -32,9 +36,20 @@ import fr.cnes.regards.modules.model.service.validation.IModelFinder;
  * @author oroussel
  */
 @Service
-public class DataObjectService extends AbstractValidationService<DataObjectFeature> {
+public class DataObjectService extends AbstractEntityValidationService<DataObjectFeature, DataObject> {
 
-    public DataObjectService(IModelFinder modelFinder) {
+    private final Validator dataObjectValidator;
+
+    public DataObjectService(IModelFinder modelFinder, Validator dataObjectValidator) {
         super(modelFinder);
+        this.dataObjectValidator = dataObjectValidator;
+    }
+
+    @Override
+    public void validate(DataObject entity, Errors inErrors, boolean manageAlterable) throws EntityInvalidException {
+        // First validate data object regarding its annotations
+        this.dataObjectValidator.validate(entity, inErrors);
+        // Then validate its associated attributes using inherited validation service
+        super.validate(entity, inErrors, manageAlterable);
     }
 }

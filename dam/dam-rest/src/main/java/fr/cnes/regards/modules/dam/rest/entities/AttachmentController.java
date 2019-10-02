@@ -167,7 +167,7 @@ public class AttachmentController {
     }
 
     @SuppressWarnings("unchecked")
-    private <S extends IEntityService<?, ?>> S getEntityService(UniformResourceName urn) {
+    private <S extends IEntityService<?>> S getEntityService(UniformResourceName urn) {
         switch (urn.getEntityType()) {
             case COLLECTION:
                 return (S) collectionService;
