@@ -27,6 +27,8 @@ import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -34,6 +36,7 @@ import org.hibernate.annotations.TypeDefs;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
  * @author Marc SORDI
@@ -54,9 +57,29 @@ public class FeatureCreationRequest extends AbstractRequest {
     @GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(columnDefinition = "jsonb", name = "feature")
+    @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
     @Type(type = "jsonb")
+    @NotNull
+    @Valid
     private Feature feature;
+    
+	public Feature getFeature() {
+		return feature;
+	}
 
-    // TODO add remote steps with storage!
+	public void setFeature(Feature feature) {
+		this.feature = feature;
+	}
+
+    public Long getId() {
+		return id;
+	}
+
+	public static FeatureCreationRequest build(Feature feature, String requestId) {
+	    FeatureCreationRequest fcr = new FeatureCreationRequest();
+	    fcr.setRequestId(requestId);
+	    fcr.setFeature(feature);
+	    fcr.setState(RequestState.GRANTED);
+		return fcr;
+    }
 }

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.utils.request.handler.AbstractRequestFlowHandler;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.service.IFeatureService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
 /**
@@ -51,6 +52,10 @@ public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandl
 
     @Autowired
     private ISubscriber subscriber;
+    
+    // FIXME proxy?
+    @Autowired
+    private IFeatureService featureService;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -73,6 +78,6 @@ public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandl
 
     @Override
     protected void processBulk(List<FeatureCreationRequestEvent> items) {
-        // TODO handle request on service side
+    	featureService.handleFeatureCreationRequestEvents(items);
     }
 }
