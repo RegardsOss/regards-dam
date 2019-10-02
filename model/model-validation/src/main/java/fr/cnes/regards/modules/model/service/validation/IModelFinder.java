@@ -23,13 +23,11 @@ import java.util.List;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 
 /**
- * Retrieve all attributes related to a model
+ * Retrieve all attributes related to a model.
  *
  * @author Marc SORDI
  */
 public interface IModelFinder {
-
-    // TODO  implement with cache / model and tenant
 
     List<ModelAttrAssoc> findByModel(String model);
 }

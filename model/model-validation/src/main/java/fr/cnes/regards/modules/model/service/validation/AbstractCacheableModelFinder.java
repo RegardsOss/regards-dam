@@ -18,12 +18,29 @@
  */
 package fr.cnes.regards.modules.model.service.validation;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.dto.event.ModelChangeEvent;
 
 /**
  * Cache proxy to handle model attributes
@@ -31,44 +48,70 @@ import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
  * @author Marc SORDI
  *
  */
-public abstract class AbstractCacheableModelFinder implements IModelFinder {
+public abstract class AbstractCacheableModelFinder
+        implements IModelFinder, ApplicationListener<ApplicationReadyEvent>, IHandler<ModelChangeEvent> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractCacheableModelFinder.class);
 
     /**
-    * Model cache is used to avoid useless database request as models rarely!
+    * Model cache is used to avoid useless database request as models rarely change!<br/>
+    * tenant key -> model key / attributes val
     */
-    private Map<String, LoadingCache<String, List<ModelAttrAssoc>>> modelCacheMap;
+    private final Map<String, LoadingCache<String, List<ModelAttrAssoc>>> modelCacheMap = new HashMap<>();
 
-    //    /**
-    //    * Original IModelAttrAssocService (ie. not proxyfied)
-    //    */
-    //    private IModelAttrAssocService modelAttrAssocServiceNoProxy;
-    //
-    //
-    //    public AbstractCacheableModelFinder() {
-    //
-    //    // Init the cache to speed up model attributes from model name retrieval
-    //        modelCache = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
-    //          .build(new CacheLoader<String, List<ModelAttrAssoc>>() {
-    //
-    //              @Override
-    //              public List<ModelAttrAssoc> load(String modelName) throws Exception {
-    //                  return findByModel(modelName);
-    //              }
-    //          });
-    //    // Use cache when calling for getModelAttrAssocs with modelName
-    //    InvocationHandler invocationHandler = (InvocationHandler) (proxy, method, args) -> {
-    //      if (method.getName().equals("getModelAttrAssocs") && method.getReturnType().equals(List.class)
-    //              && args.length == 1 && args[0] instanceof String) {
-    //          return modelCache.get((String) args[0]);
-    //      } else { // else call "true" modelService
-    //          return method.invoke(modelAttrAssocServiceNoProxy, args);
-    //      }
-    //    };
-    //    // Replace modelAttributeService by proxy which use cache
-    //    super.modelAttributeService = (IModelAttrAssocService) Proxy
-    //          .newProxyInstance(IModelAttrAssocService.class.getClassLoader(),
-    //                            new Class<?>[] { IModelAttrAssocService.class }, invocationHandler);
-    //    }
-    //}
+    @Autowired
+    private ISubscriber subscriber;
 
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(ModelChangeEvent.class, this);
+    }
+
+    @Override
+    public List<ModelAttrAssoc> findByModel(String model) {
+        String tenant = runtimeTenantResolver.getTenant();
+        try {
+            return getTenantCache(tenant).get(model);
+        } catch (ExecutionException e) {
+            LOGGER.error("Cannot find model attributes", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private LoadingCache<String, List<ModelAttrAssoc>> getTenantCache(String tenant) {
+        LoadingCache<String, List<ModelAttrAssoc>> modelCache = modelCacheMap.get(tenant);
+        if (modelCache == null) {
+            // Dynamically initialize cache
+            modelCache = CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES)
+                    .build(new CacheLoader<String, List<ModelAttrAssoc>>() {
+
+                        @Override
+                        public List<ModelAttrAssoc> load(String modelName) throws Exception {
+                            return loadAttributesByModel(modelName);
+                        }
+                    });
+            modelCacheMap.put(tenant, modelCache);
+        }
+        return modelCache;
+    }
+
+    private void cleanTenantCache(String tenant, String model) {
+        LoadingCache<String, List<ModelAttrAssoc>> modelCache = modelCacheMap.get(tenant);
+        if (modelCache != null) {
+            modelCache.invalidate(model);
+        }
+    }
+
+    protected abstract List<ModelAttrAssoc> loadAttributesByModel(String modelName);
+
+    @Override
+    public void handle(TenantWrapper<ModelChangeEvent> pWrapper) {
+        String tenant = pWrapper.getTenant();
+        String model = pWrapper.getContent().getModel();
+        LOGGER.info("Change detected for model \"{}\" of tenant \"{}\"", model, tenant);
+        cleanTenantCache(tenant, model);
+    }
 }

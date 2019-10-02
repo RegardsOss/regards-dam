@@ -63,6 +63,10 @@
     		<artifactId>request-utils</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-validation</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dto</artifactId>
 		</dependency>

@@ -46,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -67,6 +68,7 @@ import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.TypeMetadataConfMapping;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.dto.event.ModelChangeEvent;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.model.service.event.ComputedAttributeModelEvent;
 import fr.cnes.regards.modules.model.service.event.NewFragmentAttributeEvent;
@@ -115,15 +117,22 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * Application Event publisher to publish event inside the microservice
      */
-    private final ApplicationEventPublisher publisher;
+    private final ApplicationEventPublisher appPublisher;
+
+    /**
+     * Publish for model changes
+     */
+    private final IPublisher publisher;
 
     public ModelService(IModelRepository modelRepository, IModelAttrAssocRepository modelAttrAssocRepository,
             IAttributeModelService attributeModelService, IPluginService pluginService,
-            ApplicationEventPublisher publisher, IComputationPluginService computationPluginService) {
+            ApplicationEventPublisher appPublisher, IPublisher publisher,
+            IComputationPluginService computationPluginService) {
         this.modelRepository = modelRepository;
         modelAttributeRepository = modelAttrAssocRepository;
         this.attributeModelService = attributeModelService;
         this.pluginService = pluginService;
+        this.appPublisher = appPublisher;
         this.publisher = publisher;
         this.computationPluginService = computationPluginService;
     }
@@ -266,6 +275,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         }
 
         modelAttrAssoc.setModel(model);
+        // Publish model change
+        publisher.publish(ModelChangeEvent.build(model.getName()));
         return modelAttributeRepository.save(modelAttrAssoc);
     }
 
@@ -299,10 +310,12 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (!modelAttributeRepository.existsById(attributeId)) {
             throw new EntityNotFoundException(attributeId, ModelAttrAssoc.class);
         }
+        // Publish model change
+        publisher.publish(ModelChangeEvent.build(modelAttrAssoc.getModel().getName()));
         modelAttributeRepository.save(modelAttrAssoc);
         // If associated attribute is a computed one, send and event (to compute all datasets values)
         if (modelAttrAssoc.getComputationConf() != null) {
-            publisher.publishEvent(new ComputedAttributeModelEvent(modelAttrAssoc));
+            appPublisher.publishEvent(new ComputedAttributeModelEvent(modelAttrAssoc));
         }
         return modelAttrAssoc;
     }
@@ -315,6 +328,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             throw new FragmentAttributeException(modelAtt.getAttribute().getId());
         }
         modelAttributeRepository.deleteById(attributeId);
+        // Publish model change
+        publisher.publish(ModelChangeEvent.build(modelName));
     }
 
     @Override
@@ -343,6 +358,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         } else {
             LOGGER.warn("Fragment {} already bound to model {}", pFragmentId, modelName);
         }
+
+        // Publish model change
+        publisher.publish(ModelChangeEvent.build(modelName));
         return modAtts;
     }
 
@@ -373,6 +391,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 }
             }
         }
+        // Publish model change
+        publisher.publish(ModelChangeEvent.build(modelName));
     }
 
     @Override
@@ -388,6 +408,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             modelAtt.setAttribute(added);
             modelAtt.setModel(model);
             modelAttributeRepository.save(modelAtt);
+            // Publish model change
+            publisher.publish(ModelChangeEvent.build(model.getName()));
         }
     }
 
