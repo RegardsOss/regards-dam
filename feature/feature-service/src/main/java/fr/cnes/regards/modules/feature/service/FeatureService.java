@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
@@ -50,6 +51,9 @@ public class FeatureService implements IFeatureService {
 	@Autowired
 	private FeatureEntityRepository featureRepo;
 
+	@Autowired
+	private IPublisher publisher;
+	   
 	@Override
 	public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
 
@@ -94,5 +98,12 @@ public class FeatureService implements IFeatureService {
 				.map(feature -> FeatureEntity.build(feature, OffsetDateTime.now())).collect(Collectors.toList()));
 		this.featureCreationRequestRepo
 				.deleteByIdIn(featureCreationRequests.stream().map(fcr -> fcr.getId()).collect(Collectors.toList()));
+	}
+
+	@Override
+	public String publishFeature(Feature toPublish) {
+		FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish);
+    	publisher.publish(event);
+    	return event.getRequestId();
 	}
 }

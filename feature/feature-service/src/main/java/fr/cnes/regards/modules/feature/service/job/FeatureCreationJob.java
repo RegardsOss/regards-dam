@@ -73,7 +73,7 @@ public class FeatureCreationJob extends AbstractJob<Void> {
     	long beginExecutionTime = System.currentTimeMillis();
 		this.featureService.createFeatures(features, featureCreationRequests);
 		long endExcecutionTime = System.currentTimeMillis();
-    	LOGGER.error("Job execution time {}", endExcecutionTime - beginExecutionTime);
+    	LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
 	}
 
 }

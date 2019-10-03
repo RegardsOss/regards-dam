@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.dto.event.in;
 
+import java.util.UUID;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -45,5 +47,13 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
 
 	public void setFeature(Feature feature) {
 		this.feature = feature;
+	}
+	
+	public static FeatureCreationRequestEvent builder(Feature feature) {
+		FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+		event.setFeature(feature);
+		event.setRequestId(generateRequestId());
+		
+		return event;
 	}
 }

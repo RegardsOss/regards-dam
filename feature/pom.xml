@@ -60,6 +60,8 @@
 	<module>feature-domain</module>
 	<module>feature-service</module>
 	<module>feature-dto</module>
+	<module>feature-rest</module>
+	<module>feature-client</module>
 	</modules>
 
 	<dependencyManagement>
@@ -82,6 +84,11 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules.feature</groupId>
 				<artifactId>feature-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.feature</groupId>
+				<artifactId>feature-rest</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

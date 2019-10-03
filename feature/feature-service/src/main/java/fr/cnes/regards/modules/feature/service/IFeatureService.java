@@ -19,4 +19,5 @@ public interface IFeatureService {
 
 	void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests);
 
+	String publishFeature(Feature toPublish);
 }
