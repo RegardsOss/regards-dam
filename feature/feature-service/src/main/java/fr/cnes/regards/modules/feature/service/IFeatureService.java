@@ -10,14 +10,13 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 public interface IFeatureService {
 
-	/**
-	 * Prepare a Job to create and save a list of {@link FeatureEntity} and {@link FeatureCreationRequest}
-	 * from list of {@link AIP}
-	 * @param items list of {@link FeatureCreationRequestEvent}
-	 */
-	void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items);
+    /**
+     * Prepare a Job to create and save a list of {@link FeatureEntity} and {@link FeatureCreationRequest}
+     * @param items list of {@link FeatureCreationRequestEvent}
+     */
+    void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items);
 
-	void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests);
+    void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests);
 
-	String publishFeature(Feature toPublish);
+    String publishFeature(Feature toPublish);
 }

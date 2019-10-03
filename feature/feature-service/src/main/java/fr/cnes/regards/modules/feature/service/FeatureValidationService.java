@@ -44,23 +44,25 @@ import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 public class FeatureValidationService extends AbstractValidationService<Feature>
         implements IFeatureValidationService, IValidationService<Feature> {
 
-    public FeatureValidationService(IModelFinder modelFinder) {
-        super(modelFinder);
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureValidationService.class);
 
     /**
      * Standard validator based on annotation
      */
-    private Validator validator;
+    private final Validator validator;
 
+    public FeatureValidationService(IModelFinder modelFinder, Validator validator) {
+        super(modelFinder);
+        this.validator = validator;
+    }
+
+    @Override
     public Errors validate(Feature feature, ValidationMode mode) {
 
         Errors errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
 
         // Validate feature
-        validator.validate(feature, errors);
+        // Already done while validating request validator.validate(feature, errors);
 
         // Try validating properties according to data model
         if (feature.getModel() != null) {
