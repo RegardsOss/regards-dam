@@ -18,10 +18,17 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.hateoas.HateoasUtils;
+import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.service.validation.AbstractCacheableModelFinder;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
@@ -33,10 +40,22 @@ import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 @Service
 public class FeatureModelFinder extends AbstractCacheableModelFinder implements IModelFinder {
 
+    @Autowired
+    private IModelAttrAssocClient modelAttrAssocClient;
+
     @Override
     protected List<ModelAttrAssoc> loadAttributesByModel(String modelName) {
-        // TODO use model client retrieve list of attributes
-        return null;
+        try {
+            FeignSecurityManager.asSystem();
+            ResponseEntity<List<Resource<ModelAttrAssoc>>> response = modelAttrAssocClient
+                    .getModelAttrAssocs(modelName);
+            List<ModelAttrAssoc> attModelAssocs = new ArrayList<>();
+            if (response != null) {
+                attModelAssocs = HateoasUtils.unwrapCollection(response.getBody());
+            }
+            return attModelAssocs;
+        } finally {
+            FeignSecurityManager.reset();
+        }
     }
-
 }

@@ -88,6 +88,7 @@ import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.service.IModelService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.model.service.validation.validator.NotAlterableAttributeValidator;
 
 /**
@@ -243,20 +244,20 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
      * Compute available validators
      * @param modelAttribute {@link ModelAttrAssoc}
      * @param attributeKey attribute key
-     * @param manageAlterable manage update or not
+     * @param mode manage update or not
      * @return {@link Validator} list
      */
     @Override
-    protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
+    protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, ValidationMode mode,
             F feature) {
 
-        List<Validator> validators = super.getValidators(modelAttribute, attributeKey, manageAlterable, feature);
+        List<Validator> validators = super.getValidators(modelAttribute, attributeKey, mode, feature);
 
         AttributeModel attModel = modelAttribute.getAttribute();
 
         // Check alterable attribute
         // Update mode only :
-        if (manageAlterable && !attModel.isAlterable()) {
+        if (ValidationMode.UPDATE.equals(mode) && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
             AbstractEntity<?> fromDb = entityRepository.findByIpId(feature.getId());
             AbstractProperty<?> valueFromDb = extractProperty(fromDb.getFeature(), attModel);

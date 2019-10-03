@@ -43,6 +43,8 @@ import fr.cnes.regards.modules.model.service.validation.validator.PropertyTypeVa
 import fr.cnes.regards.modules.model.service.validation.validator.restriction.RestrictionValidatorFactory;
 
 /**
+ *
+ * Override this class to validate feature properties
  * @author oroussel
  * @author Marc SORDI
  */
@@ -58,7 +60,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
     }
 
     @Override
-    public Errors validate(String model, F feature, boolean manageAlterable) {
+    public Errors validate(String model, F feature, ValidationMode mode) {
 
         Errors errors = new MapBindingResult(new HashMap<>(), AbstractProperty.class.getName());
 
@@ -73,7 +75,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
 
         // Loop over model attributes ... to validate each properties
         for (ModelAttrAssoc modelAttrAssoc : modAtts) {
-            checkModelAttribute(modelAttrAssoc, errors, manageAlterable, feature, pptyMap, toCheckProperties);
+            checkModelAttribute(modelAttrAssoc, errors, mode, feature, pptyMap, toCheckProperties);
         }
 
         // If properties isn't empty it means some properties are unexpected by the model
@@ -120,7 +122,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
      * @param toCheckProperties properties not already checked
      *
      */
-    protected void checkModelAttribute(ModelAttrAssoc modelAttrAssoc, Errors errors, boolean manageAlterable, F feature,
+    protected void checkModelAttribute(ModelAttrAssoc modelAttrAssoc, Errors errors, ValidationMode mode, F feature,
             Map<String, AbstractProperty<?>> pptyMap, Set<String> toCheckProperties) {
 
         AttributeModel attModel = modelAttrAssoc.getAttribute();
@@ -147,7 +149,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
             }
 
             // Do validation
-            for (Validator validator : getValidators(modelAttrAssoc, attPath, manageAlterable, feature)) {
+            for (Validator validator : getValidators(modelAttrAssoc, attPath, mode, feature)) {
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, errors);
                 } else {
@@ -164,7 +166,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
     /**
      * Get validators
      */
-    protected List<Validator> getValidators(ModelAttrAssoc modelAttrAssoc, String attributeKey, boolean manageAlterable,
+    protected List<Validator> getValidators(ModelAttrAssoc modelAttrAssoc, String attributeKey, ValidationMode mode,
             F feature) {
         AttributeModel attModel = modelAttrAssoc.getAttribute();
 

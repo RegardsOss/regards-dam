@@ -16,18 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.service;
-
-import org.springframework.validation.Errors;
-
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.model.service.validation.ValidationMode;
+package fr.cnes.regards.modules.model.service.validation;
 
 /**
- * Validate a feature according to validation annotation plus dynamic model validation.
+ * Validation mode
  * @author Marc SORDI
  */
-public interface IFeatureValidationService {
+public enum ValidationMode {
 
-    Errors validate(Feature feature, ValidationMode mode);
+    CREATION,
+    UPDATE;
 }

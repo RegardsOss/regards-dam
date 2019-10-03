@@ -61,6 +61,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
@@ -164,7 +165,7 @@ public class DatasetController implements IResourceController<Dataset> {
             throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
-        service.validate(dataset, result, false);
+        service.validate(dataset, result, ValidationMode.CREATION);
 
         final Dataset created = service.create(dataset);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
@@ -258,7 +259,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
-        service.validate(dataset, result, true);
+        service.validate(dataset, result, ValidationMode.UPDATE);
 
         Dataset dataSet = service.update(datasetId, dataset);
         Resource<Dataset> resource = toResource(dataSet);
