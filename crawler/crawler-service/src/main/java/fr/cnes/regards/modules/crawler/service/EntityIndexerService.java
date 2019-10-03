@@ -100,6 +100,7 @@ import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * @author oroussel
@@ -246,7 +247,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                         dataset.getGroups().add(entry.getKey());
                     }
                 }
-            } 
+            }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
             // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
@@ -696,7 +697,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         List<String> errors = null;
         // If some validation errors occur, don't index data object
         try {
-            dataObjectService.validate(dataObject, errorsObject, false);
+            dataObjectService.validate(dataObject, errorsObject, ValidationMode.CREATION);
         } catch (EntityInvalidException e) {
             // If such an exception has been thrown, it contains all errors ( as a List<String>) else errors are
             // described into errorsObject
@@ -859,7 +860,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     /**
     TODO
     private class AIPEventHandler implements IHandler<AIPEvent> {
-    
+
         @Override
         public void handle(TenantWrapper<AIPEvent> wrapper) {
             AIPEvent event = wrapper.getContent();
@@ -871,7 +872,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                     String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
-    
+
             }
         }
     }

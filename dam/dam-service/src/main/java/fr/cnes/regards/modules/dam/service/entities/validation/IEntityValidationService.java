@@ -22,11 +22,12 @@ import org.springframework.validation.Errors;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * @author Marc SORDI
  */
 public interface IEntityValidationService<U extends AbstractEntity<?>> {
 
-    public void validate(U entity, Errors inErrors, boolean manageAlterable) throws EntityInvalidException;
+    public void validate(U entity, Errors inErrors, ValidationMode mode) throws EntityInvalidException;
 }

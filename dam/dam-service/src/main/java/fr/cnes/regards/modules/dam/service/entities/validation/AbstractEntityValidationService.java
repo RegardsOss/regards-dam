@@ -34,6 +34,7 @@ import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.service.validation.AbstractValidationService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * @author Marc SORDI
@@ -49,7 +50,7 @@ public abstract class AbstractEntityValidationService<F extends EntityFeature, U
     }
 
     @Override
-    public void validate(U entity, Errors inErrors, boolean manageAlterable) throws EntityInvalidException {
+    public void validate(U entity, Errors inErrors, ValidationMode mode) throws EntityInvalidException {
 
         Assert.notNull(entity, "Entity must not be null.");
 
@@ -59,7 +60,7 @@ public abstract class AbstractEntityValidationService<F extends EntityFeature, U
         Assert.notNull(model.getId(), "Model identifier must be specified.");
 
         // Validate dynamic model
-        Errors modelErrors = validate(model.getName(), entity.getFeature(), manageAlterable);
+        Errors modelErrors = validate(model.getName(), entity.getFeature(), mode);
 
         if (inErrors.hasErrors() || modelErrors.hasErrors()) {
             Set<String> errs = new HashSet<>();

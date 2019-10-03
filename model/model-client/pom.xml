@@ -53,7 +53,7 @@
 	</parent>
 
 	<dependencies>
-	<dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>feign-regards-starter</artifactId>
 			<scope>provided</scope>

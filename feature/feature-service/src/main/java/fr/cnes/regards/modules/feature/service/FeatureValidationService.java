@@ -29,6 +29,10 @@ import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.model.service.validation.AbstractValidationService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
+import fr.cnes.regards.modules.model.service.validation.IValidationService;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * Validate incoming features
@@ -37,7 +41,12 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  *
  */
 @Service
-public class FeatureValidationService implements IFeatureValidationService {
+public class FeatureValidationService extends AbstractValidationService<Feature>
+        implements IFeatureValidationService, IValidationService<Feature> {
+
+    public FeatureValidationService(IModelFinder modelFinder) {
+        super(modelFinder);
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureValidationService.class);
 
@@ -46,7 +55,7 @@ public class FeatureValidationService implements IFeatureValidationService {
      */
     private Validator validator;
 
-    public Errors validate(Feature feature) {
+    public Errors validate(Feature feature, ValidationMode mode) {
 
         Errors errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
 
@@ -55,7 +64,7 @@ public class FeatureValidationService implements IFeatureValidationService {
 
         // Try validating properties according to data model
         if (feature.getModel() != null) {
-            // TODO
+            this.validate(feature.getModel(), feature, mode);
         }
 
         if (errors.hasErrors()) {
