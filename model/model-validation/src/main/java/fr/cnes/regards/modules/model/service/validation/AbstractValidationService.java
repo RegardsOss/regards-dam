@@ -60,9 +60,9 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
     }
 
     @Override
-    public Errors validate(String model, F feature, ValidationMode mode) {
+    public Errors validate(String model, F feature, ValidationMode mode, String objectName) {
 
-        Errors errors = new MapBindingResult(new HashMap<>(), AbstractProperty.class.getName());
+        Errors errors = new MapBindingResult(new HashMap<>(), objectName);
 
         // Retrieve attributes from model
         List<ModelAttrAssoc> modAtts = modelFinder.findByModel(model);

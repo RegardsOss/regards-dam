@@ -34,5 +34,5 @@ public interface IValidationService<U extends AbstractFeature<Set<AbstractProper
     /**
      * Validate feature properties regarding the configured data model
      */
-    Errors validate(String model, U feature, ValidationMode mode);
+    Errors validate(String model, U feature, ValidationMode mode, String objectName);
 }

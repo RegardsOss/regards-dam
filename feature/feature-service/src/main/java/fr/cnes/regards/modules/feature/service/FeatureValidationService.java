@@ -59,14 +59,17 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
     @Override
     public Errors validate(Feature feature, ValidationMode mode) {
 
-        Errors errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
+        String objectName = Feature.class.getName();
+        Errors errors = new MapBindingResult(new HashMap<>(), objectName);
 
         // Validate feature
-        // Already done while validating request validator.validate(feature, errors);
+        validator.validate(feature, errors);
 
         // Try validating properties according to data model
         if (feature.getModel() != null) {
-            this.validate(feature.getModel(), feature, mode);
+            // FIXME faire un modèle et générer des features en conséquence avant de réactiver la ligne suivante
+            // FIXME gérer aussi le mock du client de récupération des attributs d'un modèle
+            // errors.addAllErrors(validate(feature.getModel(), feature, mode, objectName));
         }
 
         if (errors.hasErrors()) {

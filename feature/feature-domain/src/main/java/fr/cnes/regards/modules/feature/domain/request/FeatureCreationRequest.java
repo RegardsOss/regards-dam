@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.domain.request;
 
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,6 +35,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
+import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -62,24 +65,29 @@ public class FeatureCreationRequest extends AbstractRequest {
     @NotNull
     @Valid
     private Feature feature;
-    
-	public Feature getFeature() {
-		return feature;
-	}
 
-	public void setFeature(Feature feature) {
-		this.feature = feature;
-	}
+    public Feature getFeature() {
+        return feature;
+    }
+
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 
     public Long getId() {
-		return id;
-	}
+        return id;
+    }
 
-	public static FeatureCreationRequest build(Feature feature, String requestId) {
-	    FeatureCreationRequest fcr = new FeatureCreationRequest();
-	    fcr.setRequestId(requestId);
-	    fcr.setFeature(feature);
-	    fcr.setState(RequestState.GRANTED);
-		return fcr;
+    public static FeatureCreationRequest build(String requestId, RequestState state, Set<String> errors,
+            Feature feature) {
+        Assert.notNull(requestId, "Request id is required");
+        Assert.notNull(state, "Request state is required");
+        Assert.notNull(feature, "Feature is required");
+        FeatureCreationRequest fcr = new FeatureCreationRequest();
+        fcr.setRequestId(requestId);
+        fcr.setState(state);
+        fcr.setFeature(feature);
+        fcr.setErrors(errors);
+        return fcr;
     }
 }

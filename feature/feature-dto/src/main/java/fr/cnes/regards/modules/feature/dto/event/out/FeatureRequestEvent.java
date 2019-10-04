@@ -61,7 +61,7 @@ public class FeatureRequestEvent implements ISubscribable {
         return build(requestId, id, urn, state, null);
     }
 
-    public static FeatureRequestEvent build(String requestId, String id, @Nullable UniformResourceName urn,
+    public static FeatureRequestEvent build(String requestId, @Nullable String id, @Nullable UniformResourceName urn,
             RequestState state, Set<String> errors) {
         FeatureRequestEvent event = new FeatureRequestEvent();
         event.setRequestId(requestId);

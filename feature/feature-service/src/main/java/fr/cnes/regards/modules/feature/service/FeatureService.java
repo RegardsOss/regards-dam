@@ -1,11 +1,14 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
@@ -17,6 +20,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
@@ -24,11 +28,13 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * Feature service management
@@ -39,76 +45,105 @@ import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 @MultitenantTransactional
 public class FeatureService implements IFeatureService {
 
-	@Autowired
-	private FeatureCreationRequestRepository featureCreationRequestRepo;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureService.class);
 
-	@Autowired
-	private IAuthenticationResolver authResolver;
+    @Autowired
+    private FeatureCreationRequestRepository featureCreationRequestRepo;
 
-	@Autowired
-	private IJobInfoService jobInfoService;
+    @Autowired
+    private IAuthenticationResolver authResolver;
 
-	@Autowired
-	private FeatureEntityRepository featureRepo;
+    @Autowired
+    private IJobInfoService jobInfoService;
 
-	@Autowired
-	private IPublisher publisher;
+    @Autowired
+    private FeatureEntityRepository featureRepo;
 
-	@Autowired
-	private Validator validator;
+    @Autowired
+    private IPublisher publisher;
 
-	@Override
-	public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
+    @Autowired
+    private IFeatureValidationService validationService;
 
-		// save a list of validated FeatureCreationRequest from a list of
-		// FeatureCreationRequestEvent
-		List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(
-				items.stream().map(fcre -> FeatureCreationRequest.build(fcre.getFeature(), fcre.getRequestId()))
-						.filter(fcre -> validateFCR(fcre)).collect(Collectors.toList()));
+    @Autowired
+    private Validator validator;
 
-		// TODO remonter validation
-		// TODO notifier request DENIED or GRANTED
+    @Override
+    public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
 
-		Set<JobParameter> jobParameters = Sets.newHashSet();
-		jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
-				savedFCRE.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+        List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
+        items.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
 
-		JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
-				jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
-		jobInfoService.createAsQueued(jobInfo);
-	}
+        // Save a list of validated FeatureCreationRequest from a list of FeatureCreationRequestEvent
+        List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(grantedRequests);
 
-	private boolean validateFCR(FeatureCreationRequest toValidate) {
-		Errors errors = new MapBindingResult(new HashMap<>(), "searchContext");
-		validator.validate(toValidate, errors);
-		if (!errors.hasErrors()) {
-			toValidate.setState(RequestState.GRANTED);
-			return true;
-		}
-		toValidate.setState(RequestState.DENIED);
-		return false;
-	}
+        // Shedule job
+        Set<JobParameter> jobParameters = Sets.newHashSet();
+        jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
+                savedFCRE.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-	@Override
-	public void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests) {
-		// Prepare feature
-		// TODO delegate to feature service : validation / détection des doublons
+        JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+                jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+        jobInfoService.createAsQueued(jobInfo);
+    }
 
-		// Register feature to insert
+    /**
+    * Validate, save and publish a new request
+    * @param item request to manage
+    * @param grantedRequests collection of granted requests to populate
+    */
+    private void prepareFeatureCreationRequest(FeatureCreationRequestEvent item,
+            List<FeatureCreationRequest> grantedRequests) {
 
-		// TODO validation
-		// TODO notif
-		this.featureRepo.saveAll(features.stream().map(feature -> FeatureEntity.build(feature, OffsetDateTime.now()))
-				.collect(Collectors.toList()));
-		this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-				.filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
-				.map(fcr -> fcr.getId()).collect(Collectors.toList()));
-	}
+        // Validate event
+        Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
+        validator.validate(item, errors);
+        if (errors.hasErrors()) {
+            // Publish DENIED request (do not persist it in DB)
+            publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                        item.getFeature() != null ? item.getFeature().getId() : null,
+                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            return;
+        }
 
-	@Override
-	public String publishFeature(Feature toPublish) {
-		FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish);
-		publisher.publish(event);
-		return event.getRequestId();
-	}
+        // Validate feature according to the data model
+        errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
+        if (errors.hasErrors()) {
+            publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                        item.getFeature() != null ? item.getFeature().getId() : null,
+                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            return;
+        }
+
+        // Manage granted request
+        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), RequestState.DENIED, null,
+                                                                      item.getFeature());
+        // Publish GRANTED request
+        publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                    item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                                    RequestState.GRANTED, null));
+        // Add to granted request collection
+        grantedRequests.add(request);
+    }
+
+    @Override
+    public void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests) {
+
+        // Register feature to insert
+
+        // TODO validation
+        // TODO notif
+        this.featureRepo.saveAll(features.stream().map(feature -> FeatureEntity.build(feature, OffsetDateTime.now()))
+                .collect(Collectors.toList()));
+        this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
+                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .map(fcr -> fcr.getId()).collect(Collectors.toList()));
+    }
+
+    @Override
+    public String publishFeature(Feature toPublish) {
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish);
+        publisher.publish(event);
+        return event.getRequestId();
+    }
 }
