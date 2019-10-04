@@ -42,42 +42,41 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
  */
 @Component
 public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandler<FeatureCreationRequestEvent>
-        implements ApplicationListener<ApplicationReadyEvent> {
+		implements ApplicationListener<ApplicationReadyEvent> {
 
-    @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationRequestEventHandler.class);
+	@SuppressWarnings("unused")
+	private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationRequestEventHandler.class);
 
-    @Autowired
-    private FeatureConfigurationProperties confProperties;
+	@Autowired
+	private FeatureConfigurationProperties confProperties;
 
-    @Autowired
-    private ISubscriber subscriber;
-    
-    // FIXME proxy?
-    @Autowired
-    private IFeatureService featureService;
+	@Autowired
+	private ISubscriber subscriber;
 
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        subscriber.subscribeTo(FeatureCreationRequestEvent.class, this);
-    }
+	@Autowired
+	private IFeatureService featureService;
 
-    /**
-     * Bulk save queued items every second.
-     */
-    @Override
-    @Scheduled(fixedDelayString = "${regards.feature.request.flow.bulk.delay:1000}")
-    protected void handleQueue() {
-        super.handleQueue();
-    }
+	@Override
+	public void onApplicationEvent(ApplicationReadyEvent event) {
+		subscriber.subscribeTo(FeatureCreationRequestEvent.class, this);
+	}
 
-    @Override
-    protected Integer getBulkSize() {
-        return confProperties.getMaxBulkSize();
-    }
+	/**
+	 * Bulk save queued items every second.
+	 */
+	@Override
+	@Scheduled(fixedDelayString = "${regards.feature.request.flow.bulk.delay:1000}")
+	protected void handleQueue() {
+		super.handleQueue();
+	}
 
-    @Override
-    protected void processBulk(List<FeatureCreationRequestEvent> items) {
-    	featureService.handleFeatureCreationRequestEvents(items);
-    }
+	@Override
+	protected Integer getBulkSize() {
+		return confProperties.getMaxBulkSize();
+	}
+
+	@Override
+	protected void processBulk(List<FeatureCreationRequestEvent> items) {
+		featureService.handleFeatureCreationRequestEvents(items);
+	}
 }
