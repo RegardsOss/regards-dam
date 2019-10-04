@@ -4,7 +4,6 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
@@ -31,8 +29,6 @@ import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestReposito
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
-import fr.cnes.regards.modules.ingest.domain.request.IngestRequest;
-import fr.cnes.regards.modules.ingest.domain.request.IngestRequestStep;
 
 /**
  * Feature service management
@@ -43,11 +39,11 @@ import fr.cnes.regards.modules.ingest.domain.request.IngestRequestStep;
 @MultitenantTransactional
 public class FeatureService implements IFeatureService {
 
-    @Autowired
-    private FeatureCreationRequestRepository featureCreationRequestRepo;
+	@Autowired
+	private FeatureCreationRequestRepository featureCreationRequestRepo;
 
-    @Autowired
-    private IAuthenticationResolver authResolver;
+	@Autowired
+	private IAuthenticationResolver authResolver;
 
 	@Autowired
 	private IJobInfoService jobInfoService;
@@ -93,13 +89,12 @@ public class FeatureService implements IFeatureService {
 		return false;
 	}
 
-    @Override
-    public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
+	@Override
+	public void createFeatures(Set<Feature> features, List<FeatureCreationRequest> featureCreationRequests) {
+		// Prepare feature
+		// TODO delegate to feature service : validation / détection des doublons
 
-        // save a list of validated FeatureCreationRequest from a list of FeatureCreationRequestEvent
-        List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(items.stream()
-                .map(fcre -> FeatureCreationRequest.build(fcre.getFeature(), fcre.getRequestId()))
-                .filter(fcre -> validateFCR(fcre)).collect(Collectors.toList()));
+		// Register feature to insert
 
 		// TODO validation
 		// TODO notif
