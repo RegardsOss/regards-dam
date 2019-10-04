@@ -21,8 +21,6 @@ package fr.cnes.regards.modules.dam.service.models;
 import java.util.List;
 import java.util.Set;
 
-import javax.transaction.Transactional;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
@@ -36,7 +34,8 @@ import fr.cnes.regards.modules.dam.service.models.exception.UnsupportedRestricti
  */
 public interface IAttributeModelService {
 
-    List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName, Set<Long> modelIds);
+    List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds,
+            Set<String> modelNames);
 
     /**
      * Add an attribute in a {@link Transactional} context

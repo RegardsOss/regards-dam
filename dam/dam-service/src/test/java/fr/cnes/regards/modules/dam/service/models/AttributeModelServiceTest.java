@@ -129,7 +129,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
@@ -144,7 +144,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null, null);
         Assert.assertEquals(1, attModels.size());
     }
 
@@ -183,8 +183,8 @@ public class AttributeModelServiceTest {
         AttributeType attType = AttributeType.STRING;
         Fragment fragment = Fragment.buildFragment("GEO", "Coordinate + CRS");
 
-        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
-                .fragment(fragment).withoutRestriction();
+        AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests").fragment(fragment)
+                .withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
         Mockito.when(mockFragmentR.save(fragment)).thenReturn(fragment);
@@ -247,8 +247,8 @@ public class AttributeModelServiceTest {
     public void getAttributeTest() throws ModuleException {
         Long attributeId = 1L;
 
-        AttributeModel expectedAttModel = AttributeModelBuilder
-                .build("EXISTING", AttributeType.DOUBLE, "ForTests").withoutRestriction();
+        AttributeModel expectedAttModel = AttributeModelBuilder.build("EXISTING", AttributeType.DOUBLE, "ForTests")
+                .withoutRestriction();
         Mockito.when(mockAttModelR.existsById(attributeId)).thenReturn(Boolean.TRUE);
         Mockito.when(mockAttModelR.findById(attributeId)).thenReturn(Optional.of(expectedAttModel));
 

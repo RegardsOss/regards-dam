@@ -41,6 +41,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -188,7 +189,7 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
         modelDataset = importModel(MODEL_DATASET_FILE_NAME);
 
         // - Refresh attribute factory
-        List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
+        List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null, null);
         gsonAttributeFactory.refresh(getDefaultTenant(), atts);
 
         dataset1 = new Dataset(modelDataset, getDefaultTenant(), "DS1", "dataset one label");
