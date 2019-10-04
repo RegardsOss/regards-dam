@@ -131,8 +131,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(value = PARAM_TYPE, required = false) AttributeType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
             @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
+            @RequestParam(name = "modelNames", required = false) Set<String> modelNames,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
-        List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds);
+        List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds, modelNames);
         noLink = (noLink == null) ? Boolean.FALSE : noLink;
         List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
         return ResponseEntity.ok(resources);

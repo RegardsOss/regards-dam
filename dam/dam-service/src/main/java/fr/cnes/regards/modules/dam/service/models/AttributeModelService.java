@@ -129,8 +129,10 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds) {
-        return attModelRepository.findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds));
+    public List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds,
+            Set<String> modelNames) {
+        return attModelRepository
+                .findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds, modelNames));
     }
 
     @Override
@@ -189,7 +191,7 @@ public class AttributeModelService implements IAttributeModelService {
                 String errorMessage = "Attribute cannot be deleted because already linked to at least one entity or datasource";
                 LOGGER.error(errorMessage);
                 throw new EntityOperationForbiddenException(String.valueOf(attributeId), AttributeModel.class,
-                                                            errorMessage);
+                        errorMessage);
             }
 
             attModelRepository.deleteById(attributeId);
@@ -211,8 +213,8 @@ public class AttributeModelService implements IAttributeModelService {
             });
             // Check if linked models not already used, so attribute must not be deleted
             if (datasetRepository.isLinkedToEntities(modelIds) || collectionRepository.isLinkedToEntities(modelIds)
-                    || documentRepository.isLinkedToEntities(modelIds) || datasetRepository
-                    .isLinkedToDatasetsAsDataModel(modelNames)) {
+                    || documentRepository.isLinkedToEntities(modelIds)
+                    || datasetRepository.isLinkedToDatasetsAsDataModel(modelNames)) {
                 return false;
             }
         }
@@ -269,9 +271,9 @@ public class AttributeModelService implements IAttributeModelService {
         if (fragment == null) {
             inFragment.setId(null);
             if (!isFragmentCreatable(inFragment.getName())) {
-                throw new EntityAlreadyExistsException(String.format(
-                        "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                        inFragment.getName()));
+                throw new EntityAlreadyExistsException(String
+                        .format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                inFragment.getName()));
             }
             fragment = fragmentRepository.save(inFragment);
         }
@@ -292,8 +294,8 @@ public class AttributeModelService implements IAttributeModelService {
             if (attributeModel != null) {
                 String message;
                 if (inAttributeModel.getFragment().isDefaultFragment()) {
-                    message = MessageFormat
-                            .format("Attribute model with name \"{0}\" already exists.", inAttributeModel.getName());
+                    message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
+                                                   inAttributeModel.getName());
                 } else {
                     message = MessageFormat
                             .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
@@ -304,8 +306,8 @@ public class AttributeModelService implements IAttributeModelService {
             }
             if (fragmentRepository.findByName(inAttributeModel.getName()) != null) {
                 throw new EntityAlreadyExistsException(MessageFormat
-                                                               .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
-                                                                       inAttributeModel.getName()));
+                        .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
+                                inAttributeModel.getName()));
             }
         }
         return attModelRepository.save(inAttributeModel);
@@ -334,9 +336,8 @@ public class AttributeModelService implements IAttributeModelService {
     public void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
         IRestriction restriction = pAttributeModel.getRestriction();
         if ((restriction != null) && !restriction.supports(pAttributeModel.getType())) {
-            String message = String
-                    .format("Attribute of type %s does not support %s restriction", pAttributeModel.getType(),
-                            restriction.getType());
+            String message = String.format("Attribute of type %s does not support %s restriction",
+                                           pAttributeModel.getType(), restriction.getType());
             LOGGER.error(message);
             throw new UnsupportedRestrictionException(message);
         }
