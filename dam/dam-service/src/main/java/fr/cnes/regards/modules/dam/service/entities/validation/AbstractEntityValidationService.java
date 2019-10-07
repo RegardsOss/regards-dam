@@ -60,7 +60,7 @@ public abstract class AbstractEntityValidationService<F extends EntityFeature, U
         Assert.notNull(model.getId(), "Model identifier must be specified.");
 
         // Validate dynamic model
-        Errors modelErrors = validate(model.getName(), entity.getFeature(), mode);
+        Errors modelErrors = validate(model.getName(), entity.getFeature(), mode, entity.getClass().getName());
 
         if (inErrors.hasErrors() || modelErrors.hasErrors()) {
             Set<String> errs = new HashSet<>();

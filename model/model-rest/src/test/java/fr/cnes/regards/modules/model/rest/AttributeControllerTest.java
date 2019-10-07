@@ -34,7 +34,6 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
-import fr.cnes.regards.modules.model.rest.AttributeModelController;
 import fr.cnes.regards.modules.model.service.IAttributeModelService;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.service.RestrictionService;
@@ -98,9 +97,9 @@ public class AttributeControllerTest {
         attributes.add(AttributeModelBuilder.build("STOP_DATE", PropertyType.DATE_ISO8601, "ForTests").withId(3L)
                 .defaultFragment().get());
         // CHECKSTYLE:ON
-        Mockito.when(attributeServiceMocked.getAttributes(null, null, null)).thenReturn(attributes);
-        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null,
-                                                                                                          null, null);
+        Mockito.when(attributeServiceMocked.getAttributes(null, null, null, null)).thenReturn(attributes);
+        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController
+                .getAttributes(null, null, null, null, null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 

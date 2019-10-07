@@ -121,8 +121,10 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(PropertyType type, String fragmentName, Set<Long> modelIds) {
-        return attModelRepository.findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds));
+    public List<AttributeModel> getAttributes(PropertyType type, String fragmentName, Set<Long> modelIds,
+            Set<String> modelNames) {
+        return attModelRepository
+                .findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds, modelNames));
     }
 
     @Override
