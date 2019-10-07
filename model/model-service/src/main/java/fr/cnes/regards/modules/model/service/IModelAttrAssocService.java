@@ -89,7 +89,6 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @param pModelNames
      * @param pPageable
      * @return a page of attribute which are associated to at least one of the models
-     * @throws ModuleException
      */
     Page<AttributeModel> getAttributeModelsByName(Collection<String> pModelNames, Pageable pPageable);
 

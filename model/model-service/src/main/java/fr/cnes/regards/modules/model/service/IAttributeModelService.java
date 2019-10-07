@@ -36,7 +36,8 @@ import fr.cnes.regards.modules.model.service.exception.UnsupportedRestrictionExc
  */
 public interface IAttributeModelService {
 
-    List<AttributeModel> getAttributes(PropertyType pType, String pFragmentName, Set<Long> modelIds);
+    List<AttributeModel> getAttributes(PropertyType pType, String pFragmentName, Set<Long> modelIds,
+            Set<String> modelNames);
 
     /**
      * Add an attribute in a {@link Transactional} context

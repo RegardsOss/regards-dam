@@ -34,7 +34,6 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
-import fr.cnes.regards.modules.model.rest.AttributeModelController;
 import fr.cnes.regards.modules.model.service.IAttributeModelService;
 import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.model.service.RestrictionService;

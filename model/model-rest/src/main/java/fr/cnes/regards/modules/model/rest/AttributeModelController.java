@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -131,8 +132,18 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(value = PARAM_TYPE, required = false) PropertyType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
             @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
+            @RequestParam(name = "modelNames", required = false) Set<String> modelNames,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
-        List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds);
+        List<AttributeModel> attributes = null;
+        if (modelIds != null && !modelIds.isEmpty()) {
+            attributes = modelAttrAssocService.getAttributeModels(modelIds, PageRequest.of(0, 1000)).getContent();
+        } else if (modelNames != null && !modelNames.isEmpty()) {
+            attributes = modelAttrAssocService.getAttributeModelsByName(modelNames, PageRequest.of(0, 1000))
+                    .getContent();
+        } else {
+            attributes = attributeService.getAttributes(type, fragmentName, modelIds, modelNames);
+        }
+
         noLink = noLink == null ? Boolean.FALSE : noLink;
         List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
         return ResponseEntity.ok(resources);
@@ -254,7 +265,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                     MethodParamFactory.build(PropertyType.class),
                                     MethodParamFactory.build(String.class), MethodParamFactory.build(Set.class),
-                                    MethodParamFactory.build(Boolean.class));
+                                    MethodParamFactory.build(Set.class), MethodParamFactory.build(Boolean.class));
         }
         return resource;
     }
