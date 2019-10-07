@@ -76,21 +76,19 @@ public class FeatureStorageListener implements IStorageRequestListener {
 	@Override
 	public void onReferenceError(RequestInfo request, Collection<RequestResultInfoDTO> success,
 			Collection<RequestResultInfoDTO> errors) {
-		// TODO Auto-generated method stub
+		featureRequestService.handleError(request.getGroupId());
 
 	}
 
 	@Override
 	public void onStoreSuccess(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-		// TODO Auto-generated method stub
-
+		featureRequestService.handleSuccess(request.getGroupId());
 	}
 
 	@Override
 	public void onStoreError(RequestInfo request, Collection<RequestResultInfoDTO> success,
 			Collection<RequestResultInfoDTO> errors) {
-		// TODO Auto-generated method stub
-
+		featureRequestService.handleError(request.getGroupId());
 	}
 
 }

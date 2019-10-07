@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.feature.dto.event.in;
 
 import java.time.OffsetDateTime;
 
+import java.util.List;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -28,6 +30,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 
 /**
  * Request for new feature creation using event driven mechanism
@@ -37,23 +40,34 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
 public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
-    @Valid
-    @NotNull(message = "Feature is required")
-    private Feature feature;
+	@Valid
+	@NotNull(message = "Feature is required")
+	private Feature feature;
 
-    public Feature getFeature() {
-        return feature;
-    }
+	private List<FeatureMetadataDto> metadata;
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
-    }
+	public List<FeatureMetadataDto> getMetadata() {
+		return metadata;
+	}
 
-    public static FeatureCreationRequestEvent builder(Feature feature) {
-        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
-        event.setFeature(feature);
-        event.setRequestId(generateRequestId());
-        event.setRequestTime(OffsetDateTime.now());
-        return event;
-    }
+	public void setMetadata(List<FeatureMetadataDto> metadata) {
+		this.metadata = metadata;
+	}
+
+	public Feature getFeature() {
+		return feature;
+	}
+
+	public void setFeature(Feature feature) {
+		this.feature = feature;
+	}
+
+	public static FeatureCreationRequestEvent builder(Feature feature, List<FeatureMetadataDto> metadata) {
+		FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+		event.setFeature(feature);
+		event.setRequestId(generateRequestId());
+		event.setMetadata(metadata);
+
+		return event;
+	}
 }
