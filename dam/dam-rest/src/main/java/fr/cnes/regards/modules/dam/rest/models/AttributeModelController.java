@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -124,6 +125,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @param modelIds
      * @param noLink
      * @return list of {@link AttributeModel}
+     * @throws ModuleException
      */
     @ResourceAccess(description = "List all attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET)
@@ -133,7 +135,15 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
             @RequestParam(name = "modelNames", required = false) Set<String> modelNames,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
-        List<AttributeModel> attributes = attributeService.getAttributes(type, fragmentName, modelIds, modelNames);
+        List<AttributeModel> attributes = null;
+        if (((modelIds != null) && !modelIds.isEmpty())) {
+            attributes = modelAttrAssocService.getAttributeModels(modelIds, PageRequest.of(0, 1000)).getContent();
+        } else if ((modelNames != null) && !modelNames.isEmpty()) {
+            attributes = modelAttrAssocService.getAttributeModelsByName(modelNames, PageRequest.of(0, 1000))
+                    .getContent();
+        } else {
+            attributes = attributeService.getAttributes(type, fragmentName, modelIds, modelNames);
+        }
         noLink = (noLink == null) ? Boolean.FALSE : noLink;
         List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
         return ResponseEntity.ok(resources);
