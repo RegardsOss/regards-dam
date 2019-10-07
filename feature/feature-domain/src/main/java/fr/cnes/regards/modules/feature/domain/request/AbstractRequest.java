@@ -18,10 +18,12 @@
  */
 package fr.cnes.regards.modules.feature.domain.request;
 
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
@@ -30,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
@@ -44,10 +47,16 @@ public abstract class AbstractRequest {
 
     protected static final String COLUMN_REQUEST_ID = "request_id";
 
+    protected static final String COLUMN_REQUEST_TIME = "request_time";
+
     protected static final String COLUMN_STATE = "state";
 
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
+
+    @Column(name = COLUMN_REQUEST_TIME, nullable = false, updatable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    private OffsetDateTime requestTime;
 
     @NotNull(message = "Feature request state is required")
     @Enumerated(EnumType.STRING)
@@ -64,6 +73,14 @@ public abstract class AbstractRequest {
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+    public OffsetDateTime getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(OffsetDateTime requestTime) {
+        this.requestTime = requestTime;
     }
 
     public RequestState getState() {

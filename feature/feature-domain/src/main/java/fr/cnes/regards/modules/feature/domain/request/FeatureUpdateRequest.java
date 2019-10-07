@@ -49,18 +49,18 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
  *
  */
 @Entity
-@Table(name = "t_feature_creation_request",
-        indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE) },
-        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
+@Table(name = "t_feature_update_request",
+        indexes = { @Index(name = "idx_feature_update_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
+                @Index(name = "idx_feature_update_request_state", columnList = AbstractRequest.COLUMN_STATE) },
+        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_update_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-public class FeatureCreationRequest extends AbstractRequest {
+public class FeatureUpdateRequest extends AbstractRequest {
 
     @Id
-    @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_creation_request")
-    @GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,
+            sequenceName = "seq_feature_update_request")
+    @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
@@ -103,13 +103,13 @@ public class FeatureCreationRequest extends AbstractRequest {
         this.featureEntity = featureEntity;
     }
 
-    public static FeatureCreationRequest build(String requestId, OffsetDateTime requestTime, RequestState state,
+    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestTime, RequestState state,
             Set<String> errors, Feature feature) {
         Assert.notNull(requestId, "Request id is required");
         Assert.notNull(requestTime, "Request time is required");
         Assert.notNull(state, "Request state is required");
         Assert.notNull(feature, "Feature is required");
-        FeatureCreationRequest fcr = new FeatureCreationRequest();
+        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
         fcr.setRequestId(requestId);
         fcr.setRequestTime(requestTime);
         fcr.setState(state);

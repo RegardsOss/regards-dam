@@ -18,9 +18,12 @@
  */
 package fr.cnes.regards.modules.feature.dto.event.in;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
 import javax.validation.constraints.Size;
 
 /**
@@ -33,12 +36,24 @@ public abstract class AbstractRequestEvent {
     @Size(max = 36)
     protected String requestId;
 
+    @Past(message = "Request time must be a past date")
+    @NotNull(message = "Request time is required")
+    private OffsetDateTime requestTime;
+
     public String getRequestId() {
         return requestId;
     }
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+    public OffsetDateTime getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(OffsetDateTime requestTime) {
+        this.requestTime = requestTime;
     }
 
     /**

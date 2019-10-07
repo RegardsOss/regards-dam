@@ -35,8 +35,11 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  * @author Marc SORDI
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
+public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
+    /**
+     * Patch feature : only contains changes
+     */
     @Valid
     @NotNull(message = "Feature is required")
     private Feature feature;
@@ -49,8 +52,8 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         this.feature = feature;
     }
 
-    public static FeatureCreationRequestEvent builder(Feature feature) {
-        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+    public static FeatureUpdateRequestEvent builder(Feature feature) {
+        FeatureUpdateRequestEvent event = new FeatureUpdateRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setRequestTime(OffsetDateTime.now());
