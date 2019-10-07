@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureState;
@@ -36,6 +37,7 @@ import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
+import fr.cnes.regards.modules.storagelight.client.IStorageClient;
 
 /**
  * Feature service management
@@ -68,6 +70,9 @@ public class FeatureService implements IFeatureService {
 
 	@Autowired
 	private Validator validator;
+
+	@Autowired
+	private IStorageClient storageClient;
 
 	@Override
 	public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
@@ -120,7 +125,7 @@ public class FeatureService implements IFeatureService {
 
 		// Manage granted request
 		FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), RequestState.DENIED, null,
-				item.getFeature());
+				item.getFeature(), item.getMetadata());
 		// Publish GRANTED request
 		publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
 				item.getFeature() != null ? item.getFeature().getId() : null, null, RequestState.GRANTED, null));
@@ -133,18 +138,28 @@ public class FeatureService implements IFeatureService {
 
 		// Register feature to insert
 
-		// TODO validation
-		// TODO notif
-
 		this.featureRepo.saveAll(featureCreationRequests.stream().map(feature -> initFeatureEntity(feature))
 				.collect(Collectors.toList()));
+		// update fcr with feature setted for each of them + publish files to storage
 		this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
 				.filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
-				.collect(Collectors.toList()));
+				.map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
+		// delete fcr without files
 		this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
 				.filter(fcr -> (fcr.getFeature().getFiles() == null)
 						|| ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
 				.map(fcr -> fcr.getId()).collect(Collectors.toList()));
+	}
+
+	/**
+	 * Publish all contained files inside the {@link FeatureCreationRequest} to
+	 * storage
+	 *
+	 * @param fcr
+	 * @return
+	 */
+	private FeatureCreationRequest publishFiles(FeatureCreationRequest fcr) {
+		return fcr;
 	}
 
 	/**
@@ -162,8 +177,8 @@ public class FeatureService implements IFeatureService {
 	}
 
 	@Override
-	public String publishFeature(Feature toPublish) {
-		FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish);
+	public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata) {
+		FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata);
 		publisher.publish(event);
 		return event.getRequestId();
 	}

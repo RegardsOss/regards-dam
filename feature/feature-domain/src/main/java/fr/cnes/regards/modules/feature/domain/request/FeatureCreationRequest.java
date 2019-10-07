@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.domain.request;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -42,6 +43,7 @@ import org.springframework.util.Assert;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
@@ -75,6 +77,11 @@ public class FeatureCreationRequest extends AbstractRequest {
 	@Column(name = "group_id")
 	private String groupId;
 
+	@Column(columnDefinition = "metadata", name = "feature")
+	@Type(type = "jsonb")
+	@Valid
+	private List<FeatureMetadataDto> metadata;
+
 	public Feature getFeature() {
 		return this.feature;
 	}
@@ -103,8 +110,16 @@ public class FeatureCreationRequest extends AbstractRequest {
 		this.featureEntity = featureEntity;
 	}
 
+	public List<FeatureMetadataDto> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(List<FeatureMetadataDto> metadata) {
+		this.metadata = metadata;
+	}
+
 	public static FeatureCreationRequest build(String requestId, RequestState state, Set<String> errors,
-			Feature feature) {
+			Feature feature, List<FeatureMetadataDto> metadata) {
 		Assert.notNull(requestId, "Request id is required");
 		Assert.notNull(state, "Request state is required");
 		Assert.notNull(feature, "Feature is required");
@@ -113,6 +128,8 @@ public class FeatureCreationRequest extends AbstractRequest {
 		fcr.setState(state);
 		fcr.setFeature(feature);
 		fcr.setErrors(errors);
+		fcr.setMetadata(metadata);
+
 		return fcr;
 	}
 }

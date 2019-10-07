@@ -8,3 +8,10 @@ create index idx_feature_creation_request_state on t_feature_creation_request (s
 alter table t_feature_creation_request add constraint uk_feature_creation_request_id unique (request_id);
 create sequence seq_feature_creation_request start 1 increment 50;
 create sequence seq_feature start 1 increment 50;
+
+alter table t_feature_creation_request add column group_id varchar(255);
+alter table t_feature_creation_request add column feature_id int8;
+
+alter table t_feature_creation_request add constraint fk_feature_id foreign key (feature_id) references t_feature(id);
+
+alter table t_feature_creation_request add column metadata jsonb;

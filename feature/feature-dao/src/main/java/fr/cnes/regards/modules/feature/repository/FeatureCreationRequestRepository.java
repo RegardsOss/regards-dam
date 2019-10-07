@@ -1,7 +1,6 @@
 package fr.cnes.regards.modules.feature.repository;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,6 +10,6 @@ public interface FeatureCreationRequestRepository extends JpaRepository<FeatureC
 
 	public void deleteByIdIn(List<Long> ids);
 
-	public Set<FeatureCreationRequest> findByGroupId(String groupId);
+	public List<FeatureCreationRequest> findByGroupId(String groupId);
 
 }
