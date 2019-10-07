@@ -98,9 +98,9 @@ public class AttributeControllerTest {
         attributes.add(AttributeModelBuilder.build("STOP_DATE", PropertyType.DATE_ISO8601, "ForTests").withId(3L)
                 .defaultFragment().get());
         // CHECKSTYLE:ON
-        Mockito.when(attributeServiceMocked.getAttributes(null, null, null)).thenReturn(attributes);
-        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null,
-                                                                                                          null, null);
+        Mockito.when(attributeServiceMocked.getAttributes(null, null, null, null)).thenReturn(attributes);
+        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController
+                .getAttributes(null, null, null, null, null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 
