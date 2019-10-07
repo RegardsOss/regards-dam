@@ -103,18 +103,12 @@ public class FeatureUpdateRequest extends AbstractRequest {
         this.featureEntity = featureEntity;
     }
 
-    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestTime, RequestState state,
+    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature) {
-        Assert.notNull(requestId, "Request id is required");
-        Assert.notNull(requestTime, "Request time is required");
-        Assert.notNull(state, "Request state is required");
         Assert.notNull(feature, "Feature is required");
         FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.setRequestId(requestId);
-        fcr.setRequestTime(requestTime);
-        fcr.setState(state);
+        fcr.with(requestId, requestDate, state, errors);
         fcr.setFeature(feature);
-        fcr.setErrors(errors);
         return fcr;
     }
 }

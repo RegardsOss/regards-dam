@@ -18,8 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.domain.request;
 
-import java.util.List;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -77,14 +77,14 @@ public class FeatureCreationRequest extends AbstractRequest {
     @Column(name = "group_id")
     private String groupId;
 
-	@Column(columnDefinition = "metadata", name = "feature")
-	@Type(type = "jsonb")
-	@Valid
-	private List<FeatureMetadataDto> metadata;
+    @Column(columnDefinition = "metadata", name = "feature")
+    @Type(type = "jsonb")
+    @Valid
+    private List<FeatureMetadataDto> metadata;
 
-	public Feature getFeature() {
-		return this.feature;
-	}
+    public Feature getFeature() {
+        return this.feature;
+    }
 
     public void setFeature(Feature feature) {
         this.feature = feature;
@@ -110,26 +110,22 @@ public class FeatureCreationRequest extends AbstractRequest {
         this.featureEntity = featureEntity;
     }
 
-	public List<FeatureMetadataDto> getMetadata() {
-		return metadata;
-	}
+    public List<FeatureMetadataDto> getMetadata() {
+        return metadata;
+    }
 
-	public void setMetadata(List<FeatureMetadataDto> metadata) {
-		this.metadata = metadata;
-	}
+    public void setMetadata(List<FeatureMetadataDto> metadata) {
+        this.metadata = metadata;
+    }
 
-	public static FeatureCreationRequest build(String requestId, RequestState state, Set<String> errors,
-			Feature feature, List<FeatureMetadataDto> metadata) {
-		Assert.notNull(requestId, "Request id is required");
-		Assert.notNull(state, "Request state is required");
-		Assert.notNull(feature, "Feature is required");
-		FeatureCreationRequest fcr = new FeatureCreationRequest();
-		fcr.setRequestId(requestId);
-		fcr.setState(state);
-		fcr.setFeature(feature);
-		fcr.setErrors(errors);
-		fcr.setMetadata(metadata);
+    public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors, Feature feature, List<FeatureMetadataDto> metadata) {
+        Assert.notNull(feature, "Feature is required");
+        FeatureCreationRequest fcr = new FeatureCreationRequest();
+        fcr.with(requestId, requestDate, state, errors);
+        fcr.setFeature(feature);
+        fcr.setMetadata(metadata);
 
-		return fcr;
-	}
+        return fcr;
+    }
 }

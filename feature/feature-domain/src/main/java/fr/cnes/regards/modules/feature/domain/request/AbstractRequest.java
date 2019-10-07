@@ -31,6 +31,7 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
@@ -47,16 +48,28 @@ public abstract class AbstractRequest {
 
     protected static final String COLUMN_REQUEST_ID = "request_id";
 
-    protected static final String COLUMN_REQUEST_TIME = "request_time";
+    protected static final String COLUMN_REQUEST_TIME = "request_date";
+
+    protected static final String COLUMN_REGISTRATION_DATE = "registration_date";
 
     protected static final String COLUMN_STATE = "state";
 
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
 
+    /**
+     * External request registration date
+     */
     @Column(name = COLUMN_REQUEST_TIME, nullable = false, updatable = false)
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
-    private OffsetDateTime requestTime;
+    private OffsetDateTime requestDate;
+
+    /**
+     * Internal request registration date
+     */
+    @Column(name = COLUMN_REGISTRATION_DATE, nullable = false, updatable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    private OffsetDateTime registrationDate;
 
     @NotNull(message = "Feature request state is required")
     @Enumerated(EnumType.STRING)
@@ -67,36 +80,30 @@ public abstract class AbstractRequest {
     @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
     private Set<String> errors;
 
+    @SuppressWarnings("unchecked")
+    protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors) {
+        Assert.notNull(requestId, "Request id is required");
+        Assert.notNull(requestDate, "Request date is required");
+        Assert.notNull(state, "Request state is required");
+        this.requestId = requestId;
+        this.requestDate = requestDate;
+        this.registrationDate = OffsetDateTime.now();
+        this.state = state;
+        this.errors = errors;
+        return (T) this;
+    }
+
     public String getRequestId() {
         return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public OffsetDateTime getRequestTime() {
-        return requestTime;
-    }
-
-    public void setRequestTime(OffsetDateTime requestTime) {
-        this.requestTime = requestTime;
     }
 
     public RequestState getState() {
         return state;
     }
 
-    public void setState(RequestState state) {
-        this.state = state;
-    }
-
     public Set<String> getErrors() {
         return errors;
-    }
-
-    public void setErrors(Set<String> errors) {
-        this.errors = errors;
     }
 
     public void addError(String error) {
@@ -104,5 +111,33 @@ public abstract class AbstractRequest {
             errors = new HashSet<>();
         }
         errors.add(error);
+    }
+
+    public OffsetDateTime getRequestDate() {
+        return requestDate;
+    }
+
+    public OffsetDateTime getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public void setRequestDate(OffsetDateTime requestDate) {
+        this.requestDate = requestDate;
+    }
+
+    public void setRegistrationDate(OffsetDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public void setState(RequestState state) {
+        this.state = state;
+    }
+
+    public void setErrors(Set<String> errors) {
+        this.errors = errors;
     }
 }
