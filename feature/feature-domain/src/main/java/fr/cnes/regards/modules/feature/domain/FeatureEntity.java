@@ -38,38 +38,36 @@ import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.event.out.FeatureState;
 
 /**
  * @author Marc SORDI
  *
  */
 @Entity
-@Table(name = "t_feature",
-        indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update") })
+@Table(name = "t_feature", indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update") })
 public class FeatureEntity {
 
 	@Id
-    @SequenceGenerator(name = "featureSequence", initialValue = 1,
-            sequenceName = "seq_feature")
-    @GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
-    private Long id;
+	@SequenceGenerator(name = "featureSequence", initialValue = 1, sequenceName = "seq_feature")
+	@GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
+	private Long id;
 
-    @Column(columnDefinition = "jsonb", name = "feature")
-    @Type(type = "jsonb")
-    @Valid
-    private Feature feature;
-    
-    @NotNull(message = "Feature request state is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "state", length = 50, nullable = false)
-    private RequestState state;
-    
-    @Column(name = "last_update", nullable = false)
-    @Convert(converter = OffsetDateTimeAttributeConverter.class)
-    @NotNull
-    private OffsetDateTime lastUpdate;
-    
+	@Column(columnDefinition = "jsonb", name = "feature")
+	@Type(type = "jsonb")
+	@Valid
+	private Feature feature;
+
+	@NotNull(message = "Feature request state is required")
+	@Enumerated(EnumType.STRING)
+	@Column(name = "state", length = 50, nullable = false)
+	private FeatureState state;
+
+	@Column(name = "last_update", nullable = false)
+	@Convert(converter = OffsetDateTimeAttributeConverter.class)
+	@NotNull
+	private OffsetDateTime lastUpdate;
+
 	public Long getId() {
 		return id;
 	}
@@ -86,11 +84,11 @@ public class FeatureEntity {
 		this.feature = feature;
 	}
 
-	public RequestState getState() {
+	public FeatureState getState() {
 		return state;
 	}
 
-	public void setState(RequestState state) {
+	public void setState(FeatureState state) {
 		this.state = state;
 	}
 
@@ -101,12 +99,12 @@ public class FeatureEntity {
 	public void setLastUpdate(OffsetDateTime lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
-	
-	public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate) {
+
+	public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureState state) {
 		FeatureEntity featureEntity = new FeatureEntity();
 		featureEntity.setFeature(feature);
 		featureEntity.setLastUpdate(lastUpdate);
-		featureEntity.setState(RequestState.GRANTED);
+		featureEntity.setState(state);
 		return featureEntity;
 	}
 }

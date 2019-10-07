@@ -22,7 +22,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,7 +32,6 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.service.IFeatureService;
 
@@ -50,30 +48,29 @@ public class FeatureCreationJob extends AbstractJob<Void> {
 	public static final String FEATURES_PARAMETER = "features";
 
 	private List<FeatureCreationRequest> featureCreationRequests;
-	private Set<Feature> features;
 
 	@Autowired
 	private FeatureCreationRequestRepository featureCreationRequestRepo;
 
 	@Autowired
 	private IFeatureService featureService;
-	
+
 	@Override
 	public void setParameters(Map<String, JobParameter> parameters)
 			throws JobParameterMissingException, JobParameterInvalidException {
-        Type type = new TypeToken<Set<Long>>() {
+		Type type = new TypeToken<Set<Long>>() {
 
-        }.getType();
-		featureCreationRequests = this.featureCreationRequestRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
-		features = this.featureCreationRequests.stream().map(fcr -> fcr.getFeature()).collect(Collectors.toSet());
+		}.getType();
+		featureCreationRequests = this.featureCreationRequestRepo
+				.findAllById(getValue(parameters, IDS_PARAMETER, type));
 	}
 
 	@Override
 	public void run() {
-    	long beginExecutionTime = System.currentTimeMillis();
-		this.featureService.createFeatures(features, featureCreationRequests);
+		long beginExecutionTime = System.currentTimeMillis();
+		this.featureService.createFeatures(featureCreationRequests);
 		long endExcecutionTime = System.currentTimeMillis();
-    	LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
+		LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
 	}
 
 }

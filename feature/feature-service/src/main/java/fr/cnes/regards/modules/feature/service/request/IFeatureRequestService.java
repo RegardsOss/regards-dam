@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package fr.cnes.regards.modules.feature.service.request;
 
@@ -8,5 +8,10 @@ package fr.cnes.regards.modules.feature.service.request;
  *
  */
 public interface IFeatureRequestService {
+
+	/**
+	 * @param groupId
+	 */
+	void handleSuccess(String groupId);
 
 }

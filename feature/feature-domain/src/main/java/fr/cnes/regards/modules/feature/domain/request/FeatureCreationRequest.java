@@ -26,6 +26,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -38,6 +40,7 @@ import org.hibernate.annotations.TypeDefs;
 import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
@@ -46,48 +49,70 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
  *
  */
 @Entity
-@Table(name = "t_feature_creation_request",
-        indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE) },
-        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
-                columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
+@Table(name = "t_feature_creation_request", indexes = {
+		@Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
+		@Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE) }, uniqueConstraints = {
+				@UniqueConstraint(name = "uk_feature_creation_request_id", columnNames = {
+						AbstractRequest.COLUMN_REQUEST_ID }) })
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class FeatureCreationRequest extends AbstractRequest {
 
-    @Id
-    @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_creation_request")
-    @GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
-    private Long id;
+	@Id
+	@SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1, sequenceName = "seq_feature_creation_request")
+	@GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
+	private Long id;
 
-    @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
-    @Type(type = "jsonb")
-    @NotNull
-    @Valid
-    private Feature feature;
+	@Column(columnDefinition = "jsonb", name = "feature", nullable = false)
+	@Type(type = "jsonb")
+	@NotNull
+	@Valid
+	private Feature feature;
 
-    public Feature getFeature() {
-        return feature;
-    }
+	@ManyToOne()
+	@JoinColumn(name = "feature_id")
+	private FeatureEntity featureEntity;
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
-    }
+	@Column(name = "group_id")
+	private String groupId;
 
-    public Long getId() {
-        return id;
-    }
+	public Feature getFeature() {
+		return this.feature;
+	}
 
-    public static FeatureCreationRequest build(String requestId, RequestState state, Set<String> errors,
-            Feature feature) {
-        Assert.notNull(requestId, "Request id is required");
-        Assert.notNull(state, "Request state is required");
-        Assert.notNull(feature, "Feature is required");
-        FeatureCreationRequest fcr = new FeatureCreationRequest();
-        fcr.setRequestId(requestId);
-        fcr.setState(state);
-        fcr.setFeature(feature);
-        fcr.setErrors(errors);
-        return fcr;
-    }
+	public void setFeature(Feature feature) {
+		this.feature = feature;
+	}
+
+	public Long getId() {
+		return this.id;
+	}
+
+	public String getGroupId() {
+		return this.groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
+
+	public FeatureEntity getFeatureEntity() {
+		return featureEntity;
+	}
+
+	public void setFeatureEntity(FeatureEntity featureEntity) {
+		this.featureEntity = featureEntity;
+	}
+
+	public static FeatureCreationRequest build(String requestId, RequestState state, Set<String> errors,
+			Feature feature) {
+		Assert.notNull(requestId, "Request id is required");
+		Assert.notNull(state, "Request state is required");
+		Assert.notNull(feature, "Feature is required");
+		FeatureCreationRequest fcr = new FeatureCreationRequest();
+		fcr.setRequestId(requestId);
+		fcr.setState(state);
+		fcr.setFeature(feature);
+		fcr.setErrors(errors);
+		return fcr;
+	}
 }
