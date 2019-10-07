@@ -24,115 +24,118 @@ import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestReposito
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
-        "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
-        "spring.jpa.properties.hibernate.order_inserts=true" })
+		"regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
+		"spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
-    private final int EVENTS_NUMBER = 1000;
+	private final int EVENTS_NUMBER = 1;
 
-    @Autowired
-    private FeatureService featureService;
+	@Autowired
+	private FeatureService featureService;
 
-    @Autowired
-    private FeatureEntityRepository featureRepo;
+	@Autowired
+	private FeatureEntityRepository featureRepo;
 
-    @Autowired
-    private FeatureCreationRequestRepository featureCreationRequestRepo;
+	@Autowired
+	private FeatureCreationRequestRepository featureCreationRequestRepo;
 
-    /**
-     * Test creation of EVENTS_NUMBER features
-     * Check if {@link FeatureCreationRequest} and {@link FeatureEntity}are stored in database
-     * then at the end of the job test if all {@link FeatureCreationRequest} are deleted
-     * @throws InterruptedException
-     */
-    @Test
-    public void testFeatureCreation() throws InterruptedException {
+	/**
+	 * Test creation of EVENTS_NUMBER features Check if
+	 * {@link FeatureCreationRequest} and {@link FeatureEntity}are stored in
+	 * database then at the end of the job test if all
+	 * {@link FeatureCreationRequest} are deleted
+	 *
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testFeatureCreation() throws InterruptedException {
 
-        List<FeatureCreationRequestEvent> events = new ArrayList<>();
+		List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        FeatureCreationRequestEvent toAdd;
-        Feature featureToAdd;
+		FeatureCreationRequestEvent toAdd;
+		Feature featureToAdd;
 
-        // create events to publish
-        for (int i = 0; i < EVENTS_NUMBER; i++) {
-            featureToAdd = new Feature();
-            featureToAdd.setEntityType(EntityType.DATA);
-            featureToAdd.setModel("model");
-            featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
-            featureToAdd
-                    .setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
-            toAdd = new FeatureCreationRequestEvent();
-            toAdd.setRequestId(String.valueOf(i));
-            toAdd.setFeature(featureToAdd);
-            events.add(toAdd);
-        }
+		// create events to publish
+		for (int i = 0; i < EVENTS_NUMBER; i++) {
+			featureToAdd = new Feature();
+			featureToAdd.setEntityType(EntityType.DATA);
+			featureToAdd.setModel("model");
+			featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
+			featureToAdd
+					.setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
+			toAdd = new FeatureCreationRequestEvent();
+			toAdd.setRequestId(String.valueOf(i));
+			toAdd.setFeature(featureToAdd);
+			events.add(toAdd);
+		}
 
-        featureService.handleFeatureCreationRequestEvents(events);
+		featureService.handleFeatureCreationRequestEvents(events);
 
-        assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
+		assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
 
-        int cpt = 0;
-        long featureNumberInDatabase;
-        do {
-            featureNumberInDatabase = this.featureRepo.count();
-            Thread.sleep(1000);
-            cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
+		int cpt = 0;
+		long featureNumberInDatabase;
+		do {
+			featureNumberInDatabase = this.featureRepo.count();
+			Thread.sleep(1000);
+			cpt++;
+		} while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
 
-        // in that case all features hasn't been saved
-        if (cpt == 100) {
-            fail("Doesn't have all features at the end of time");
-        }
+		// in that case all features hasn't been saved
+		if (cpt == 100) {
+			fail("Doesn't have all features at the end of time");
+		}
 
-        assertEquals(1000, this.featureCreationRequestRepo.count());
+		assertEquals(0, this.featureCreationRequestRepo.count());
 
-    }
+	}
 
-    /**
-     * Test creation of EVENTS_NUMBER features one will be invalid test 
-     * that this one will not be sored in databse
-     * @throws InterruptedException
-     */
-    @Test
-    public void testFeatureCreationWithInvalidFeature() throws InterruptedException {
+	/**
+	 * Test creation of EVENTS_NUMBER features one will be invalid test that this
+	 * one will not be sored in databse
+	 *
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testFeatureCreationWithInvalidFeature() throws InterruptedException {
 
-        List<FeatureCreationRequestEvent> events = new ArrayList<>();
+		List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        FeatureCreationRequestEvent toAdd;
-        Feature featureToAdd;
+		FeatureCreationRequestEvent toAdd;
+		Feature featureToAdd;
 
-        // create events to publish
-        for (int i = 0; i < EVENTS_NUMBER; i++) {
-            featureToAdd = new Feature();
-            featureToAdd.setEntityType(EntityType.DATA);
-            featureToAdd.setModel("model");
-            featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
-            featureToAdd
-                    .setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
-            toAdd = new FeatureCreationRequestEvent();
-            toAdd.setRequestId(String.valueOf(i));
-            toAdd.setFeature(featureToAdd);
-            events.add(toAdd);
-        }
+		// create events to publish
+		for (int i = 0; i < EVENTS_NUMBER; i++) {
+			featureToAdd = new Feature();
+			featureToAdd.setEntityType(EntityType.DATA);
+			featureToAdd.setModel("model");
+			featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
+			featureToAdd
+					.setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
+			toAdd = new FeatureCreationRequestEvent();
+			toAdd.setRequestId(String.valueOf(i));
+			toAdd.setFeature(featureToAdd);
+			events.add(toAdd);
+		}
 
-        events.get(0).getFeature().setUrn(null);
+		events.get(0).getFeature().setUrn(null);
 
-        featureService.handleFeatureCreationRequestEvents(events);
+		featureService.handleFeatureCreationRequestEvents(events);
 
-        assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
+		assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
 
-        int cpt = 0;
-        long featureNumberInDatabase;
-        do {
-            featureNumberInDatabase = this.featureRepo.count();
-            Thread.sleep(1000);
-            cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
+		int cpt = 0;
+		long featureNumberInDatabase;
+		do {
+			featureNumberInDatabase = this.featureRepo.count();
+			Thread.sleep(1000);
+			cpt++;
+		} while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
 
-        // in that case all features hasn't been saved
-        if (cpt == 100) {
-            fail("Doesn't have all features at the end of time");
-        }
-    }
+		// in that case all features hasn't been saved
+		if (cpt == 100) {
+			fail("Doesn't have all features at the end of time");
+		}
+	}
 }
