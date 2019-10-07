@@ -256,7 +256,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                     MethodParamFactory.build(AttributeType.class),
                                     MethodParamFactory.build(String.class), MethodParamFactory.build(Set.class),
-                                    MethodParamFactory.build(Boolean.class));
+                                    MethodParamFactory.build(Set.class), MethodParamFactory.build(Boolean.class));
         }
         return resource;
     }
