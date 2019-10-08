@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.feature.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +30,7 @@ import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 @ActiveProfiles(value = { "testAmqp" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
-	private final int EVENTS_NUMBER = 1;
+	private final int EVENTS_NUMBER = 1000;
 
 	@Autowired
 	private FeatureService featureService;
@@ -67,6 +68,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 			toAdd = new FeatureCreationRequestEvent();
 			toAdd.setRequestId(String.valueOf(i));
 			toAdd.setFeature(featureToAdd);
+			toAdd.setRequestTime(OffsetDateTime.now());
 			events.add(toAdd);
 		}
 

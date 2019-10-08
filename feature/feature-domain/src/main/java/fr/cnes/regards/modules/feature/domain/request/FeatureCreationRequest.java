@@ -77,7 +77,7 @@ public class FeatureCreationRequest extends AbstractRequest {
     @Column(name = "group_id")
     private String groupId;
 
-    @Column(columnDefinition = "metadata", name = "feature")
+    @Column(columnDefinition = "jsonb", name = "metadata")
     @Type(type = "jsonb")
     @Valid
     private List<FeatureMetadataDto> metadata;

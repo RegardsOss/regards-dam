@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.feature.dto.event.in;
 
-import java.time.OffsetDateTime;
-
 import java.util.List;
 
 import javax.validation.Valid;
@@ -44,6 +42,7 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
 	@NotNull(message = "Feature is required")
 	private Feature feature;
 
+	@Valid
 	private List<FeatureMetadataDto> metadata;
 
 	public List<FeatureMetadataDto> getMetadata() {
