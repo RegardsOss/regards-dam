@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,9 @@ import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureFile;
+import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
+import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
@@ -38,6 +42,8 @@ import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.storagelight.client.IStorageClient;
+import fr.cnes.regards.modules.storagelight.domain.dto.request.FileReferenceRequestDTO;
+import fr.cnes.regards.modules.storagelight.domain.dto.request.FileStorageRequestDTO;
 
 /**
  * Feature service management
@@ -152,14 +158,36 @@ public class FeatureService implements IFeatureService {
 
 	/**
 	 * Publish all contained files inside the {@link FeatureCreationRequest} to
-	 * storage
+	 * storage Two cases if they
 	 *
 	 * @param fcr
 	 * @return
 	 */
 	private FeatureCreationRequest publishFiles(FeatureCreationRequest fcr) {
-		if ((fcr.getMetadata() != null) && fcr.getMetadata().isEmpty()) {
-
+		for (FeatureFile file : fcr.getFeature().getFiles()) {
+			FeatureFileAttributes attribute = file.getAttributes();
+			for (FeatureFileLocation loc : file.getLocations()) {
+				if (fcr.getMetadata().isEmpty()) {
+					this.storageClient.store(FileStorageRequestDTO.build(attribute.getFilename(),
+							attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
+							fcr.getFeature().getUrn().toString(), loc.getUrl(), loc.getStorage(),
+							Optional.of(loc.getUrl())));
+				}
+				for (FeatureMetadataDto metadata : fcr.getMetadata()) {
+					// FIXME vérifier le mime type? + verif reference et store
+					if (loc.getStorage() == null) {
+						this.storageClient.reference((FileReferenceRequestDTO.build(attribute.getFilename(),
+								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
+								fcr.getFeature().getUrn().getOrder(), loc.getUrl(), metadata.getStorageIdentifier(),
+								loc.getUrl())));
+					} else {
+						this.storageClient.store(FileStorageRequestDTO.build(attribute.getFilename(),
+								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
+								fcr.getFeature().getUrn().toString(), loc.getUrl(), loc.getStorage(),
+								Optional.of(loc.getUrl())));
+					}
+				}
+			}
 		}
 		return fcr;
 	}

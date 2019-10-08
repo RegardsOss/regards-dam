@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.dto.event.in;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -29,6 +30,7 @@ import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
  * Request for new feature creation using event driven mechanism
@@ -36,6 +38,7 @@ import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
  * @author Marc SORDI
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
+@ValidFeatureEvent
 public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
 	@Valid
@@ -43,7 +46,7 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
 	private Feature feature;
 
 	@Valid
-	private List<FeatureMetadataDto> metadata;
+	private List<FeatureMetadataDto> metadata = new ArrayList<FeatureMetadataDto>();
 
 	public List<FeatureMetadataDto> getMetadata() {
 		return metadata;

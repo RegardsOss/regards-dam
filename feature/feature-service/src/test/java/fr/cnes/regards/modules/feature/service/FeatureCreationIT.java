@@ -12,14 +12,19 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureFile;
+import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
+import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
@@ -54,23 +59,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
 		List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-		FeatureCreationRequestEvent toAdd;
-		Feature featureToAdd;
-
-		// create events to publish
-		for (int i = 0; i < EVENTS_NUMBER; i++) {
-			featureToAdd = new Feature();
-			featureToAdd.setEntityType(EntityType.DATA);
-			featureToAdd.setModel("model");
-			featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
-			featureToAdd
-					.setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
-			toAdd = new FeatureCreationRequestEvent();
-			toAdd.setRequestId(String.valueOf(i));
-			toAdd.setFeature(featureToAdd);
-			toAdd.setRequestTime(OffsetDateTime.now());
-			events.add(toAdd);
-		}
+		initFeatureCreationRequestEvent(events);
 
 		featureService.handleFeatureCreationRequestEvents(events);
 
@@ -88,9 +77,32 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 		if (cpt == 100) {
 			fail("Doesn't have all features at the end of time");
 		}
+	}
 
-		assertEquals(0, this.featureCreationRequestRepo.count());
-
+	private void initFeatureCreationRequestEvent(List<FeatureCreationRequestEvent> events) {
+		FeatureCreationRequestEvent toAdd;
+		Feature featureToAdd;
+		FeatureFile file;
+		FeatureFileAttributes attributes;
+		FeatureFileLocation loc;
+		// create events to publish
+		for (int i = 0; i < EVENTS_NUMBER; i++) {
+			featureToAdd = Feature.builder(
+					new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1),
+					IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
+			file = new FeatureFile();
+			attributes = FeatureFileAttributes.builder(DataType.DESCRIPTION, new MimeType("mime"), "toto", 1024l, "MD5",
+					"checksum");
+			loc = FeatureFileLocation.build("www.google.com", "GPFS");
+			file.getLocations().add(loc);
+			file.setAttributes(attributes);
+			featureToAdd.getFiles().add(file);
+			toAdd = new FeatureCreationRequestEvent();
+			toAdd.setRequestId(String.valueOf(i));
+			toAdd.setFeature(featureToAdd);
+			toAdd.setRequestTime(OffsetDateTime.now());
+			events.add(toAdd);
+		}
 	}
 
 	/**
@@ -104,22 +116,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
 		List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-		FeatureCreationRequestEvent toAdd;
-		Feature featureToAdd;
-
-		// create events to publish
-		for (int i = 0; i < EVENTS_NUMBER; i++) {
-			featureToAdd = new Feature();
-			featureToAdd.setEntityType(EntityType.DATA);
-			featureToAdd.setModel("model");
-			featureToAdd.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
-			featureToAdd
-					.setUrn(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1));
-			toAdd = new FeatureCreationRequestEvent();
-			toAdd.setRequestId(String.valueOf(i));
-			toAdd.setFeature(featureToAdd);
-			events.add(toAdd);
-		}
+		initFeatureCreationRequestEvent(events);
 
 		events.get(0).getFeature().setUrn(null);
 

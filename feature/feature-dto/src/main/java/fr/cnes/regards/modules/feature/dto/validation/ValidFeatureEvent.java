@@ -15,7 +15,7 @@ import javax.validation.Payload;
  * @author kevin
  *
  */
-@Target({ ElementType.METHOD, ElementType.FIELD })
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = FeatureCreationRequestEventValidation.class)
 public @interface ValidFeatureEvent {
