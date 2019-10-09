@@ -118,7 +118,7 @@ public final class StaticProperties {
     public static final String DATASOURCE_ID = "dataSourceId";
 
     // Long list
-    public static final String DATASET_MODEL_IDS = "datasetModelIds";
+    public static final String DATASET_MODEL_NAMES = "datasetModelNames";
 
     // ##########-Dataset-##########
 

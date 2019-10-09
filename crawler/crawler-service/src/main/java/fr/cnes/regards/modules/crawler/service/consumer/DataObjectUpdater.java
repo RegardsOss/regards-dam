@@ -21,20 +21,20 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
 
     private final OffsetDateTime updateDate;
 
-    private final Long datasetModelId;
+    private final String datasetModelName;
 
     public DataObjectUpdater(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
             SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {
         super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId());
         this.datasetIpId = dataset.getIpId().toString();
         this.groupsMap = dataset.getMetadata().getDataObjectsGroupsMap();
-        this.datasetModelId = dataset.getModel().getId();
+        this.datasetModelName = dataset.getModel().getName();
         this.updateDate = updateDate;
     }
 
     @Override
     public void accept(DataObject object) {
-        // reset groupsMap and modelIds for this datasetIpId
+        // reset groupsMap and modelNames for this datasetIpId
         object.getMetadata().removeDatasetIpId(datasetIpId);
         object.addTags(datasetIpId);
         // set current groups with no plugin access filter from groupsMap on metadata for this datasetIpId
@@ -45,12 +45,12 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
                 object.getMetadata().addGroup(group.getGroupName(), datasetIpId, group.getDataObjectAccess());
             }
         }
-        // set current modelIds on metadata for this datasetIpId
-        object.getMetadata().addModelId(datasetModelId, datasetIpId);
+        // set current modelNames on metadata for this datasetIpId
+        object.getMetadata().addModelName(datasetModelName, datasetIpId);
         // update groupsMap from metadata
         object.setGroups(object.getMetadata().getGroups());
-        // update modelIds from metadata
-        object.setDatasetModelIds(object.getMetadata().getModelIds());
+        // update modelNames from metadata
+        object.setDatasetModelNames(object.getMetadata().getModelNames());
         object.setLastUpdate(updateDate);
         super.addDataObject(object);
         if (super.needToSave()) {
