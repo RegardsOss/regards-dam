@@ -177,8 +177,11 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
     @Override
     protected void doCheck(Dataset entity, Dataset entityInDB) throws ModuleException {
         try {
-            Dataset ds = checkDataSource(entity);
-            checkSubsettingCriterion(ds);
+            // datasource not being updatable, we only check it at creation i.e. when entityInDB is null
+            if(entityInDB == null) {
+                entity = checkDataSource(entity);
+            }
+            checkSubsettingCriterion(entity);
             // check for updates on data model or datasource
             // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
             if (entityInDB != null) {
