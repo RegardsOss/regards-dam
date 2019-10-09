@@ -94,16 +94,33 @@ public class FeatureUpdateRequest extends AbstractRequest {
     @Column(name = "group_id")
     private String groupId;
 
+    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors, Feature feature) {
+        Assert.notNull(feature, "Feature is required");
+        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
+        fcr.with(requestId, requestDate, state, errors);
+        fcr.setFeature(feature);
+        return fcr;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public FeatureUniformResourceName getUrn() {
+        return urn;
+    }
+
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
+    }
+
     public Feature getFeature() {
         return this.feature;
     }
 
     public void setFeature(Feature feature) {
         this.feature = feature;
-    }
-
-    public Long getId() {
-        return this.id;
     }
 
     public String getGroupId() {
@@ -122,12 +139,11 @@ public class FeatureUpdateRequest extends AbstractRequest {
         this.featureEntity = featureEntity;
     }
 
-    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature) {
-        Assert.notNull(feature, "Feature is required");
-        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.with(requestId, requestDate, state, errors);
-        fcr.setFeature(feature);
-        return fcr;
+    public FeatureRequestStep getStep() {
+        return step;
+    }
+
+    public void setStep(FeatureRequestStep step) {
+        this.step = step;
     }
 }

@@ -124,13 +124,13 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
-        if (!attribute.isDynamic() && (attribute.getId() != null)) {
+        if (!attribute.isDynamic() && attribute.getId() != null) {
             return name;
         }
 
         for (Entry<String, AttributeModel> entry : getTenantMap().entrySet()) {
             AttributeModel att = entry.getValue();
-            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
+            if (att.isDynamic() && att.getId() != null && att.getId().equals(attribute.getId())) {
                 if (entry.getKey().length() < name.length()) {
                     name = entry.getKey();
                 }
@@ -192,7 +192,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
 
         // Allows to filter on dataset model id when searching for dataobjects
         tenantMap.put(StaticProperties.DATASET_MODEL_NAMES, AttributeModelBuilder
-                .build(StaticProperties.DATASET_MODEL_NAMES, AttributeType.STRING, null).isInternal().get());
+                .build(StaticProperties.DATASET_MODEL_NAMES, PropertyType.STRING, null).isInternal().get());
 
         // Register static properties by types
         tenantMap.values().forEach(attModel -> tenantTypeMap.put(attModel.getType(), attModel));
