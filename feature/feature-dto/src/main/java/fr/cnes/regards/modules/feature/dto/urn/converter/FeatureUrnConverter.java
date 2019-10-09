@@ -21,29 +21,30 @@ package fr.cnes.regards.modules.feature.dto.urn.converter;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 /**
  * Converter used by Hibernate (see AbstractEntity)
- * @author Sylvain Vissiere-Guerinet
+ *
+ * @author Kevin Marchois
  */
 @Converter(autoApply = true)
-public class UrnConverter implements AttributeConverter<UniformResourceName, String> {
+public class FeatureUrnConverter implements AttributeConverter<FeatureUniformResourceName, String> {
 
-    @Override
-    public String convertToDatabaseColumn(UniformResourceName pAttribute) {
-        if (pAttribute == null) {
-            return null;
-        }
-        return pAttribute.toString();
-    }
+	@Override
+	public String convertToDatabaseColumn(FeatureUniformResourceName pAttribute) {
+		if (pAttribute == null) {
+			return null;
+		}
+		return pAttribute.toString();
+	}
 
-    @Override
-    public UniformResourceName convertToEntityAttribute(String pDbData) {
-        if (pDbData == null) {
-            return new UniformResourceName();
-        }
-        return UniformResourceName.fromString(pDbData);
-    }
+	@Override
+	public FeatureUniformResourceName convertToEntityAttribute(String pDbData) {
+		if (pDbData == null) {
+			return new FeatureUniformResourceName();
+		}
+		return FeatureUniformResourceName.fromString(pDbData);
+	}
 
 }

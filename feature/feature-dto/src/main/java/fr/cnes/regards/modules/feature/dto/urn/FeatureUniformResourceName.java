@@ -26,8 +26,8 @@ import javax.persistence.Convert;
 
 import fr.cnes.regards.framework.oais.urn.AbstractUniformResourceName;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.framework.oais.urn.validator.RegardsOaisUrn;
+import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
  * allow us to create URN with the following format:
@@ -43,7 +43,7 @@ import fr.cnes.regards.framework.oais.urn.validator.RegardsOaisUrn;
  * @author Kevin Marchois
  */
 @RegardsOaisUrn
-@Convert(converter = UrnConverter.class)
+@Convert(converter = FeatureUrnConverter.class)
 public class FeatureUniformResourceName extends AbstractUniformResourceName<FeatureIdentifier> {
 
 	public static final int MAX_SIZE = 128;
