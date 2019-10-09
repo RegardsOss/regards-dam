@@ -21,14 +21,14 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
 
     private final OffsetDateTime updateDate;
 
-    private final Long datasetModelId;
+    private final String datasetModelName;
 
     public DataObjectUpdater(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
             SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {
         super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId());
         this.datasetIpId = dataset.getIpId().toString();
         this.groupsMap = dataset.getMetadata().getDataObjectsGroupsMap();
-        this.datasetModelId = dataset.getModel().getId();
+        this.datasetModelName = dataset.getModel().getName();
         this.updateDate = updateDate;
     }
 
@@ -46,11 +46,11 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
             }
         }
         // set current modelIds on metadata for this datasetIpId
-        object.getMetadata().addModelId(datasetModelId, datasetIpId);
+        object.getMetadata().addModelName(datasetModelName, datasetIpId);
         // update groupsMap from metadata
         object.setGroups(object.getMetadata().getGroups());
         // update modelIds from metadata
-        object.setDatasetModelIds(object.getMetadata().getModelIds());
+        object.setDatasetModelNames(object.getMetadata().getModelNames());
         object.setLastUpdate(updateDate);
         super.addDataObject(object);
         if (super.needToSave()) {

@@ -31,7 +31,7 @@ public class DataObjectAssocRemover extends AbstractDataObjectBulkSaver implemen
         object.removeTags(Arrays.asList(datasetIpId));
         object.getMetadata().removeDatasetIpId(datasetIpId);
         object.setGroups(object.getMetadata().getGroups());
-        object.setDatasetModelIds(object.getMetadata().getModelIds());
+        object.setDatasetModelNames(object.getMetadata().getModelNames());
         object.setLastUpdate(updateDate);
         super.addDataObject(object);
         if (super.needToSave()) {

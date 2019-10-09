@@ -340,13 +340,13 @@ public class EntityIndexerService implements IEntityIndexerService {
         Consumer<DataObject> updateDataObject = object -> {
             object.removeTags(Arrays.asList(ipId));
             // reset datasetModelIds
-            object.getDatasetModelIds().clear();
+            object.getDatasetModelNames().clear();
             // Remove dataset ipId from metadata.groups dans modelIds
             object.getMetadata().removeDatasetIpId(ipId);
             // update groups
             object.setGroups(object.getMetadata().getGroups());
             // update modelIds
-            object.setDatasetModelIds(object.getMetadata().getModelIds());
+            object.setDatasetModelNames(object.getMetadata().getModelNames());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
@@ -784,7 +784,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             dataObject.setCreationDate(curObject.getCreationDate());
             dataObject.setMetadata(curObject.getMetadata());
             dataObject.setGroups(dataObject.getMetadata().getGroups());
-            dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
+            dataObject.setDatasetModelNames(dataObject.getMetadata().getModelNames());
             // In case to ingest object has new tags
             if (!curObject.getTags().isEmpty()) {
                 dataObject.addTags(curObject.getTags());
