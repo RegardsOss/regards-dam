@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
@@ -34,7 +35,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureState;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
@@ -198,7 +198,7 @@ public class FeatureService implements IFeatureService {
 	 */
 	private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr) {
 		FeatureEntity created = FeatureEntity.build(fcr.getFeature(), OffsetDateTime.now(),
-				FeatureState.STORAGE_REQUESTED);
+				FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
 		fcr.setFeatureEntity(created);
 		return created;
 	}
