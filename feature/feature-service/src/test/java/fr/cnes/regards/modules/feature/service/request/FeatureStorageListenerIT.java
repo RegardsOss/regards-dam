@@ -16,6 +16,8 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
@@ -24,8 +26,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
-import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
-import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 import fr.cnes.regards.modules.feature.service.AbstractFeatureMultitenantServiceTest;
 import fr.cnes.regards.modules.storagelight.client.RequestInfo;
 import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfoDTO;
@@ -38,10 +38,10 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfo
 public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
-    private FeatureCreationRequestRepository fcrRepo;
+    private IFeatureCreationRequestRepository fcrRepo;
 
     @Autowired
-    private FeatureEntityRepository featureRepo;
+    private IFeatureEntityRepository featureRepo;
 
     @Autowired
     private FeatureStorageListener listener;

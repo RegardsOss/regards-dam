@@ -16,6 +16,8 @@ import org.springframework.util.MimeType;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -23,8 +25,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
-import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
-import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
@@ -38,10 +38,10 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
     private FeatureService featureService;
 
     @Autowired
-    private FeatureEntityRepository featureRepo;
+    private IFeatureEntityRepository featureRepo;
 
     @Autowired
-    private FeatureCreationRequestRepository featureCreationRequestRepo;
+    private IFeatureCreationRequestRepository featureCreationRequestRepo;
 
     /**
      * Test creation of EVENTS_NUMBER features Check if
@@ -68,7 +68,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
 
         // in that case all features hasn't been saved
         if (cpt == 100) {
@@ -96,7 +96,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             toAdd = new FeatureCreationRequestEvent();
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
-            toAdd.setRequestTime(OffsetDateTime.now());
+            toAdd.setRequestDate(OffsetDateTime.now());
             events.add(toAdd);
         }
     }
@@ -127,7 +127,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
 
         // in that case all features hasn't been saved
         if (cpt == 100) {

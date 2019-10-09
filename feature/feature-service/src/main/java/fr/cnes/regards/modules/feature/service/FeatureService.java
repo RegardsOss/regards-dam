@@ -25,6 +25,8 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
@@ -36,8 +38,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
-import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
-import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -54,10 +54,11 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.FileStorageReques
 @MultitenantTransactional
 public class FeatureService implements IFeatureService {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureService.class);
 
     @Autowired
-    private FeatureCreationRequestRepository featureCreationRequestRepo;
+    private IFeatureCreationRequestRepository featureCreationRequestRepo;
 
     @Autowired
     private IAuthenticationResolver authResolver;
@@ -66,7 +67,7 @@ public class FeatureService implements IFeatureService {
     private IJobInfoService jobInfoService;
 
     @Autowired
-    private FeatureEntityRepository featureRepo;
+    private IFeatureEntityRepository featureRepo;
 
     @Autowired
     private IPublisher publisher;
@@ -130,8 +131,8 @@ public class FeatureService implements IFeatureService {
         }
 
         // Manage granted request
-        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestTime(),
-                                                                      RequestState.DENIED, null, item.getFeature(),
+        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestDate(),
+                                                                      RequestState.GRANTED, null, item.getFeature(),
                                                                       item.getMetadata());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
@@ -149,12 +150,12 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() == null)
-                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
+                .filter(fcr -> fcr.getFeature().getFiles() == null
+                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 

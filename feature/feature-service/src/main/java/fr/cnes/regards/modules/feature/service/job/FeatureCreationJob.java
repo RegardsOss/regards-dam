@@ -31,8 +31,8 @@ import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
+import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.service.IFeatureService;
 
 /**
@@ -50,7 +50,7 @@ public class FeatureCreationJob extends AbstractJob<Void> {
 	private List<FeatureCreationRequest> featureCreationRequests;
 
 	@Autowired
-	private FeatureCreationRequestRepository featureCreationRequestRepo;
+	private IFeatureCreationRequestRepository featureCreationRequestRepo;
 
 	@Autowired
 	private IFeatureService featureService;

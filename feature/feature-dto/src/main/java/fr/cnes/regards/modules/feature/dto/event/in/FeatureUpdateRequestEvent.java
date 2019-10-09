@@ -56,7 +56,7 @@ public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements I
         FeatureUpdateRequestEvent event = new FeatureUpdateRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
-        event.setRequestTime(OffsetDateTime.now());
+        event.setRequestDate(OffsetDateTime.now());
         return event;
     }
 }

@@ -46,6 +46,8 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureValidationService.class);
 
+    private static final String URN_FIELD = "urn";
+
     /**
      * Standard validator based on annotation
      */
@@ -65,8 +67,26 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
         // Validate feature
         validator.validate(feature, errors);
 
+        // Programmatic validation according to the context
+        switch (mode) {
+            case CREATION:
+                if (feature.getUrn() != null) {
+                    errors.rejectValue(URN_FIELD, "feature.urn.unexpected.error.message",
+                                       "Unexpected URN is feature creation");
+                }
+                break;
+            case UPDATE:
+                if (feature.getUrn() == null) {
+                    errors.rejectValue(URN_FIELD, "feature.urn.required.error.message",
+                                       "URN is requiredin feature update");
+                }
+                break;
+            default:
+                break;
+        }
+
         // Try validating properties according to data model
-        if (feature.getModel() != null) {
+        if (feature.getModel() != null) { // FIXME à supprimer le modèle ne peut être nul ici!
             // FIXME faire un modèle et générer des features en conséquence avant de réactiver la ligne suivante
             // FIXME gérer aussi le mock du client de récupération des attributs d'un modèle
             // errors.addAllErrors(validate(feature.getModel(), feature, mode, objectName));

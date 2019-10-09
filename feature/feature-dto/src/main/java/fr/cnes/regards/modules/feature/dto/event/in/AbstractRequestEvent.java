@@ -38,7 +38,14 @@ public abstract class AbstractRequestEvent {
 
     @Past(message = "Request time must be a past date")
     @NotNull(message = "Request time is required")
-    private OffsetDateTime requestTime;
+    private OffsetDateTime requestDate;
+
+    /**
+     * Generate a request ID
+     */
+    public static String generateRequestId() {
+        return UUID.randomUUID().toString();
+    }
 
     public String getRequestId() {
         return requestId;
@@ -48,18 +55,11 @@ public abstract class AbstractRequestEvent {
         this.requestId = requestId;
     }
 
-    public OffsetDateTime getRequestTime() {
-        return requestTime;
+    public OffsetDateTime getRequestDate() {
+        return requestDate;
     }
 
-    public void setRequestTime(OffsetDateTime requestTime) {
-        this.requestTime = requestTime;
-    }
-
-    /**
-     * Generate a request ID
-     */
-    public static String generateRequestId() {
-        return UUID.randomUUID().toString();
+    public void setRequestDate(OffsetDateTime requestDate) {
+        this.requestDate = requestDate;
     }
 }
