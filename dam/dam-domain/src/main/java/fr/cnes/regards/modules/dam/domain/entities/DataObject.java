@@ -47,7 +47,7 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     /**
      * Denormalization : allows to retrieve dataobjects related to models (i.e. types) of dataset
      */
-    private Set<Long> datasetModelIds = new HashSet<>();
+    private Set<String> datasetModelNames = new HashSet<>();
 
     /**
      * These metadata are used only by elasticsearch to add useful informations needed by catalog
@@ -83,12 +83,12 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         this.dataSourceId = pDataSourceId;
     }
 
-    public Set<Long> getDatasetModelIds() {
-        return datasetModelIds;
+    public Set<String> getDatasetModelNames() {
+        return datasetModelNames;
     }
 
-    public void setDatasetModelIds(Set<Long> datasetModelIds) {
-        this.datasetModelIds = datasetModelIds;
+    public void setDatasetModelNames(Set<String> datasetModelNames) {
+        this.datasetModelNames = datasetModelNames;
     }
 
     public DataObjectMetadata getMetadata() {
