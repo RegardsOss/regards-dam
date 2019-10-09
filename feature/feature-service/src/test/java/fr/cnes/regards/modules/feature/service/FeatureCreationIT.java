@@ -6,7 +6,6 @@ import static org.junit.Assert.fail;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +23,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 
@@ -71,7 +68,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
+        } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
 
         // in that case all features hasn't been saved
         if (cpt == 100) {
@@ -87,10 +84,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         FeatureFileLocation loc;
         // create events to publish
         for (int i = 0; i < EVENTS_NUMBER; i++) {
-            featureToAdd = Feature.builder(
-                                           FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                            "peps", UUID.randomUUID(), 1),
-                                           IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
+            featureToAdd = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                           "model");
             file = new FeatureFile();
             attributes = FeatureFileAttributes.builder(DataType.DESCRIPTION, new MimeType("mime"), "toto", 1024l, "MD5",
                                                        "checksum");
@@ -132,7 +127,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
+        } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
 
         // in that case all features hasn't been saved
         if (cpt == 100) {

@@ -20,58 +20,59 @@ package fr.cnes.regards.modules.feature.domain.request;
 
 /**
  *
- * Available steps to follow to properly handle feature request with concurrent updates and remote storage.
+ * Available steps to follow to properly handle feature request with concurrent
+ * updates and remote storage.
+ * 
  * @author Marc SORDI
  *
- * FIXME : compléter les steps si besoin
+ *         FIXME : compléter les steps si besoin
  *
  */
 public enum FeatureRequestStep {
 
-    // Not granted before db persist
-    LOCAL_DENIED,
+	// Not granted before db persist
+	LOCAL_DENIED,
 
-    // Request processing is delayed to handle concurrent asynchronous update request
-    // Manager waits for a configurable delay before scheduling feature uptate job.
-    LOCAL_DELAYED,
+	// Request processing is delayed to handle concurrent asynchronous update
+	// request
+	// Manager waits for a configurable delay before scheduling feature uptate job.
+	LOCAL_DELAYED,
 
-    // Awaiting processing
-    LOCAL_SCHEDULED,
+	// Awaiting processing
+	LOCAL_SCHEDULED,
 
-    REMOTE_STORAGE_REQUESTED(true, true),
-    // REMOTE_STORAGE_GRANTED(true),
-    REMOTE_STORAGE_DENIED(true),
-    REMOTE_STORAGE_ERROR(true);
-    // REMOTE_STORAGE_SUCCESS(true),
+	REMOTE_STORAGE_REQUESTED(true, true),
+	// REMOTE_STORAGE_GRANTED(true),
+	REMOTE_STORAGE_DENIED(true), REMOTE_STORAGE_ERROR(true), REMOTE_STORAGE_SUCCESS(true);
 
-    private boolean remote = false;
+	private boolean remote = false;
 
-    private boolean timeout = false;
+	private boolean timeout = false;
 
-    private FeatureRequestStep() {
-    }
+	private FeatureRequestStep() {
+	}
 
-    private FeatureRequestStep(boolean remote) {
-        this.remote = remote;
-    }
+	private FeatureRequestStep(boolean remote) {
+		this.remote = remote;
+	}
 
-    private FeatureRequestStep(boolean remote, boolean timeout) {
-        this.remote = remote;
-        this.timeout = timeout;
-    }
+	private FeatureRequestStep(boolean remote, boolean timeout) {
+		this.remote = remote;
+		this.timeout = timeout;
+	}
 
-    /**
-     * Identify a remote step
-     */
-    public boolean isRemote() {
-        return remote;
-    }
+	/**
+	 * Identify a remote step
+	 */
+	public boolean isRemote() {
+		return remote;
+	}
 
-    /**
-     * Identify a remote step with request timeout
-     */
-    public boolean withTimeout() {
-        return timeout;
-    }
+	/**
+	 * Identify a remote step with request timeout
+	 */
+	public boolean withTimeout() {
+		return timeout;
+	}
 
 }

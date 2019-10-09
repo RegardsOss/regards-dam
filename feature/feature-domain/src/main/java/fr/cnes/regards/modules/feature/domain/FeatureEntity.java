@@ -37,8 +37,8 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureState;
 
 /**
  * @author Marc SORDI
@@ -61,7 +61,7 @@ public class FeatureEntity {
 	@NotNull(message = "Feature request state is required")
 	@Enumerated(EnumType.STRING)
 	@Column(name = "state", length = 50, nullable = false)
-	private FeatureState state;
+	private FeatureRequestStep state;
 
 	@Column(name = "last_update", nullable = false)
 	@Convert(converter = OffsetDateTimeAttributeConverter.class)
@@ -84,11 +84,11 @@ public class FeatureEntity {
 		this.feature = feature;
 	}
 
-	public FeatureState getState() {
+	public FeatureRequestStep getState() {
 		return state;
 	}
 
-	public void setState(FeatureState state) {
+	public void setState(FeatureRequestStep state) {
 		this.state = state;
 	}
 
@@ -100,7 +100,7 @@ public class FeatureEntity {
 		this.lastUpdate = lastUpdate;
 	}
 
-	public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureState state) {
+	public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureRequestStep state) {
 		FeatureEntity featureEntity = new FeatureEntity();
 		featureEntity.setFeature(feature);
 		featureEntity.setLastUpdate(lastUpdate);

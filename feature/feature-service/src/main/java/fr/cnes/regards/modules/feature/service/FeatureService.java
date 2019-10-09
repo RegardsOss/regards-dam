@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
@@ -34,7 +35,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureState;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
@@ -149,12 +149,12 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() == null)
+                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 
@@ -213,7 +213,8 @@ public class FeatureService implements IFeatureService {
         // FIXME KMS (revoir PM sur politique de gestion des versions/doublons)
         // feature.setUrn(null);
 
-        FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(), FeatureState.STORAGE_REQUESTED);
+        FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(),
+                                                    FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         fcr.setFeatureEntity(created);
         return created;
     }
