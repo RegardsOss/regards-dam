@@ -22,7 +22,10 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -32,7 +35,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -43,6 +46,8 @@ import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
  * @author Marc SORDI
@@ -63,17 +68,52 @@ public class FeatureUpdateRequest extends AbstractRequest {
     @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
+    /**
+     * Information Package ID for REST request
+     */
+    @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
+    @Convert(converter = FeatureUrnConverter.class)
+    private FeatureUniformResourceName urn;
+
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
     @Type(type = "jsonb")
-    @Valid
     private Feature feature;
 
     @ManyToOne
     @JoinColumn(name = "feature_id")
     private FeatureEntity featureEntity;
 
+    /**
+     * All internal request steps including local and remote ones
+     */
+    @NotNull(message = "Feature request step is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "step", length = 50, nullable = false)
+    private FeatureRequestStep step;
+
     @Column(name = "group_id")
     private String groupId;
+
+    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors, Feature feature) {
+        Assert.notNull(feature, "Feature is required");
+        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
+        fcr.with(requestId, requestDate, state, errors);
+        fcr.setFeature(feature);
+        return fcr;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public FeatureUniformResourceName getUrn() {
+        return urn;
+    }
+
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
+    }
 
     public Feature getFeature() {
         return this.feature;
@@ -81,10 +121,6 @@ public class FeatureUpdateRequest extends AbstractRequest {
 
     public void setFeature(Feature feature) {
         this.feature = feature;
-    }
-
-    public Long getId() {
-        return this.id;
     }
 
     public String getGroupId() {
@@ -103,12 +139,11 @@ public class FeatureUpdateRequest extends AbstractRequest {
         this.featureEntity = featureEntity;
     }
 
-    public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature) {
-        Assert.notNull(feature, "Feature is required");
-        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.with(requestId, requestDate, state, errors);
-        fcr.setFeature(feature);
-        return fcr;
+    public FeatureRequestStep getStep() {
+        return step;
+    }
+
+    public void setStep(FeatureRequestStep step) {
+        this.step = step;
     }
 }

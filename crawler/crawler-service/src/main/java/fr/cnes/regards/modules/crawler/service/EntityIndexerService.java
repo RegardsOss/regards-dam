@@ -330,13 +330,13 @@ public class EntityIndexerService implements IEntityIndexerService {
         Consumer<DataObject> updateDataObject = object -> {
             object.removeTags(Arrays.asList(ipId));
             // reset datasetModelIds
-            object.getDatasetModelIds().clear();
-            // Remove dataset ipId from metadata.groups dans modelIds
+            object.getDatasetModelNames().clear();
+            // Remove dataset ipId from metadata.groups dans modelNames
             object.getMetadata().removeDatasetIpId(ipId);
             // update groups
             object.setGroups(object.getMetadata().getGroups());
-            // update modelIds
-            object.setDatasetModelIds(object.getMetadata().getModelIds());
+            // update modelNames
+            object.setDatasetModelNames(object.getMetadata().getModelNames());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
@@ -775,12 +775,12 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
         // search objects from storage only using tags so if this tag has been used
         // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
-        // current creationDate, groups, tags and modelIds
+        // current creationDate, groups, tags and modelNames
         if (curObject != null) {
             dataObject.setCreationDate(curObject.getCreationDate());
             dataObject.setMetadata(curObject.getMetadata());
             dataObject.setGroups(dataObject.getMetadata().getGroups());
-            dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
+            dataObject.setDatasetModelNames(dataObject.getMetadata().getModelNames());
             // In case to ingest object has new tags
             if (!curObject.getTags().isEmpty()) {
                 dataObject.addTags(curObject.getTags());

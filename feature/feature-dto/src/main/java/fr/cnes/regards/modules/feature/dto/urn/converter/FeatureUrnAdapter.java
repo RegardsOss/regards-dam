@@ -18,33 +18,34 @@
  */
 package fr.cnes.regards.modules.feature.dto.urn.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import java.io.IOException;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapter;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 /**
- * Converter used by Hibernate (see AbstractEntity)
- *
- * @author Kevin Marchois
+ * This adapter is used by Gson on {@link FeatureUniformResourceName}
+ * @author Sylvain Vissiere-Guerinet
  */
-@Converter(autoApply = true)
-public class FeatureUrnConverter implements AttributeConverter<FeatureUniformResourceName, String> {
+@GsonTypeAdapter(adapted = FeatureUniformResourceName.class)
+public class FeatureUrnAdapter extends TypeAdapter<FeatureUniformResourceName> {
 
-	@Override
-	public String convertToDatabaseColumn(FeatureUniformResourceName urn) {
-		if (urn == null) {
-			return null;
-		}
-		return urn.toString();
-	}
+    @Override
+    public FeatureUniformResourceName read(JsonReader reader) throws IOException {
+        return FeatureUniformResourceName.fromString(reader.nextString());
+    }
 
-	@Override
-	public FeatureUniformResourceName convertToEntityAttribute(String data) {
-		if (data == null) {
-			return new FeatureUniformResourceName();
-		}
-		return FeatureUniformResourceName.fromString(data);
-	}
+    @Override
+    public void write(JsonWriter writer, FeatureUniformResourceName urn) throws IOException {
+        if (urn != null) {
+            writer.value(urn.toString());
+        } else {
+            writer.nullValue();
+        }
+    }
 
 }

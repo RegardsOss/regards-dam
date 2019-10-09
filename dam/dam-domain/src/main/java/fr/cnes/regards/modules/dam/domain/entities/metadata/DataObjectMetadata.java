@@ -21,9 +21,9 @@ public class DataObjectMetadata {
     private final Multimap<String, DatasetAccessRight> groups = HashMultimap.create();
 
     /**
-     * Multimap { modelId, (datasetIpIds) }
+     * Multimap { modelName, (datasetIpIds) }
      */
-    private final Multimap<Long, String> modelIds = HashMultimap.create();
+    private final Multimap<String, String> modelNames = HashMultimap.create();
 
     /**
      * @param groupName
@@ -40,7 +40,7 @@ public class DataObjectMetadata {
     }
 
     /**
-     * Remove given ipId from all values (groups multimap AND modelIds multimap)
+     * Remove given ipId from all values (groups multimap AND modelNames multimap)
      * @param datasetIpId
      */
     public void removeDatasetIpId(String datasetIpId) {
@@ -49,7 +49,7 @@ public class DataObjectMetadata {
                 i.remove();
             }
         }
-        for (Iterator<String> i = modelIds.values().iterator(); i.hasNext();) {
+        for (Iterator<String> i = modelNames.values().iterator(); i.hasNext();) {
             if (i.next().equals(datasetIpId)) {
                 i.remove();
             }
@@ -72,16 +72,16 @@ public class DataObjectMetadata {
                 .asMap(), rights -> rights.stream().anyMatch(datasetAccessRight -> datasetAccessRight.isAccessRight()));
     }
 
-    public void addModelId(long modelId, String datasetIpId) {
-        modelIds.put(modelId, datasetIpId);
+    public void addModelName(String modelName, String datasetIpId) {
+        modelNames.put(modelName, datasetIpId);
     }
 
-    public void removeModelId(long modelId, String datasetIpId) {
-        modelIds.remove(modelId, datasetIpId);
+    public void removeModelName(String modelName, String datasetIpId) {
+        modelNames.remove(modelName, datasetIpId);
     }
 
-    public Set<Long> getModelIds() {
-        return modelIds.keySet();
+    public Set<String> getModelNames() {
+        return modelNames.keySet();
     }
 
     @SuppressWarnings("unused")
