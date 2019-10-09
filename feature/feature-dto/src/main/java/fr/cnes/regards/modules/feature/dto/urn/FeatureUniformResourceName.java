@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.feature.dto.urn;
 
-import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -46,282 +45,87 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 @Convert(converter = FeatureUrnConverter.class)
 public class FeatureUniformResourceName extends AbstractUniformResourceName<FeatureIdentifier> {
 
-	public static final int MAX_SIZE = 128;
+    public static final int MAX_SIZE = 132;
 
-	/**
-	 * URN pattern
-	 */
-	public static final String URN_PATTERN = "URN:[^:]+:[^:]+:[^:]+:[^:]+:V\\d{1,3}(,\\d+)?(:REV.+)?";
+    public static FeatureUniformResourceName build(FeatureIdentifier identifier, EntityType entityType, String tenant,
+            UUID entityId, int version) {
+        FeatureUniformResourceName urn = new FeatureUniformResourceName();
+        urn.build(identifier, entityType, tenant, entityId, version, null, null);
+        return urn;
+    }
 
-	/**
-	 * Version prefix
-	 */
-	private static final String VERSION_PREFIX = "V";
+    /**
+     * take this kind of String
+     * URN:OAISIdentifier:entityType:tenant:UUID(entityId):version[,order][:REVrevision]
+     * and return a new instance of {@link FeatureUniformResourceName}
+     *
+     * @param urn String respecting the following regex
+     *            URN:.+:.+:.+:.+:\\d{1,3}(,\\d+)?(:REV.+)?
+     * @return a new instance of {@link FeatureUniformResourceName}
+     * @throws IllegalArgumentException if the given string does not respect the urn
+     *                                  pattern
+     */
+    public static FeatureUniformResourceName fromString(String urn) {
+        final Pattern pattern = Pattern.compile(URN_PATTERN);
+        if (!pattern.matcher(urn).matches()) {
+            throw new IllegalArgumentException();
+        }
+        final String[] stringFragment = urn.split(DELIMITER);
+        final FeatureIdentifier identifier = FeatureIdentifier.valueOf(stringFragment[1]);
+        final EntityType entityType = EntityType.valueOf(stringFragment[2]);
+        final String tenant = stringFragment[3];
+        final UUID entityId = UUID.fromString(stringFragment[4]);
+        final String[] versionWithOrder = stringFragment[5].split(",");
+        if (versionWithOrder.length == 2) {
+            // Order is precised
+            if (stringFragment.length == 7) {
+                // Revision is precised
+                final String revisionString = stringFragment[6];
+                // so we have all fields
+                return FeatureUniformResourceName
+                        .build(identifier, entityType, tenant, entityId,
+                               Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())))
+                        .withOrder(Long.parseLong(versionWithOrder[1]))
+                        .withRevision(revisionString.substring(REVISION_PREFIX.length()));
+            } else {
+                // Revision is missing so we have all except Revision
+                return FeatureUniformResourceName
+                        .build(identifier, entityType, tenant, entityId,
+                               Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())))
+                        .withOrder(Long.parseLong(versionWithOrder[1]));
+            }
+        } else {
+            // we don't have an order specified
+            if (stringFragment.length == 7) {
+                // Revision is precised
+                final String revisionString = stringFragment[6];
+                // so we have all fields exception Order
+                return FeatureUniformResourceName
+                        .build(identifier, entityType, tenant, entityId,
+                               Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())))
+                        .withRevision(revisionString.substring(REVISION_PREFIX.length()));
+            } else {
+                // Revision is missing so we have all except Revision and Order
+                return FeatureUniformResourceName
+                        .build(identifier, entityType, tenant, entityId,
+                               Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())));
+            }
+        }
+    }
 
-	/**
-	 * Section delimiter
-	 */
-	private static final String DELIMITER = ":";
+    /**
+     * Build a pseudo random UUID starting with 00000000-0000-0000-0000
+     */
+    public static FeatureUniformResourceName pseudoRandomUrn(FeatureIdentifier identifier, EntityType entityType,
+            String tenant, int version) {
+        return FeatureUniformResourceName.build(identifier, entityType, tenant,
+                                                UUID.fromString("0-0-0-0-" + (int) (Math.random() * Integer.MAX_VALUE)),
+                                                version);
+    }
 
-	/**
-	 * Revision prefix
-	 */
-	private static final String REVISION_PREFIX = "REV";
-
-	private static final String BASE_URN_ZERO = "00000000-0000-0000-0000";
-
-	/**
-	 * Compiled pattern
-	 */
-	private static final Pattern PATTERN = Pattern.compile(URN_PATTERN);
-
-	/**
-	 * Constructor setting the given parameters as attributes
-	 */
-	public FeatureUniformResourceName(FeatureIdentifier oaisIdentifier, EntityType entityType, String tenant,
-			UUID entityId, int version) {
-		super(oaisIdentifier, entityType, tenant, entityId, version);
-	}
-
-	/**
-	 * Constructor setting the given parameters as attributes
-	 */
-	public FeatureUniformResourceName(FeatureIdentifier oaisIdentifier, EntityType entityType, String tenant,
-			UUID entityId, int version, Long order, String revision) {
-		super(oaisIdentifier, entityType, tenant, entityId, version, order, revision);
-	}
-
-	/**
-	 * Constructor setting the given parameters as attributes
-	 */
-	public FeatureUniformResourceName(FeatureIdentifier oaisIdentifier, EntityType entityType, String tenant,
-			UUID entityId, int version, long order) {
-		super(oaisIdentifier, entityType, tenant, entityId, version, order);
-	}
-
-	/**
-	 * Constructor setting the given parameters as attributes
-	 */
-	public FeatureUniformResourceName(FeatureIdentifier oaisIdentifier, EntityType entityType, String tenant,
-			UUID entityId, int version, String revision) {
-		super(oaisIdentifier, entityType, tenant, entityId, version, revision);
-	}
-
-	public FeatureUniformResourceName() {
-		// for testing purpose
-	}
-
-	/**
-	 * take this kind of String
-	 * URN:OAISIdentifier:entityType:tenant:UUID(entityId):version[,order][:REVrevision]
-	 * and return a new instance of {@link FeatureUniformResourceName}
-	 *
-	 * @param urn String respecting the following regex
-	 *            URN:.+:.+:.+:.+:\\d{1,3}(,\\d+)?(:REV.+)?
-	 * @return a new instance of {@link FeatureUniformResourceName}
-	 * @throws IllegalArgumentException if the given string does not respect the urn
-	 *                                  pattern
-	 */
-	public static FeatureUniformResourceName fromString(String urn) {
-		final Pattern pattern = Pattern.compile(URN_PATTERN);
-		if (!pattern.matcher(urn).matches()) {
-			throw new IllegalArgumentException();
-		}
-		final String[] stringFragment = urn.split(DELIMITER);
-		final FeatureIdentifier oaisIdentifier = FeatureIdentifier.valueOf(stringFragment[1]);
-		final EntityType entityType = EntityType.valueOf(stringFragment[2]);
-		final String tenant = stringFragment[3];
-		final UUID entityId = UUID.fromString(stringFragment[4]);
-		final String[] versionWithOrder = stringFragment[5].split(",");
-		if (versionWithOrder.length == 2) {
-			// Order is precised
-			if (stringFragment.length == 7) {
-				// Revision is precised
-				final String revisionString = stringFragment[6];
-				// so we have all fields
-				return new FeatureUniformResourceName(oaisIdentifier, entityType, tenant, entityId,
-						Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())),
-						Long.parseLong(versionWithOrder[1]), revisionString.substring(REVISION_PREFIX.length()));
-			} else {
-				// Revision is missing so we have all except Revision
-				return new FeatureUniformResourceName(oaisIdentifier, entityType, tenant, entityId,
-						Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())),
-						Long.parseLong(versionWithOrder[1]));
-			}
-		} else {
-			// we don't have an order specified
-			if (stringFragment.length == 7) {
-				// Revision is precised
-				final String revisionString = stringFragment[6];
-				// so we have all fields exception Order
-				return new FeatureUniformResourceName(oaisIdentifier, entityType, tenant, entityId,
-						Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())),
-						revisionString.substring(REVISION_PREFIX.length()));
-			} else {
-				// Revision is missing so we have all except Revision and Order
-				return new FeatureUniformResourceName(oaisIdentifier, entityType, tenant, entityId,
-						Integer.parseInt(versionWithOrder[0].substring(VERSION_PREFIX.length())));
-			}
-		}
-	}
-
-	/**
-	 * Build a pseudo random UUID starting with 00000000-0000-0000-0000
-	 */
-	public static FeatureUniformResourceName pseudoRandomUrn(FeatureIdentifier oaisIdentifier, EntityType entityType,
-			String tenant, int version) {
-		return new FeatureUniformResourceName(oaisIdentifier, entityType, tenant,
-				UUID.fromString("0-0-0-0-" + (int) (Math.random() * Integer.MAX_VALUE)), version);
-	}
-
-	public static FeatureUniformResourceName clone(FeatureUniformResourceName template, Long order) {
-		return new FeatureUniformResourceName(template.getIdentifier(), template.getEntityType(), template.getTenant(),
-				template.getEntityId(), template.getVersion(), order);
-	}
-
-	/**
-	 * By default UUID.randomUUID() must not be used. It is generating a true random
-	 * UUID which makes it undetectable. To avoid this, pseudo random UUID is used
-	 * with following format : 00000000-0000-0000-0000-&lt;random-int>
-	 */
-	public boolean isRandomEntityId() {
-		return super.getEntityId().toString().startsWith(BASE_URN_ZERO);
-	}
-
-	/**
-	 * @return whether the given string is a urn or not
-	 */
-	public static boolean isValidUrn(String urn) {
-		return PATTERN.matcher(urn).matches();
-	}
-
-	@Override
-	public String toString() {
-		final StringJoiner urnBuilder = new StringJoiner(":", "URN:", "");
-		urnBuilder.add(super.getIdentifier().toString());
-		urnBuilder.add(super.getEntityType().toString());
-		urnBuilder.add(super.getTenant());
-		urnBuilder.add(super.getEntityId().toString());
-		String orderString = "";
-		if (super.getOrder() != null) {
-			orderString = "," + super.getOrder();
-		}
-		// order is not added with the joiner because it is "version,order" and not
-		// "version:order"
-		urnBuilder.add(VERSION_PREFIX + super.getVersion() + orderString);
-		if (super.getRevision() != null) {
-			urnBuilder.add(REVISION_PREFIX + super.getRevision());
-		}
-		return urnBuilder.toString();
-	}
-
-	/**
-	 * @return the oais identifier
-	 */
-	public FeatureIdentifier getOaisIdentifier() {
-		return super.getIdentifier();
-	}
-
-	/**
-	 * Set the oais identifier
-	 */
-	public void setOaisIdentifier(FeatureIdentifier oaisIdentifier) {
-		super.setIdentifier(oaisIdentifier);
-	}
-
-	/**
-	 * @return the entity type
-	 */
-	@Override
-	public EntityType getEntityType() {
-		return super.getEntityType();
-	}
-
-	/**
-	 * Set the entity type
-	 */
-	@Override
-	public void setEntityType(EntityType entityType) {
-		super.setEntityType(entityType);
-	}
-
-	/**
-	 * @return the tenant
-	 */
-	@Override
-	public String getTenant() {
-		return super.getTenant();
-	}
-
-	/**
-	 * Set the tenant
-	 */
-	@Override
-	public void setTenant(String tenant) {
-		super.setTenant(tenant);
-	}
-
-	/**
-	 * @return the entity id
-	 */
-	@Override
-	public UUID getEntityId() {
-		return super.getEntityId();
-	}
-
-	/**
-	 * Set the entity id
-	 */
-	@Override
-	public void setEntityId(UUID entityId) {
-		super.setEntityId(entityId);
-	}
-
-	/**
-	 * @return the version
-	 */
-	@Override
-	public int getVersion() {
-		return super.getVersion();
-	}
-
-	/**
-	 * Set the version
-	 */
-	@Override
-	public void setVersion(int version) {
-		super.setVersion(version);
-	}
-
-	/**
-	 * @return the order
-	 */
-	@Override
-	public Long getOrder() {
-		return super.getOrder();
-	}
-
-	/**
-	 * Set the order
-	 */
-	@Override
-	public void setOrder(Long order) {
-		super.setOrder(order);
-	}
-
-	/**
-	 * @return the revision
-	 */
-	@Override
-	public String getRevision() {
-		return super.getRevision();
-	}
-
-	/**
-	 * Set the revision
-	 */
-	@Override
-	public void setRevision(String revision) {
-		super.setRevision(revision);
-	}
+    public static FeatureUniformResourceName clone(FeatureUniformResourceName template, Long order) {
+        return FeatureUniformResourceName.build(template.getIdentifier(), template.getEntityType(),
+                                                template.getTenant(), template.getEntityId(), template.getVersion())
+                .withOrder(order);
+    }
 }

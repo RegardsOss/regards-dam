@@ -54,160 +54,175 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.FileStorageReques
 @MultitenantTransactional
 public class FeatureService implements IFeatureService {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(FeatureService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureService.class);
 
-	@Autowired
-	private FeatureCreationRequestRepository featureCreationRequestRepo;
+    @Autowired
+    private FeatureCreationRequestRepository featureCreationRequestRepo;
 
-	@Autowired
-	private IAuthenticationResolver authResolver;
+    @Autowired
+    private IAuthenticationResolver authResolver;
 
-	@Autowired
-	private IJobInfoService jobInfoService;
+    @Autowired
+    private IJobInfoService jobInfoService;
 
-	@Autowired
-	private FeatureEntityRepository featureRepo;
+    @Autowired
+    private FeatureEntityRepository featureRepo;
 
-	@Autowired
-	private IPublisher publisher;
+    @Autowired
+    private IPublisher publisher;
 
-	@Autowired
-	private IFeatureValidationService validationService;
+    @Autowired
+    private IFeatureValidationService validationService;
 
-	@Autowired
-	private Validator validator;
+    @Autowired
+    private Validator validator;
 
-	@Autowired
-	private IStorageClient storageClient;
+    @Autowired
+    private IStorageClient storageClient;
 
-	@Override
-	public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
+    @Override
+    public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
 
-		List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
-		items.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
+        List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
+        items.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
 
-		// Save a list of validated FeatureCreationRequest from a list of
-		// FeatureCreationRequestEvent
-		List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(grantedRequests);
+        // Save a list of validated FeatureCreationRequest from a list of
+        // FeatureCreationRequestEvent
+        List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(grantedRequests);
 
-		// Shedule job
-		Set<JobParameter> jobParameters = Sets.newHashSet();
-		jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
-				savedFCRE.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+        // Shedule job
+        Set<JobParameter> jobParameters = Sets.newHashSet();
+        jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
+                savedFCRE.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-		JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
-				jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
-		jobInfoService.createAsQueued(jobInfo);
-	}
+        JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+                jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+        jobInfoService.createAsQueued(jobInfo);
+    }
 
-	/**
-	 * Validate, save and publish a new request
-	 *
-	 * @param item            request to manage
-	 * @param grantedRequests collection of granted requests to populate
-	 */
-	private void prepareFeatureCreationRequest(FeatureCreationRequestEvent item,
-			List<FeatureCreationRequest> grantedRequests) {
+    /**
+     * Validate, save and publish a new request
+     *
+     * @param item            request to manage
+     * @param grantedRequests collection of granted requests to populate
+     */
+    private void prepareFeatureCreationRequest(FeatureCreationRequestEvent item,
+            List<FeatureCreationRequest> grantedRequests) {
 
-		// Validate event
-		Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
-		validator.validate(item, errors);
-		if (errors.hasErrors()) {
-			// Publish DENIED request (do not persist it in DB)
-			publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
-					item.getFeature() != null ? item.getFeature().getId() : null, null, RequestState.DENIED,
-					ErrorTranslator.getErrors(errors)));
-			return;
-		}
+        // Validate event
+        Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
+        validator.validate(item, errors);
+        if (errors.hasErrors()) {
+            // Publish DENIED request (do not persist it in DB)
+            publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                        item.getFeature() != null ? item.getFeature().getId() : null,
+                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            return;
+        }
 
-		// Validate feature according to the data model
-		errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
-		if (errors.hasErrors()) {
-			publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
-					item.getFeature() != null ? item.getFeature().getId() : null, null, RequestState.DENIED,
-					ErrorTranslator.getErrors(errors)));
-			return;
-		}
+        // Validate feature according to the data model
+        errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
+        if (errors.hasErrors()) {
+            publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                        item.getFeature() != null ? item.getFeature().getId() : null,
+                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            return;
+        }
 
-		// Manage granted request
-		FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestTime(),
-				RequestState.DENIED, null, item.getFeature(), item.getMetadata());
-		// Publish GRANTED request
-		publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
-				item.getFeature() != null ? item.getFeature().getId() : null, null, RequestState.GRANTED, null));
-		// Add to granted request collection
-		grantedRequests.add(request);
-	}
+        // Manage granted request
+        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestTime(),
+                                                                      RequestState.DENIED, null, item.getFeature(),
+                                                                      item.getMetadata());
+        // Publish GRANTED request
+        publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                    item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                                    RequestState.GRANTED, null));
+        // Add to granted request collection
+        grantedRequests.add(request);
+    }
 
-	@Override
-	public void createFeatures(List<FeatureCreationRequest> featureCreationRequests) {
+    @Override
+    public void createFeatures(List<FeatureCreationRequest> featureCreationRequests) {
 
-		// Register feature to insert
-		this.featureRepo.saveAll(featureCreationRequests.stream().map(feature -> initFeatureEntity(feature))
-				.collect(Collectors.toList()));
-		// update fcr with feature setted for each of them + publish files to storage
-		this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-				.filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
-				.map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
-		// delete fcr without files
-		this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-				.filter(fcr -> (fcr.getFeature().getFiles() == null)
-						|| ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
-				.map(fcr -> fcr.getId()).collect(Collectors.toList()));
-	}
+        // Register feature to insert
+        this.featureRepo.saveAll(featureCreationRequests.stream().map(feature -> initFeatureEntity(feature))
+                .collect(Collectors.toList()));
+        // update fcr with feature setted for each of them + publish files to storage
+        this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
+                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
+        // delete fcr without files
+        this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
+                .filter(fcr -> fcr.getFeature().getFiles() == null
+                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .map(fcr -> fcr.getId()).collect(Collectors.toList()));
+    }
 
-	/**
-	 * Publish all contained files inside the {@link FeatureCreationRequest} to
-	 * storage Two cases if they
-	 *
-	 * @param fcr
-	 * @return
-	 */
-	private FeatureCreationRequest publishFiles(FeatureCreationRequest fcr) {
-		for (FeatureFile file : fcr.getFeature().getFiles()) {
-			FeatureFileAttributes attribute = file.getAttributes();
-			for (FeatureFileLocation loc : file.getLocations()) {
-				if (fcr.getMetadata().isEmpty()) {
-					this.storageClient.reference((FileReferenceRequestDTO.build(attribute.getFilename(),
-							attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-							fcr.getFeature().getUrn().getOrder(), loc.getUrl(), loc.getStorage(), loc.getUrl())));
-				}
-				for (FeatureMetadataDto metadata : fcr.getMetadata()) {
-					if (loc.getStorage() == null) {
-						this.storageClient.store(FileStorageRequestDTO.build(attribute.getFilename(),
-								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-								fcr.getFeature().getUrn().toString(), loc.getUrl(), metadata.getStorageIdentifier(),
-								Optional.of(loc.getUrl())));
-					} else {
-						this.storageClient.reference(FileReferenceRequestDTO.build(attribute.getFilename(),
-								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-								fcr.getFeature().getUrn().getOrder(), loc.getUrl(), loc.getStorage(), loc.getUrl()));
-					}
-				}
-			}
-		}
-		return fcr;
-	}
+    /**
+     * Publish all contained files inside the {@link FeatureCreationRequest} to
+     * storage Two cases if they
+     *
+     * @param fcr
+     * @return
+     */
+    private FeatureCreationRequest publishFiles(FeatureCreationRequest fcr) {
+        for (FeatureFile file : fcr.getFeature().getFiles()) {
+            FeatureFileAttributes attribute = file.getAttributes();
+            for (FeatureFileLocation loc : file.getLocations()) {
+                if (fcr.getMetadata().isEmpty()) {
+                    this.storageClient.reference(FileReferenceRequestDTO
+                            .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
+                                   attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
+                                   loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                }
+                for (FeatureMetadataDto metadata : fcr.getMetadata()) {
+                    if (loc.getStorage() == null) {
+                        this.storageClient.store(FileStorageRequestDTO
+                                .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
+                                       attribute.getMimeType().toString(), fcr.getFeature().getUrn().toString(),
+                                       loc.getUrl(), metadata.getStorageIdentifier(), Optional.of(loc.getUrl())));
+                    } else {
+                        this.storageClient.reference(FileReferenceRequestDTO
+                                .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
+                                       attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
+                                       loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                    }
+                }
+            }
+        }
+        return fcr;
+    }
 
-	/**
-	 * Init a {@link FeatureEntity} from a {@link FeatureCreationRequest} and set it
-	 * as feature entity
-	 *
-	 * @param feature
-	 * @return
-	 */
-	private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr) {
-		FeatureEntity created = FeatureEntity.build(fcr.getFeature(), OffsetDateTime.now(),
-				FeatureState.STORAGE_REQUESTED);
-		fcr.setFeatureEntity(created);
-		return created;
-	}
+    /**
+     * Init a {@link FeatureEntity} from a {@link FeatureCreationRequest} and set it
+     * as feature entity
+     *
+     * @param feature
+     * @return
+     */
+    private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr) {
 
-	@Override
-	public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata) {
-		FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata);
-		publisher.publish(event);
-		return event.getRequestId();
-	}
+        Feature feature = fcr.getFeature();
+
+        if (feature.getUrn() != null) {
+            // FIXME KMS : la requête doit être validé en amont et cette erreur ne doit pas arriver jusque ici
+            throw new IllegalArgumentException(String.format("URN of feature \"%\" must be null", feature.getId()));
+        }
+
+        // Compute URN with version (URN must not be null in database)
+        // FIXME KMS (revoir PM sur politique de gestion des versions/doublons)
+        // feature.setUrn(null);
+
+        FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(), FeatureState.STORAGE_REQUESTED);
+        fcr.setFeatureEntity(created);
+        return created;
+    }
+
+    @Override
+    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata) {
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata);
+        publisher.publish(event);
+        return event.getRequestId();
+    }
 
 }
