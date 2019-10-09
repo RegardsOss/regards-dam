@@ -168,23 +168,20 @@ public class FeatureService implements IFeatureService {
 			FeatureFileAttributes attribute = file.getAttributes();
 			for (FeatureFileLocation loc : file.getLocations()) {
 				if (fcr.getMetadata().isEmpty()) {
-					this.storageClient.store(FileStorageRequestDTO.build(attribute.getFilename(),
+					this.storageClient.reference((FileReferenceRequestDTO.build(attribute.getFilename(),
 							attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-							fcr.getFeature().getUrn().toString(), loc.getUrl(), loc.getStorage(),
-							Optional.of(loc.getUrl())));
+							fcr.getFeature().getUrn().getOrder(), loc.getUrl(), loc.getStorage(), loc.getUrl())));
 				}
 				for (FeatureMetadataDto metadata : fcr.getMetadata()) {
-					// FIXME vérifier le mime type? + verif reference et store
 					if (loc.getStorage() == null) {
-						this.storageClient.reference((FileReferenceRequestDTO.build(attribute.getFilename(),
-								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-								fcr.getFeature().getUrn().getOrder(), loc.getUrl(), metadata.getStorageIdentifier(),
-								loc.getUrl())));
-					} else {
 						this.storageClient.store(FileStorageRequestDTO.build(attribute.getFilename(),
 								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
-								fcr.getFeature().getUrn().toString(), loc.getUrl(), loc.getStorage(),
+								fcr.getFeature().getUrn().toString(), loc.getUrl(), metadata.getStorageIdentifier(),
 								Optional.of(loc.getUrl())));
+					} else {
+						this.storageClient.reference(FileReferenceRequestDTO.build(attribute.getFilename(),
+								attribute.getChecksum(), attribute.getAlgorithm(), attribute.getMimeType().toString(),
+								fcr.getFeature().getUrn().getOrder(), loc.getUrl(), loc.getStorage(), loc.getUrl()));
 					}
 				}
 			}

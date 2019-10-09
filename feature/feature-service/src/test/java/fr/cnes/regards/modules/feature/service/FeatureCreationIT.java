@@ -17,8 +17,6 @@ import org.springframework.util.MimeType;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -26,6 +24,8 @@ import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.repository.FeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.repository.FeatureEntityRepository;
 
@@ -88,7 +88,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 		// create events to publish
 		for (int i = 0; i < EVENTS_NUMBER; i++) {
 			featureToAdd = Feature.builder(
-					new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, "peps", UUID.randomUUID(), 1),
+					new FeatureUniformResourceName(FeatureIdentifier.FEATURE, EntityType.DATA, "peps",
+							UUID.randomUUID(), 1),
 					IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
 			file = new FeatureFile();
 			attributes = FeatureFileAttributes.builder(DataType.DESCRIPTION, new MimeType("mime"), "toto", 1024l, "MD5",
@@ -118,7 +119,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
 		initFeatureCreationRequestEvent(events);
 
-		events.get(0).getFeature().setUrn(null);
+		events.get(0).getFeature().setEntityType(null);
+		;
 
 		featureService.handleFeatureCreationRequestEvents(events);
 

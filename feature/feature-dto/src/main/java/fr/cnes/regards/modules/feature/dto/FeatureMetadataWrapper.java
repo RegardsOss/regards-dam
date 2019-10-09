@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.feature.dto;
 import java.util.List;
 
 /**
+ * Wrapper of {@link Feature} and associated list of {@link FeatureMetadataDto}
+ * 
  * @author kevin
  *
  */

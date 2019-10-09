@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 
 /**
@@ -44,8 +44,7 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
 	/**
 	 * Unique feature identifer based on provider identifier with versionning
 	 */
-	@NotNull
-	private UniformResourceName urn;
+	private FeatureUniformResourceName urn;
 
 	@NotNull(message = "Feature type is required")
 	private EntityType entityType;
@@ -56,11 +55,11 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
 	@Valid
 	protected List<FeatureFile> files = new ArrayList<FeatureFile>();
 
-	public UniformResourceName getUrn() {
+	public FeatureUniformResourceName getUrn() {
 		return urn;
 	}
 
-	public void setUrn(UniformResourceName urn) {
+	public void setUrn(FeatureUniformResourceName urn) {
 		this.urn = urn;
 	}
 
@@ -138,7 +137,7 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
 		return true;
 	}
 
-	public static Feature builder(UniformResourceName urn, Point geometry, EntityType entityType, String model) {
+	public static Feature builder(FeatureUniformResourceName urn, Point geometry, EntityType entityType, String model) {
 		Feature feature = new Feature();
 		feature.setUrn(urn);
 		feature.setEntityType(entityType);
