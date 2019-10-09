@@ -341,11 +341,11 @@ public class EntityIndexerService implements IEntityIndexerService {
             object.removeTags(Arrays.asList(ipId));
             // reset datasetModelIds
             object.getDatasetModelNames().clear();
-            // Remove dataset ipId from metadata.groups dans modelIds
+            // Remove dataset ipId from metadata.groups dans modelNames
             object.getMetadata().removeDatasetIpId(ipId);
             // update groups
             object.setGroups(object.getMetadata().getGroups());
-            // update modelIds
+            // update modelNames
             object.setDatasetModelNames(object.getMetadata().getModelNames());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
@@ -779,7 +779,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
         // search objects from storage only using tags so if this tag has been used
         // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
-        // current creationDate, groups, tags and modelIds
+        // current creationDate, groups, tags and modelNames
         if (curObject != null) {
             dataObject.setCreationDate(curObject.getCreationDate());
             dataObject.setMetadata(curObject.getMetadata());

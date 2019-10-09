@@ -34,7 +34,7 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
 
     @Override
     public void accept(DataObject object) {
-        // reset groupsMap and modelIds for this datasetIpId
+        // reset groupsMap and modelNames for this datasetIpId
         object.getMetadata().removeDatasetIpId(datasetIpId);
         object.addTags(datasetIpId);
         // set current groups with no plugin access filter from groupsMap on metadata for this datasetIpId
@@ -45,11 +45,11 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
                 object.getMetadata().addGroup(group.getGroupName(), datasetIpId, group.getDataObjectAccess());
             }
         }
-        // set current modelIds on metadata for this datasetIpId
+        // set current modelNames on metadata for this datasetIpId
         object.getMetadata().addModelName(datasetModelName, datasetIpId);
         // update groupsMap from metadata
         object.setGroups(object.getMetadata().getGroups());
-        // update modelIds from metadata
+        // update modelNames from metadata
         object.setDatasetModelNames(object.getMetadata().getModelNames());
         object.setLastUpdate(updateDate);
         super.addDataObject(object);
