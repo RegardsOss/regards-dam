@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -71,7 +72,7 @@ public class FeatureCreationRequest extends AbstractRequest {
     private Feature feature;
 
     @ManyToOne
-    @JoinColumn(name = "feature_id")
+    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
     private FeatureEntity featureEntity;
 
     @Column(name = "group_id")

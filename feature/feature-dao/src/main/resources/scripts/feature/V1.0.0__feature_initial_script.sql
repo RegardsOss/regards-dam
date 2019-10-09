@@ -12,6 +12,16 @@ create sequence seq_feature start 1 increment 50;
 alter table t_feature_creation_request add column group_id varchar(255);
 alter table t_feature_creation_request add column feature_id int8;
 
-alter table t_feature_creation_request add constraint fk_feature_id foreign key (feature_id) references t_feature(id);
+alter table t_feature_creation_request add constraint foreign key (feature_id) references t_feature(id);
 
 alter table t_feature_creation_request add column metadata jsonb;
+
+-- Update requests
+create table t_feature_update_request (id int8 not null, errors jsonb, registration_date timestamp not null, request_date timestamp not null, request_id varchar(36) not null, state varchar(50) not null, feature jsonb not null, group_id varchar(255), step varchar(50) not null, urn varchar(132) not null, feature_id int8, primary key (id));
+create index idx_feature_update_request_id on t_feature_update_request (request_id);
+create index idx_feature_update_request_state on t_feature_update_request (state);
+create index idx_feature_update_request_urn on t_feature_update_request (urn);
+
+alter table t_feature_update_request add constraint uk_feature_update_request_id unique (request_id);
+create sequence seq_feature_update_request start 1 increment 50;
+alter table  constraint foreign key (feature_id) references t_feature(id);

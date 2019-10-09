@@ -26,6 +26,7 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -56,7 +57,8 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 @Entity
 @Table(name = "t_feature_update_request",
         indexes = { @Index(name = "idx_feature_update_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_update_request_state", columnList = AbstractRequest.COLUMN_STATE) },
+                @Index(name = "idx_feature_update_request_state", columnList = AbstractRequest.COLUMN_STATE),
+                @Index(name = "idx_feature_update_request_urn", columnList = "urn") },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_update_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
@@ -80,7 +82,7 @@ public class FeatureUpdateRequest extends AbstractRequest {
     private Feature feature;
 
     @ManyToOne
-    @JoinColumn(name = "feature_id")
+    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
     private FeatureEntity featureEntity;
 
     /**
