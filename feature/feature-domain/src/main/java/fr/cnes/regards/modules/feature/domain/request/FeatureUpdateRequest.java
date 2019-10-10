@@ -26,13 +26,10 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -44,7 +41,6 @@ import org.hibernate.annotations.TypeDefs;
 import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
-import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -81,10 +77,6 @@ public class FeatureUpdateRequest extends AbstractRequest {
     @Type(type = "jsonb")
     private Feature feature;
 
-    @ManyToOne
-    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
-    private FeatureEntity featureEntity;
-
     /**
      * All internal request steps including local and remote ones
      */
@@ -92,9 +84,6 @@ public class FeatureUpdateRequest extends AbstractRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "step", length = 50, nullable = false)
     private FeatureRequestStep step;
-
-    @Column(name = "group_id")
-    private String groupId;
 
     public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature) {
@@ -123,22 +112,6 @@ public class FeatureUpdateRequest extends AbstractRequest {
 
     public void setFeature(Feature feature) {
         this.feature = feature;
-    }
-
-    public String getGroupId() {
-        return this.groupId;
-    }
-
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
-    }
-
-    public FeatureEntity getFeatureEntity() {
-        return featureEntity;
-    }
-
-    public void setFeatureEntity(FeatureEntity featureEntity) {
-        this.featureEntity = featureEntity;
     }
 
     public FeatureRequestStep getStep() {

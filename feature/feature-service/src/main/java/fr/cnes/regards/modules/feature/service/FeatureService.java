@@ -150,18 +150,18 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() == null)
+                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 
     /**
      * Publish all contained files inside the {@link FeatureCreationRequest} to
-     * storage Two cases if they
+     * storage
      *
      * @param fcr
      * @return
@@ -170,6 +170,7 @@ public class FeatureService implements IFeatureService {
         for (FeatureFile file : fcr.getFeature().getFiles()) {
             FeatureFileAttributes attribute = file.getAttributes();
             for (FeatureFileLocation loc : file.getLocations()) {
+                // there is no metadata but a file location so we will update reference
                 if (fcr.getMetadata().isEmpty()) {
                     this.storageClient.reference(FileReferenceRequestDTO
                             .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
