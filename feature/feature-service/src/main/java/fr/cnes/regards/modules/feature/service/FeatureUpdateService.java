@@ -34,6 +34,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
@@ -64,7 +65,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     private IFeatureUpdateRequestRepository updateRepo;
 
     @Override
-    public void registerFeatureUpdateRequestEvents(List<FeatureUpdateRequestEvent> items) {
+    public void registerUpdateRequests(List<FeatureUpdateRequestEvent> items) {
         List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
         items.forEach(item -> prepareFeatureUpdateRequest(item, grantedRequests));
 
@@ -106,6 +107,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
         // Manage granted request
         FeatureUpdateRequest request = FeatureUpdateRequest.build(item.getRequestId(), item.getRequestDate(),
                                                                   RequestState.GRANTED, null, item.getFeature());
+        request.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
@@ -113,6 +115,12 @@ public class FeatureUpdateService implements IFeatureUpdateService {
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
         grantedRequests.add(request);
+    }
+
+    @Override
+    public void scheduleUpdateRequestProcessing() {
+        // TODO Auto-generated method stub
+
     }
 
 }

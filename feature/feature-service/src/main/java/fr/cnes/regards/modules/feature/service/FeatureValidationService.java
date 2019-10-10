@@ -72,13 +72,13 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
             case CREATION:
                 if (feature.getUrn() != null) {
                     errors.rejectValue(URN_FIELD, "feature.urn.unexpected.error.message",
-                                       "Unexpected URN is feature creation");
+                                       "Unexpected URN in feature creation");
                 }
                 break;
             case UPDATE:
                 if (feature.getUrn() == null) {
                     errors.rejectValue(URN_FIELD, "feature.urn.required.error.message",
-                                       "URN is requiredin feature update");
+                                       "URN is required in feature update");
                 }
                 break;
             default:

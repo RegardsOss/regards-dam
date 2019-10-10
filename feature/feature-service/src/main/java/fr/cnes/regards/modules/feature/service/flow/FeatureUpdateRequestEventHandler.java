@@ -77,6 +77,6 @@ public class FeatureUpdateRequestEventHandler extends AbstractRequestFlowHandler
 
     @Override
     protected void processBulk(List<FeatureUpdateRequestEvent> items) {
-        featureService.registerFeatureUpdateRequestEvents(items);
+        featureService.registerUpdateRequests(items);
     }
 }

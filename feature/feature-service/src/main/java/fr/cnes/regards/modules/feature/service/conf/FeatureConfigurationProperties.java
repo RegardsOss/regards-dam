@@ -30,8 +30,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FeatureConfigurationProperties {
 
+    /**
+     * Max number of requests to process at a time
+     */
     @Value("${regards.feature.max.bulk.size:1000}")
     private Integer maxBulkSize;
+
+    /**
+     * In second.
+     */
+    @Value("${regards.feature.delay.before.processing:5}")
+    private Integer delayBeforeProcessing;
 
     /*
      * In minute.
@@ -53,5 +62,13 @@ public class FeatureConfigurationProperties {
 
     public void setRemoteRequestTimeout(Long remoteRequestTimeout) {
         this.remoteRequestTimeout = remoteRequestTimeout;
+    }
+
+    public Integer getDelayBeforeProcessing() {
+        return delayBeforeProcessing;
+    }
+
+    public void setDelayBeforeProcessing(Integer delayBeforeProcessing) {
+        this.delayBeforeProcessing = delayBeforeProcessing;
     }
 }

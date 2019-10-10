@@ -31,5 +31,11 @@ public interface IFeatureUpdateService {
     /**
      * Register update requests in database for further processing
      */
-    void registerFeatureUpdateRequestEvents(List<FeatureUpdateRequestEvent> items);
+    void registerUpdateRequests(List<FeatureUpdateRequestEvent> items);
+
+    /**
+     * Schedule update request processing.<br/>
+     * A delta of time is kept between request registration and processing to manage concurrent updates.
+     */
+    void scheduleUpdateRequestProcessing();
 }
