@@ -41,6 +41,8 @@ public class FeatureTaskScheduler {
 
     private static final String LOCK_REQUEST_UPDATE = "Update_Request";
 
+    private static final String LOCK_REQUEST_INSERT = "Insert_Request";
+
     @Autowired
     private ITenantResolver tenantResolver;
 
@@ -62,6 +64,21 @@ public class FeatureTaskScheduler {
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
+                runtimeTenantResolver.clearTenant();
+            }
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+    public void scheduleInsertRequests() {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
+            try {
+                runtimeTenantResolver.forceTenant(tenant);
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
+
+                }
+            } finally {
+                lockService.releaseLock(LOCK_REQUEST_INSERT, this);
                 runtimeTenantResolver.clearTenant();
             }
         }

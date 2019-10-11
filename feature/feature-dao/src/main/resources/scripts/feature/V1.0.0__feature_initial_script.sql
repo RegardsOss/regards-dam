@@ -1,4 +1,4 @@
-create table t_feature (id int8 not null, feature jsonb, last_update timestamp not null, state varchar(50) not null, primary key (id));
+create table t_feature (id int8 not null, feature jsonb, last_update timestamp not null, state varchar(50) not null, provider_id varchar(100) not null, version numeric not null,primary key (id));
 create table t_feature_creation_request (id int8 not null, errors jsonb, request_id varchar(36) not null, state varchar(50) not null, feature jsonb not null, registration_date timestamp not null, request_date timestamp not null, primary key (id));
 
 create index idx_feature_last_update on t_feature (last_update);

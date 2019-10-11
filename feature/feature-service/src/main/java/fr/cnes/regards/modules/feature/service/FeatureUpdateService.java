@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
@@ -40,6 +42,7 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -63,6 +66,9 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
     @Autowired
     private IFeatureUpdateRequestRepository updateRepo;
+
+    @Autowired
+    FeatureConfigurationProperties properties;
 
     @Override
     public void registerUpdateRequests(List<FeatureUpdateRequestEvent> items) {
@@ -119,8 +125,21 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
     @Override
     public void scheduleUpdateRequestProcessing() {
-        // TODO Auto-generated method stub
 
+        List<FeatureUpdateRequest> delayedRequests = this.updateRepo
+                .findRequestToSchedule(PageRequest.of(0, this.properties.getMaxBulkSize()),
+                                       OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
+        List<FeatureUpdateRequest> toSchedule = new ArrayList<FeatureUpdateRequest>();
+        FeatureUpdateRequest currentRequest;
+
+        for (int i = 0; i < delayedRequests.size(); i++) {
+            currentRequest = delayedRequests.get(i);
+            currentRequest.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+            toSchedule.add(currentRequest);
+        }
+        // TODO préparation du job
+
+        this.updateRepo.saveAll(toSchedule);
     }
 
 }

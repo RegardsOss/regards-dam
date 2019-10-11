@@ -84,6 +84,7 @@ public abstract class AbstractRequest {
     @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
     private Set<String> errors;
 
+    // FIXME enlever de la super classe si l'update ne concerna pas les ficheirs
     @ManyToOne
     @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
     private FeatureEntity featureEntity;

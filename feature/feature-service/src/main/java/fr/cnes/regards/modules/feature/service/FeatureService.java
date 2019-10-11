@@ -25,6 +25,8 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
@@ -38,6 +40,8 @@ import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -80,6 +84,9 @@ public class FeatureService implements IFeatureService {
 
     @Autowired
     private IStorageClient storageClient;
+
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Override
     public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
@@ -211,14 +218,27 @@ public class FeatureService implements IFeatureService {
             throw new IllegalArgumentException(String.format("URN of feature \"%\" must be null", feature.getId()));
         }
 
-        // Compute URN with version (URN must not be null in database)
+        // FIXME entity type
+        feature.setUrn(FeatureUniformResourceName
+                .pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA, runtimeTenantResolver.getTenant(),
+                                 computeNextVersion(featureRepo
+                                         .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
         // FIXME KMS (revoir PM sur politique de gestion des versions/doublons)
-        // feature.setUrn(null);
 
         FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(),
                                                     FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         fcr.setFeatureEntity(created);
         return created;
+    }
+
+    /**
+     * Compute the next version for a specific provider id we will increment the version passed in parameter
+     * a null parameter mean a first version
+     * @param lastVersion last version for a provider id null if it not exist
+     * @return the next version
+     */
+    private int computeNextVersion(Integer lastVersion) {
+        return lastVersion == null ? 1 : lastVersion + 1;
     }
 
     @Override
@@ -227,5 +247,4 @@ public class FeatureService implements IFeatureService {
         publisher.publish(event);
         return event.getRequestId();
     }
-
 }

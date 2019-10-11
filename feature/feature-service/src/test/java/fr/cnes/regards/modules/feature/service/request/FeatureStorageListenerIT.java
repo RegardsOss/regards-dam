@@ -89,14 +89,16 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
                 .build("id1", OffsetDateTime.now(), RequestState.GRANTED, new HashSet<String>(),
                        Feature.builder(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                         "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
+                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                       "id1"),
                        new ArrayList<FeatureMetadataDto>());
         fcr.setGroupId(info.getGroupId());
         FeatureEntity feature = FeatureEntity
                 .build(Feature.builder(
                                        FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                         "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
+                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                       "id2"),
                        OffsetDateTime.now(), FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         this.featureRepo.save(feature);
         fcr.setFeatureEntity(feature);

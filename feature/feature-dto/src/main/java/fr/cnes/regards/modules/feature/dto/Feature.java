@@ -41,108 +41,110 @@ import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
  */
 public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
 
-	/**
-	 * Unique feature identifer based on provider identifier with versionning
-	 */
-	private FeatureUniformResourceName urn;
+    /**
+     * Unique feature identifer based on provider identifier with versionning
+     */
+    private FeatureUniformResourceName urn;
 
-	@NotNull(message = "Feature type is required")
-	private EntityType entityType;
+    @NotNull(message = "Feature type is required")
+    private EntityType entityType;
 
-	@NotBlank(message = "Model name is required")
-	protected String model;
+    @NotBlank(message = "Model name is required")
+    protected String model;
 
-	@Valid
-	protected List<FeatureFile> files = new ArrayList<FeatureFile>();
+    @Valid
+    protected List<FeatureFile> files = new ArrayList<FeatureFile>();
 
-	public FeatureUniformResourceName getUrn() {
-		return urn;
-	}
+    public FeatureUniformResourceName getUrn() {
+        return urn;
+    }
 
-	public void setUrn(FeatureUniformResourceName urn) {
-		this.urn = urn;
-	}
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
+    }
 
-	public EntityType getEntityType() {
-		return entityType;
-	}
+    public EntityType getEntityType() {
+        return entityType;
+    }
 
-	public void setEntityType(EntityType entityType) {
-		this.entityType = entityType;
-	}
+    public void setEntityType(EntityType entityType) {
+        this.entityType = entityType;
+    }
 
-	public String getModel() {
-		return model;
-	}
+    public String getModel() {
+        return model;
+    }
 
-	public void setModel(String model) {
-		this.model = model;
-	}
+    public void setModel(String model) {
+        this.model = model;
+    }
 
-	public List<FeatureFile> getFiles() {
-		return files;
-	}
+    public List<FeatureFile> getFiles() {
+        return files;
+    }
 
-	public void setFiles(List<FeatureFile> files) {
-		this.files = files;
-	}
+    public void setFiles(List<FeatureFile> files) {
+        this.files = files;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = (prime * result) + (entityType == null ? 0 : entityType.hashCode());
-		result = (prime * result) + (files == null ? 0 : files.hashCode());
-		result = (prime * result) + (model == null ? 0 : model.hashCode());
-		result = (prime * result) + (urn == null ? 0 : urn.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = (prime * result) + (entityType == null ? 0 : entityType.hashCode());
+        result = (prime * result) + (files == null ? 0 : files.hashCode());
+        result = (prime * result) + (model == null ? 0 : model.hashCode());
+        result = (prime * result) + (urn == null ? 0 : urn.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		Feature other = (Feature) obj;
-		if (entityType != other.entityType) {
-			return false;
-		}
-		if (files == null) {
-			if (other.files != null) {
-				return false;
-			}
-		} else if (!files.equals(other.files)) {
-			return false;
-		}
-		if (model == null) {
-			if (other.model != null) {
-				return false;
-			}
-		} else if (!model.equals(other.model)) {
-			return false;
-		}
-		if (urn == null) {
-			if (other.urn != null) {
-				return false;
-			}
-		} else if (!urn.equals(other.urn)) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Feature other = (Feature) obj;
+        if (entityType != other.entityType) {
+            return false;
+        }
+        if (files == null) {
+            if (other.files != null) {
+                return false;
+            }
+        } else if (!files.equals(other.files)) {
+            return false;
+        }
+        if (model == null) {
+            if (other.model != null) {
+                return false;
+            }
+        } else if (!model.equals(other.model)) {
+            return false;
+        }
+        if (urn == null) {
+            if (other.urn != null) {
+                return false;
+            }
+        } else if (!urn.equals(other.urn)) {
+            return false;
+        }
+        return true;
+    }
 
-	public static Feature builder(FeatureUniformResourceName urn, Point geometry, EntityType entityType, String model) {
-		Feature feature = new Feature();
-		feature.setUrn(urn);
-		feature.setEntityType(entityType);
-		feature.setModel(model);
-		feature.setGeometry(geometry);
-		return feature;
-	}
+    public static Feature builder(FeatureUniformResourceName urn, Point geometry, EntityType entityType, String model,
+            String id) {
+        Feature feature = new Feature();
+        feature.setUrn(urn);
+        feature.setEntityType(entityType);
+        feature.setModel(model);
+        feature.setGeometry(geometry);
+        feature.setId(id);
+        return feature;
+    }
 }
