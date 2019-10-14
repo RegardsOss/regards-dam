@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -35,6 +36,7 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfo
  *
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
+@ActiveProfiles(value = { "noscheduler" })
 public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
@@ -91,7 +93,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
                                                                         "peps", UUID.randomUUID(), 1),
                                        IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
                                        "id1"),
-                       new ArrayList<FeatureMetadataDto>());
+                       new ArrayList<FeatureMetadataDto>(), FeatureRequestStep.LOCAL_SCHEDULED);
         fcr.setGroupId(info.getGroupId());
         FeatureEntity feature = FeatureEntity
                 .build(Feature.builder(

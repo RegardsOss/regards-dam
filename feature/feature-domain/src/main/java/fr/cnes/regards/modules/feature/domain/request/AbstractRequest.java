@@ -92,6 +92,14 @@ public abstract class AbstractRequest {
     @Column(name = "group_id")
     private String groupId;
 
+    /**
+     * All internal request steps including local and remote ones
+     */
+    @NotNull(message = "Feature request step is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "step", length = 50, nullable = false)
+    private FeatureRequestStep step;
+
     @SuppressWarnings("unchecked")
     protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors) {
@@ -167,5 +175,13 @@ public abstract class AbstractRequest {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public FeatureRequestStep getStep() {
+        return step;
+    }
+
+    public void setStep(FeatureRequestStep step) {
+        this.step = step;
     }
 }

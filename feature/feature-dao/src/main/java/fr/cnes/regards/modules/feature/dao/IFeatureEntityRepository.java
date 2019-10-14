@@ -24,5 +24,5 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 
 public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
 
-    public Integer findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
+    public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
 }

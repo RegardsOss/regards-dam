@@ -32,7 +32,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
     protected IFeatureUpdateRequestRepository featureUpdateRequestRepo;
 
     @Before
-    public void before() {
+    public void before() throws InterruptedException {
         this.featureCreationRequestRepo.deleteAll();
         this.featureUpdateRequestRepo.deleteAll();
         this.featureRepo.deleteAll();
@@ -49,7 +49,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             featureToAdd = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                           "model", "id");
+                                           "model", "id" + i);
             file = new FeatureFile();
             attributes = FeatureFileAttributes.builder(DataType.DESCRIPTION, new MimeType("mime"), "toto", 1024l, "MD5",
                                                        "checksum");

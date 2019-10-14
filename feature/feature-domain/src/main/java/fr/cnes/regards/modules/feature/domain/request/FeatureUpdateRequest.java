@@ -24,8 +24,6 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,7 +31,6 @@ import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -77,14 +74,6 @@ public class FeatureUpdateRequest extends AbstractRequest {
     @Type(type = "jsonb")
     private Feature feature;
 
-    /**
-     * All internal request steps including local and remote ones
-     */
-    @NotNull(message = "Feature request step is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "step", length = 50, nullable = false)
-    private FeatureRequestStep step;
-
     public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature) {
         Assert.notNull(feature, "Feature is required");
@@ -112,13 +101,5 @@ public class FeatureUpdateRequest extends AbstractRequest {
 
     public void setFeature(Feature feature) {
         this.feature = feature;
-    }
-
-    public FeatureRequestStep getStep() {
-        return step;
-    }
-
-    public void setStep(FeatureRequestStep step) {
-        this.step = step;
     }
 }

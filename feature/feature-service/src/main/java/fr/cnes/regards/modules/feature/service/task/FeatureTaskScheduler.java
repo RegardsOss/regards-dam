@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.modules.locks.service.ILockService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.modules.feature.service.IFeatureService;
 
 /**
  * Enable feature task scheduling
@@ -52,6 +53,9 @@ public class FeatureTaskScheduler {
     @Autowired
     private ILockService lockService;
 
+    @Autowired
+    private IFeatureService featureService;
+
     @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
     public void scheduleUpdateRequests() {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
@@ -75,7 +79,7 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-
+                    this.featureService.scheduleFeatureCreationRequest();
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_INSERT, this);

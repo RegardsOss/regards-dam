@@ -21,4 +21,10 @@ public interface IFeatureService {
     void createFeatures(List<FeatureCreationRequest> featureCreationRequests);
 
     String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata);
+
+    /**
+     * Schedule a list of {@link FeatureCreationRequest} in a job
+     * Inside this list there is only one occurence {@link FeatureCreationRequest} per {@link Feature} id
+     */
+    void scheduleFeatureCreationRequest();
 }

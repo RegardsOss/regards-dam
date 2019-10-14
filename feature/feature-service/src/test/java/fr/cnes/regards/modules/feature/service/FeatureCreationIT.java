@@ -18,7 +18,7 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp" })
+@ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
     private final int EVENTS_NUMBER = 1000;
@@ -42,6 +42,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         super.initFeatureCreationRequestEvent(events, EVENTS_NUMBER);
 
         this.featureService.handleFeatureCreationRequestEvents(events);
+        this.featureService.scheduleFeatureCreationRequest();
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
 
@@ -73,9 +74,9 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         super.initFeatureCreationRequestEvent(events, EVENTS_NUMBER);
 
         events.get(0).getFeature().setEntityType(null);
-        ;
 
         this.featureService.handleFeatureCreationRequestEvents(events);
+        this.featureService.scheduleFeatureCreationRequest();
 
         assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
 
