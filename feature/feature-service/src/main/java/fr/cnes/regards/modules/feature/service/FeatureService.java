@@ -161,6 +161,11 @@ public class FeatureService implements IFeatureService {
             return;
         }
 
+        // check that all features have a null urn
+        if (item.getFeature().getUrn() != null) {
+            return;
+        }
+
         // Manage granted request
         FeatureCreationRequest request = FeatureCreationRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
@@ -236,11 +241,6 @@ public class FeatureService implements IFeatureService {
     private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr) {
 
         Feature feature = fcr.getFeature();
-
-        if (feature.getUrn() != null) {
-            // FIXME KMS : la requête doit être validé en amont et cette erreur ne doit pas arriver jusque ici
-            throw new IllegalArgumentException(String.format("URN of feature \"%\" must be null", feature.getId()));
-        }
 
         // FIXME entity type
         feature.setUrn(FeatureUniformResourceName

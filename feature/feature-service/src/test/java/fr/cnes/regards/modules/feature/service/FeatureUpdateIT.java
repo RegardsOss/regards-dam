@@ -43,7 +43,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
         super.initFeatureCreationRequestEvent(events, 2);
         this.featureService.handleFeatureCreationRequestEvents(events);
-
+        this.featureService.scheduleFeatureCreationRequest();
         int cpt = 0;
         long featureNumberInDatabase;
         do {

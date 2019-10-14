@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.Embedded;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
@@ -99,6 +100,9 @@ public abstract class AbstractRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "step", length = 50, nullable = false)
     private FeatureRequestStep step;
+
+    @Embedded
+    private FeatureSession session;
 
     @SuppressWarnings("unchecked")
     protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
@@ -184,4 +188,13 @@ public abstract class AbstractRequest {
     public void setStep(FeatureRequestStep step) {
         this.step = step;
     }
+
+    public FeatureSession getSession() {
+        return session;
+    }
+
+    public void setSession(FeatureSession session) {
+        this.session = session;
+    }
+
 }
