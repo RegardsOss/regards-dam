@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
@@ -18,6 +19,8 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMultitenantServiceTest {
@@ -46,6 +49,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureFile file;
         FeatureFileAttributes attributes;
         FeatureFileLocation loc;
+        FeatureSessionDto session;
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             featureToAdd = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
@@ -57,7 +61,9 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             file.getLocations().add(loc);
             file.setAttributes(attributes);
             featureToAdd.getFiles().add(file);
-            toAdd = new FeatureCreationRequestEvent();
+            toAdd = FeatureCreationRequestEvent.builder(featureToAdd, new ArrayList<FeatureMetadataDto>(),
+                                                        OffsetDateTime.now(),
+                                                        FeatureSessionDto.builder("owner", "session"));
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now());

@@ -7,12 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
@@ -20,6 +23,8 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationIT.class);
 
     private final int EVENTS_NUMBER = 1000;
 
@@ -42,7 +47,6 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         super.initFeatureCreationRequestEvent(events, EVENTS_NUMBER);
 
         this.featureService.handleFeatureCreationRequestEvents(events);
-        this.featureService.scheduleFeatureCreationRequest();
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
 
@@ -53,6 +57,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             Thread.sleep(1000);
             cpt++;
         } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
+
+        assertEquals(EVENTS_NUMBER, this.featureRepo.count());
 
         // in that case all features hasn't been saved
         if (cpt == 100) {
@@ -73,10 +79,11 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         super.initFeatureCreationRequestEvent(events, EVENTS_NUMBER);
 
-        events.get(0).getFeature().setEntityType(null);
+        Feature f = events.get(0).getFeature();
+        f.setEntityType(null);
+        LOGGER.info(">>>>>>>>>>>>>>>>>>>>> Entity type set to null for feature {}", f.getId());
 
         this.featureService.handleFeatureCreationRequestEvents(events);
-        this.featureService.scheduleFeatureCreationRequest();
 
         assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
 
@@ -87,6 +94,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             Thread.sleep(1000);
             cpt++;
         } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
+
+        assertEquals(EVENTS_NUMBER - 1, this.featureRepo.count());
 
         // in that case all features hasn't been saved
         if (cpt == 100) {

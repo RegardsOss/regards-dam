@@ -30,17 +30,18 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -161,15 +162,11 @@ public class FeatureService implements IFeatureService {
             return;
         }
 
-        // check that all features have a null urn
-        if (item.getFeature().getUrn() != null) {
-            return;
-        }
-
         // Manage granted request
         FeatureCreationRequest request = FeatureCreationRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
-                       item.getMetadata(), FeatureRequestStep.LOCAL_DELAYED);
+                       item.getMetadata(), FeatureRequestStep.LOCAL_DELAYED,
+                       FeatureSession.builder(item.getSession().getSessionOwner(), item.getSession().getSession()));
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
@@ -242,9 +239,8 @@ public class FeatureService implements IFeatureService {
 
         Feature feature = fcr.getFeature();
 
-        // FIXME entity type
         feature.setUrn(FeatureUniformResourceName
-                .pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA, runtimeTenantResolver.getTenant(),
+                .pseudoRandomUrn(FeatureIdentifier.FEATURE, feature.getEntityType(), runtimeTenantResolver.getTenant(),
                                  computeNextVersion(featureRepo
                                          .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
 
@@ -266,8 +262,9 @@ public class FeatureService implements IFeatureService {
     }
 
     @Override
-    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata);
+    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata, FeatureSessionDto session) {
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata,
+                                                                                OffsetDateTime.now(), session);
         publisher.publish(event);
         return event.getRequestId();
     }

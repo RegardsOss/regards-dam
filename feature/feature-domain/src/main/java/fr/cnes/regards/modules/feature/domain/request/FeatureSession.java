@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.feature.domain.request;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotEmpty;
 
 /**
  * Metadata associate to features requests
@@ -14,12 +15,12 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class FeatureSession {
 
-    // FIXME qu'elles contrainte?
-    @Column(length = 128, name = "session_owner")
+    @NotEmpty
+    @Column(length = 128, name = "session_owner", nullable = false)
     private String sessionOwner;
 
-    // FIXME qu'elles contrainte?
-    @Column(length = 128, name = "session_name")
+    @NotEmpty
+    @Column(length = 128, name = "session_name", nullable = false)
     private String session;
 
     public String getSessionOwner() {
@@ -36,5 +37,12 @@ public class FeatureSession {
 
     public void setSession(String session) {
         this.session = session;
+    }
+
+    public static FeatureSession builder(String sessionOwner, String session) {
+        FeatureSession newSession = new FeatureSession();
+        newSession.setSession(session);
+        newSession.setSessionOwner(sessionOwner);
+        return newSession;
     }
 }

@@ -31,6 +31,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Parameter;
@@ -101,6 +102,7 @@ public abstract class AbstractRequest {
     @Column(name = "step", length = 50, nullable = false)
     private FeatureRequestStep step;
 
+    @Valid
     @Embedded
     private FeatureSession session;
 

@@ -7,37 +7,47 @@ import java.util.List;
 
 /**
  * Wrapper of {@link Feature} and associated list of {@link FeatureMetadataDto}
- * 
+ *
  * @author kevin
  *
  */
 public class FeatureMetadataWrapper {
 
-	private Feature feature;
+    private Feature feature;
 
-	private List<FeatureMetadataDto> metada;
+    private List<FeatureMetadataDto> metada;
 
-	public Feature getFeature() {
-		return feature;
-	}
+    private FeatureSessionDto session;
 
-	public void setFeature(Feature feature) {
-		this.feature = feature;
-	}
+    public Feature getFeature() {
+        return feature;
+    }
 
-	public List<FeatureMetadataDto> getMetada() {
-		return metada;
-	}
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 
-	public void setMetada(List<FeatureMetadataDto> metada) {
-		this.metada = metada;
-	}
+    public List<FeatureMetadataDto> getMetada() {
+        return metada;
+    }
 
-	public static FeatureMetadataWrapper builder(Feature feature, List<FeatureMetadataDto> metada) {
-		FeatureMetadataWrapper fmw = new FeatureMetadataWrapper();
-		fmw.setFeature(feature);
-		fmw.setMetada(metada);
+    public void setMetada(List<FeatureMetadataDto> metada) {
+        this.metada = metada;
+    }
 
-		return fmw;
-	}
+    public FeatureSessionDto getSession() {
+        return session;
+    }
+
+    public void setSession(FeatureSessionDto session) {
+        this.session = session;
+    }
+
+    public static FeatureMetadataWrapper builder(Feature feature, List<FeatureMetadataDto> metada) {
+        FeatureMetadataWrapper fmw = new FeatureMetadataWrapper();
+        fmw.setFeature(feature);
+        fmw.setMetada(metada);
+
+        return fmw;
+    }
 }

@@ -66,6 +66,7 @@ public class FeatureCreationJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
+        LOGGER.info("Feature creation job begin");
         long beginExecutionTime = System.currentTimeMillis();
         this.featureService.createFeatures(featureCreationRequests);
         long endExcecutionTime = System.currentTimeMillis();

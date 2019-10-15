@@ -27,33 +27,33 @@ import fr.cnes.regards.modules.feature.service.IFeatureService;
 @RequestMapping(FeatureController.PATH_FEATURE)
 public class FeatureController implements IResourceController<Feature> {
 
-	public final static String PATH_FEATURE = "/feature";
+    public final static String PATH_FEATURE = "/feature";
 
-	@Autowired
-	private IFeatureService featureService;
+    @Autowired
+    private IFeatureService featureService;
 
-	@Autowired
-	private IResourceService resourceService;
+    @Autowired
+    private IResourceService resourceService;
 
-	/**
-	 * Receive a feature publish it and return the request id
-	 *
-	 * @param toPublish {@link FeatureMetadataWrapper} to publish
-	 * @return a request id
-	 */
-	@RequestMapping(method = RequestMethod.POST)
-	@ResourceAccess(description = "Public a feature and return the request id")
-	public ResponseEntity<Resource<Feature>> createAccessGroup(@Valid @RequestBody FeatureMetadataWrapper toPublish) {
-		return new ResponseEntity<>(
-				toResource(toPublish.getFeature(),
-						featureService.publishFeature(toPublish.getFeature(), toPublish.getMetada())),
-				HttpStatus.CREATED);
-	}
+    /**
+     * Receive a feature publish it and return the request id
+     *
+     * @param toPublish {@link FeatureMetadataWrapper} to publish
+     * @return a request id
+     */
+    @RequestMapping(method = RequestMethod.POST)
+    @ResourceAccess(description = "Public a feature and return the request id")
+    public ResponseEntity<Resource<Feature>> createAccessGroup(@Valid @RequestBody FeatureMetadataWrapper toPublish) {
+        return new ResponseEntity<>(
+                toResource(toPublish.getFeature(), featureService
+                        .publishFeature(toPublish.getFeature(), toPublish.getMetada(), toPublish.getSession())),
+                HttpStatus.CREATED);
+    }
 
-	@Override
-	public Resource<Feature> toResource(Feature element, Object... extras) {
-		Resource<Feature> resource = resourceService.toResource(element);
-		return resource;
-	}
+    @Override
+    public Resource<Feature> toResource(Feature element, Object... extras) {
+        Resource<Feature> resource = resourceService.toResource(element);
+        return resource;
+    }
 
 }
