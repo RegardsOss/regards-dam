@@ -32,45 +32,54 @@ import fr.cnes.regards.framework.oais.urn.DataType;
  */
 public class FeatureMetadataDto {
 
-	/**
-	 * Storage identifier. To use a plugin from storage, this identifier must match
-	 * a plugin configuration business identifier.
-	 */
-	@NotNull
-	private String storageIdentifier;
+    /**
+     * Storage identifier. To use a plugin from storage, this identifier must match
+     * a plugin configuration business identifier.
+     */
+    @NotNull
+    private String storageIdentifier;
 
-	/**
-	 * Optional path identifying the base directory in which to store related files
-	 */
-	private String subDir;
+    /**
+     * Optional path identifying the base directory in which to store related files
+     */
+    private String subDir;
 
-	/**
-	 * List of data object types accepted by this storage location (when storing
-	 * AIPs)
-	 */
-	private Set<DataType> targetTypes;
+    /**
+     * List of data object types accepted by this storage location (when storing
+     * AIPs)
+     */
+    private Set<DataType> targetTypes;
 
-	public String getStorageIdentifier() {
-		return storageIdentifier;
-	}
+    public String getStorageIdentifier() {
+        return storageIdentifier;
+    }
 
-	public void setStorageIdentifier(String storageIdentifier) {
-		this.storageIdentifier = storageIdentifier;
-	}
+    public void setStorageIdentifier(String storageIdentifier) {
+        this.storageIdentifier = storageIdentifier;
+    }
 
-	public String getSubDir() {
-		return subDir;
-	}
+    public String getSubDir() {
+        return subDir;
+    }
 
-	public void setSubDir(String subDir) {
-		this.subDir = subDir;
-	}
+    public void setSubDir(String subDir) {
+        this.subDir = subDir;
+    }
 
-	public Set<DataType> getTargetTypes() {
-		return targetTypes;
-	}
+    public Set<DataType> getTargetTypes() {
+        return targetTypes;
+    }
 
-	public void setTargetTypes(Set<DataType> targetTypes) {
-		this.targetTypes = targetTypes;
-	}
+    public void setTargetTypes(Set<DataType> targetTypes) {
+        this.targetTypes = targetTypes;
+    }
+
+    public static FeatureMetadataDto builder(String storageIdentifier, String subDir, Set<DataType> targetTypes) {
+        FeatureMetadataDto toCreate = new FeatureMetadataDto();
+        toCreate.setSubDir(subDir);
+        toCreate.setStorageIdentifier(storageIdentifier);
+        toCreate.setTargetTypes(targetTypes);
+
+        return toCreate;
+    }
 }

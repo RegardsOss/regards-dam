@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
@@ -98,16 +99,18 @@ public class FeatureService implements IFeatureService {
     FeatureConfigurationProperties properties;
 
     @Override
-    public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
+    public List<FeatureCreationRequest> handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
 
         List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
         items.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
 
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
-        featureCreationRequestRepo.saveAll(grantedRequests);
+        List<FeatureCreationRequest> savedFcr = featureCreationRequestRepo.saveAll(grantedRequests);
 
         scheduleFeatureCreationRequest();
+
+        return savedFcr;
     }
 
     @Override
@@ -267,5 +270,16 @@ public class FeatureService implements IFeatureService {
                                                                                 OffsetDateTime.now(), session);
         publisher.publish(event);
         return event.getRequestId();
+    }
+
+    @Override
+    public List<FeatureCreationRequest> createFeatureRequestEvent(FeatureCollection toHandle) {
+        List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
+
+        for (Feature feature : toHandle.getFeatures()) {
+            toTreat.add(FeatureCreationRequestEvent.builder(feature, toHandle.getMetadata(), OffsetDateTime.now(),
+                                                            toHandle.getSession()));
+        }
+        return this.handleFeatureCreationRequestEvents(toTreat);
     }
 }

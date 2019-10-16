@@ -13,9 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
@@ -101,5 +106,22 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         if (cpt == 100) {
             fail("Doesn't have all features at the end of time");
         }
+    }
+
+    @Test
+    public void testCreateFeatureRequestEvent() {
+        List<Feature> features = new ArrayList<Feature>();
+        for (int i = 0; i < EVENTS_NUMBER; i++) {
+            features.add(Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                         "model", "id" + i));
+        }
+
+        FeatureCollection collection = FeatureCollection.build(new ArrayList<FeatureMetadataDto>(),
+                                                               FeatureSessionDto.builder("owner", "session"));
+        collection.addAll(features);
+        collection.getMetadata().add(FeatureMetadataDto.builder("id ", null, null));
+        this.featureService.createFeatureRequestEvent(collection);
+
+        assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
     }
 }

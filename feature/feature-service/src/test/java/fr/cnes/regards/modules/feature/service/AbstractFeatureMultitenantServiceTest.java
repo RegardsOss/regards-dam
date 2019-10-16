@@ -49,7 +49,6 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureFile file;
         FeatureFileAttributes attributes;
         FeatureFileLocation loc;
-        FeatureSessionDto session;
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             featureToAdd = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
