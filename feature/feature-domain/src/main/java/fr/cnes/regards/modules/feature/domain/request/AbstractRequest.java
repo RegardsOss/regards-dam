@@ -24,9 +24,14 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.Embedded;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Parameter;
@@ -35,6 +40,7 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
@@ -79,6 +85,26 @@ public abstract class AbstractRequest {
     @Column(columnDefinition = "jsonb", name = "errors")
     @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
     private Set<String> errors;
+
+    // FIXME enlever de la super classe si l'update ne concerna pas les ficheirs
+    @ManyToOne
+    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
+    private FeatureEntity featureEntity;
+
+    @Column(name = "group_id")
+    private String groupId;
+
+    /**
+     * All internal request steps including local and remote ones
+     */
+    @NotNull(message = "Feature request step is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "step", length = 50, nullable = false)
+    private FeatureRequestStep step;
+
+    @Valid
+    @Embedded
+    private FeatureSession session;
 
     @SuppressWarnings("unchecked")
     protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
@@ -140,4 +166,37 @@ public abstract class AbstractRequest {
     public void setErrors(Set<String> errors) {
         this.errors = errors;
     }
+
+    public FeatureEntity getFeatureEntity() {
+        return featureEntity;
+    }
+
+    public void setFeatureEntity(FeatureEntity featureEntity) {
+        this.featureEntity = featureEntity;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    public FeatureRequestStep getStep() {
+        return step;
+    }
+
+    public void setStep(FeatureRequestStep step) {
+        this.step = step;
+    }
+
+    public FeatureSession getSession() {
+        return session;
+    }
+
+    public void setSession(FeatureSession session) {
+        this.session = session;
+    }
+
 }

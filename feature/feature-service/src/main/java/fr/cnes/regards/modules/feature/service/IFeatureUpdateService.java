@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
 
+import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 
 /**
@@ -38,4 +39,9 @@ public interface IFeatureUpdateService {
      * A delta of time is kept between request registration and processing to manage concurrent updates.
      */
     void scheduleUpdateRequestProcessing();
+
+    /**
+     * @param featureUpdateRequests
+     */
+    void updateFeatures(List<FeatureUpdateRequest> featureUpdateRequests);
 }

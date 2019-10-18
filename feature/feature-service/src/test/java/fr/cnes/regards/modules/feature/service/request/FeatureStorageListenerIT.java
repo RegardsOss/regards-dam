@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -21,6 +22,7 @@ import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -35,6 +37,7 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfo
  *
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
+@ActiveProfiles(value = { "noscheduler" })
 public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
@@ -89,14 +92,17 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
                 .build("id1", OffsetDateTime.now(), RequestState.GRANTED, new HashSet<String>(),
                        Feature.builder(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                         "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
-                       new ArrayList<FeatureMetadataDto>());
+                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                       "id1"),
+                       new ArrayList<FeatureMetadataDto>(), FeatureRequestStep.LOCAL_SCHEDULED,
+                       FeatureSession.builder("owner", "session"));
         fcr.setGroupId(info.getGroupId());
         FeatureEntity feature = FeatureEntity
                 .build(Feature.builder(
                                        FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                         "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
+                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                       "id2"),
                        OffsetDateTime.now(), FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         this.featureRepo.save(feature);
         fcr.setFeatureEntity(feature);

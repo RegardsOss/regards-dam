@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.dto.event.in;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
@@ -41,35 +43,37 @@ import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 @ValidFeatureEvent
 public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
-	@Valid
-	@NotNull(message = "Feature is required")
-	private Feature feature;
+    @Valid
+    @NotNull(message = "Feature is required")
+    private Feature feature;
 
-	@Valid
-	private List<FeatureMetadataDto> metadata = new ArrayList<FeatureMetadataDto>();
+    @Valid
+    private List<FeatureMetadataDto> metadata = new ArrayList<FeatureMetadataDto>();
 
-	public List<FeatureMetadataDto> getMetadata() {
-		return metadata;
-	}
+    public List<FeatureMetadataDto> getMetadata() {
+        return metadata;
+    }
 
-	public void setMetadata(List<FeatureMetadataDto> metadata) {
-		this.metadata = metadata;
-	}
+    public void setMetadata(List<FeatureMetadataDto> metadata) {
+        this.metadata = metadata;
+    }
 
-	public Feature getFeature() {
-		return feature;
-	}
+    public Feature getFeature() {
+        return feature;
+    }
 
-	public void setFeature(Feature feature) {
-		this.feature = feature;
-	}
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 
-	public static FeatureCreationRequestEvent builder(Feature feature, List<FeatureMetadataDto> metadata) {
-		FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
-		event.setFeature(feature);
-		event.setRequestId(generateRequestId());
-		event.setMetadata(metadata);
-
-		return event;
-	}
+    public static FeatureCreationRequestEvent builder(Feature feature, List<FeatureMetadataDto> metadata,
+            OffsetDateTime date, FeatureSessionDto session) {
+        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+        event.setFeature(feature);
+        event.setRequestId(generateRequestId());
+        event.setMetadata(metadata);
+        event.setRequestDate(date);
+        event.setSession(session);
+        return event;
+    }
 }

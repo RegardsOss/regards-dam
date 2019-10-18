@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.feature.service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -11,6 +12,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
@@ -25,19 +29,26 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -81,20 +92,44 @@ public class FeatureService implements IFeatureService {
     @Autowired
     private IStorageClient storageClient;
 
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    @Autowired
+    FeatureConfigurationProperties properties;
+
     @Override
-    public void handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
+    public List<FeatureCreationRequest> handleFeatureCreationRequestEvents(List<FeatureCreationRequestEvent> items) {
 
         List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
         items.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
 
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
-        List<FeatureCreationRequest> savedFCRE = featureCreationRequestRepo.saveAll(grantedRequests);
+        List<FeatureCreationRequest> savedFcr = featureCreationRequestRepo.saveAll(grantedRequests);
+
+        scheduleFeatureCreationRequest();
+
+        return savedFcr;
+    }
+
+    @Override
+    public void scheduleFeatureCreationRequest() {
 
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
+        Set<String> featureIdsScheduled = new HashSet<>();
+        List<FeatureCreationRequest> requestsToSchedule = new ArrayList<FeatureCreationRequest>();
+        for (FeatureCreationRequest request : this.featureCreationRequestRepo
+                .findAll(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))))) {
+            // we will schedule only one feature request for a feature id
+            if (!featureIdsScheduled.contains(request.getFeature().getId())) {
+                requestsToSchedule.add(request);
+                featureIdsScheduled.add(request.getFeature().getId());
+            }
+        }
         jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
-                savedFCRE.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+                requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
         JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
                 jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
@@ -131,9 +166,10 @@ public class FeatureService implements IFeatureService {
         }
 
         // Manage granted request
-        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestDate(),
-                                                                      RequestState.GRANTED, null, item.getFeature(),
-                                                                      item.getMetadata());
+        FeatureCreationRequest request = FeatureCreationRequest
+                .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
+                       item.getMetadata(), FeatureRequestStep.LOCAL_DELAYED,
+                       FeatureSession.builder(item.getSession().getSessionOwner(), item.getSession().getSession()));
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
@@ -150,18 +186,18 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() == null)
+                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 
     /**
      * Publish all contained files inside the {@link FeatureCreationRequest} to
-     * storage Two cases if they
+     * storage
      *
      * @param fcr
      * @return
@@ -170,6 +206,7 @@ public class FeatureService implements IFeatureService {
         for (FeatureFile file : fcr.getFeature().getFiles()) {
             FeatureFileAttributes attribute = file.getAttributes();
             for (FeatureFileLocation loc : file.getLocations()) {
+                // there is no metadata but a file location so we will update reference
                 if (fcr.getMetadata().isEmpty()) {
                     this.storageClient.reference(FileReferenceRequestDTO
                             .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
@@ -205,26 +242,44 @@ public class FeatureService implements IFeatureService {
 
         Feature feature = fcr.getFeature();
 
-        if (feature.getUrn() != null) {
-            // FIXME KMS : la requête doit être validé en amont et cette erreur ne doit pas arriver jusque ici
-            throw new IllegalArgumentException(String.format("URN of feature \"%\" must be null", feature.getId()));
-        }
-
-        // Compute URN with version (URN must not be null in database)
-        // FIXME KMS (revoir PM sur politique de gestion des versions/doublons)
-        // feature.setUrn(null);
+        feature.setUrn(FeatureUniformResourceName
+                .pseudoRandomUrn(FeatureIdentifier.FEATURE, feature.getEntityType(), runtimeTenantResolver.getTenant(),
+                                 computeNextVersion(featureRepo
+                                         .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
 
         FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(),
                                                     FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
+        created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
         return created;
     }
 
+    /**
+     * Compute the next version for a specific provider id we will increment the version passed in parameter
+     * a null parameter mean a first version
+     * @param featureEntity last version for a provider id null if it not exist
+     * @return the next version
+     */
+    private int computeNextVersion(FeatureEntity featureEntity) {
+        return featureEntity == null ? 1 : featureEntity.getVersion() + 1;
+    }
+
     @Override
-    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata);
+    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata, FeatureSessionDto session) {
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata,
+                                                                                OffsetDateTime.now(), session);
         publisher.publish(event);
         return event.getRequestId();
     }
 
+    @Override
+    public List<FeatureCreationRequest> createFeatureRequestEvent(FeatureCollection toHandle) {
+        List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
+
+        for (Feature feature : toHandle.getFeatures()) {
+            toTreat.add(FeatureCreationRequestEvent.builder(feature, toHandle.getMetadata(), OffsetDateTime.now(),
+                                                            toHandle.getSession()));
+        }
+        return this.handleFeatureCreationRequestEvents(toTreat);
+    }
 }

@@ -18,11 +18,53 @@
  */
 package fr.cnes.regards.modules.feature.service.job;
 
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.gson.reflect.TypeToken;
+
+import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
+import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
+import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
+import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
+import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 
 /**
  * @author Marc SORDI
  *
  */
-public class FeatureUpdateJob {
+public class FeatureUpdateJob extends AbstractJob<Void> {
 
+    public static final String IDS_PARAMETER = "ids";
+
+    private List<FeatureUpdateRequest> featureUpdateRequests;
+
+    @Autowired
+    private IFeatureUpdateRequestRepository featureUpdateRequestRepo;
+
+    @Autowired
+    private IFeatureUpdateService featureUpdateService;
+
+    @Override
+    public void setParameters(Map<String, JobParameter> parameters)
+            throws JobParameterMissingException, JobParameterInvalidException {
+        Type type = new TypeToken<Set<Long>>() {
+
+        }.getType();
+        featureUpdateRequests = this.featureUpdateRequestRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
+    }
+
+    @Override
+    public void run() {
+        long beginExecutionTime = System.currentTimeMillis();
+        this.featureUpdateService.updateFeatures(featureUpdateRequests);
+        long endExcecutionTime = System.currentTimeMillis();
+        LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
+    }
 }

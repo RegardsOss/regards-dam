@@ -44,33 +44,33 @@ import fr.cnes.regards.modules.feature.service.IFeatureService;
  */
 public class FeatureCreationJob extends AbstractJob<Void> {
 
-	public static final String IDS_PARAMETER = "ids";
-	public static final String FEATURES_PARAMETER = "features";
+    public static final String IDS_PARAMETER = "ids";
 
-	private List<FeatureCreationRequest> featureCreationRequests;
+    private List<FeatureCreationRequest> featureCreationRequests;
 
-	@Autowired
-	private IFeatureCreationRequestRepository featureCreationRequestRepo;
+    @Autowired
+    private IFeatureCreationRequestRepository featureCreationRequestRepo;
 
-	@Autowired
-	private IFeatureService featureService;
+    @Autowired
+    private IFeatureService featureService;
 
-	@Override
-	public void setParameters(Map<String, JobParameter> parameters)
-			throws JobParameterMissingException, JobParameterInvalidException {
-		Type type = new TypeToken<Set<Long>>() {
+    @Override
+    public void setParameters(Map<String, JobParameter> parameters)
+            throws JobParameterMissingException, JobParameterInvalidException {
+        Type type = new TypeToken<Set<Long>>() {
 
-		}.getType();
-		featureCreationRequests = this.featureCreationRequestRepo
-				.findAllById(getValue(parameters, IDS_PARAMETER, type));
-	}
+        }.getType();
+        featureCreationRequests = this.featureCreationRequestRepo
+                .findAllById(getValue(parameters, IDS_PARAMETER, type));
+    }
 
-	@Override
-	public void run() {
-		long beginExecutionTime = System.currentTimeMillis();
-		this.featureService.createFeatures(featureCreationRequests);
-		long endExcecutionTime = System.currentTimeMillis();
-		LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
-	}
+    @Override
+    public void run() {
+        LOGGER.info("Feature creation job begin");
+        long beginExecutionTime = System.currentTimeMillis();
+        this.featureService.createFeatures(featureCreationRequests);
+        long endExcecutionTime = System.currentTimeMillis();
+        LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
+    }
 
 }

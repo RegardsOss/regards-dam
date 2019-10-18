@@ -23,4 +23,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 
 public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
+
+    public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
 }

@@ -48,63 +48,90 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 @Table(name = "t_feature", indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update") })
 public class FeatureEntity {
 
-	@Id
-	@SequenceGenerator(name = "featureSequence", initialValue = 1, sequenceName = "seq_feature")
-	@GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
-	private Long id;
+    @Id
+    @SequenceGenerator(name = "featureSequence", initialValue = 1, sequenceName = "seq_feature")
+    @GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
+    private Long id;
 
-	@Column(columnDefinition = "jsonb", name = "feature")
-	@Type(type = "jsonb")
-	@Valid
-	private Feature feature;
+    @Column(columnDefinition = "jsonb", name = "feature")
+    @Type(type = "jsonb")
+    @Valid
+    private Feature feature;
 
-	@NotNull(message = "Feature request state is required")
-	@Enumerated(EnumType.STRING)
-	@Column(name = "state", length = 50, nullable = false)
-	private FeatureRequestStep state;
+    @NotNull(message = "Feature request state is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", length = 50, nullable = false)
+    private FeatureRequestStep state;
 
-	@Column(name = "last_update", nullable = false)
-	@Convert(converter = OffsetDateTimeAttributeConverter.class)
-	@NotNull
-	private OffsetDateTime lastUpdate;
+    @Column(name = "last_update", nullable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    @NotNull
+    private OffsetDateTime lastUpdate;
 
-	public Long getId() {
-		return id;
-	}
+    @Column(name = "provider_id", nullable = false)
+    @NotNull(message = "Provider must be setted")
+    private String providerId;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Column(name = "version", nullable = false)
+    @NotNull()
+    private Integer version;
 
-	public Feature getFeature() {
-		return feature;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setFeature(Feature feature) {
-		this.feature = feature;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public FeatureRequestStep getState() {
-		return state;
-	}
+    public Feature getFeature() {
+        return feature;
+    }
 
-	public void setState(FeatureRequestStep state) {
-		this.state = state;
-	}
+    public void setFeature(Feature feature) {
+        this.feature = feature;
+    }
 
-	public OffsetDateTime getLastUpdate() {
-		return lastUpdate;
-	}
+    public FeatureRequestStep getState() {
+        return state;
+    }
 
-	public void setLastUpdate(OffsetDateTime lastUpdate) {
-		this.lastUpdate = lastUpdate;
-	}
+    public void setState(FeatureRequestStep state) {
+        this.state = state;
+    }
 
-	public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureRequestStep state) {
-		FeatureEntity featureEntity = new FeatureEntity();
-		featureEntity.setFeature(feature);
-		featureEntity.setLastUpdate(lastUpdate);
-		featureEntity.setState(state);
-		return featureEntity;
-	}
+    public OffsetDateTime getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(OffsetDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureRequestStep state) {
+        FeatureEntity featureEntity = new FeatureEntity();
+        featureEntity.setFeature(feature);
+        featureEntity.setLastUpdate(lastUpdate);
+        featureEntity.setState(state);
+        featureEntity.setProviderId(feature.getId());
+        featureEntity.setVersion(feature.getUrn().getVersion());
+
+        return featureEntity;
+    }
 }

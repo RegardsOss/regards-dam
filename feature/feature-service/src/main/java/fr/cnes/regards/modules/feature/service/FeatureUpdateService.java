@@ -18,21 +18,31 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
+import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
+import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
+import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
+import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
@@ -40,6 +50,10 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
+import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
+import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
+import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -63,6 +77,15 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
     @Autowired
     private IFeatureUpdateRequestRepository updateRepo;
+
+    @Autowired
+    private IJobInfoService jobInfoService;
+
+    @Autowired
+    private IAuthenticationResolver authResolver;
+
+    @Autowired
+    private FeatureConfigurationProperties properties;
 
     @Override
     public void registerUpdateRequests(List<FeatureUpdateRequestEvent> items) {
@@ -119,6 +142,32 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
     @Override
     public void scheduleUpdateRequestProcessing() {
+
+        Set<JobParameter> jobParameters = Sets.newHashSet();
+        List<FeatureUpdateRequest> delayedRequests = this.updateRepo
+                .findRequestToSchedule(PageRequest.of(0, this.properties.getMaxBulkSize()),
+                                       OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
+        List<FeatureUpdateRequest> toSchedule = new ArrayList<FeatureUpdateRequest>();
+        FeatureUpdateRequest currentRequest;
+
+        for (int i = 0; i < delayedRequests.size(); i++) {
+            currentRequest = delayedRequests.get(i);
+            currentRequest.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+            toSchedule.add(currentRequest);
+        }
+
+        this.updateRepo.saveAll(toSchedule);
+
+        jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
+                toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+
+        JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+                jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+        jobInfoService.createAsQueued(jobInfo);
+    }
+
+    @Override
+    public void updateFeatures(List<FeatureUpdateRequest> featureUpdateRequests) {
         // TODO Auto-generated method stub
 
     }
