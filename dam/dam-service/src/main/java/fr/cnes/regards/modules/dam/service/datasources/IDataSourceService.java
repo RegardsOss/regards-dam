@@ -48,11 +48,11 @@ public interface IDataSourceService {
 
     /**
      * Get datasource {@link PluginConfiguration}.
-     * @param id a {@link PluginConfiguration} identifier
+     * @param businessId a {@link PluginConfiguration} business identifier
      * @return {@link PluginConfiguration}
      * @throws EntityNotFoundException if entity does not exist
      */
-    PluginConfiguration getDataSource(Long id) throws EntityNotFoundException;
+    PluginConfiguration getDataSource(String businessId) throws EntityNotFoundException;
 
     /**
      * Update datasource {@link PluginConfiguration}
