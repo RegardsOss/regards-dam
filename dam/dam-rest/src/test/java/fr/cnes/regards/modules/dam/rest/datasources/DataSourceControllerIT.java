@@ -207,13 +207,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .expect(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE, Matchers
                         .contains(dataSource.getParameterValue(DataSourcePluginConstants.FROM_CLAUSE))));
 
-        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", expectations,
-                          "DataSource shouldn't be retrieve.", dataSource.getId());
+        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{businessId}", expectations,
+                          "DataSource shouldn't be retrieve.", dataSource.getBusinessId());
     }
 
     @Test
     public void getUnknownDataSource() {
-        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", customizer().expectStatusNotFound(),
+        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{businessId}", customizer().expectStatusNotFound(),
                           "DataSource shouldn't be retrieve.", Long.MAX_VALUE);
     }
 
@@ -238,8 +238,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                      dataSource.getParameterValue(DataSourcePluginConstants.CONNECTION_PARAM))
                 .expectArrayContains(JSON_PATH_FROM_CLAUSE,
                                      dataSource.getParameterValue(DataSourcePluginConstants.FROM_CLAUSE));
-        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
-                          "DataSource shouldn't be created.", dataSource.getId());
+        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{businessId}", dataSource, expectations,
+                          "DataSource shouldn't be created.", dataSource.getBusinessId());
     }
 
     @Test
@@ -267,8 +267,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .expectArrayContains(JSON_PATH_FROM_CLAUSE,
                                      dataSource.getParameterValue(DataSourcePluginConstants.FROM_CLAUSE));
 
-        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pluginConfId}", dataSource, expectations,
-                          "DataSource shouldn't be created.", dataSource.getId());
+        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{businessId}", dataSource, expectations,
+                          "DataSource shouldn't be created.", dataSource.getBusinessId());
     }
 
     @Test
@@ -283,9 +283,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setId(pls.get(0).getId());
 
-        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{pluginConfId}",
-                             customizer().expectStatusNoContent(), "DataSource should have been deleted.",
-                             dataSource.getBusinessId());
+        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{businessId}", customizer().expectStatusNoContent(),
+                             "DataSource should have been deleted.", dataSource.getBusinessId());
     }
 
     @Test

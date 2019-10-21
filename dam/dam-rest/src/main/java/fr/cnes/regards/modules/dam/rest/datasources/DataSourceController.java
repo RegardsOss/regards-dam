@@ -108,7 +108,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      * @throws ModuleException if plugin configuration cannot be retrieved
      */
     @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pluginConfId}")
+    @RequestMapping(method = RequestMethod.GET, value = "/{businessId}")
     public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable String businessId)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(businessId)));
@@ -122,7 +122,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      * @throws ModuleException if plugin configuration cannot be updated
      */
     @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pluginConfId}")
+    @RequestMapping(method = RequestMethod.PUT, value = "/{businessId}")
     public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(@PathVariable String businessId,
             @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
         if (!businessId.equals(dataSource.getBusinessId())) {
