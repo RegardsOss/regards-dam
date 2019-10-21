@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.notification.service;
 
+import java.util.concurrent.ExecutionException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +12,14 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.notification.dao.IRuleRepository;
+import fr.cnes.regards.modules.notification.cache.AbstractCacheableRule;
+import fr.cnes.regards.modules.notification.domain.Recipient;
 import fr.cnes.regards.modules.notification.domain.Rule;
+import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
 import fr.cnes.regards.modules.notification.domain.plugin.IRuleMatcher;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
  * @author kevin
@@ -24,34 +27,55 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
  */
 @Service
 @MultitenantTransactional
-public class NotificationRuleService implements INotificationRuleService {
+public class NotificationRuleService extends AbstractCacheableRule implements INotificationRuleService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotificationRuleService.class);
 
     @Autowired
-    private PluginService pluginService;
-
-    @Autowired
-    private IRuleRepository ruleRepo;
+    private IPluginService pluginService;
 
     @Override
-    public boolean handleFeatures(Feature toHandle) throws NotAvailablePluginConfigurationException, ModuleException {
+    public int handleFeatures(Feature toHandle)
+            throws ExecutionException, ModuleException, NotAvailablePluginConfigurationException {
+        int notificationNumber = 0;
         // FIXME gestion du cache
-        for (Rule rule : this.ruleRepo.findByEnableTrueAndType(NotificationType.IMMEDIATE)) {
+        for (Rule rule : getRules()) {
             try {
+                // check if the  feature match with the rule
                 if (((IRuleMatcher) this.pluginService.getPlugin(rule.getPluginCondConfiguration().getId()))
                         .match(toHandle)) {
-                    // TODO envoyer message au destinataires
+                    for (Recipient recipient : rule.getRecipients()) {
+                        if (notifyRecipient(toHandle, recipient)) {
+                            notificationNumber++;
+                        } else {
+                            // TODO notifier feature manager
 
-                    return true;
+                        }
+                    }
                 }
             } catch (ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error("Error while get plugin with id {}", rule.getPluginCondConfiguration().getId(), e);
                 throw e;
             }
         }
-        return false;
+        return notificationNumber;
+    }
 
+    /**
+     * Notify a recipient return false if a problem occurs
+     * @param toHandle {@link Feature} about to notify
+     * @param recipient {@link Recipient} of the notification
+     * @return
+     */
+    private boolean notifyRecipient(Feature toHandle, Recipient recipient) {
+        try {
+            // check that all send method of recipiens return true
+            return ((IRecipientSender) this.pluginService.getPlugin(recipient.getPluginCondConfiguration().getId()))
+                    .send(toHandle);
+        } catch (ModuleException | NotAvailablePluginConfigurationException e) {
+            LOGGER.error("Error while sending notification to receiver ", e);
+            return false;
+        }
     }
 
 }

@@ -46,6 +46,9 @@ public class DefaultRuleMatcher implements IRuleMatcher {
      */
     private boolean handleProperties(Set<AbstractProperty<?>> properties) {
         boolean match = false;
+        if (properties == null) {
+            return false;
+        }
         for (AbstractProperty<?> property : properties) {
             if (property.getValue() instanceof Set) {
                 match = handleProperties((Set<AbstractProperty<?>>) property.getValue());

@@ -19,7 +19,7 @@ public class DefaultRecipientSender implements IRecipientSender {
     @Override
     public boolean send(Feature feature) {
         // TODO faire quelque chose! mais quoi?
-        return true;
+        return !feature.getModel().equals("fail");
     }
 
 }

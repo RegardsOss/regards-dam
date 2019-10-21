@@ -3,13 +3,13 @@
  */
 package fr.cnes.regards.modules.notification.service;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -36,23 +36,15 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
 @ActiveProfiles(value = { "testAmqp" })
 public class NotificationServiceIT extends AbstractNotificationMultitenantServiceTest {
 
-    @Autowired
-    private INotificationRuleService notificationService;
-
     @Test
-    public void testRuleMacher() throws NotAvailablePluginConfigurationException, ModuleException {
+    public void testRuleMacher() throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException {
+
         Feature feature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
                                           "model", "id");
-        Set<AbstractProperty<?>> properties = new HashSet<>();
-        Set<AbstractProperty<?>> property1Set = new HashSet<AbstractProperty<?>>();
-        AbstractProperty<String> prop = new AbstractProperty<String>() {
 
-            @Override
-            public boolean represents(PropertyType pAttributeType) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        };
+        // properties of the feature
+        Set<AbstractProperty<?>> properties = new HashSet<>();
+        // the first property
         AbstractProperty<Set<AbstractProperty<?>>> property1 = new AbstractProperty<Set<AbstractProperty<?>>>() {
 
             @Override
@@ -61,14 +53,27 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
                 return false;
             }
         };
+        // the fist property is a set of properties
+        Set<AbstractProperty<?>> property1Set = new HashSet<AbstractProperty<?>>();
+        // sub property inside the first property
+        AbstractProperty<String> subProp = new AbstractProperty<String>() {
+
+            @Override
+            public boolean represents(PropertyType pAttributeType) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+        };
+
         property1.setName("file_infos");
         property1.setValue(property1Set);
-        property1Set.add(prop);
-        prop.setName("fem_type");
-        prop.setValue("TM");
+        property1Set.add(subProp);
+        subProp.setName("fem_type");
+        subProp.setValue("TM");
         properties.add(property1);
         feature.setProperties(properties);
 
+        // configuration of the rule plugin
         PluginConfiguration rulePlugin = new PluginConfiguration();
         rulePlugin.setBusinessId("testRule");
         rulePlugin.setVersion("1.0.0");
@@ -89,6 +94,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         Rule rule = Rule.builder(NotificationType.IMMEDIATE, rulePlugin);
         this.ruleRepo.save(rule);
 
+        // configuration of the recipient sender plugin
         PluginConfiguration recipientPlugin = new PluginConfiguration();
         recipientPlugin.setBusinessId("testRecipient");
         recipientPlugin.setVersion("1.0.0");
@@ -98,7 +104,88 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         Recipient recipient = Recipient.builder(rule, recipientPlugin);
         this.recipientRepo.save(recipient);
 
-        assertTrue(this.notificationService.handleFeatures(feature));
+        assertEquals(1, this.notificationService.handleFeatures(feature));
+
+        // FIXME this feature will fail cause to the fail model  (sender not implemented)
+        Feature failingFeature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                                 "fail", "id");
+        failingFeature.setProperties(properties);
+
+        assertEquals(0, this.notificationService.handleFeatures(failingFeature));
+
+    }
+
+    @Test
+    public void testRuleMacherWithNonMatcherFeature()
+            throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException {
+
+        Feature feature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                          "model", "id");
+
+        // properties of the feature
+        Set<AbstractProperty<?>> properties = new HashSet<>();
+        // the first property
+        AbstractProperty<Set<AbstractProperty<?>>> property1 = new AbstractProperty<Set<AbstractProperty<?>>>() {
+
+            @Override
+            public boolean represents(PropertyType pAttributeType) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+        };
+        // the fist property is a set of properties
+        Set<AbstractProperty<?>> property1Set = new HashSet<AbstractProperty<?>>();
+        // sub property inside the first property
+        AbstractProperty<String> subProp = new AbstractProperty<String>() {
+
+            @Override
+            public boolean represents(PropertyType pAttributeType) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+        };
+
+        property1.setName("file_infos");
+        property1.setValue(property1Set);
+        property1Set.add(subProp);
+        subProp.setName("fem_type");
+        subProp.setValue("Not TM");
+        properties.add(property1);
+        feature.setProperties(properties);
+
+        // configuration of the rule plugin
+        PluginConfiguration rulePlugin = new PluginConfiguration();
+        rulePlugin.setBusinessId("testRule");
+        rulePlugin.setVersion("1.0.0");
+        rulePlugin.setLabel("test");
+        rulePlugin.setPluginId("DefaultRuleMatcher");
+
+        StringPluginParam param = new StringPluginParam();
+        param.setName("attributeToSeek");
+        param.setValue("fem_type");
+        rulePlugin.getParameters().add(param);
+        param = new StringPluginParam();
+        param.setName("attributeValueToSeek");
+        param.setValue("TM");
+        rulePlugin.getParameters().add(param);
+
+        rulePlugin = this.pluginConfRepo.save(rulePlugin);
+
+        Rule rule = Rule.builder(NotificationType.IMMEDIATE, rulePlugin);
+        this.ruleRepo.save(rule);
+
+        // configuration of the recipient sender plugin
+        PluginConfiguration recipientPlugin = new PluginConfiguration();
+        recipientPlugin.setBusinessId("testRecipient");
+        recipientPlugin.setVersion("1.0.0");
+        recipientPlugin.setLabel("test recipient");
+        recipientPlugin.setPluginId("DefaultRecipientSender");
+        recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
+        Recipient recipient = Recipient.builder(rule, recipientPlugin);
+
+        this.recipientRepo.save(recipient);
+        assertEquals(0, this.notificationService.handleFeatures(feature));
+
     }
 
 }

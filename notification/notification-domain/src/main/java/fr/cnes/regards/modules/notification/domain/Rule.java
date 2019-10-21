@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.notification.domain;
 
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -47,6 +50,9 @@ public class Rule {
     @Column(name = "enable", nullable = false)
     private boolean enable = true;
 
+    @OneToMany(mappedBy = "rule")
+    private Set<Recipient> recipients;
+
     public Long getId() {
         return id;
     }
@@ -77,6 +83,14 @@ public class Rule {
 
     public void setEnable(boolean enable) {
         this.enable = enable;
+    }
+
+    public Set<Recipient> getRecipients() {
+        return recipients;
+    }
+
+    public void setRecipients(Set<Recipient> recipients) {
+        this.recipients = recipients;
     }
 
     public static Rule builder(NotificationType type, PluginConfiguration plugin) {
