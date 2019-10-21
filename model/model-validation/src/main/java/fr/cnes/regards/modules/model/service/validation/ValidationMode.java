@@ -24,6 +24,16 @@ package fr.cnes.regards.modules.model.service.validation;
  */
 public enum ValidationMode {
 
+    /**
+     * All required properties must be set
+     */
     CREATION,
-    UPDATE;
+    /**
+     * All required properties must be set ... non alterable properties must not be changed!
+     */
+    UPDATE,
+    /**
+     * Only properties to update are set!
+     */
+    PATCH;
 }

@@ -48,7 +48,6 @@ import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.model.dao.IModelRepository;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.model.rest.ModelController;
@@ -198,7 +197,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection collection = new Collection(model1, getDefaultTenant(), "COL1", COLLECTION_LABEL);
         collection.setProviderId(providerId);
         collection.setCreationDate(OffsetDateTime.now());
-        Set<AbstractProperty<?>> atts = new HashSet<>();
+        Set<IProperty<?>> atts = new HashSet<>();
 
         atts.add(IProperty.buildString(refAtt, refValue));
         atts.add(IProperty.buildBoolean(actAtt, actValue));
@@ -261,7 +260,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection optionalNonAlterable = new Collection(model, getDefaultTenant(), "COL1", "optionalNonAlterable");
         optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
-        Set<AbstractProperty<?>> atts = new HashSet<>();
+        Set<IProperty<?>> atts = new HashSet<>();
         atts.add(IProperty.buildString(refAtt, "ref"));
         optionalNonAlterable.setProperties(atts);
 
@@ -349,7 +348,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractProperty<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
         // bad values
         final int badRefValue = 5;
@@ -385,7 +384,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractProperty<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
         atts.add(IProperty.buildString(refAtt, refValue));
         atts.add(IProperty.buildBoolean(actAtt, actValue));
@@ -419,7 +418,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractProperty<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
         atts.add(IProperty.buildString(refAtt, refValue));
         atts.add(IProperty.buildBoolean(actAtt, actValue));

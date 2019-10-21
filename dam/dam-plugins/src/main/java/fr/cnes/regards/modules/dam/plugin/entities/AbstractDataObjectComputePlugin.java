@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.model.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 /**
@@ -155,7 +155,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     /**
      * Extract the property of which name and eventually fragment name are given
      */
-    protected Optional<AbstractProperty<?>> extractProperty(DataObject object) { // NOSONAR
+    protected Optional<IProperty<?>> extractProperty(DataObject object) { // NOSONAR
         if (parameterAttribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
             return Optional.ofNullable(object.getProperty(parameterAttribute.getName()));

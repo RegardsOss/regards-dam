@@ -30,8 +30,8 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.model.domain.ComputationPlugin;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.DateProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
@@ -81,7 +81,7 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
                   dataset.getIpId().toString(), result);
     }
 
-    private void getMinDate(Optional<AbstractProperty<?>> parameterOpt) {
+    private void getMinDate(Optional<IProperty<?>> parameterOpt) {
         if (parameterOpt.isPresent()) {
             OffsetDateTime value = (OffsetDateTime) parameterOpt.get().getValue();
             if (value != null) {

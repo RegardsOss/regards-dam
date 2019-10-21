@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.model.domain.ComputationPlugin;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.IntegerProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
@@ -65,7 +65,7 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
         super.result = 0;
     }
 
-    private void doSum(Optional<AbstractProperty<?>> propertyOpt) {
+    private void doSum(Optional<IProperty<?>> propertyOpt) {
         if (propertyOpt.isPresent()) {
             Integer value = ((Number) propertyOpt.get().getValue()).intValue();
             if (value != null) {

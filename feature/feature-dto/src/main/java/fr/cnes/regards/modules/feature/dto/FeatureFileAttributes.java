@@ -178,7 +178,7 @@ public class FeatureFileAttributes {
 		return true;
 	}
 
-	public static FeatureFileAttributes builder(DataType dataType, MimeType mimeType, String filename, Long fileSize,
+	public static FeatureFileAttributes build(DataType dataType, MimeType mimeType, String filename, Long fileSize,
 			String algorithm, String checksum) {
 		FeatureFileAttributes attribute = new FeatureFileAttributes();
 		attribute.setDataType(dataType);

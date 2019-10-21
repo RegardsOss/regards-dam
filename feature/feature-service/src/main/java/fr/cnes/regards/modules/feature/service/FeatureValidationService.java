@@ -76,6 +76,7 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
                 }
                 break;
             case UPDATE:
+            case PATCH:
                 if (feature.getUrn() == null) {
                     errors.rejectValue(URN_FIELD, "feature.urn.required.error.message",
                                        "URN is required in feature update");
@@ -86,10 +87,8 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
         }
 
         // Try validating properties according to data model
-        if (feature.getModel() != null) { // FIXME à supprimer le modèle ne peut être nul ici!
-            // FIXME faire un modèle et générer des features en conséquence avant de réactiver la ligne suivante
-            // FIXME gérer aussi le mock du client de récupération des attributs d'un modèle
-            // errors.addAllErrors(validate(feature.getModel(), feature, mode, objectName));
+        if (feature.getModel() != null) { // If model is null, error already detected before!
+            errors.addAllErrors(validate(feature.getModel(), feature, mode, objectName));
         }
 
         if (errors.hasErrors()) {

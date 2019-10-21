@@ -85,6 +85,7 @@ import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.service.IModelService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
@@ -260,15 +261,15 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         if (ValidationMode.UPDATE.equals(mode) && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
             AbstractEntity<?> fromDb = entityRepository.findByIpId(feature.getId());
-            AbstractProperty<?> valueFromDb = extractProperty(fromDb.getFeature(), attModel);
-            AbstractProperty<?> valueFromEntity = extractProperty(feature, attModel);
+            IProperty<?> valueFromDb = extractProperty(fromDb.getFeature(), attModel);
+            IProperty<?> valueFromEntity = extractProperty(feature, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
             validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, valueFromDb, valueFromEntity));
         }
         return validators;
     }
 
-    protected AbstractProperty<?> extractProperty(EntityFeature feature, AttributeModel attribute) {
+    protected IProperty<?> extractProperty(EntityFeature feature, AttributeModel attribute) {
         Fragment fragment = attribute.getFragment();
         String attName = attribute.getName();
         String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
@@ -281,10 +282,9 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
      * @param namespace namespace context
      * @param attributes {@link AbstractProperty} list to analyze
      */
-    protected void buildAttributeMap(Map<String, AbstractProperty<?>> attMap, String namespace,
-            Set<AbstractProperty<?>> attributes) {
+    protected void buildAttributeMap(Map<String, IProperty<?>> attMap, String namespace, Set<IProperty<?>> attributes) {
         if (attributes != null) {
-            for (AbstractProperty<?> att : attributes) {
+            for (IProperty<?> att : attributes) {
                 // Compute value
                 if (ObjectProperty.class.equals(att.getClass())) {
                     ObjectProperty o = (ObjectProperty) att;

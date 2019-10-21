@@ -56,6 +56,8 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      */
     T getValue();
 
+    boolean represents(PropertyType type);
+
     @Override
     default int compareTo(IProperty<T> o) {
         // name is not null (mandatory)
@@ -617,10 +619,10 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         return att;
     }
 
-    public static ObjectProperty buildObject(String name, AbstractProperty<?>... attributes) {
+    public static ObjectProperty buildObject(String name, AbstractProperty<?>... properties) {
         ObjectProperty att = new ObjectProperty();
         att.setName(name);
-        att.setValue(Sets.newHashSet(attributes));
+        att.setValue(Sets.newHashSet(properties));
         return att;
     }
 
@@ -648,5 +650,15 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         att.setName(name);
         att.setValue(value);
         return att;
+    }
+
+    static Set<IProperty<?>> set(IProperty<?>... properties) {
+        Set<IProperty<?>> set = new HashSet<>();
+        if (properties != null) {
+            for (IProperty<?> ppty : properties) {
+                set.add(ppty);
+            }
+        }
+        return set;
     }
 }

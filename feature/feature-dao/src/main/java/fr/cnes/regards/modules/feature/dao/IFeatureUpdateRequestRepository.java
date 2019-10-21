@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 public interface IFeatureUpdateRequestRepository extends JpaRepository<FeatureUpdateRequest, Long> {
 
     /**
-     * Get {@link FeatureUpdateRequest} with a {@link Feature} urn not assigned to an other {@link FeaureUpdateRequest}
+     * Get {@link FeatureUpdateRequest} with a {@link Feature} urn not assigned to an other {@link FeatureUpdateRequest}
      * with it step set to LOCAL_SCHEDULED an ordered by registration date and before a delay
      * @param page contain the number of {@link FeatureUpdateRequest} to return
      * @param delay we want {@link FeatureUpdateRequest} with registration date before this delay

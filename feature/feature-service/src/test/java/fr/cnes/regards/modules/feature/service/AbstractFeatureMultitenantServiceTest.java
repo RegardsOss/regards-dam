@@ -47,22 +47,18 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureCreationRequestEvent toAdd;
         Feature featureToAdd;
         FeatureFile file;
-        FeatureFileAttributes attributes;
-        FeatureFileLocation loc;
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
-            featureToAdd = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                           "model", "id" + i);
-            file = new FeatureFile();
-            attributes = FeatureFileAttributes.builder(DataType.DESCRIPTION, new MimeType("mime"), "toto", 1024l, "MD5",
-                                                       "checksum");
-            loc = FeatureFileLocation.build("www.google.com", "GPFS");
-            file.getLocations().add(loc);
-            file.setAttributes(attributes);
-            featureToAdd.getFiles().add(file);
-            toAdd = FeatureCreationRequestEvent.builder(featureToAdd, new ArrayList<FeatureMetadataDto>(),
-                                                        OffsetDateTime.now(),
-                                                        FeatureSessionDto.builder("owner", "session"));
+            file = FeatureFile.build(
+                                     FeatureFileAttributes.build(DataType.DESCRIPTION, new MimeType("mime"), "toto",
+                                                                 1024l, "MD5", "checksum"),
+                                     FeatureFileLocation.build("www.google.com", "GPFS"));
+            featureToAdd = Feature
+                    .build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model")
+                    .withFiles(file);
+            toAdd = FeatureCreationRequestEvent.build(featureToAdd, new ArrayList<FeatureMetadataDto>(),
+                                                      OffsetDateTime.now(),
+                                                      FeatureSessionDto.builder("owner", "session"));
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now());

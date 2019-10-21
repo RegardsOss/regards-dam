@@ -26,11 +26,15 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import org.springframework.lang.Nullable;
+
+import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
  * GeoJson feature with dynamic properties based on data model definition<br/>
@@ -39,7 +43,7 @@ import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
  * @author Marc SORDI
  *
  */
-public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
+public class Feature extends AbstractFeature<Set<IProperty<?>>, String> {
 
     /**
      * Unique feature identifer based on provider identifier with versionning
@@ -91,10 +95,10 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = (prime * result) + (entityType == null ? 0 : entityType.hashCode());
-        result = (prime * result) + (files == null ? 0 : files.hashCode());
-        result = (prime * result) + (model == null ? 0 : model.hashCode());
-        result = (prime * result) + (urn == null ? 0 : urn.hashCode());
+        result = prime * result + (entityType == null ? 0 : entityType.hashCode());
+        result = prime * result + (files == null ? 0 : files.hashCode());
+        result = prime * result + (model == null ? 0 : model.hashCode());
+        result = prime * result + (urn == null ? 0 : urn.hashCode());
         return result;
     }
 
@@ -137,8 +141,8 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
         return true;
     }
 
-    public static Feature builder(FeatureUniformResourceName urn, Point geometry, EntityType entityType, String model,
-            String id) {
+    public static Feature build(String id, @Nullable FeatureUniformResourceName urn, Point geometry,
+            EntityType entityType, String model) {
         Feature feature = new Feature();
         feature.setUrn(urn);
         feature.setEntityType(entityType);
@@ -146,5 +150,15 @@ public class Feature extends AbstractFeature<Set<AbstractProperty<?>>, String> {
         feature.setGeometry(geometry);
         feature.setId(id);
         return feature;
+    }
+
+    public Feature withProperties(Set<IProperty<?>> properties) {
+        this.setProperties(properties);
+        return this;
+    }
+
+    public Feature withFiles(FeatureFile... files) {
+        this.setFiles(Lists.newArrayList(files));
+        return this;
     }
 }

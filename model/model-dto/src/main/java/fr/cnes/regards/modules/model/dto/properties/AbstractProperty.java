@@ -61,8 +61,6 @@ public abstract class AbstractProperty<T> implements IProperty<T> {
         return name + " : " + display;
     }
 
-    public abstract boolean represents(PropertyType pAttributeType);
-
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -25,6 +25,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+import com.google.common.collect.Sets;
+
 /**
  *
  * File description
@@ -47,6 +49,13 @@ public class FeatureFile {
     @Valid
     @NotNull(message = "File attributes is requred")
     private FeatureFileAttributes attributes;
+
+    public static FeatureFile build(FeatureFileAttributes attributes, FeatureFileLocation... locations) {
+        FeatureFile file = new FeatureFile();
+        file.setAttributes(attributes);
+        file.setLocations(Sets.newHashSet(locations));
+        return file;
+    }
 
     public Set<FeatureFileLocation> getLocations() {
         return locations;

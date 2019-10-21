@@ -61,7 +61,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
 
         assertEquals(EVENTS_NUMBER, this.featureRepo.count());
 
@@ -98,7 +98,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
 
         assertEquals(EVENTS_NUMBER - 1, this.featureRepo.count());
 
@@ -112,8 +112,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
     public void testCreateFeatureRequestEvent() {
         List<Feature> features = new ArrayList<Feature>();
         for (int i = 0; i < EVENTS_NUMBER; i++) {
-            features.add(Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                         "model", "id" + i));
+            features.add(Feature.build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                       "model"));
         }
 
         FeatureCollection collection = FeatureCollection.build(new ArrayList<FeatureMetadataDto>(),
