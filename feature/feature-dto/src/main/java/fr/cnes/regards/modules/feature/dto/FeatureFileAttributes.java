@@ -51,7 +51,7 @@ public class FeatureFileAttributes {
 	/**
 	 * The file size
 	 */
-	private Long fileSize;
+	private Long filesize;
 
 	/**
 	 * The checksum algorithm (<b>required</b> if data object is not a reference)
@@ -88,12 +88,12 @@ public class FeatureFileAttributes {
 		this.filename = filename;
 	}
 
-	public Long getFileSize() {
-		return fileSize;
+	public Long getFilesize() {
+		return filesize;
 	}
 
-	public void setFileSize(Long fileSize) {
-		this.fileSize = fileSize;
+	public void setFilesize(Long fileSize) {
+		this.filesize = fileSize;
 	}
 
 	public String getAlgorithm() {
@@ -119,7 +119,7 @@ public class FeatureFileAttributes {
 		result = (prime * result) + (algorithm == null ? 0 : algorithm.hashCode());
 		result = (prime * result) + (checksum == null ? 0 : checksum.hashCode());
 		result = (prime * result) + (dataType == null ? 0 : dataType.hashCode());
-		result = (prime * result) + (fileSize == null ? 0 : fileSize.hashCode());
+		result = (prime * result) + (filesize == null ? 0 : filesize.hashCode());
 		result = (prime * result) + (filename == null ? 0 : filename.hashCode());
 		result = (prime * result) + (mimeType == null ? 0 : mimeType.hashCode());
 		return result;
@@ -154,11 +154,11 @@ public class FeatureFileAttributes {
 		if (dataType != other.dataType) {
 			return false;
 		}
-		if (fileSize == null) {
-			if (other.fileSize != null) {
+		if (filesize == null) {
+			if (other.filesize != null) {
 				return false;
 			}
-		} else if (!fileSize.equals(other.fileSize)) {
+		} else if (!filesize.equals(other.filesize)) {
 			return false;
 		}
 		if (filename == null) {
@@ -184,7 +184,7 @@ public class FeatureFileAttributes {
 		attribute.setDataType(dataType);
 		attribute.setMimeType(mimeType);
 		attribute.setFilename(filename);
-		attribute.setFileSize(fileSize);
+		attribute.setFilesize(fileSize);
 		attribute.setAlgorithm(algorithm);
 		attribute.setChecksum(checksum);
 
