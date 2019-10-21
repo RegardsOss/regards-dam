@@ -9,6 +9,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.notification.domain.plugin.IRuleMatcher;
 
 /**
@@ -44,14 +45,14 @@ public class DefaultRuleMatcher implements IRuleMatcher {
      * and the value 'attributeValueToSeek'
      * @param properties
      */
-    private boolean handleProperties(Set<AbstractProperty<?>> properties) {
+    private boolean handleProperties(Set<IProperty<?>> properties) {
         boolean match = false;
         if (properties == null) {
             return false;
         }
-        for (AbstractProperty<?> property : properties) {
+        for (IProperty<?> property : properties) {
             if (property.getValue() instanceof Set) {
-                match = handleProperties((Set<AbstractProperty<?>>) property.getValue());
+                match = handleProperties((Set<IProperty<?>>) property.getValue());
             } else {
                 if (property.getName().equals(attributeToSeek)) {
                     return property.getValue().equals(attributeValueToSeek);
