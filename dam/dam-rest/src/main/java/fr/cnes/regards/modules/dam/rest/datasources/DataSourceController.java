@@ -109,7 +109,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{businessId}")
-    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable String businessId)
+    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable(name = "businessId") String businessId)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(businessId)));
     }
@@ -123,8 +123,9 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{businessId}")
-    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(@PathVariable String businessId,
-            @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
+    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(
+            @PathVariable(name = "businessId") String businessId, @Valid @RequestBody PluginConfiguration dataSource)
+            throws ModuleException {
         if (!businessId.equals(dataSource.getBusinessId())) {
             throw new EntityInconsistentIdentifierException(businessId, dataSource.getBusinessId(),
                     PluginConfiguration.class);
@@ -141,7 +142,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{businessId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable String businessId)
+    public ResponseEntity<Void> deleteDataSource(@PathVariable(name = "businessId") String businessId)
             throws AssociatedDatasetExistsException, ModuleException {
         try {
             dataSourceService.deleteDataSource(businessId);
