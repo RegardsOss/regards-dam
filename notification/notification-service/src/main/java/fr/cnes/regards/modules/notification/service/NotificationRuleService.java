@@ -22,6 +22,7 @@ import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
 import fr.cnes.regards.modules.notification.domain.plugin.IRuleMatcher;
 
 /**
+ * Service for checking {@link Rule} applied to {@link Feature} for notification sending
  * @author kevin
  *
  */
@@ -38,11 +39,10 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     public int handleFeatures(Feature toHandle)
             throws ExecutionException, ModuleException, NotAvailablePluginConfigurationException {
         int notificationNumber = 0;
-        // FIXME gestion du cache
         for (Rule rule : getRules()) {
             try {
                 // check if the  feature match with the rule
-                if (((IRuleMatcher) this.pluginService.getPlugin(rule.getPluginCondConfiguration().getId()))
+                if (((IRuleMatcher) this.pluginService.getPlugin(rule.getPluginCondConfiguration().getBusinessId()))
                         .match(toHandle)) {
                     for (Recipient recipient : rule.getRecipients()) {
                         if (notifyRecipient(toHandle, recipient)) {
@@ -70,8 +70,8 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     private boolean notifyRecipient(Feature toHandle, Recipient recipient) {
         try {
             // check that all send method of recipiens return true
-            return ((IRecipientSender) this.pluginService.getPlugin(recipient.getPluginCondConfiguration().getId()))
-                    .send(toHandle);
+            return ((IRecipientSender) this.pluginService
+                    .getPlugin(recipient.getPluginCondConfiguration().getBusinessId())).send(toHandle);
         } catch (ModuleException | NotAvailablePluginConfigurationException e) {
             LOGGER.error("Error while sending notification to receiver ", e);
             return false;
