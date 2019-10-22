@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.feature.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,6 @@ import org.springframework.validation.Errors;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
@@ -111,7 +111,6 @@ public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest
         if (errors.hasErrors()) {
             // Missing required properties
             Assert.assertEquals(2, errors.getErrorCount());
-            LOGGER.error(ErrorTranslator.getErrorsAsString(errors));
         } else {
             Assert.fail();
         }
@@ -124,7 +123,6 @@ public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest
         errors = validationService.validate(feature, ValidationMode.CREATION);
 
         if (errors.hasErrors()) {
-            LOGGER.error(ErrorTranslator.getErrorsAsString(errors));
             Assert.fail();
         }
 
@@ -142,6 +140,15 @@ public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest
         }
 
         // Update feature with authorized properties
-        //        feature.
+        feature.withProperties(IProperty
+                .set(IProperty.buildObject("file_characterization", IProperty.buildBoolean("valid", Boolean.TRUE),
+                                           IProperty.buildDate("invalidation_date", OffsetDateTime.now()))));
+
+        errors = validationService.validate(feature, ValidationMode.PATCH);
+
+        if (errors.hasErrors()) {
+            // Expected non alterable properties
+            Assert.fail();
+        }
     }
 }

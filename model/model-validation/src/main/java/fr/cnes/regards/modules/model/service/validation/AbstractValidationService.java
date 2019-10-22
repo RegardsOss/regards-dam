@@ -153,6 +153,8 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
             // Check if value is expected or not according to the validation context
             checkAuthorizedPropertyValue(attModel, errors, mode);
             if (errors.hasErrors()) {
+                // Ok, attribute has been checked
+                toCheckProperties.remove(attPath);
                 return;
             }
 
