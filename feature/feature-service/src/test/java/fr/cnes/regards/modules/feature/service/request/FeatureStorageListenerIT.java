@@ -90,19 +90,18 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
     private void initData(RequestInfo info) {
         FeatureCreationRequest fcr = FeatureCreationRequest
                 .build("id1", OffsetDateTime.now(), RequestState.GRANTED, new HashSet<String>(),
-                       Feature.builder(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                        "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
-                                       "id1"),
+                       Feature.build("id1",
+                                     FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
+                                                                      "peps", UUID.randomUUID(), 1),
+                                     IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
                        new ArrayList<FeatureMetadataDto>(), FeatureRequestStep.LOCAL_SCHEDULED,
                        FeatureSession.builder("owner", "session"));
         fcr.setGroupId(info.getGroupId());
         FeatureEntity feature = FeatureEntity
-                .build(Feature.builder(
-                                       FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                        "peps", UUID.randomUUID(), 1),
-                                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
-                                       "id2"),
+                .build(Feature.build("id2",
+                                     FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
+                                                                      "peps", UUID.randomUUID(), 1),
+                                     IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
                        OffsetDateTime.now(), FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         this.featureRepo.save(feature);
         fcr.setFeatureEntity(feature);

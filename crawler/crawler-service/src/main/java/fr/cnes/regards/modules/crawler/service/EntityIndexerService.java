@@ -98,6 +98,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -624,12 +625,12 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (attributeToAdd instanceof ObjectProperty) {
                 ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
-                Optional<AbstractProperty<?>> candidate = dataset.getProperties().stream()
+                Optional<IProperty<?>> candidate = dataset.getProperties().stream()
                         .filter(attr -> attr instanceof ObjectProperty
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
-                    Set<AbstractProperty<?>> properties = ((ObjectProperty) candidate.get()).getValue();
+                    Set<IProperty<?>> properties = ((ObjectProperty) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
                     properties.removeAll(attrInFragment.getValue());
                     // and now set the new ones

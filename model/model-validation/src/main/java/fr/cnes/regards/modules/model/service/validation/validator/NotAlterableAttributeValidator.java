@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.springframework.validation.Errors;
 
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
  * Validate not alterable attribute
@@ -39,12 +39,12 @@ public class NotAlterableAttributeValidator extends AbstractPropertyValidator {
     /**
      * old attribute
      */
-    private final AbstractProperty<?> oldValue;
+    private final IProperty<?> oldValue;
 
     /**
      * new attribute
      */
-    private final AbstractProperty<?> newValue;
+    private final IProperty<?> newValue;
 
     /**
      * Constructor
@@ -53,8 +53,8 @@ public class NotAlterableAttributeValidator extends AbstractPropertyValidator {
      * @param oldValue
      * @param newValue
      */
-    public NotAlterableAttributeValidator(String attributeKey, AttributeModel attribute, AbstractProperty<?> oldValue,
-            AbstractProperty<?> newValue) {
+    public NotAlterableAttributeValidator(String attributeKey, AttributeModel attribute, IProperty<?> oldValue,
+            IProperty<?> newValue) {
         super(attributeKey);
         this.oldValue = oldValue;
         this.newValue = newValue;

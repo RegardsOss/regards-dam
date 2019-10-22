@@ -110,7 +110,7 @@ import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.model.dao.IModelRepository;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.model.service.IAttributeModelService;
@@ -496,7 +496,7 @@ public class IndexerServiceDataSourceIT {
         client.close();
     }
 
-    private AbstractProperty<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {
+    private IProperty<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {
         return pDataset.getProperties().stream().filter(p -> p.getName().equals(pPropertyName)).findAny().orElse(null);
     }
 

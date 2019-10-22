@@ -23,13 +23,13 @@ import java.util.Set;
 import org.springframework.validation.Errors;
 
 import fr.cnes.regards.framework.geojson.AbstractFeature;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
  * Validation interface
  * @param <U> {@link AbstractFeature}
  */
-public interface IValidationService<U extends AbstractFeature<Set<AbstractProperty<?>>, ?>> {
+public interface IValidationService<U extends AbstractFeature<Set<IProperty<?>>, ?>> {
 
     /**
      * Validate feature properties regarding the configured data model

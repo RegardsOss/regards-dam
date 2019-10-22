@@ -60,8 +60,8 @@ public class DataSourceService implements IDataSourceService {
     }
 
     @Override
-    public PluginConfiguration getDataSource(Long id) throws EntityNotFoundException {
-        return service.getPluginConfiguration(id);
+    public PluginConfiguration getDataSource(String businessId) throws EntityNotFoundException {
+        return service.getPluginConfiguration(businessId);
     }
 
     @Override

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -106,11 +107,7 @@ public class FeatureService implements IFeatureService {
 
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
-        List<FeatureCreationRequest> savedFcr = featureCreationRequestRepo.saveAll(grantedRequests);
-
-        scheduleFeatureCreationRequest();
-
-        return savedFcr;
+        return featureCreationRequestRepo.saveAll(grantedRequests);
     }
 
     @Override
@@ -120,20 +117,25 @@ public class FeatureService implements IFeatureService {
         Set<JobParameter> jobParameters = Sets.newHashSet();
         Set<String> featureIdsScheduled = new HashSet<>();
         List<FeatureCreationRequest> requestsToSchedule = new ArrayList<FeatureCreationRequest>();
-        for (FeatureCreationRequest request : this.featureCreationRequestRepo
-                .findAll(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))))) {
-            // we will schedule only one feature request for a feature id
-            if (!featureIdsScheduled.contains(request.getFeature().getId())) {
-                requestsToSchedule.add(request);
-                featureIdsScheduled.add(request.getFeature().getId());
-            }
-        }
-        jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
-                requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-        JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
-                jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
-        jobInfoService.createAsQueued(jobInfo);
+        Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
+                .findAll(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))));
+
+        if (page.hasContent()) {
+            for (FeatureCreationRequest request : page) {
+                // we will schedule only one feature request for a feature id
+                if (!featureIdsScheduled.contains(request.getFeature().getId())) {
+                    requestsToSchedule.add(request);
+                    featureIdsScheduled.add(request.getFeature().getId());
+                }
+            }
+            jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
+                    requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+
+            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+            jobInfoService.createAsQueued(jobInfo);
+        }
     }
 
     /**
@@ -186,12 +188,12 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() == null)
-                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
+                .filter(fcr -> fcr.getFeature().getFiles() == null
+                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 
@@ -266,8 +268,8 @@ public class FeatureService implements IFeatureService {
 
     @Override
     public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata, FeatureSessionDto session) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.builder(toPublish, metadata,
-                                                                                OffsetDateTime.now(), session);
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(toPublish, metadata, OffsetDateTime.now(),
+                                                                              session);
         publisher.publish(event);
         return event.getRequestId();
     }
@@ -277,8 +279,8 @@ public class FeatureService implements IFeatureService {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
 
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.builder(feature, toHandle.getMetadata(), OffsetDateTime.now(),
-                                                            toHandle.getSession()));
+            toTreat.add(FeatureCreationRequestEvent.build(feature, toHandle.getMetadata(), OffsetDateTime.now(),
+                                                          toHandle.getSession()));
         }
         return this.handleFeatureCreationRequestEvents(toTreat);
     }

@@ -431,6 +431,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         buildPublicJsonPath();
     }
 
+    public boolean hasDefaultValue() {
+        return defaultValue != null;
+    }
+
     public String getDefaultValue() {
         return defaultValue;
     }

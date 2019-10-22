@@ -109,9 +109,9 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pluginConfId}")
-    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable Long pluginConfId)
+    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable String businessId)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pluginConfId)));
+        return ResponseEntity.ok(toResource(dataSourceService.getDataSource(businessId)));
     }
 
     /**
@@ -123,10 +123,10 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pluginConfId}")
-    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(@PathVariable Long pluginConfId,
+    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(@PathVariable String businessId,
             @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
-        if (!pluginConfId.equals(dataSource.getId())) {
-            throw new EntityInconsistentIdentifierException(pluginConfId, dataSource.getId(),
+        if (!businessId.equals(dataSource.getBusinessId())) {
+            throw new EntityInconsistentIdentifierException(businessId, dataSource.getBusinessId(),
                     PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dataSourceService.updateDataSource(dataSource)));
@@ -140,11 +140,11 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable String pluginConfId)
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{businessId}")
+    public ResponseEntity<Void> deleteDataSource(@PathVariable String businessId)
             throws AssociatedDatasetExistsException, ModuleException {
         try {
-            dataSourceService.deleteDataSource(pluginConfId);
+            dataSourceService.deleteDataSource(businessId);
         } catch (RuntimeException e) {
             // Ugliest method to manage constraints on entites which are associated to this datasource but because
             // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
@@ -172,13 +172,13 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
     public Resource<DataSourceDTO> toResource(DataSourceDTO conf, Object... pExtras) {
         Resource<DataSourceDTO> resource = resourceService.toResource(conf);
         resourceService.addLink(resource, this.getClass(), "getDataSource", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, conf.getId()));
+                                MethodParamFactory.build(String.class, conf.getBusinessId()));
         if (conf.getAssociatedDatasets() == 0) {
             resourceService.addLink(resource, this.getClass(), "deleteDataSource", LinkRels.DELETE,
-                                    MethodParamFactory.build(Long.class, conf.getId()));
+                                    MethodParamFactory.build(String.class, conf.getBusinessId()));
         }
         resourceService.addLink(resource, this.getClass(), "updateDataSource", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, conf.getId()),
+                                MethodParamFactory.build(String.class, conf.getBusinessId()),
                                 MethodParamFactory.build(PluginConfiguration.class));
         resourceService.addLink(resource, this.getClass(), "getAllDataSources", LinkRels.LIST);
         return resource;

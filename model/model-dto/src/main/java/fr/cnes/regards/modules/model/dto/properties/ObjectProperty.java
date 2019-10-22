@@ -25,7 +25,7 @@ import java.util.Set;
  *
  * @author Marc Sordi
  */
-public class ObjectProperty extends AbstractProperty<Set<AbstractProperty<?>>> {
+public class ObjectProperty extends AbstractProperty<Set<IProperty<?>>> {
 
     @Override
     public boolean represents(PropertyType pAttributeType) {

@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
+import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 
 /**
  * @author Marc SORDI
@@ -35,6 +36,11 @@ public class FeatureTestConfiguration {
     @Bean
     public IModelAttrAssocClient modelAttrAssocClient() {
         return Mockito.mock(IModelAttrAssocClient.class);
+    }
+
+    @Bean // Used in model service
+    public IComputationPluginService computationPluginService() {
+        return Mockito.mock(IComputationPluginService.class);
     }
 
     // FIXME a implémenter réellement!

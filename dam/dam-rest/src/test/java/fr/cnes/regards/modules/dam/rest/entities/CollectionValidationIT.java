@@ -39,7 +39,6 @@ import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.model.rest.ModelController;
@@ -131,7 +130,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         Model model = modelService.getModelByName("MISSION_WITH_LABEL");
 
         Collection collection = new Collection(model, getDefaultTenant(), "COL1", "mission");
-        Set<AbstractProperty<?>> atts = new HashSet<>();
+        Set<IProperty<?>> atts = new HashSet<>();
         atts.add(IProperty.buildString("LABEL", "uppercaselabel"));
         collection.setProperties(atts);
 

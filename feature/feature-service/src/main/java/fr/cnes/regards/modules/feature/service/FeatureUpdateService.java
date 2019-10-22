@@ -147,23 +147,26 @@ public class FeatureUpdateService implements IFeatureUpdateService {
         List<FeatureUpdateRequest> delayedRequests = this.updateRepo
                 .findRequestToSchedule(PageRequest.of(0, this.properties.getMaxBulkSize()),
                                        OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
-        List<FeatureUpdateRequest> toSchedule = new ArrayList<FeatureUpdateRequest>();
-        FeatureUpdateRequest currentRequest;
 
-        for (int i = 0; i < delayedRequests.size(); i++) {
-            currentRequest = delayedRequests.get(i);
-            currentRequest.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-            toSchedule.add(currentRequest);
+        if (!delayedRequests.isEmpty()) {
+            List<FeatureUpdateRequest> toSchedule = new ArrayList<FeatureUpdateRequest>();
+            FeatureUpdateRequest currentRequest;
+
+            for (int i = 0; i < delayedRequests.size(); i++) {
+                currentRequest = delayedRequests.get(i);
+                currentRequest.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+                toSchedule.add(currentRequest);
+            }
+
+            this.updateRepo.saveAll(toSchedule);
+
+            jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
+                    toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+
+            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+            jobInfoService.createAsQueued(jobInfo);
         }
-
-        this.updateRepo.saveAll(toSchedule);
-
-        jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
-                toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
-
-        JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
-                jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
-        jobInfoService.createAsQueued(jobInfo);
     }
 
     @Override

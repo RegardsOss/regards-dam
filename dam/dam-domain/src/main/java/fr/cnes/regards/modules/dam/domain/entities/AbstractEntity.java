@@ -73,6 +73,7 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 /**
@@ -303,7 +304,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * If this set should be modified, please use addProperty or removeProperty
      * @return {@link AbstractProperty}s
      */
-    public ImmutableSet<AbstractProperty<?>> getProperties() {
+    public ImmutableSet<IProperty<?>> getProperties() {
         return ImmutableSet.copyOf(feature.getProperties());
     }
 
@@ -313,7 +314,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      */
     public Set<String> getMutableCopyOfPropertiesPaths() {
         Set<String> propertiesPaths = new HashSet<>();
-        for (AbstractProperty<?> prop : feature.getProperties()) {
+        for (IProperty<?> prop : feature.getProperties()) {
             // Fragment
             if (prop instanceof ObjectProperty) {
                 String fragmentName = prop.getName();
@@ -339,7 +340,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.removeProperty(property);
     }
 
-    public AbstractProperty<?> getProperty(String name) {
+    public IProperty<?> getProperty(String name) {
         return feature.getProperty(name);
     }
 
@@ -347,7 +348,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Set the properties
      * @param attributes
      */
-    public void setProperties(Set<AbstractProperty<?>> attributes) {
+    public void setProperties(Set<IProperty<?>> attributes) {
         feature.setProperties(attributes);
     }
 

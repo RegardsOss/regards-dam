@@ -35,7 +35,7 @@ import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.modules.model.domain.ComputationMode;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.model.service.validation.validator.ComputationModeValidator;
@@ -48,7 +48,7 @@ import fr.cnes.regards.modules.model.service.validation.validator.restriction.Re
  * @author oroussel
  * @author Marc SORDI
  */
-public abstract class AbstractValidationService<F extends AbstractFeature<Set<AbstractProperty<?>>, ?>>
+public abstract class AbstractValidationService<F extends AbstractFeature<Set<IProperty<?>>, ?>>
         implements IValidationService<F> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValidationService.class);
@@ -68,7 +68,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
         List<ModelAttrAssoc> modAtts = modelFinder.findByModel(model);
 
         // Build fast property access map
-        Map<String, AbstractProperty<?>> pptyMap = getPropertyMap(feature.getProperties());
+        Map<String, IProperty<?>> pptyMap = getPropertyMap(feature.getProperties());
         // Get a copy of entity attributes values to optimize the search of unexpected properties
         // FIXME check it's a real copy!
         Set<String> toCheckProperties = new HashSet<>(pptyMap.keySet());
@@ -91,17 +91,19 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
     /**
      * Build a fast access map for current properties
      */
-    private Map<String, AbstractProperty<?>> getPropertyMap(Set<AbstractProperty<?>> properties) {
-        Map<String, AbstractProperty<?>> pmap = new HashMap<>();
-        for (AbstractProperty<?> ppt : properties) {
-            addPropertyToMap(pmap, ppt, null);
+    private Map<String, IProperty<?>> getPropertyMap(Set<IProperty<?>> properties) {
+        Map<String, IProperty<?>> pmap = new HashMap<>();
+        if (properties != null) {
+            for (IProperty<?> ppt : properties) {
+                addPropertyToMap(pmap, ppt, null);
+            }
         }
         return pmap;
     }
 
-    private void addPropertyToMap(Map<String, AbstractProperty<?>> pmap, AbstractProperty<?> ppt, String namespace) {
+    private void addPropertyToMap(Map<String, IProperty<?>> pmap, IProperty<?> ppt, String namespace) {
         if (ppt.represents(PropertyType.OBJECT)) {
-            for (AbstractProperty<?> inner : ((ObjectProperty) ppt).getValue()) {
+            for (IProperty<?> inner : ((ObjectProperty) ppt).getValue()) {
                 addPropertyToMap(pmap, inner, ppt.getName());
             }
         } else {
@@ -123,7 +125,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
      *
      */
     protected void checkModelAttribute(ModelAttrAssoc modelAttrAssoc, Errors errors, ValidationMode mode, F feature,
-            Map<String, AbstractProperty<?>> pptyMap, Set<String> toCheckProperties) {
+            Map<String, IProperty<?>> pptyMap, Set<String> toCheckProperties) {
 
         AttributeModel attModel = modelAttrAssoc.getAttribute();
         String attPath = attModel.getJsonPropertyPath();
@@ -134,17 +136,25 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
             LOGGER.debug("Computed key : \"{}\"", attPath);
 
             // Retrieve property
-            AbstractProperty<?> att = pptyMap.get(attPath);
+            IProperty<?> att = pptyMap.get(attPath);
 
-            // Null value check
+            // Null property check
             if (att == null) {
-                if (!attModel.isOptional()) {
-                    String messageKey = "error.missing.required.property.message";
-                    String defaultMessage = String.format("Missing required property \"%s\".", attPath);
-                    errors.reject(messageKey, defaultMessage);
-                    return;
-                }
-                LOGGER.debug(String.format("Property \"%s\" is optional in current context.", attPath));
+                checkNullProperty(attModel, errors, mode);
+                return;
+            }
+
+            // Null property value check
+            if (att.getValue() == null) {
+                checkNullPropertyValue(attModel, errors, mode);
+                return;
+            }
+
+            // Check if value is expected or not according to the validation context
+            checkAuthorizedPropertyValue(attModel, errors, mode);
+            if (errors.hasErrors()) {
+                // Ok, attribute has been checked
+                toCheckProperties.remove(attPath);
                 return;
             }
 
@@ -161,6 +171,46 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<Ab
         }
         // Ok, attribute has been checked or is a computed one
         toCheckProperties.remove(attPath);
+    }
+
+    protected void checkNullProperty(AttributeModel attModel, Errors errors, ValidationMode mode) {
+        if (!ValidationMode.PATCH.equals(mode)) { // In PATCH mode, all properties can be null
+            if (!attModel.isOptional()) {
+                String messageKey = "error.missing.required.property.message";
+                String defaultMessage = String.format("Missing required property \"%s\".",
+                                                      attModel.getJsonPropertyPath());
+                errors.reject(messageKey, defaultMessage);
+                return;
+            }
+        }
+        LOGGER.debug("Property \"{}\" is optional in {} context.", attModel.getJsonPropertyPath(), mode);
+    }
+
+    protected void checkNullPropertyValue(AttributeModel attModel, Errors errors, ValidationMode mode) {
+        if (ValidationMode.PATCH.equals(mode)) {
+            // In PATCH mode, null value is used to unset a property
+            if (!attModel.isAlterable()) {
+                String messageKey = "error.unset.non.alterable.property.message";
+                String defaultMessage = String.format("Non alterable property \"%s\" cannot be unset.",
+                                                      attModel.getJsonPropertyPath());
+                errors.reject(messageKey, defaultMessage);
+            } else {
+                LOGGER.debug("Property \"{}\" will be unset in {} context.", attModel.getJsonPropertyPath(), mode);
+            }
+        }
+    }
+
+    protected void checkAuthorizedPropertyValue(AttributeModel attModel, Errors errors, ValidationMode mode) {
+        if (ValidationMode.PATCH.equals(mode)) {
+            if (!attModel.isAlterable()) {
+                String messageKey = "error.patch.non.alterable.property.message";
+                String defaultMessage = String.format("Non alterable property \"%s\" must not be set in patch request.",
+                                                      attModel.getJsonPropertyPath());
+                errors.reject(messageKey, defaultMessage);
+            } else {
+                LOGGER.debug("Property \"{}\" will be updated in {} context.", attModel.getJsonPropertyPath(), mode);
+            }
+        }
     }
 
     /**

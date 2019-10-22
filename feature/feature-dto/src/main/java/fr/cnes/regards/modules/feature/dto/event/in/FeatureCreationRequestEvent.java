@@ -66,7 +66,7 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         this.feature = feature;
     }
 
-    public static FeatureCreationRequestEvent builder(Feature feature, List<FeatureMetadataDto> metadata,
+    public static FeatureCreationRequestEvent build(Feature feature, List<FeatureMetadataDto> metadata,
             OffsetDateTime date, FeatureSessionDto session) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);

@@ -42,14 +42,14 @@ import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 /**
  * Public and common entity feature properties
  * @author Marc Sordi
  */
-public abstract class EntityFeature extends AbstractFeature<Set<AbstractProperty<?>>, UniformResourceName> {
+public abstract class EntityFeature extends AbstractFeature<Set<IProperty<?>>, UniformResourceName> {
 
     /**
      * Submission information package provider identifier
@@ -80,7 +80,7 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractProperty
     // To perform quick access to attribute from its name
     @Transient
     @GsonIgnore
-    private Map<String, AbstractProperty<?>> propertyMap = null;
+    private Map<String, IProperty<?>> propertyMap = null;
 
     public EntityFeature(UniformResourceName id, String providerId, EntityType entityType, String label) {
         Assert.notNull(entityType, "Entity type is required");
@@ -91,17 +91,17 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractProperty
         this.properties = new HashSet<>();
     }
 
-    public void addProperty(AbstractProperty<?> property) {
+    public void addProperty(IProperty<?> property) {
         this.properties.add(property);
         // If property key is null, it is not a valid property and so it may not pass validation process
         if (property.getName() != null) {
-            propertyMap = Maps.uniqueIndex(this.properties, AbstractProperty::getName);
+            propertyMap = Maps.uniqueIndex(this.properties, IProperty::getName);
         }
     }
 
-    public AbstractProperty<?> getProperty(String name) {
+    public IProperty<?> getProperty(String name) {
         if (propertyMap == null) {
-            propertyMap = Maps.uniqueIndex(this.properties, AbstractProperty::getName);
+            propertyMap = Maps.uniqueIndex(this.properties, IProperty::getName);
         }
         if (!name.contains(".")) {
             return this.propertyMap.get(name);
@@ -109,17 +109,17 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractProperty
             ObjectProperty fragment = (ObjectProperty) this.propertyMap.get(name.substring(0, name.indexOf('.')));
             String propName = name.substring(name.indexOf('.') + 1);
             if (fragment != null) {
-                Optional<AbstractProperty<?>> attOpt = fragment.getValue().stream()
-                        .filter(p -> p.getName().equals(propName)).findFirst();
+                Optional<IProperty<?>> attOpt = fragment.getValue().stream().filter(p -> p.getName().equals(propName))
+                        .findFirst();
                 return attOpt.isPresent() ? attOpt.get() : null;
             }
             return null;
         }
     }
 
-    public void removeProperty(AbstractProperty<?> property) {
+    public void removeProperty(IProperty<?> property) {
         this.properties.remove(property);
-        propertyMap = Maps.uniqueIndex(this.properties, AbstractProperty::getName);
+        propertyMap = Maps.uniqueIndex(this.properties, IProperty::getName);
     }
 
     public String getProviderId() {
@@ -187,9 +187,9 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractProperty
     }
 
     @Override
-    public void setProperties(Set<AbstractProperty<?>> properties) {
+    public void setProperties(Set<IProperty<?>> properties) {
         super.setProperties(properties);
-        propertyMap = Maps.uniqueIndex(this.properties, AbstractProperty::getName);
+        propertyMap = Maps.uniqueIndex(this.properties, IProperty::getName);
     }
 
 }

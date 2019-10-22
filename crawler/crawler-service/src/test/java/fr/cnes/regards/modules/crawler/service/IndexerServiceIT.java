@@ -55,7 +55,6 @@ import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
 import fr.cnes.regards.modules.model.domain.Model;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.BooleanProperty;
 import fr.cnes.regards.modules.model.dto.properties.DateArrayProperty;
 import fr.cnes.regards.modules.model.dto.properties.DateIntervalProperty;
@@ -127,7 +126,7 @@ public class IndexerServiceIT {
 
         // Creating a Collection with all types of attributes
         final Collection collection = new Collection(model, tenant, "COL1", "coll1");
-        final HashSet<AbstractProperty<?>> attributes = new HashSet<>();
+        final HashSet<IProperty<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanProperty.class, "booleanAtt");
         gsonAttributeFactory.registerSubtype(tenant, DateArrayProperty.class, "dateArrayAtt");
@@ -255,7 +254,7 @@ public class IndexerServiceIT {
 
     private Collection createCollection(final Model collModel, final int i) {
         final Collection collection = new Collection(collModel, SEARCH, "COL" + i, "coll" + i);
-        final HashSet<AbstractProperty<?>> attributes = new HashSet<>();
+        final HashSet<IProperty<?>> attributes = new HashSet<>();
         attributes.add(IProperty.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(IProperty.buildDouble("longitude", Math.random() * 360. - 180.));
         attributes.add(IProperty.buildDouble("latitude", Math.random() * 180. - 90.));

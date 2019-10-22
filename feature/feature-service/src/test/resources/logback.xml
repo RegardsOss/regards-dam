@@ -28,7 +28,8 @@
 	</appender>
 
 	<logger name="org.springframework" level="INFO" />
-	<root level="info">
+	<logger name="fr.cnes.regards.modules" level="DEBUG" />
+	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
