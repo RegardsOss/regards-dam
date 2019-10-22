@@ -119,16 +119,23 @@ public class FeatureService implements IFeatureService {
         List<FeatureCreationRequest> requestsToSchedule = new ArrayList<FeatureCreationRequest>();
 
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
-                .findAll(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))));
+                .findByStep(FeatureRequestStep.LOCAL_DELAYED,
+                            PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))));
 
         if (page.hasContent()) {
             for (FeatureCreationRequest request : page) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getFeature().getId())) {
                     requestsToSchedule.add(request);
+                    request.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
                     featureIdsScheduled.add(request.getFeature().getId());
                 }
             }
+
+            // update FeatureCreationRequest scheduled state
+            this.featureCreationRequestRepo
+                    .updateState(RequestState.GRANTED,
+                                 requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toSet()));
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
@@ -190,12 +197,12 @@ public class FeatureService implements IFeatureService {
                 .collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(featureCreationRequests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() == null)
+                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
     }
 
