@@ -118,7 +118,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Dataset checkDataSource(Dataset dataset) throws ModuleException, NotAvailablePluginConfigurationException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
-            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getBusinessId());
             String modelName = datasourcePlugin.getModelName();
             try {
                 Model model = modelService.getModelByName(modelName);
@@ -173,7 +173,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     protected void doCheck(Dataset entity, Dataset entityInDB) throws ModuleException {
         try {
             // datasource not being updatable, we only check it at creation i.e. when entityInDB is null
-            if(entityInDB == null) {
+            if (entityInDB == null) {
                 entity = checkDataSource(entity);
             }
             checkSubsettingCriterion(entity);
