@@ -16,7 +16,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
-import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -51,7 +50,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 10) && (featureNumberInDatabase != 2));
+        } while (cpt < 10 && featureNumberInDatabase != 2);
 
         FeatureEntity toUpdate = super.featureRepo.findAll().get(0);
         FeatureEntity updatingByScheduler = super.featureRepo.findAll().get(1);
@@ -65,7 +64,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         fur1.setRequestDate(OffsetDateTime.now());
         fur1.setRequestId("1");
         fur1.setUrn(toUpdate.getFeature().getUrn());
-        fur1.setSession(FeatureSession.builder("owner", "session"));
+
         FeatureUpdateRequest fur2 = new FeatureUpdateRequest();
         fur2.setFeatureEntity(updatingByScheduler);
         fur2.setFeature(updatingByScheduler.getFeature());
@@ -75,7 +74,6 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         fur2.setState(RequestState.GRANTED);
         fur2.setRequestId("2");
         fur2.setUrn(updatingByScheduler.getFeature().getUrn());
-        fur2.setSession(FeatureSession.builder("owner", "session"));
 
         FeatureUpdateRequest fur3 = new FeatureUpdateRequest();
         fur3.setFeature(updatingByScheduler.getFeature());
@@ -85,7 +83,6 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         fur3.setRequestDate(OffsetDateTime.now());
         fur3.setRequestId("3");
         fur3.setUrn(updatingByScheduler.getFeature().getUrn());
-        fur3.setSession(FeatureSession.builder("owner", "session"));
 
         super.featureUpdateRequestRepo.save(fur1);
         super.featureUpdateRequestRepo.save(fur2);

@@ -6,8 +6,7 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 public interface IFeatureService {
@@ -23,7 +22,7 @@ public interface IFeatureService {
 
     void createFeatures(List<FeatureCreationRequest> featureCreationRequests);
 
-    String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata, FeatureSessionDto session);
+    String publishFeature(Feature toPublish, FeatureMetadata metadata);
 
     /**
      * Schedule a list of {@link FeatureCreationRequest} in a job

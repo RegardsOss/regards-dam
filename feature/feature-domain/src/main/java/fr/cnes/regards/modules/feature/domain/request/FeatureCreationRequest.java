@@ -19,10 +19,10 @@
 package fr.cnes.regards.modules.feature.domain.request;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,7 +31,6 @@ import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.validation.Valid;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -40,7 +39,6 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
@@ -64,13 +62,10 @@ public class FeatureCreationRequest extends AbstractRequest {
 
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
     @Type(type = "jsonb")
-    @Valid
     private Feature feature;
 
-    @Column(columnDefinition = "jsonb", name = "metadata")
-    @Type(type = "jsonb")
-    @Valid
-    private List<FeatureMetadataDto> metadata;
+    @Embedded
+    private FeatureMetadataEntity metadata;
 
     public Feature getFeature() {
         return this.feature;
@@ -84,24 +79,22 @@ public class FeatureCreationRequest extends AbstractRequest {
         return this.id;
     }
 
-    public List<FeatureMetadataDto> getMetadata() {
+    public FeatureMetadataEntity getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(List<FeatureMetadataDto> metadata) {
+    public void setMetadata(FeatureMetadataEntity metadata) {
         this.metadata = metadata;
     }
 
     public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature, List<FeatureMetadataDto> metadata, FeatureRequestStep step,
-            FeatureSession session) {
+            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step) {
         Assert.notNull(feature, "Feature is required");
         FeatureCreationRequest fcr = new FeatureCreationRequest();
         fcr.with(requestId, requestDate, state, errors);
         fcr.setFeature(feature);
         fcr.setMetadata(metadata);
         fcr.setStep(step);
-        fcr.setSession(session);
         return fcr;
     }
 }

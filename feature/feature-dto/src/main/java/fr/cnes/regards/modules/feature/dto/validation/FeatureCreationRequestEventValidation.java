@@ -27,9 +27,9 @@ public class FeatureCreationRequestEventValidation
 
     @Override
     public boolean isValid(FeatureCreationRequestEvent value, ConstraintValidatorContext context) {
-        // We will seek unvalid cases, there are 3 cases
-        // When there are metada but they aren't valid
-        if (!value.getMetadata().isEmpty()) {
+        // We will seek invalid cases, there are 3 cases
+        // When there are metadata but they aren't valid
+        if (value.getMetadata().hasStorage()) {
             Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
             validator.validate(value.getMetadata(), errors);
             return !errors.hasErrors();

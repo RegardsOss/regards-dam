@@ -35,15 +35,15 @@ import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
-import fr.cnes.regards.modules.feature.domain.request.FeatureSession;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -168,10 +168,12 @@ public class FeatureService implements IFeatureService {
         }
 
         // Manage granted request
-        FeatureCreationRequest request = FeatureCreationRequest
-                .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
-                       item.getMetadata(), FeatureRequestStep.LOCAL_DELAYED,
-                       FeatureSession.builder(item.getSession().getSessionOwner(), item.getSession().getSession()));
+        FeatureMetadataEntity metadata = FeatureMetadataEntity.build(item.getMetadata().getSession(),
+                                                                     item.getMetadata().getSessionOwner(),
+                                                                     item.getMetadata().getStorages());
+        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestDate(),
+                                                                      RequestState.GRANTED, null, item.getFeature(),
+                                                                      metadata, FeatureRequestStep.LOCAL_DELAYED);
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
@@ -209,18 +211,18 @@ public class FeatureService implements IFeatureService {
             FeatureFileAttributes attribute = file.getAttributes();
             for (FeatureFileLocation loc : file.getLocations()) {
                 // there is no metadata but a file location so we will update reference
-                if (fcr.getMetadata().isEmpty()) {
+                if (!fcr.getMetadata().hasStorage()) {
                     this.storageClient.reference(FileReferenceRequestDTO
                             .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
                                    attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
                                    loc.getUrl(), loc.getStorage(), loc.getUrl()));
                 }
-                for (FeatureMetadataDto metadata : fcr.getMetadata()) {
+                for (StorageMetadata metadata : fcr.getMetadata().getStorages()) {
                     if (loc.getStorage() == null) {
                         this.storageClient.store(FileStorageRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
                                        attribute.getMimeType().toString(), fcr.getFeature().getUrn().toString(),
-                                       loc.getUrl(), metadata.getStorageIdentifier(), Optional.of(loc.getUrl())));
+                                       loc.getUrl(), metadata.getPluginBusinessId(), Optional.of(loc.getUrl())));
                     } else {
                         this.storageClient.reference(FileReferenceRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
@@ -249,7 +251,8 @@ public class FeatureService implements IFeatureService {
                                  computeNextVersion(featureRepo
                                          .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
 
-        FeatureEntity created = FeatureEntity.build(feature, OffsetDateTime.now(),
+        FeatureEntity created = FeatureEntity.build(fcr.getMetadata().getSession(), fcr.getMetadata().getSessionOwner(),
+                                                    feature, OffsetDateTime.now(),
                                                     FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
@@ -267,9 +270,9 @@ public class FeatureService implements IFeatureService {
     }
 
     @Override
-    public String publishFeature(Feature toPublish, List<FeatureMetadataDto> metadata, FeatureSessionDto session) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(toPublish, metadata, OffsetDateTime.now(),
-                                                                              session);
+    public String publishFeature(Feature toPublish, FeatureMetadata metadata) {
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(toPublish, OffsetDateTime.now(),
+                                                                              metadata);
         publisher.publish(event);
         return event.getRequestId();
     }
@@ -279,8 +282,7 @@ public class FeatureService implements IFeatureService {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
 
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build(feature, toHandle.getMetadata(), OffsetDateTime.now(),
-                                                          toHandle.getSession()));
+            toTreat.add(FeatureCreationRequestEvent.build(feature, OffsetDateTime.now(), toHandle.getMetadata()));
         }
         return this.handleFeatureCreationRequestEvents(toTreat);
     }

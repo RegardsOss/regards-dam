@@ -19,8 +19,8 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
@@ -34,7 +34,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
     private final int EVENTS_NUMBER = 1000;
 
     @Autowired
-    private FeatureService featureService;
+    private IFeatureService featureService;
 
     /**
      * Test creation of EVENTS_NUMBER features Check if
@@ -120,10 +120,9 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
                                        "model"));
         }
 
-        FeatureCollection collection = FeatureCollection.build(new ArrayList<FeatureMetadataDto>(),
-                                                               FeatureSessionDto.builder("owner", "session"));
-        collection.addAll(features);
-        collection.getMetadata().add(FeatureMetadataDto.builder("id ", null, null));
+        StorageMetadata.build("id ");
+        FeatureCollection collection = FeatureCollection
+                .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
         this.featureService.createFeatureRequestEvent(collection);
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
