@@ -118,11 +118,14 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Dataset checkDataSource(Dataset dataset) throws ModuleException, NotAvailablePluginConfigurationException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
-            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getBusinessId());
+            PluginConfiguration pluginConf = pluginService
+                    .getPluginConfiguration(dataset.getDataSource().getBusinessId());
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(pluginConf.getBusinessId());
             String modelName = datasourcePlugin.getModelName();
             try {
                 Model model = modelService.getModelByName(modelName);
                 dataset.setDataModel(model.getName());
+                dataset.setDataSource(pluginConf);
             } catch (ModuleException e) {
                 logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                 throw new EntityNotFoundException(String
