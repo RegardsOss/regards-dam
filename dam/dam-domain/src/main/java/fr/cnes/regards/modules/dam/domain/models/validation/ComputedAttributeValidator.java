@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
 import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
@@ -63,21 +64,20 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
             return false;
         }
         PluginConfiguration computationConf = modelAttrAssoc.getComputationConf();
+        computationConf.setMetaData(PluginUtils.getPlugins().get(computationConf.getPluginId()));
         if (modelAttrAssoc.getMode() == ComputationMode.COMPUTED) {
             // If computed attribute, check that the model is a dataset model
             Model model = modelAttrAssoc.getModel();
             if (model.getType() != EntityType.DATASET) {
-                String msg = String.format(ComputedAttribute.WRONG_MODEL_TYPE,
-                                           modelAttrAssoc.getAttribute().getName(),
-                                           computationConf,
-                                           EntityType.DATASET);
+                String msg = String.format(ComputedAttribute.WRONG_MODEL_TYPE, modelAttrAssoc.getAttribute().getName(),
+                                           computationConf, EntityType.DATASET);
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
                 return false;
             }
             // If computed attribute, check that computation plugin mechanism is correct
-            if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null) && computationConf
-                    .getInterfaceNames().contains(IComputedAttribute.class.getName())) {
+            if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null)
+                    && computationConf.getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
                 try {
                     // Retrieve annotation and check plugin supported type
@@ -87,17 +87,16 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
                     boolean ok = (computationPlugin.supportedType() == modelAttrAssoc.getAttribute().getType());
                     if (!ok) {
                         String msg = String.format(ComputedAttribute.INCOMPATIBLE_TYPE,
-                                                   modelAttrAssoc.getAttribute().getName(),
-                                                   computationConf);
+                                                   modelAttrAssoc.getAttribute().getName(), computationConf);
                         context.disableDefaultConstraintViolation();
                         context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
                     }
                     return ok;
                 } catch (ClassNotFoundException e) {
                     LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
-                                      + " cannot be validated because we couldn't find annotation"
-                                      + ComputationPlugin.class.getName() + " on the associated plugin to check the "
-                                      + "coherence of its return type.");
+                            + " cannot be validated because we couldn't find annotation"
+                            + ComputationPlugin.class.getName() + " on the associated plugin to check the "
+                            + "coherence of its return type.");
                     throw new RsRuntimeException(e);
                 }
             }
@@ -105,8 +104,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         // It is not a computed attribute so it must be GIVEN one
         boolean ok = (modelAttrAssoc.getMode() == ComputationMode.GIVEN);
         if (!ok) {
-            String msg = String.format(ComputedAttribute.DEFAULT_TEMPLATE,
-                                       modelAttrAssoc.getAttribute().getName(),
+            String msg = String.format(ComputedAttribute.DEFAULT_TEMPLATE, modelAttrAssoc.getAttribute().getName(),
                                        computationConf);
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
