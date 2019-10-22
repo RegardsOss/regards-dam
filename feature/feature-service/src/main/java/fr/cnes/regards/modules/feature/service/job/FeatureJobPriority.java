@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.service.job.feature;
+package fr.cnes.regards.modules.feature.service.job;
 
 /**
  * Feature jobs priority management
@@ -26,6 +26,14 @@ package fr.cnes.regards.modules.feature.service.job.feature;
 public enum FeatureJobPriority {
 
     FEATURE_CREATION_JOB_PRIORITY {
+
+        @Override
+        public int getPriority() {
+            return 0;
+        }
+    },
+
+    FEATURE_UPDATE_JOB_PRIORITY {
 
         @Override
         public int getPriority() {

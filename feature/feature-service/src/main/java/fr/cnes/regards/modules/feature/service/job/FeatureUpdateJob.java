@@ -62,9 +62,10 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
-        long beginExecutionTime = System.currentTimeMillis();
+        LOGGER.info("[{}] Feature update job starts", jobInfoId);
+        long start = System.currentTimeMillis();
         this.featureUpdateService.updateFeatures(featureUpdateRequests);
-        long endExcecutionTime = System.currentTimeMillis();
-        LOGGER.info("Job execution time {} ms", endExcecutionTime - beginExecutionTime);
+        LOGGER.info("[{}]{}{} feature(s) updated in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
+                    System.currentTimeMillis() - start);
     }
 }

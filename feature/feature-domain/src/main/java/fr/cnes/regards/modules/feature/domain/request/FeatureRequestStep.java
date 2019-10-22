@@ -34,7 +34,7 @@ public enum FeatureRequestStep {
     LOCAL_DENIED,
 
     // Request processing is delayed to handle concurrent asynchronous update
-    // Manager waits for a configurable delay before scheduling feature uptate job.
+    // Manager waits for a configurable delay before scheduling feature update job.
     LOCAL_DELAYED,
 
     // Awaiting processing

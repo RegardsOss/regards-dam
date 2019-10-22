@@ -55,6 +55,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
 
+        featureService.scheduleFeatureCreationRequest();
+
         int cpt = 0;
         long featureNumberInDatabase;
         do {
@@ -92,6 +94,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
 
+        featureService.scheduleFeatureCreationRequest();
+
         int cpt = 0;
         long featureNumberInDatabase;
         do {
@@ -110,7 +114,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
     @Test
     public void testCreateFeatureRequestEvent() {
-        List<Feature> features = new ArrayList<Feature>();
+        List<Feature> features = new ArrayList<>();
         for (int i = 0; i < EVENTS_NUMBER; i++) {
             features.add(Feature.build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
                                        "model"));

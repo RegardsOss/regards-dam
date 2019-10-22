@@ -52,8 +52,8 @@ import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
+import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
-import fr.cnes.regards.modules.feature.service.job.feature.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -163,7 +163,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
                     toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_UPDATE_JOB_PRIORITY.getPriority(),
                     jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
