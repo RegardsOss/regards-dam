@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.utils.request.handler.AbstractRequestFlowHandler;
+import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
@@ -41,11 +41,14 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
  *
  */
 @Component
-public class FeatureUpdateRequestEventHandler extends AbstractRequestFlowHandler<FeatureUpdateRequestEvent>
-        implements ApplicationListener<ApplicationReadyEvent> {
+public class FeatureUpdateRequestEventHandler
+        implements IBatchHandler<FeatureUpdateRequestEvent>, ApplicationListener<ApplicationReadyEvent> {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUpdateRequestEventHandler.class);
+
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Autowired
     private FeatureConfigurationProperties confProperties;
@@ -61,22 +64,23 @@ public class FeatureUpdateRequestEventHandler extends AbstractRequestFlowHandler
         subscriber.subscribeTo(FeatureUpdateRequestEvent.class, this);
     }
 
-    /**
-     * Bulk save queued items every second.
-     */
     @Override
-    @Scheduled(fixedDelayString = "${regards.feature.request.flow.bulk.delay:1000}")
-    protected void handleQueue() {
-        super.handleQueue();
+    public void handleBatch(String tenant, List<FeatureUpdateRequestEvent> messages) {
+        try {
+            runtimeTenantResolver.forceTenant(tenant);
+            featureService.registerRequests(messages);
+        } finally {
+            runtimeTenantResolver.clearTenant();
+        }
     }
 
     @Override
-    protected Integer getBulkSize() {
+    public int getBatchSize() {
         return confProperties.getMaxBulkSize();
     }
 
     @Override
-    protected void processBulk(List<FeatureUpdateRequestEvent> items) {
-        featureService.registerRequests(items);
+    public long getReceiveTimeout() {
+        return confProperties.getBatchReceiveTimeout();
     }
 }
