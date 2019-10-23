@@ -36,7 +36,10 @@ import org.springframework.test.context.TestPropertySource;
 public class FeatureMutationTest extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
-    private IFeatureCreationService featureService;
+    private IFeatureCreationService featureCreationService;
+
+    @Autowired
+    private IFeatureUpdateService featureUpdateService;
 
     @Test
     public void createAndUpdateTest() {

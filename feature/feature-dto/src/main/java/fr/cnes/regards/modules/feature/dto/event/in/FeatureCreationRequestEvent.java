@@ -41,12 +41,12 @@ import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @Valid
-    @NotNull(message = "Feature is required")
-    private Feature feature;
-
-    @Valid
     @NotNull(message = "Feature metadata is required")
     private FeatureMetadata metadata;
+
+    @Valid
+    @NotNull(message = "Feature is required")
+    private Feature feature;
 
     public static FeatureCreationRequestEvent build(Feature feature, OffsetDateTime requestDate,
             FeatureMetadata metadata) {
