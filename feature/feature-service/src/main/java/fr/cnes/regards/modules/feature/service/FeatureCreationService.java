@@ -111,6 +111,12 @@ public class FeatureCreationService implements IFeatureCreationService {
     }
 
     @Override
+    public List<FeatureCreationRequest> registerRequests(FeatureCollection collection) {
+        // FIXME KMS : sans doute changer l'objet retourné pour avoir la liste des requests DENIED & GRANTED
+        return null;
+    }
+
+    @Override
     public void scheduleRequests() {
 
         // Shedule job
@@ -285,6 +291,7 @@ public class FeatureCreationService implements IFeatureCreationService {
     }
 
     @Override
+    @Deprecated // FIXME à supprimer après recablage vers register
     public List<FeatureCreationRequest> createFeatureRequestEvent(FeatureCollection toHandle) {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
 

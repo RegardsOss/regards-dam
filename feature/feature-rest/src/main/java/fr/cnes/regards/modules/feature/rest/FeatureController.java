@@ -35,7 +35,7 @@ public class FeatureController implements IResourceController<Feature> {
     public final static String PATH_FEATURES = "/features";
 
     @Autowired
-    private IFeatureCreationService featureService;
+    private IFeatureCreationService featureCreationService;
 
     @Autowired
     private IResourceService resourceService;
@@ -47,13 +47,14 @@ public class FeatureController implements IResourceController<Feature> {
      * @param toHandle {@link FeatureCollection} contain a list of {@link Feature}
      * @return list of created request ids
      */
+    // FIXME KMS revoir API + documenter avec des tests IT
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<List<Resource<Feature>>> createFeatures(@Valid @RequestBody FeatureCollection toHandle) {
         List<Feature> createdFeature = new ArrayList<>();
         List<String> requestIds = new ArrayList<>();
 
-        List<FeatureCreationRequest> createdEvents = this.featureService.createFeatureRequestEvent(toHandle);
+        List<FeatureCreationRequest> createdEvents = featureCreationService.createFeatureRequestEvent(toHandle);
 
         // extract the list of feature concerned by a feature creation request
         // and extract their request id in the same time
@@ -64,6 +65,8 @@ public class FeatureController implements IResourceController<Feature> {
 
         return new ResponseEntity<>(toResources(createdFeature, requestIds), HttpStatus.CREATED);
     }
+
+    // FIXME KMS ajouter API update
 
     @Override
     public Resource<Feature> toResource(Feature element, Object... extras) {

@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.feature.service;
 import java.util.List;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 
 /**
@@ -33,6 +34,11 @@ public interface IFeatureUpdateService {
      * Register update requests in database for further processing from incoming request events
      */
     void registerRequests(List<FeatureUpdateRequestEvent> events);
+
+    /**
+     * Register update requests in database for further processing from feature collection
+     */
+    List<FeatureUpdateRequest> registerRequests(FeatureCollection collection);
 
     /**
      * Schedule a job to process a batch of requests<br/>

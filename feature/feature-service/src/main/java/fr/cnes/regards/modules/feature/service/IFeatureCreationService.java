@@ -16,6 +16,11 @@ public interface IFeatureCreationService {
     List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events);
 
     /**
+     * Register creation requests in database for further processing from feature collection
+     */
+    List<FeatureCreationRequest> registerRequests(FeatureCollection collection);
+
+    /**
      * Schedule a job to process a batch of requests<br/>
      * Inside this list there is only one occurence of {@link FeatureCreationRequest} per {@link Feature} id
      */

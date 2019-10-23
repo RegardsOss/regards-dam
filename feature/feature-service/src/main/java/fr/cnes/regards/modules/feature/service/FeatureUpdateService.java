@@ -46,6 +46,7 @@ import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
@@ -94,6 +95,12 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
         // Batch save
         updateRepo.saveAll(grantedRequests);
+    }
+
+    @Override
+    public List<FeatureUpdateRequest> registerRequests(FeatureCollection collection) {
+        // FIXME KMS : sans doute changer l'objet retourné pour avoir la liste des requests DENIED & GRANTED
+        return null;
     }
 
     /**
