@@ -93,11 +93,12 @@ public class Rule {
         this.recipients = recipients;
     }
 
-    public static Rule builder(NotificationType type, PluginConfiguration plugin) {
+    public static Rule build(Long id, PluginConfiguration pluginConf, boolean enabled, NotificationType type) {
         Rule rule = new Rule();
-        rule.setPluginCondConfiguration(plugin);
+        rule.setPluginCondConfiguration(pluginConf);
         rule.setType(type);
-
+        rule.setEnable(enabled);
+        rule.setId(id);
         return rule;
     }
 }

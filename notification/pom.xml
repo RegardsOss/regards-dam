@@ -51,6 +51,7 @@
 		<module>notification-domain</module>
 		<module>notification-dao</module>
 		<module>notification-dto</module>
+		<module>notification-rest</module>
 	</modules>
 
 	<dependencyManagement>

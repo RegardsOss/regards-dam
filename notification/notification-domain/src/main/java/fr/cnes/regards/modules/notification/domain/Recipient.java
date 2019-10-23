@@ -30,8 +30,7 @@ public class Recipient {
     private Long id;
 
     @ManyToOne
-    @NotNull(message = "A rule is required")
-    @JoinColumn(name = "rule_id", foreignKey = @ForeignKey(name = "fk_rule_id"), nullable = false)
+    @JoinColumn(name = "rule_id", foreignKey = @ForeignKey(name = "fk_rule_id"))
     private Rule rule;
 
     @ManyToOne
@@ -64,7 +63,7 @@ public class Recipient {
         this.pluginCondConfiguration = pluginCondConfiguration;
     }
 
-    public static Recipient builder(Rule rule, PluginConfiguration plugin) {
+    public static Recipient build(Rule rule, PluginConfiguration plugin) {
         Recipient recipient = new Recipient();
         recipient.setRule(rule);
         recipient.setPluginCondConfiguration(plugin);

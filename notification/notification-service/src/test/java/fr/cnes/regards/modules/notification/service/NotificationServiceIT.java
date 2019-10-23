@@ -39,8 +39,8 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
     @Test
     public void testRuleMacher() throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException {
 
-        Feature feature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                          "model", "id");
+        Feature feature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                        "id");
 
         // properties of the feature
         Set<AbstractProperty<?>> properties = new HashSet<>();
@@ -91,7 +91,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         rulePlugin = this.pluginConfRepo.save(rulePlugin);
 
-        Rule rule = Rule.builder(NotificationType.IMMEDIATE, rulePlugin);
+        Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
         this.ruleRepo.save(rule);
 
         // configuration of the recipient sender plugin
@@ -101,14 +101,14 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         recipientPlugin.setLabel("test recipient");
         recipientPlugin.setPluginId("DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
-        Recipient recipient = Recipient.builder(rule, recipientPlugin);
+        Recipient recipient = Recipient.build(rule, recipientPlugin);
         this.recipientRepo.save(recipient);
 
         assertEquals(1, this.notificationService.handleFeatures(feature));
 
         // FIXME this feature will fail cause to the fail model  (sender not implemented)
-        Feature failingFeature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                                 "fail", "id");
+        Feature failingFeature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                               "fail", "id");
         failingFeature.setProperties(properties);
 
         assertEquals(0, this.notificationService.handleFeatures(failingFeature));
@@ -119,8 +119,8 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
     public void testRuleMacherWithNonMatcherFeature()
             throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException {
 
-        Feature feature = Feature.builder(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                          "model", "id");
+        Feature feature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
+                                        "id");
 
         // properties of the feature
         Set<AbstractProperty<?>> properties = new HashSet<>();
@@ -171,7 +171,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         rulePlugin = this.pluginConfRepo.save(rulePlugin);
 
-        Rule rule = Rule.builder(NotificationType.IMMEDIATE, rulePlugin);
+        Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
         this.ruleRepo.save(rule);
 
         // configuration of the recipient sender plugin
@@ -181,7 +181,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         recipientPlugin.setLabel("test recipient");
         recipientPlugin.setPluginId("DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
-        Recipient recipient = Recipient.builder(rule, recipientPlugin);
+        Recipient recipient = Recipient.build(rule, recipientPlugin);
 
         this.recipientRepo.save(recipient);
         assertEquals(0, this.notificationService.handleFeatures(feature));
