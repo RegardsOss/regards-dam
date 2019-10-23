@@ -64,7 +64,7 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
     public void run() {
         LOGGER.info("[{}] Feature update job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        this.featureUpdateService.updateFeatures(featureUpdateRequests);
+        this.featureUpdateService.processRequests(featureUpdateRequests);
         LOGGER.info("[{}]{}{} feature(s) updated in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
                     System.currentTimeMillis() - start);
     }

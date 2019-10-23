@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.modules.locks.service.ILockService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.modules.feature.service.IFeatureService;
+import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 
 /**
@@ -55,7 +55,7 @@ public class FeatureTaskScheduler {
     private ILockService lockService;
 
     @Autowired
-    private IFeatureService featureService;
+    private IFeatureCreationService featureService;
 
     @Autowired
     private IFeatureUpdateService feeatureUpdateService;
@@ -69,7 +69,7 @@ public class FeatureTaskScheduler {
                     // TODO delegate to update request service ...
                     // TODO find update request in state DELAYED and with a registration date < now - waiting delay to avoid update concurrency
                     // TODO chech update concurrency ... only select first request for a distinct URN chronologically speaking!
-                    this.feeatureUpdateService.scheduleUpdateRequestProcessing();
+                    this.feeatureUpdateService.scheduleRequests();
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
@@ -84,7 +84,7 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-                    this.featureService.scheduleFeatureCreationRequest();
+                    this.featureService.scheduleRequests();
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_INSERT, this);

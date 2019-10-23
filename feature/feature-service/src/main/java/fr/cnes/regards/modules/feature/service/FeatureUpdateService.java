@@ -88,9 +88,9 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     private FeatureConfigurationProperties properties;
 
     @Override
-    public void registerUpdateRequests(List<FeatureUpdateRequestEvent> items) {
+    public void registerRequests(List<FeatureUpdateRequestEvent> events) {
         List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
-        items.forEach(item -> prepareFeatureUpdateRequest(item, grantedRequests));
+        events.forEach(item -> prepareFeatureUpdateRequest(item, grantedRequests));
 
         // Batch save
         updateRepo.saveAll(grantedRequests);
@@ -141,7 +141,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     }
 
     @Override
-    public void scheduleUpdateRequestProcessing() {
+    public void scheduleRequests() {
 
         Set<JobParameter> jobParameters = Sets.newHashSet();
         List<FeatureUpdateRequest> delayedRequests = this.updateRepo
@@ -170,7 +170,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     }
 
     @Override
-    public void updateFeatures(List<FeatureUpdateRequest> featureUpdateRequests) {
+    public void processRequests(List<FeatureUpdateRequest> requests) {
         // TODO Auto-generated method stub
 
     }

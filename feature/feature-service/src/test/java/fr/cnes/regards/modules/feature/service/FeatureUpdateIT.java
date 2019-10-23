@@ -34,7 +34,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
     private IFeatureUpdateService featureUpdateService;
 
     @Autowired
-    private FeatureService featureService;
+    private FeatureCreationService featureService;
 
     @Test
     public void testSchedulerSteps() throws InterruptedException {
@@ -42,8 +42,8 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
         super.initFeatureCreationRequestEvent(events, 2);
-        this.featureService.handleFeatureCreationRequestEvents(events);
-        this.featureService.scheduleFeatureCreationRequest();
+        this.featureService.registerRequests(events);
+        this.featureService.scheduleRequests();
         int cpt = 0;
         long featureNumberInDatabase;
         do {
@@ -91,7 +91,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         // wait 5 second to delay
         Thread.sleep(5000);
 
-        featureUpdateService.scheduleUpdateRequestProcessing();
+        featureUpdateService.scheduleRequests();
 
         List<FeatureUpdateRequest> updateRequests = this.featureUpdateRequestRepo.findAll();
 
