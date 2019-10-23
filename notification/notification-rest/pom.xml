@@ -7,10 +7,8 @@
 		<artifactId>notification</artifactId>
 		<version>0.5.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>notification-dto</artifactId>
-	<groupId>fr.cnes.regards.modules.notification</groupId>
-
-	<description>Notification DTO layer</description>
+	<artifactId>notification-rest</artifactId>
+	<description>Web Services for notifications management</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2019</inceptionYear>
 	<licenses>
@@ -31,12 +29,26 @@
 			<organizationUrl>http://www.c-s.fr</organizationUrl>
 		</developer>
 	</developers>
-
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>plugins-service</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards-starter</artifactId>
 		</dependency>
-
+		<dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>security-regards-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>hateoas-regards-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.notification</groupId>
+            <artifactId>notification-dto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.notification</groupId>
+            <artifactId>notification-service</artifactId>
+        </dependency>
 	</dependencies>
 </project>
