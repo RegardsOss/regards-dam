@@ -19,6 +19,8 @@
 package fr.cnes.regards.modules.feature.dto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,7 +33,7 @@ import org.springframework.lang.Nullable;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.geojson.AbstractFeature;
-import fr.cnes.regards.framework.geojson.geometry.Point;
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
@@ -91,6 +93,10 @@ public class Feature extends AbstractFeature<Set<IProperty<?>>, String> {
         this.files = files;
     }
 
+    public boolean hasFiles() {
+        return this.files != null && !this.files.isEmpty();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -141,7 +147,7 @@ public class Feature extends AbstractFeature<Set<IProperty<?>>, String> {
         return true;
     }
 
-    public static Feature build(String id, @Nullable FeatureUniformResourceName urn, Point geometry,
+    public static Feature build(String id, @Nullable FeatureUniformResourceName urn, IGeometry geometry,
             EntityType entityType, String model) {
         Feature feature = new Feature();
         feature.setUrn(urn);
@@ -157,8 +163,20 @@ public class Feature extends AbstractFeature<Set<IProperty<?>>, String> {
         return this;
     }
 
+    public Feature withProperties(IProperty<?>... properties) {
+        this.setProperties(new HashSet<>(Arrays.asList(properties)));
+        return this;
+    }
+
     public Feature withFiles(FeatureFile... files) {
         this.setFiles(Lists.newArrayList(files));
         return this;
+    }
+
+    public void addProperty(IProperty<?> property) {
+        if (this.properties == null) {
+            this.properties = new HashSet<>();
+        }
+        this.properties.add(property);
     }
 }

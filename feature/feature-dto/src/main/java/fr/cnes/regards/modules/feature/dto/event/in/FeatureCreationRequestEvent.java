@@ -19,8 +19,6 @@
 package fr.cnes.regards.modules.feature.dto.event.in;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -30,8 +28,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataDto;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
@@ -44,18 +41,20 @@ import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 public class FeatureCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @Valid
+    @NotNull(message = "Feature metadata is required")
+    private FeatureMetadata metadata;
+
+    @Valid
     @NotNull(message = "Feature is required")
     private Feature feature;
 
-    @Valid
-    private List<FeatureMetadataDto> metadata = new ArrayList<FeatureMetadataDto>();
-
-    public List<FeatureMetadataDto> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(List<FeatureMetadataDto> metadata) {
-        this.metadata = metadata;
+    public static FeatureCreationRequestEvent build(FeatureMetadata metadata, Feature feature) {
+        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+        event.setFeature(feature);
+        event.setRequestId(generateRequestId());
+        event.setMetadata(metadata);
+        event.setRequestDate(OffsetDateTime.now());
+        return event;
     }
 
     public Feature getFeature() {
@@ -66,14 +65,11 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         this.feature = feature;
     }
 
-    public static FeatureCreationRequestEvent build(Feature feature, List<FeatureMetadataDto> metadata,
-            OffsetDateTime date, FeatureSessionDto session) {
-        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
-        event.setFeature(feature);
-        event.setRequestId(generateRequestId());
-        event.setMetadata(metadata);
-        event.setRequestDate(date);
-        event.setSession(session);
-        return event;
+    public FeatureMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(FeatureMetadata metadata) {
+        this.metadata = metadata;
     }
 }

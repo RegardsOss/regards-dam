@@ -36,7 +36,6 @@ import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.BooleanProperty;
 import fr.cnes.regards.modules.model.dto.properties.DateArrayProperty;
 import fr.cnes.regards.modules.model.dto.properties.DateIntervalProperty;
@@ -44,6 +43,7 @@ import fr.cnes.regards.modules.model.dto.properties.DateProperty;
 import fr.cnes.regards.modules.model.dto.properties.DoubleArrayProperty;
 import fr.cnes.regards.modules.model.dto.properties.DoubleIntervalProperty;
 import fr.cnes.regards.modules.model.dto.properties.DoubleProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.IntegerArrayProperty;
 import fr.cnes.regards.modules.model.dto.properties.IntegerIntervalProperty;
 import fr.cnes.regards.modules.model.dto.properties.IntegerProperty;
@@ -63,8 +63,7 @@ import fr.cnes.regards.modules.model.dto.properties.UrlProperty;
  */
 @SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactoryBean
-public class MultitenantFlattenedAttributeAdapterFactory
-        extends MultitenantPolymorphicTypeAdapterFactory<AbstractProperty> {
+public class MultitenantFlattenedAttributeAdapterFactory extends MultitenantPolymorphicTypeAdapterFactory<IProperty> {
 
     /**
      * Class logger
@@ -92,7 +91,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
     private static final String REGEXP_ESCAPE = "\\";
 
     public MultitenantFlattenedAttributeAdapterFactory(final IRuntimeTenantResolver pRuntimeTenantResolver) {
-        super(pRuntimeTenantResolver, AbstractProperty.class, DISCRIMINATOR_FIELD_NAME);
+        super(pRuntimeTenantResolver, IProperty.class, DISCRIMINATOR_FIELD_NAME);
         runtimeTenantResolver = pRuntimeTenantResolver;
     }
 

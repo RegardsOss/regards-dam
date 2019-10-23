@@ -1,9 +1,7 @@
 package fr.cnes.regards.modules.feature.rest;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -22,9 +20,8 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadataWrapper;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
-import fr.cnes.regards.modules.feature.service.IFeatureService;
+import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 
 /**
  * Controller REST handling requests about {@link Feature}s
@@ -32,31 +29,16 @@ import fr.cnes.regards.modules.feature.service.IFeatureService;
  * @author Kevin Marchois
  */
 @RestController
-@RequestMapping(FeatureController.PATH_FEATURE)
+@RequestMapping(FeatureController.PATH_FEATURES)
 public class FeatureController implements IResourceController<Feature> {
 
-    public final static String PATH_FEATURE = "/feature";
+    public final static String PATH_FEATURES = "/features";
 
     @Autowired
-    private IFeatureService featureService;
+    private IFeatureCreationService featureCreationService;
 
     @Autowired
     private IResourceService resourceService;
-
-    /**
-     * Receive a feature publish it and return the request id
-     *
-     * @param toPublish {@link FeatureMetadataWrapper} to publish
-     * @return a request id
-     */
-    @RequestMapping(method = RequestMethod.POST)
-    @ResourceAccess(description = "Public a feature and return the request id")
-    public ResponseEntity<Resource<Feature>> publishFeature(@Valid @RequestBody FeatureMetadataWrapper toPublish) {
-        return new ResponseEntity<>(
-                toResource(toPublish.getFeature(), featureService
-                        .publishFeature(toPublish.getFeature(), toPublish.getMetada(), toPublish.getSession())),
-                HttpStatus.CREATED);
-    }
 
     /**
      * Receive a {@link FeatureCollection} and create for each of them a {@link FeatureCreationRequestEvent}
@@ -65,13 +47,14 @@ public class FeatureController implements IResourceController<Feature> {
      * @param toHandle {@link FeatureCollection} contain a list of {@link Feature}
      * @return list of created request ids
      */
+    // FIXME KMS revoir API + documenter avec des tests IT
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<List<Resource<Feature>>> createFeatures(@Valid @RequestBody FeatureCollection toHandle) {
-        List<Feature> createdFeature = new ArrayList<Feature>();
-        List<String> requestIds = new ArrayList<String>();
+        List<Feature> createdFeature = new ArrayList<>();
+        List<String> requestIds = new ArrayList<>();
 
-        List<FeatureCreationRequest> createdEvents = this.featureService.createFeatureRequestEvent(toHandle);
+        List<FeatureCreationRequest> createdEvents = featureCreationService.createFeatureRequestEvent(toHandle);
 
         // extract the list of feature concerned by a feature creation request
         // and extract their request id in the same time
@@ -83,14 +66,11 @@ public class FeatureController implements IResourceController<Feature> {
         return new ResponseEntity<>(toResources(createdFeature, requestIds), HttpStatus.CREATED);
     }
 
+    // FIXME KMS ajouter API update
+
     @Override
     public Resource<Feature> toResource(Feature element, Object... extras) {
         Resource<Feature> resource = resourceService.toResource(element);
         return resource;
-    }
-
-    @Override
-    public List<Resource<Feature>> toResources(final Collection<Feature> features, final Object... extras) {
-        return features.stream().map(resource -> toResource(resource, extras)).collect(Collectors.toList());
     }
 }

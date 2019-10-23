@@ -30,7 +30,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         featureToAdd.setUrn(null);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusOk();
 
-        performDefaultPost(FeatureController.PATH_FEATURE, featureToAdd, requestBuilderCustomizer,
+        performDefaultPost(FeatureController.PATH_FEATURES, featureToAdd, requestBuilderCustomizer,
                            "Should retrieve request id").andDo(MockMvcResultHandlers.print());
 
     }

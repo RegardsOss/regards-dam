@@ -18,8 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -35,38 +34,27 @@ import fr.cnes.regards.framework.geojson.AbstractFeatureCollection;
 public class FeatureCollection extends AbstractFeatureCollection<Feature> {
 
     @Valid
-    private List<FeatureMetadataDto> metadata = new ArrayList<FeatureMetadataDto>();
-
-    @NotNull
-    @Valid
-    private FeatureSessionDto session;
-
-    public List<FeatureMetadataDto> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(List<FeatureMetadataDto> metadata) {
-        this.metadata = metadata;
-    }
-
-    public FeatureSessionDto getSession() {
-        return session;
-    }
-
-    public void setSession(FeatureSessionDto session) {
-        this.session = session;
-    }
+    @NotNull(message = "Feature metadata is required")
+    private FeatureMetadata metadata;
 
     /**
      * Create a new {@link FeatureCollection} <br/>
-     * @param metadata a list of {@link FeatureMetadataDto} not mandatory
-     * @param featureSession a {@link FeatureSessionDto} mandatory
+     * @param metadata {@link FeatureMetadata}
+     * @param features collection of {@link Feature}
      * @return a {@link FeatureCollection}
      */
-    public static FeatureCollection build(List<FeatureMetadataDto> metadata, FeatureSessionDto featureSession) {
+    public static FeatureCollection build(FeatureMetadata metadata, Collection<Feature> features) {
         FeatureCollection collection = new FeatureCollection();
         collection.setMetadata(metadata);
-        collection.setSession(featureSession);
+        collection.addAll(features);
         return collection;
+    }
+
+    public FeatureMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(FeatureMetadata metadata) {
+        this.metadata = metadata;
     }
 }

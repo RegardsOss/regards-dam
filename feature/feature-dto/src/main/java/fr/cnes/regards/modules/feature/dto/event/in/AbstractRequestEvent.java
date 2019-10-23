@@ -21,13 +21,10 @@ package fr.cnes.regards.modules.feature.dto.event.in;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Size;
-
-import fr.cnes.regards.modules.feature.dto.FeatureSessionDto;
 
 /**
  * @author Marc SORDI
@@ -42,10 +39,6 @@ public abstract class AbstractRequestEvent {
     @Past(message = "Request time must be a past date")
     @NotNull(message = "Request time is required")
     private OffsetDateTime requestDate;
-
-    @NotNull
-    @Valid
-    private FeatureSessionDto session;
 
     /**
      * Generate a request ID
@@ -69,13 +62,4 @@ public abstract class AbstractRequestEvent {
     public void setRequestDate(OffsetDateTime requestDate) {
         this.requestDate = requestDate;
     }
-
-    public FeatureSessionDto getSession() {
-        return session;
-    }
-
-    public void setSession(FeatureSessionDto session) {
-        this.session = session;
-    }
-
 }

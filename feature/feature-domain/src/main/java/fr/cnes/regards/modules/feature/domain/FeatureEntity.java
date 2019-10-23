@@ -45,13 +45,20 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  *
  */
 @Entity
-@Table(name = "t_feature", indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update") })
+@Table(name = "t_feature", indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update"),
+        @Index(name = "idx_feature_session", columnList = "session_owner,session_name"), })
 public class FeatureEntity {
 
     @Id
     @SequenceGenerator(name = "featureSequence", initialValue = 1, sequenceName = "seq_feature")
     @GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Column(length = 128, name = "session_owner", nullable = false)
+    private String sessionOwner;
+
+    @Column(length = 128, name = "session_name", nullable = false)
+    private String session;
 
     @Column(columnDefinition = "jsonb", name = "feature")
     @Type(type = "jsonb")
@@ -75,6 +82,20 @@ public class FeatureEntity {
     @Column(name = "version", nullable = false)
     @NotNull()
     private Integer version;
+
+    public static FeatureEntity build(String sessionOwner, String session, Feature feature, OffsetDateTime lastUpdate,
+            FeatureRequestStep state) {
+        FeatureEntity featureEntity = new FeatureEntity();
+        featureEntity.setSessionOwner(sessionOwner);
+        featureEntity.setSession(session);
+        featureEntity.setFeature(feature);
+        featureEntity.setLastUpdate(lastUpdate);
+        featureEntity.setState(state);
+        featureEntity.setProviderId(feature.getId());
+        featureEntity.setVersion(feature.getUrn().getVersion());
+
+        return featureEntity;
+    }
 
     public Long getId() {
         return id;
@@ -124,14 +145,19 @@ public class FeatureEntity {
         this.version = version;
     }
 
-    public static FeatureEntity build(Feature feature, OffsetDateTime lastUpdate, FeatureRequestStep state) {
-        FeatureEntity featureEntity = new FeatureEntity();
-        featureEntity.setFeature(feature);
-        featureEntity.setLastUpdate(lastUpdate);
-        featureEntity.setState(state);
-        featureEntity.setProviderId(feature.getId());
-        featureEntity.setVersion(feature.getUrn().getVersion());
+    public String getSessionOwner() {
+        return sessionOwner;
+    }
 
-        return featureEntity;
+    public void setSessionOwner(String sessionOwner) {
+        this.sessionOwner = sessionOwner;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
+    public void setSession(String session) {
+        this.session = session;
     }
 }

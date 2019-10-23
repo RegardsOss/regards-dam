@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.utils.request.handler.AbstractRequestFlowHandler;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
-import fr.cnes.regards.modules.feature.service.IFeatureService;
+import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
 /**
@@ -54,7 +54,7 @@ public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandl
 	private ISubscriber subscriber;
 
 	@Autowired
-	private IFeatureService featureService;
+	private IFeatureCreationService featureService;
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -77,6 +77,6 @@ public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandl
 
 	@Override
 	protected void processBulk(List<FeatureCreationRequestEvent> items) {
-		featureService.handleFeatureCreationRequestEvents(items);
+		featureService.registerRequests(items);
 	}
 }
