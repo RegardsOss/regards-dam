@@ -48,13 +48,12 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
     @NotNull(message = "Feature is required")
     private Feature feature;
 
-    public static FeatureCreationRequestEvent build(Feature feature, OffsetDateTime requestDate,
-            FeatureMetadata metadata) {
+    public static FeatureCreationRequestEvent build(FeatureMetadata metadata, Feature feature) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
-        event.setRequestDate(requestDate);
+        event.setRequestDate(OffsetDateTime.now());
         return event;
     }
 

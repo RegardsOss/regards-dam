@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -259,10 +260,11 @@ public class FeatureCreationService implements IFeatureCreationService {
 
         Feature feature = fcr.getFeature();
 
+        UUID uuid = UUID.nameUUIDFromBytes(feature.getId().getBytes());
         feature.setUrn(FeatureUniformResourceName
-                .pseudoRandomUrn(FeatureIdentifier.FEATURE, feature.getEntityType(), runtimeTenantResolver.getTenant(),
-                                 computeNextVersion(featureRepo
-                                         .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
+                .build(FeatureIdentifier.FEATURE, feature.getEntityType(), runtimeTenantResolver.getTenant(), uuid,
+                       computeNextVersion(featureRepo
+                               .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
 
         FeatureEntity created = FeatureEntity.build(fcr.getMetadata().getSession(), fcr.getMetadata().getSessionOwner(),
                                                     feature, OffsetDateTime.now(),
@@ -284,8 +286,7 @@ public class FeatureCreationService implements IFeatureCreationService {
 
     @Override
     public String publishFeature(Feature toPublish, FeatureMetadata metadata) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(toPublish, OffsetDateTime.now(),
-                                                                              metadata);
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(metadata, toPublish);
         publisher.publish(event);
         return event.getRequestId();
     }
@@ -296,7 +297,7 @@ public class FeatureCreationService implements IFeatureCreationService {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
 
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build(feature, OffsetDateTime.now(), toHandle.getMetadata()));
+            toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
         }
         return this.registerRequests(toTreat);
     }

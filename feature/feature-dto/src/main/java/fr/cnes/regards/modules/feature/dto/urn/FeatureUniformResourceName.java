@@ -114,7 +114,8 @@ public class FeatureUniformResourceName extends AbstractUniformResourceName<Feat
     }
 
     /**
-     * Build a pseudo random UUID starting with 00000000-0000-0000-0000
+     * Build a pseudo random UUID starting with 00000000-0000-0000-0000 for test purpose only.
+     * Use {@link #build(FeatureIdentifier, EntityType, String, UUID, int, Long, String)} in production.
      */
     public static FeatureUniformResourceName pseudoRandomUrn(FeatureIdentifier identifier, EntityType entityType,
             String tenant, int version) {
