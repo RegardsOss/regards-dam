@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.feature.service;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
@@ -31,6 +32,7 @@ import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
  *
  */
 @Configuration
+@PropertySource({ "classpath:metrics.properties" })
 public class FeatureTestConfiguration {
 
     @Bean
