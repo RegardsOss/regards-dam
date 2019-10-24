@@ -23,8 +23,6 @@ import java.time.OffsetDateTime;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -37,7 +35,6 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
-import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
 
 /**
@@ -65,11 +62,6 @@ public class FeatureEntity {
     @Valid
     private Feature feature;
 
-    @NotNull(message = "Feature request state is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "state", length = 50, nullable = false)
-    private FeatureRequestStep state;
-
     @Column(name = "last_update", nullable = false)
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     @NotNull
@@ -83,14 +75,12 @@ public class FeatureEntity {
     @NotNull()
     private Integer version;
 
-    public static FeatureEntity build(String sessionOwner, String session, Feature feature, OffsetDateTime lastUpdate,
-            FeatureRequestStep state) {
+    public static FeatureEntity build(String sessionOwner, String session, Feature feature, OffsetDateTime lastUpdate) {
         FeatureEntity featureEntity = new FeatureEntity();
         featureEntity.setSessionOwner(sessionOwner);
         featureEntity.setSession(session);
         featureEntity.setFeature(feature);
         featureEntity.setLastUpdate(lastUpdate);
-        featureEntity.setState(state);
         featureEntity.setProviderId(feature.getId());
         featureEntity.setVersion(feature.getUrn().getVersion());
 
@@ -111,14 +101,6 @@ public class FeatureEntity {
 
     public void setFeature(Feature feature) {
         this.feature = feature;
-    }
-
-    public FeatureRequestStep getState() {
-        return state;
-    }
-
-    public void setState(FeatureRequestStep state) {
-        this.state = state;
     }
 
     public OffsetDateTime getLastUpdate() {

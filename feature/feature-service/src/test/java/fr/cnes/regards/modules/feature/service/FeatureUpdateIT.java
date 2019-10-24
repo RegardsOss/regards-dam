@@ -50,7 +50,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 10 && featureNumberInDatabase != 2);
+        } while ((cpt < 100) && (featureNumberInDatabase != 2));
 
         FeatureEntity toUpdate = super.featureRepo.findAll().get(0);
         FeatureEntity updatingByScheduler = super.featureRepo.findAll().get(1);

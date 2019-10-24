@@ -62,8 +62,6 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
         assertEquals(0, fcrRepo.count());
         // the FeatureEntity must remain
         assertEquals(1, featureRepo.count());
-        // and its status must be to success
-        assertEquals(FeatureRequestStep.REMOTE_STORAGE_SUCCESS, featureRepo.findAll().get(0).getState());
 
     }
 
@@ -82,8 +80,6 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
         assertEquals(RequestState.ERROR, fcrRepo.findAll().get(0).getState());
         // the FeatureEntity must remain
         assertEquals(1, featureRepo.count());
-        // and its status must be to success
-        assertEquals(FeatureRequestStep.REMOTE_STORAGE_ERROR, featureRepo.findAll().get(0).getState());
 
     }
 
@@ -104,7 +100,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
                                      FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                       "peps", UUID.randomUUID(), 1),
                                      IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
-                       OffsetDateTime.now(), FeatureRequestStep.REMOTE_STORAGE_REQUESTED);
+                       OffsetDateTime.now());
         this.featureRepo.save(feature);
         fcr.setFeatureEntity(feature);
         this.fcrRepo.save(fcr);
