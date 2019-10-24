@@ -22,9 +22,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,7 +57,6 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
 import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
-import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -189,6 +185,8 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     @Override
     public void processRequests(List<FeatureUpdateRequest> requests) {
 
+        List<FeatureEntity> entities = new ArrayList<>();
+
         // Update feature
         for (FeatureUpdateRequest request : requests) {
 
@@ -199,65 +197,18 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             FeatureEntity entity = featureRepo.findByUrn(patch.getUrn());
 
             // Merge properties handling null property values to unset properties
-            mergeProperties(entity.getFeature(), patch);
+            IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
+            // TODO : manage geometry!
+
+            // Publish request success
+            // TODO
 
             // Register
-            // TODO
+            entities.add(entity);
         }
 
-        // TODO save all
+        featureRepo.saveAll(entities);
 
         // TODO Delete request
-
-        // TODO Auto-generated method stub
-        LOGGER.debug("i'm here!");
-
     }
-
-    private void mergeProperties(Feature feature, Feature patch) {
-
-        // Build fast property access maps
-        Map<String, IProperty<?>> featureMap = new HashMap<>();
-        Map<String, ObjectProperty> featureObjectMap = new HashMap<>();
-        IProperty.getPropertyMap(featureMap, featureObjectMap, feature.getProperties());
-
-        // Build fast property for patch feature
-        Map<String, IProperty<?>> patchMap = new HashMap<>();
-        Map<String, ObjectProperty> patchObjectMap = new HashMap<>();
-        IProperty.getPropertyMap(patchMap, patchObjectMap, patch.getProperties());
-
-        // Loop on patch properties
-        for (Entry<String, IProperty<?>> entry : patchMap.entrySet()) {
-            IProperty<?> property = entry.getValue();
-
-            if (property.getValue() == null) {
-                if (featureMap.containsKey(entry.getKey())) {
-                    // Unset property if exists
-                    featureMap.get(entry.getKey()).updateValue(null);
-                }
-            } else {
-                if (featureMap.containsKey(entry.getKey())) {
-                    // Update property if already exists
-                    IProperty.updatePropertyValue(featureMap.get(entry.getKey()), property.getValue());
-                } else {
-                    // Add property
-                    Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
-                    if (namespace.isPresent()) {
-                        if (featureObjectMap.containsKey(namespace.get())) {
-                            featureObjectMap.get(namespace.get()).addProperty(property);
-                        } else {
-                            // Create object
-                            ObjectProperty o = IProperty.buildObject(namespace.get(), property);
-                            // Add it to the feature and to the reference map
-                            feature.addProperty(o);
-                            featureObjectMap.put(o.getName(), o);
-                        }
-                    } else {
-                        feature.addProperty(property);
-                    }
-                }
-            }
-        }
-    }
-
 }
