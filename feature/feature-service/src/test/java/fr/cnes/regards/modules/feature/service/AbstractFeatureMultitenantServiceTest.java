@@ -63,8 +63,8 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
     @Before
     public void before() throws InterruptedException {
-        this.featureCreationRequestRepo.deleteAll();
-        this.featureUpdateRequestRepo.deleteAll();
+        this.featureCreationRequestRepo.deleteAllInBatch();
+        this.featureUpdateRequestRepo.deleteAllInBatch();
         this.featureRepo.deleteAllInBatch();
         simulateApplicationReadyEvent();
     }

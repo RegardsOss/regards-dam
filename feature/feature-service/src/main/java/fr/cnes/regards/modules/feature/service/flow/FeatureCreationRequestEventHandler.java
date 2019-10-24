@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.utils.request.handler.AbstractRequestFlowHandler;
+import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
@@ -41,42 +41,46 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
  *
  */
 @Component
-public class FeatureCreationRequestEventHandler extends AbstractRequestFlowHandler<FeatureCreationRequestEvent>
-		implements ApplicationListener<ApplicationReadyEvent> {
+public class FeatureCreationRequestEventHandler
+        implements IBatchHandler<FeatureCreationRequestEvent>, ApplicationListener<ApplicationReadyEvent> {
 
-	@SuppressWarnings("unused")
-	private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationRequestEventHandler.class);
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationRequestEventHandler.class);
 
-	@Autowired
-	private FeatureConfigurationProperties confProperties;
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
-	@Autowired
-	private ISubscriber subscriber;
+    @Autowired
+    private FeatureConfigurationProperties confProperties;
 
-	@Autowired
-	private IFeatureCreationService featureService;
+    @Autowired
+    private ISubscriber subscriber;
 
-	@Override
-	public void onApplicationEvent(ApplicationReadyEvent event) {
-		subscriber.subscribeTo(FeatureCreationRequestEvent.class, this);
-	}
+    @Autowired
+    private IFeatureCreationService featureService;
 
-	/**
-	 * Bulk save queued items every second.
-	 */
-	@Override
-	@Scheduled(fixedDelayString = "${regards.feature.request.flow.bulk.delay:1000}")
-	protected void handleQueue() {
-		super.handleQueue();
-	}
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(FeatureCreationRequestEvent.class, this);
+    }
 
-	@Override
-	protected Integer getBulkSize() {
-		return confProperties.getMaxBulkSize();
-	}
+    @Override
+    public void handleBatch(String tenant, List<FeatureCreationRequestEvent> messages) {
+        try {
+            runtimeTenantResolver.forceTenant(tenant);
+            featureService.registerRequests(messages);
+        } finally {
+            runtimeTenantResolver.clearTenant();
+        }
+    }
 
-	@Override
-	protected void processBulk(List<FeatureCreationRequestEvent> items) {
-		featureService.registerRequests(items);
-	}
+    @Override
+    public int getBatchSize() {
+        return confProperties.getMaxBulkSize();
+    }
+
+    @Override
+    public long getReceiveTimeout() {
+        return confProperties.getBatchReceiveTimeout();
+    }
 }

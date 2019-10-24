@@ -37,6 +37,12 @@ public class FeatureConfigurationProperties {
     private Integer maxBulkSize;
 
     /**
+     * Batch message reception in millisecond
+     */
+    @Value("${regards.feature.batch.receive.timeout:1000}")
+    private Long batchReceiveTimeout;
+
+    /**
      * In second.
      */
     @Value("${regards.feature.delay.before.processing:5}")
@@ -70,5 +76,13 @@ public class FeatureConfigurationProperties {
 
     public void setDelayBeforeProcessing(Integer delayBeforeProcessing) {
         this.delayBeforeProcessing = delayBeforeProcessing;
+    }
+
+    public Long getBatchReceiveTimeout() {
+        return batchReceiveTimeout;
+    }
+
+    public void setBatchReceiveTimeout(Long batchReceiveTimeout) {
+        this.batchReceiveTimeout = batchReceiveTimeout;
     }
 }
