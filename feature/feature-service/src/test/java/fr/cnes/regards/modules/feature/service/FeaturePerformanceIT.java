@@ -52,12 +52,6 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
     private static final Integer NB_FEATURES = 10;
 
     @Autowired
-    private IFeatureCreationService featureCreationService;
-
-    @Autowired
-    private IFeatureUpdateService featureUpdateService;
-
-    @Autowired
     private IPublisher publisher;
 
     @Test

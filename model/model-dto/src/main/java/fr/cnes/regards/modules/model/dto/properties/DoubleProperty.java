@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class DoubleProperty extends AbstractProperty<Double> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.DOUBLE.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.DOUBLE;
     }
 }

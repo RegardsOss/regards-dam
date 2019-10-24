@@ -71,10 +71,10 @@ public class FeatureCreationJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
-        Timer timer = Timer.builder("FeatureCreationJob").tag("method", "run").register(registry);
+        Timer timer = Timer.builder(this.getClass().getName()).tag("job", "run").register(registry);
         LOGGER.info("[{}] Feature creation job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        timer.record(() -> this.featureService.processRequests(featureCreationRequests));
+        timer.record(() -> featureService.processRequests(featureCreationRequests));
         LOGGER.info("[{}]{}{} feature(s) created in {} ms", jobInfoId, INFO_TAB, featureCreationRequests.size(),
                     System.currentTimeMillis() - start);
     }

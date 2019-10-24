@@ -27,8 +27,8 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class LongArrayProperty extends AbstractProperty<Long[]> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.LONG_ARRAY.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.LONG_ARRAY;
     }
 
 }

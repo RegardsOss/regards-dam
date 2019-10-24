@@ -28,10 +28,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+
+import org.springframework.util.Assert;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
@@ -56,7 +62,15 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      */
     T getValue();
 
+    /**
+     * Allows to update property value.
+     * @param value new value or <code>null</code>
+     */
+    void updateValue(T value);
+
     boolean represents(PropertyType type);
+
+    PropertyType getType();
 
     @Override
     default int compareTo(IProperty<T> o) {
@@ -265,7 +279,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      * @throws IllegalArgumentException when the value cannot converted into expected type for attribute
      */
     @SuppressWarnings("unchecked")
-    public static AbstractProperty<?> forType(PropertyType attributeType, String name, Object value)
+    public static IProperty<?> forType(PropertyType attributeType, String name, Object value)
             throws IllegalArgumentException {
         if (name == null || attributeType == null) {
             throw new IllegalArgumentException("An attribute cannot have a null name");
@@ -330,7 +344,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      * @return a newly created AbstractAttribute according the given AttributeType, name and value
      */
     @SuppressWarnings("unchecked")
-    public static <U, T extends AbstractProperty<U>> T forType(PropertyType attributeType, String name, U lowerBound,
+    public static <U, T extends IProperty<U>> T forType(PropertyType attributeType, String name, U lowerBound,
             U upperBound) {
 
         if (!attributeType.isInterval()) {
@@ -366,6 +380,73 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public static IProperty<?> updatePropertyValue(IProperty<?> property, Object value)
+            throws IllegalArgumentException {
+        if (value == null) {
+            property.updateValue(null);
+        }
+
+        switch (property.getType()) {
+            case BOOLEAN:
+                ((BooleanProperty) property).updateValue(toBooleanValue(value));
+                break;
+            case DATE_ARRAY:
+                ((DateArrayProperty) property)
+                        .updateValue(toArrayValue(value, IProperty::toDateValue, OffsetDateTime.class));
+                break;
+            case DATE_INTERVAL:
+                ((DateIntervalProperty) property).updateValue((Range<OffsetDateTime>) value);
+                break;
+            case DATE_ISO8601:
+                ((DateProperty) property).updateValue(toDateValue(value));
+                break;
+            case DOUBLE:
+                ((DoubleProperty) property).updateValue(toDoubleValue(value));
+                break;
+            case DOUBLE_ARRAY:
+                ((DoubleArrayProperty) property)
+                        .updateValue(toArrayValue(value, IProperty::toDoubleValue, Double.class));
+                break;
+            case DOUBLE_INTERVAL:
+                ((DoubleIntervalProperty) property).updateValue((Range<Double>) value);
+                break;
+            case INTEGER:
+                ((IntegerProperty) property).updateValue(toIntegerValue(value));
+                break;
+            case INTEGER_ARRAY:
+                ((IntegerArrayProperty) property)
+                        .updateValue(toArrayValue(value, IProperty::toIntegerValue, Integer.class));
+                break;
+            case INTEGER_INTERVAL:
+                ((IntegerIntervalProperty) property).updateValue((Range<Integer>) value);
+                break;
+            case LONG:
+                ((LongProperty) property).updateValue(toLongValue(value));
+                break;
+            case LONG_ARRAY:
+                ((LongArrayProperty) property).updateValue(toArrayValue(value, IProperty::toLongValue, Long.class));
+                break;
+            case LONG_INTERVAL:
+                ((LongIntervalProperty) property).updateValue((Range<Long>) value);
+                break;
+            case STRING:
+                ((StringProperty) property).updateValue(toStringValue(value));
+                break;
+            case STRING_ARRAY:
+                ((StringArrayProperty) property)
+                        .updateValue(toArrayValue(value, IProperty::toStringValue, String.class));
+                break;
+            case URL:
+                ((UrlProperty) property).updateValue(toURLValue(value));
+                break;
+            default:
+                throw new IllegalArgumentException(property.getType() + " is not a handled value of "
+                        + PropertyType.class.getName() + " in " + IProperty.class.getName());
+        }
+        return property;
+    }
+
     /**
      * Build a range considering null value for one of the bound
      *
@@ -384,7 +465,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <U, T extends AbstractProperty<?>> T forTypeWithNullValue(PropertyType attributeType, String name) {
+    public static <U, T extends IProperty<?>> T forTypeWithNullValue(PropertyType attributeType, String name) {
         switch (attributeType) {
             case INTEGER:
                 return (T) buildInteger(name, null);
@@ -571,7 +652,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         return att;
     }
 
-    public static AbstractProperty<?> buildInteger(String name, Integer value) {
+    public static IntegerProperty buildInteger(String name, Integer value) {
         IntegerProperty att = new IntegerProperty();
         att.setName(name);
         att.setValue(value);
@@ -619,7 +700,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         return att;
     }
 
-    public static ObjectProperty buildObject(String name, AbstractProperty<?>... properties) {
+    public static ObjectProperty buildObject(String name, IProperty<?>... properties) {
         ObjectProperty att = new ObjectProperty();
         att.setName(name);
         att.setValue(Sets.newHashSet(properties));
@@ -661,4 +742,106 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
         }
         return set;
     }
+
+    /**
+     * Build a fast access map for current properties
+     */
+    public static Map<String, IProperty<?>> getPropertyMap(Set<IProperty<?>> properties) {
+        Map<String, IProperty<?>> pmap = new HashMap<>();
+        Map<String, ObjectProperty> omap = new HashMap<>();
+        getPropertyMap(pmap, omap, properties);
+        return pmap;
+    }
+
+    /**
+     * Build a fast access map for properties and objects
+     */
+    public static void getPropertyMap(Map<String, IProperty<?>> pmap, Map<String, ObjectProperty> omap,
+            Set<IProperty<?>> properties) {
+        if (properties != null) {
+            for (IProperty<?> ppt : properties) {
+                addPropertyToMap(pmap, omap, ppt, null);
+            }
+        }
+    }
+
+    public static void addPropertyToMap(Map<String, IProperty<?>> pmap, Map<String, ObjectProperty> omap,
+            IProperty<?> ppt, String namespace) {
+        if (ppt.represents(PropertyType.OBJECT)) {
+            omap.put(ppt.getName(), (ObjectProperty) ppt);
+            for (IProperty<?> inner : ((ObjectProperty) ppt).getValue()) {
+                addPropertyToMap(pmap, omap, inner, ppt.getName());
+            }
+        } else {
+            StringBuilder builder = new StringBuilder();
+            if (namespace != null && !namespace.isEmpty()) {
+                builder.append(namespace);
+                builder.append(DOT);
+            }
+            pmap.put(builder.append(ppt.getName()).toString(), ppt);
+        }
+    }
+
+    public static Optional<String> getPropertyNamespace(String propertyKey) {
+        if (propertyKey != null && propertyKey.contains(DOT)) {
+            return Optional.of(propertyKey.substring(0, propertyKey.indexOf(DOT)));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Merge patch properties into reference ones
+     * @param reference not <code>null</code> reference properties
+     * @param patch not <code>null</code> patch properties
+     */
+    public static void mergeProperties(Set<IProperty<?>> reference, Set<IProperty<?>> patch) {
+
+        Assert.notNull(reference, "Reference properties must not be null");
+        Assert.notNull(patch, "Patch properties must not be null");
+
+        // Build fast property access maps
+        Map<String, IProperty<?>> refMap = new HashMap<>();
+        Map<String, ObjectProperty> refObjectMap = new HashMap<>();
+        IProperty.getPropertyMap(refMap, refObjectMap, reference);
+
+        // Build fast property for patch feature
+        Map<String, IProperty<?>> patchMap = new HashMap<>();
+        Map<String, ObjectProperty> patchObjectMap = new HashMap<>();
+        IProperty.getPropertyMap(patchMap, patchObjectMap, patch);
+
+        // Loop on patch properties
+        for (Entry<String, IProperty<?>> entry : patchMap.entrySet()) {
+            IProperty<?> property = entry.getValue();
+
+            if (property.getValue() == null) {
+                if (refMap.containsKey(entry.getKey())) {
+                    // Unset property if exists
+                    refMap.get(entry.getKey()).updateValue(null);
+                }
+            } else {
+                if (refMap.containsKey(entry.getKey())) {
+                    // Update property if already exists
+                    IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
+                } else {
+                    // Add property
+                    Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
+                    if (namespace.isPresent()) {
+                        if (refObjectMap.containsKey(namespace.get())) {
+                            refObjectMap.get(namespace.get()).addProperty(property);
+                        } else {
+                            // Create object
+                            ObjectProperty o = IProperty.buildObject(namespace.get(), property);
+                            // Add it to the feature and to the reference map
+                            reference.add(o);
+                            refObjectMap.put(o.getName(), o);
+                        }
+                    } else {
+                        reference.add(property);
+                    }
+                }
+            }
+        }
+    }
+
+    static final String DOT = ".";
 }

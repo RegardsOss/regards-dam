@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.model.dto.properties.adapter.DoubleIntervalAttrib
 public class DoubleIntervalProperty extends AbstractProperty<Range<Double>> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.DOUBLE_INTERVAL.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.DOUBLE_INTERVAL;
     }
 }

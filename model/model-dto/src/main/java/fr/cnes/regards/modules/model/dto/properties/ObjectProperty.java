@@ -28,16 +28,25 @@ import java.util.Set;
 public class ObjectProperty extends AbstractProperty<Set<IProperty<?>>> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.OBJECT.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.OBJECT;
     }
 
     /**
      * Appends attribute in this attribute set
      * @param attribute to append
      */
+    @Deprecated
     public void addAttribute(AbstractProperty<?> attribute) {
         getValue().add(attribute);
+    }
+
+    /**
+     * Appends property in this property set
+     * @param property to append
+     */
+    public void addProperty(IProperty<?> property) {
+        getValue().add(property);
     }
 
 }

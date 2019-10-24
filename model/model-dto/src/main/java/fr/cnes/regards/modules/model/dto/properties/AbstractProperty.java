@@ -38,8 +38,18 @@ public abstract class AbstractProperty<T> implements IProperty<T> {
     private T value;
 
     @Override
+    public boolean represents(PropertyType type) {
+        return getType().equals(type);
+    }
+
+    @Override
     public T getValue() {
         return value;
+    }
+
+    @Override
+    public void updateValue(T value) {
+        this.value = value;
     }
 
     public void setValue(T pValue) {

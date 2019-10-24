@@ -22,12 +22,14 @@ import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.model.service.validation.AbstractValidationService;
 import fr.cnes.regards.modules.model.service.validation.IModelFinder;
@@ -51,11 +53,14 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
     /**
      * Standard validator based on annotation
      */
-    private final Validator validator;
+    @Autowired
+    private Validator validator;
 
-    public FeatureValidationService(IModelFinder modelFinder, Validator validator) {
+    @Autowired
+    private IFeatureEntityRepository featureRepo;
+
+    public FeatureValidationService(IModelFinder modelFinder) {
         super(modelFinder);
-        this.validator = validator;
     }
 
     @Override
@@ -80,6 +85,11 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
                 if (feature.getUrn() == null) {
                     errors.rejectValue(URN_FIELD, "feature.urn.required.error.message",
                                        "URN is required in feature update");
+                } else {
+                    if (!featureRepo.existsByUrn(feature.getUrn())) {
+                        errors.rejectValue(URN_FIELD, "feature.urn.unknown.error.message",
+                                           "Unknown URN is set in feature update");
+                    }
                 }
                 break;
             default:

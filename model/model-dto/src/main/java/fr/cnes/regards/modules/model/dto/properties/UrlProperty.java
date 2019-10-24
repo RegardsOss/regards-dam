@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class UrlProperty extends AbstractProperty<MarkdownURL> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.URL.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.URL;
     }
 }

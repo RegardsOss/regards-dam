@@ -21,8 +21,13 @@ package fr.cnes.regards.modules.feature.dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
 
     public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
+
+    boolean existsByUrn(FeatureUniformResourceName urn);
+
+    public FeatureEntity findByUrn(FeatureUniformResourceName urn);
 }

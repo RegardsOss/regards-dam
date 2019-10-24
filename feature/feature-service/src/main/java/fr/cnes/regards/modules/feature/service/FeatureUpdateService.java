@@ -22,6 +22,9 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,18 +46,21 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
-import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -88,6 +94,9 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     @Autowired
     private FeatureConfigurationProperties properties;
 
+    @Autowired
+    private IFeatureEntityRepository featureRepo;
+
     @Override
     public void registerRequests(List<FeatureUpdateRequestEvent> events) {
         List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
@@ -113,7 +122,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             List<FeatureUpdateRequest> grantedRequests) {
 
         // Validate event
-        Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
+        Errors errors = new MapBindingResult(new HashMap<>(), FeatureUpdateRequestEvent.class.getName());
         validator.validate(item, errors);
 
         if (errors.hasErrors()) {
@@ -125,12 +134,13 @@ public class FeatureUpdateService implements IFeatureUpdateService {
         }
 
         // Validate feature according to the data model
-        errors = validationService.validate(item.getFeature(), ValidationMode.UPDATE);
+        errors = validationService.validate(item.getFeature(), ValidationMode.PATCH);
 
         if (errors.hasErrors()) {
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
-                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+                                                        item.getFeature() != null ? item.getFeature().getUrn() : null,
+                                                        RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             return;
         }
 
@@ -171,15 +181,83 @@ public class FeatureUpdateService implements IFeatureUpdateService {
                     toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
             JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_UPDATE_JOB_PRIORITY.getPriority(),
-                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+                    jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
     }
 
     @Override
     public void processRequests(List<FeatureUpdateRequest> requests) {
-        // TODO Auto-generated method stub
 
+        // Update feature
+        for (FeatureUpdateRequest request : requests) {
+
+            Feature patch = request.getFeature();
+
+            // Retrieve feature from db
+            // Note : entity is attached to transaction manager so all changes will be reflected in the db!
+            FeatureEntity entity = featureRepo.findByUrn(patch.getUrn());
+
+            // Merge properties handling null property values to unset properties
+            mergeProperties(entity.getFeature(), patch);
+
+            // Register
+            // TODO
+        }
+
+        // TODO save all
+
+        // TODO Delete request
+
+        // TODO Auto-generated method stub
+        LOGGER.debug("i'm here!");
+
+    }
+
+    private void mergeProperties(Feature feature, Feature patch) {
+
+        // Build fast property access maps
+        Map<String, IProperty<?>> featureMap = new HashMap<>();
+        Map<String, ObjectProperty> featureObjectMap = new HashMap<>();
+        IProperty.getPropertyMap(featureMap, featureObjectMap, feature.getProperties());
+
+        // Build fast property for patch feature
+        Map<String, IProperty<?>> patchMap = new HashMap<>();
+        Map<String, ObjectProperty> patchObjectMap = new HashMap<>();
+        IProperty.getPropertyMap(patchMap, patchObjectMap, patch.getProperties());
+
+        // Loop on patch properties
+        for (Entry<String, IProperty<?>> entry : patchMap.entrySet()) {
+            IProperty<?> property = entry.getValue();
+
+            if (property.getValue() == null) {
+                if (featureMap.containsKey(entry.getKey())) {
+                    // Unset property if exists
+                    featureMap.get(entry.getKey()).updateValue(null);
+                }
+            } else {
+                if (featureMap.containsKey(entry.getKey())) {
+                    // Update property if already exists
+                    IProperty.updatePropertyValue(featureMap.get(entry.getKey()), property.getValue());
+                } else {
+                    // Add property
+                    Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
+                    if (namespace.isPresent()) {
+                        if (featureObjectMap.containsKey(namespace.get())) {
+                            featureObjectMap.get(namespace.get()).addProperty(property);
+                        } else {
+                            // Create object
+                            ObjectProperty o = IProperty.buildObject(namespace.get(), property);
+                            // Add it to the feature and to the reference map
+                            feature.addProperty(o);
+                            featureObjectMap.put(o.getName(), o);
+                        }
+                    } else {
+                        feature.addProperty(property);
+                    }
+                }
+            }
+        }
     }
 
 }

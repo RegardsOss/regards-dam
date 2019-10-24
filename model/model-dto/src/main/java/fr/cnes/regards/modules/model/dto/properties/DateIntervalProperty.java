@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.model.dto.properties.adapter.DateIntervalAttribut
 public class DateIntervalProperty extends AbstractProperty<Range<OffsetDateTime>> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.DATE_INTERVAL.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.DATE_INTERVAL;
     }
 }

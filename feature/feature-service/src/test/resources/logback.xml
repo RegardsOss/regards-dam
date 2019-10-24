@@ -29,6 +29,7 @@
 
 	<logger name="org.springframework" level="INFO" />
 	<logger name="fr.cnes.regards.modules" level="DEBUG" />
+	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR" />
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>

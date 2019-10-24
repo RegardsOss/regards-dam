@@ -34,6 +34,8 @@ import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissi
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 /**
  * @author Marc SORDI
@@ -51,6 +53,9 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
     @Autowired
     private IFeatureUpdateService featureUpdateService;
 
+    @Autowired
+    private MeterRegistry registry;
+
     @Override
     public void setParameters(Map<String, JobParameter> parameters)
             throws JobParameterMissingException, JobParameterInvalidException {
@@ -62,9 +67,10 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
+        Timer timer = Timer.builder(this.getClass().getName()).tag("job", "run").register(registry);
         LOGGER.info("[{}] Feature update job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        this.featureUpdateService.processRequests(featureUpdateRequests);
+        timer.record(() -> featureUpdateService.processRequests(featureUpdateRequests));
         LOGGER.info("[{}]{}{} feature(s) updated in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
                     System.currentTimeMillis() - start);
     }

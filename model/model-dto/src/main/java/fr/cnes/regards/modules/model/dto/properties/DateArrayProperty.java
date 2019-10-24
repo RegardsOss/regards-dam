@@ -29,7 +29,7 @@ import java.time.OffsetDateTime;
 public class DateArrayProperty extends AbstractProperty<OffsetDateTime[]> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.DATE_ARRAY.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.DATE_ARRAY;
     }
 }
