@@ -123,11 +123,14 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
     private Dataset checkDataSource(Dataset dataset) throws ModuleException, NotAvailablePluginConfigurationException {
         if (dataset.getDataSource() != null) {
             // Retrieve plugin from associated datasource
-            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getBusinessId());
+            PluginConfiguration pluginConf = pluginService
+                    .getPluginConfiguration(dataset.getDataSource().getBusinessId());
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(pluginConf.getBusinessId());
             String modelName = datasourcePlugin.getModelName();
             try {
                 Model model = modelService.getModelByName(modelName);
                 dataset.setDataModel(model.getName());
+                dataset.setDataSource(pluginConf);
             } catch (ModuleException e) {
                 LOGGER.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                 throw new EntityNotFoundException(String
@@ -178,7 +181,7 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
     protected void doCheck(Dataset entity, Dataset entityInDB) throws ModuleException {
         try {
             // datasource not being updatable, we only check it at creation i.e. when entityInDB is null
-            if(entityInDB == null) {
+            if (entityInDB == null) {
                 entity = checkDataSource(entity);
             }
             checkSubsettingCriterion(entity);
