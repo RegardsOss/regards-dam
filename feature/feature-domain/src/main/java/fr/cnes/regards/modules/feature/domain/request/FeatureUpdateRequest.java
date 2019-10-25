@@ -79,6 +79,7 @@ public class FeatureUpdateRequest extends AbstractRequest {
         Assert.notNull(feature, "Feature is required");
         FeatureUpdateRequest fcr = new FeatureUpdateRequest();
         fcr.with(requestId, requestDate, state, errors);
+        fcr.setUrn(feature.getUrn());
         fcr.setFeature(feature);
         return fcr;
     }

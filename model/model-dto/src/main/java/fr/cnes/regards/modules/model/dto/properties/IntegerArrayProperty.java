@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class IntegerArrayProperty extends AbstractProperty<Integer[]> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.INTEGER_ARRAY.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.INTEGER_ARRAY;
     }
 }

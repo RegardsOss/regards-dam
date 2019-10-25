@@ -26,7 +26,7 @@ import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 /**
  * Ingest request event
@@ -50,22 +50,23 @@ public class FeatureRequestEvent implements ISubscribable {
     /**
      * The feature URN
      */
-    private UniformResourceName urn;
+    private FeatureUniformResourceName urn;
 
     private RequestState state;
 
     private Set<String> errors;
 
-    public static FeatureRequestEvent build(String requestId, String id, @Nullable UniformResourceName urn,
+    public static FeatureRequestEvent build(String requestId, String id, @Nullable FeatureUniformResourceName urn,
             RequestState state) {
         return build(requestId, id, urn, state, null);
     }
 
-    public static FeatureRequestEvent build(String requestId, @Nullable String id, @Nullable UniformResourceName urn,
-            RequestState state, Set<String> errors) {
+    public static FeatureRequestEvent build(String requestId, @Nullable String id,
+            @Nullable FeatureUniformResourceName urn, RequestState state, Set<String> errors) {
         FeatureRequestEvent event = new FeatureRequestEvent();
         event.setRequestId(requestId);
         event.setId(id);
+        event.setUrn(urn);
         event.setState(state);
         event.setErrors(errors);
         return event;
@@ -103,11 +104,11 @@ public class FeatureRequestEvent implements ISubscribable {
         this.requestId = requestId;
     }
 
-    public UniformResourceName getUrn() {
+    public FeatureUniformResourceName getUrn() {
         return urn;
     }
 
-    public void setUrn(UniformResourceName urn) {
+    public void setUrn(FeatureUniformResourceName urn) {
         this.urn = urn;
     }
 

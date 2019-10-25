@@ -52,7 +52,7 @@ public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements I
         this.feature = feature;
     }
 
-    public static FeatureUpdateRequestEvent builder(Feature feature) {
+    public static FeatureUpdateRequestEvent build(Feature feature) {
         FeatureUpdateRequestEvent event = new FeatureUpdateRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());

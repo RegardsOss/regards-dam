@@ -15,8 +15,8 @@ import fr.cnes.regards.modules.model.dto.properties.adapter.LongIntervalAttribut
 public class LongIntervalProperty extends AbstractProperty<Range<Long>> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.INTEGER_INTERVAL.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.LONG_INTERVAL;
     }
 
 }

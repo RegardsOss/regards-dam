@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class StringProperty extends AbstractProperty<String> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.STRING.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.STRING;
     }
 }

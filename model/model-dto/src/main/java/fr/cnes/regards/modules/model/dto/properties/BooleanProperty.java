@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class BooleanProperty extends AbstractProperty<Boolean> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.BOOLEAN.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.BOOLEAN;
     }
 }

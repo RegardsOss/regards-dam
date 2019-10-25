@@ -36,20 +36,28 @@ import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
  * @author Marc SORDI
  *
  */
 @Entity
-@Table(name = "t_feature", indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update"),
-        @Index(name = "idx_feature_session", columnList = "session_owner,session_name"), })
+@Table(name = "t_feature",
+        indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update"),
+                @Index(name = "idx_feature_urn", columnList = "urn"),
+                @Index(name = "idx_feature_session", columnList = "session_owner,session_name"), })
 public class FeatureEntity {
 
     @Id
     @SequenceGenerator(name = "featureSequence", initialValue = 1, sequenceName = "seq_feature")
     @GeneratedValue(generator = "featureSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
+    @Convert(converter = FeatureUrnConverter.class)
+    private FeatureUniformResourceName urn;
 
     @Column(length = 128, name = "session_owner", nullable = false)
     private String sessionOwner;
@@ -82,6 +90,7 @@ public class FeatureEntity {
         featureEntity.setFeature(feature);
         featureEntity.setLastUpdate(lastUpdate);
         featureEntity.setProviderId(feature.getId());
+        featureEntity.setUrn(feature.getUrn());
         featureEntity.setVersion(feature.getUrn().getVersion());
 
         return featureEntity;
@@ -141,5 +150,13 @@ public class FeatureEntity {
 
     public void setSession(String session) {
         this.session = session;
+    }
+
+    public FeatureUniformResourceName getUrn() {
+        return urn;
+    }
+
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
     }
 }

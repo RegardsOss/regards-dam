@@ -22,7 +22,6 @@ import fr.cnes.regards.modules.model.domain.ComputationPlugin;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.domain.IComputedAttributeVisitor;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
@@ -32,10 +31,10 @@ import fr.cnes.regards.modules.model.dto.properties.PropertyType;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-public class AttributeBuilderVisitor implements IComputedAttributeVisitor<AbstractProperty<?>> {
+public class AttributeBuilderVisitor implements IComputedAttributeVisitor<IProperty<?>> {
 
     @Override
-    public <P, U> AbstractProperty<?> visit(IComputedAttribute<P, U> plugin) {
+    public <P, U> IProperty<?> visit(IComputedAttribute<P, U> plugin) {
         AttributeModel attr = plugin.getAttributeToCompute();
         ComputationPlugin computationPlugin = plugin.getClass().getAnnotation(ComputationPlugin.class);
         PropertyType attributeType = computationPlugin.supportedType();

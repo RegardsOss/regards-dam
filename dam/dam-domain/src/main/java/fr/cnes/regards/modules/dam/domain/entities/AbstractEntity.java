@@ -332,11 +332,11 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Add feature property
      * @param property {@link AbstractProperty}
      */
-    public void addProperty(AbstractProperty<?> property) {
+    public void addProperty(IProperty<?> property) {
         feature.addProperty(property);
     }
 
-    public void removeProperty(AbstractProperty<?> property) {
+    public void removeProperty(IProperty<?> property) {
         feature.removeProperty(property);
     }
 

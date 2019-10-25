@@ -57,7 +57,6 @@ import org.springframework.validation.ObjectError;
 import com.google.common.base.Strings;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -97,7 +96,6 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
@@ -134,9 +132,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private IPublisher publisher;
-
-    @Autowired
-    private ISubscriber subscriber;
 
     @PersistenceContext
     private EntityManager em;
@@ -621,7 +616,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
         for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
-            AbstractProperty<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
+            IProperty<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectProperty) {
                 ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it

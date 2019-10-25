@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.model.dto.properties.adapter.IntegerIntervalAttri
 public class IntegerIntervalProperty extends AbstractProperty<Range<Integer>> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.INTEGER_INTERVAL.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.INTEGER_INTERVAL;
     }
 }

@@ -36,8 +36,6 @@ import fr.cnes.regards.modules.model.domain.ComputationMode;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
-import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
-import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.model.service.validation.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.model.service.validation.validator.PropertyTypeValidator;
 import fr.cnes.regards.modules.model.service.validation.validator.restriction.RestrictionValidatorFactory;
@@ -68,7 +66,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
         List<ModelAttrAssoc> modAtts = modelFinder.findByModel(model);
 
         // Build fast property access map
-        Map<String, IProperty<?>> pptyMap = getPropertyMap(feature.getProperties());
+        Map<String, IProperty<?>> pptyMap = IProperty.getPropertyMap(feature.getProperties());
         // Get a copy of entity attributes values to optimize the search of unexpected properties
         // FIXME check it's a real copy!
         Set<String> toCheckProperties = new HashSet<>(pptyMap.keySet());
@@ -86,34 +84,6 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
         }
 
         return errors;
-    }
-
-    /**
-     * Build a fast access map for current properties
-     */
-    private Map<String, IProperty<?>> getPropertyMap(Set<IProperty<?>> properties) {
-        Map<String, IProperty<?>> pmap = new HashMap<>();
-        if (properties != null) {
-            for (IProperty<?> ppt : properties) {
-                addPropertyToMap(pmap, ppt, null);
-            }
-        }
-        return pmap;
-    }
-
-    private void addPropertyToMap(Map<String, IProperty<?>> pmap, IProperty<?> ppt, String namespace) {
-        if (ppt.represents(PropertyType.OBJECT)) {
-            for (IProperty<?> inner : ((ObjectProperty) ppt).getValue()) {
-                addPropertyToMap(pmap, inner, ppt.getName());
-            }
-        } else {
-            StringBuilder builder = new StringBuilder();
-            if (namespace != null && !namespace.isEmpty()) {
-                builder.append(namespace);
-                builder.append(".");
-            }
-            pmap.put(builder.append(ppt.getName()).toString(), ppt);
-        }
     }
 
     /**
@@ -147,6 +117,8 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
             // Null property value check
             if (att.getValue() == null) {
                 checkNullPropertyValue(attModel, errors, mode);
+                // Ok, attribute has been checked
+                toCheckProperties.remove(attPath);
                 return;
             }
 

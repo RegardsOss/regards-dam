@@ -58,6 +58,10 @@
 			<artifactId>plugins-domain</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.framework.utils</groupId>
+    		<artifactId>plugin-utils</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>oais-regards</artifactId>
 		</dependency>

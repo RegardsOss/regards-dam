@@ -27,7 +27,7 @@ package fr.cnes.regards.modules.model.dto.properties;
 public class StringArrayProperty extends AbstractProperty<String[]> {
 
     @Override
-    public boolean represents(PropertyType pAttributeType) {
-        return PropertyType.STRING_ARRAY.equals(pAttributeType);
+    public PropertyType getType() {
+        return PropertyType.STRING_ARRAY;
     }
 }

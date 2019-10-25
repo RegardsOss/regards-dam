@@ -43,18 +43,20 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
-import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
@@ -88,6 +90,9 @@ public class FeatureUpdateService implements IFeatureUpdateService {
     @Autowired
     private FeatureConfigurationProperties properties;
 
+    @Autowired
+    private IFeatureEntityRepository featureRepo;
+
     @Override
     public void registerRequests(List<FeatureUpdateRequestEvent> events) {
         List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
@@ -113,7 +118,7 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             List<FeatureUpdateRequest> grantedRequests) {
 
         // Validate event
-        Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
+        Errors errors = new MapBindingResult(new HashMap<>(), FeatureUpdateRequestEvent.class.getName());
         validator.validate(item, errors);
 
         if (errors.hasErrors()) {
@@ -125,12 +130,13 @@ public class FeatureUpdateService implements IFeatureUpdateService {
         }
 
         // Validate feature according to the data model
-        errors = validationService.validate(item.getFeature(), ValidationMode.UPDATE);
+        errors = validationService.validate(item.getFeature(), ValidationMode.PATCH);
 
         if (errors.hasErrors()) {
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
-                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+                                                        item.getFeature() != null ? item.getFeature().getUrn() : null,
+                                                        RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             return;
         }
 
@@ -171,15 +177,38 @@ public class FeatureUpdateService implements IFeatureUpdateService {
                     toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
             JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_UPDATE_JOB_PRIORITY.getPriority(),
-                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+                    jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
     }
 
     @Override
     public void processRequests(List<FeatureUpdateRequest> requests) {
-        // TODO Auto-generated method stub
 
+        List<FeatureEntity> entities = new ArrayList<>();
+
+        // Update feature
+        for (FeatureUpdateRequest request : requests) {
+
+            Feature patch = request.getFeature();
+
+            // Retrieve feature from db
+            // Note : entity is attached to transaction manager so all changes will be reflected in the db!
+            FeatureEntity entity = featureRepo.findByUrn(patch.getUrn());
+
+            // Merge properties handling null property values to unset properties
+            IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
+            // TODO : manage geometry!
+
+            // Publish request success
+            // TODO
+
+            // Register
+            entities.add(entity);
+        }
+
+        featureRepo.saveAll(entities);
+
+        // TODO Delete request
     }
-
 }
