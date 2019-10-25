@@ -90,7 +90,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         featureCreationService.scheduleRequests();
 
         // Wait for feature creation
-        waitFeature(1, 10_000);
+        waitFeature(1, null, 10_000);
 
         // Retrieve feature from database
         FeatureEntity entity = featureRepo.findTop1VersionByProviderIdOrderByVersionAsc(id);

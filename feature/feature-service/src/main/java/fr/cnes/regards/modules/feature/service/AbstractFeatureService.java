@@ -16,23 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dao;
+package fr.cnes.regards.modules.feature.service;
 
-import java.time.OffsetDateTime;
+/**
+ *
+ * Common feature utility method
+ * @author Marc SORDI
+ *
+ */
+public abstract class AbstractFeatureService {
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import fr.cnes.regards.modules.feature.domain.FeatureEntity;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
-
-public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
-
-    public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
-
-    boolean existsByUrn(FeatureUniformResourceName urn);
-
-    public FeatureEntity findByUrn(FeatureUniformResourceName urn);
-
-    // FIXME remove just for test
-    public long countByLastUpdateGreaterThan(OffsetDateTime from);
 }

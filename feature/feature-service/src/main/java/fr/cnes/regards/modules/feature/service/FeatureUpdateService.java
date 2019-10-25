@@ -65,7 +65,7 @@ import fr.cnes.regards.modules.model.service.validation.ValidationMode;
  */
 @Service
 @MultitenantTransactional
-public class FeatureUpdateService implements IFeatureUpdateService {
+public class FeatureUpdateService extends AbstractFeatureService implements IFeatureUpdateService {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUpdateService.class);
@@ -213,6 +213,8 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             // FIXME does not manage storage metadata at the moment
             publisher.publish(FeatureRequestEvent.build(request.getRequestId(), entity.getProviderId(), entity.getUrn(),
                                                         RequestState.SUCCESS));
+
+            // FIXME notify entire feature for notification manager
 
             // Register
             entities.add(entity);
