@@ -1,11 +1,15 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
 public interface IFeatureCreationService {
@@ -13,12 +17,8 @@ public interface IFeatureCreationService {
     /**
      * Register creation requests in database for further processing from incoming request events
      */
-    List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events);
-
-    /**
-     * Register creation requests in database for further processing from feature collection
-     */
-    List<FeatureCreationRequest> registerRequests(FeatureCollection collection);
+    List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events,
+            Set<String> grantedRequestId, Multimap<String, String> errorByRequestId);
 
     /**
      * Schedule a job to process a batch of requests<br/>
@@ -35,9 +35,9 @@ public interface IFeatureCreationService {
 
     /**
      * Create a list of {@link FeatureCreationRequest} from a list of {@link Feature} stored in a {@link FeatureCollection}
-     * and return a list of request id
+     * and return a {@link RequestInfo} full of request ids and occured errors
      * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
-     * @return a list of created {@link FeatureCreationRequest}
+     * @return {@link RequestInfo}
      */
-    List<FeatureCreationRequest> createFeatureRequestEvent(FeatureCollection toHandle);
+    RequestInfo registerScheduleProcess(FeatureCollection toHandle);
 }

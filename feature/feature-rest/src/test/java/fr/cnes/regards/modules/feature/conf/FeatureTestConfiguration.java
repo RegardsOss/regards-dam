@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
+import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 
 /**
  * @author Marc SORDI
@@ -41,5 +42,10 @@ public class FeatureTestConfiguration {
     @Bean
     public IAttributeHelper attributeHelper() {
         return Mockito.mock(IAttributeHelper.class);
+    }
+
+    @Bean
+    public IComputationPluginService computationPluginService() {
+        return Mockito.mock(IComputationPluginService.class);
     }
 }

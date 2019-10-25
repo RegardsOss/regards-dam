@@ -48,6 +48,8 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
 
     private static final String URN_FIELD = "urn";
 
+    private static final String ID_FIELD = "id";
+
     /**
      * Standard validator based on annotation
      */
@@ -66,6 +68,10 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
 
         // Validate feature
         validator.validate(feature, errors);
+
+        if (feature.getId() == null) {
+            errors.rejectValue(ID_FIELD, "feature.id.null.error.message", "Feature id mustn't be null");
+        }
 
         // Programmatic validation according to the context
         switch (mode) {

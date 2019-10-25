@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.assertj.core.util.Lists;
@@ -28,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -75,7 +78,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
                                                       IProperty.buildBoolean("valid", Boolean.TRUE)));
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
-        featureCreationService.registerRequests(events);
+        featureCreationService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
 
         // Schedule job
         featureCreationService.scheduleRequests();

@@ -7,12 +7,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
@@ -42,7 +45,8 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
         super.initFeatureCreationRequestEvent(events, 2);
-        this.featureService.registerRequests(events);
+        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+
         this.featureService.scheduleRequests();
         int cpt = 0;
         long featureNumberInDatabase;
