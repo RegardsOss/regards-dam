@@ -19,10 +19,17 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
+
+import javax.validation.Valid;
+
+import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 /**
  * This service handles feature update workflow.
@@ -32,13 +39,17 @@ public interface IFeatureUpdateService {
 
     /**
      * Register update requests in database for further processing from incoming request events
+     * @return
      */
-    void registerRequests(List<FeatureUpdateRequestEvent> events);
+    List<FeatureUpdateRequest> registerRequests(List<FeatureUpdateRequestEvent> events,
+            Set<FeatureUniformResourceName> grantedUrn, Multimap<FeatureUniformResourceName, String> errorByUrn);
 
     /**
      * Register update requests in database for further processing from feature collection
+     * @param toHandle
+     * @return
      */
-    List<FeatureUpdateRequest> registerRequests(FeatureCollection collection);
+    RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureCollection toHandle);
 
     /**
      * Schedule a job to process a batch of requests<br/>
@@ -50,4 +61,5 @@ public interface IFeatureUpdateService {
      * Process batch of requests during job
      */
     void processRequests(List<FeatureUpdateRequest> requests);
+
 }

@@ -4,14 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -20,6 +21,7 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
@@ -28,8 +30,6 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationIT.class);
 
     private final int EVENTS_NUMBER = 1000;
 
@@ -51,7 +51,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         super.initFeatureCreationRequestEvent(events, EVENTS_NUMBER);
 
-        this.featureService.registerRequests(events);
+        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
 
@@ -63,7 +63,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
+        } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
 
         assertEquals(EVENTS_NUMBER, this.featureRepo.count());
 
@@ -88,9 +88,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         Feature f = events.get(0).getFeature();
         f.setEntityType(null);
-        LOGGER.info(">>>>>>>>>>>>>>>>>>>>> Entity type set to null for feature {}", f.getId());
 
-        this.featureService.registerRequests(events);
+        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
 
         assertEquals(EVENTS_NUMBER - 1, this.featureCreationRequestRepo.count());
 
@@ -102,7 +101,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
+        } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
 
         assertEquals(EVENTS_NUMBER - 1, this.featureRepo.count());
 
@@ -113,7 +112,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
     }
 
     @Test
-    public void testCreateFeatureRequestEvent() {
+    public void testRegisterScheduleProcess() {
         List<Feature> features = new ArrayList<>();
         for (int i = 0; i < EVENTS_NUMBER; i++) {
             features.add(Feature.build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
@@ -123,8 +122,30 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         StorageMetadata.build("id ");
         FeatureCollection collection = FeatureCollection
                 .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
-        this.featureService.createFeatureRequestEvent(collection);
+        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
+        assertEquals(EVENTS_NUMBER, infos.getGrantedId().size());
+        assertEquals(0, infos.getErrorById().size());
+        assertEquals(EVENTS_NUMBER, infos.getIdByFeatureId().keySet().size());
+
+    }
+
+    @Test
+    public void testRegisterScheduleProcessWithErros() {
+        List<Feature> features = new ArrayList<>();
+        for (int i = 0; i < EVENTS_NUMBER; i++) {
+            features.add(Feature.build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), null, "model"));
+        }
+
+        StorageMetadata.build("id ");
+        FeatureCollection collection = FeatureCollection
+                .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
+        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
+
+        assertEquals(0, infos.getGrantedId().size());
+        assertEquals(EVENTS_NUMBER, infos.getErrorById().size());
+        assertEquals(0, infos.getIdByFeatureId().keySet().size());
+
     }
 }

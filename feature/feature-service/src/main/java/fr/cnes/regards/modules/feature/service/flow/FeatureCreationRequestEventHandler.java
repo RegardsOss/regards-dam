@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.service.flow;
 
+import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,6 +28,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
@@ -70,7 +73,7 @@ public class FeatureCreationRequestEventHandler
     public void handleBatch(String tenant, List<FeatureCreationRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
-            featureService.registerRequests(messages);
+            featureService.registerRequests(messages, new HashSet<String>(), ArrayListMultimap.create());
         } finally {
             runtimeTenantResolver.clearTenant();
         }

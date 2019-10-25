@@ -1,8 +1,5 @@
 package fr.cnes.regards.modules.feature.rest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +15,13 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
+import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 
 /**
  * Controller REST handling requests about {@link Feature}s
@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
  */
 @RestController
 @RequestMapping(FeatureController.PATH_FEATURES)
-public class FeatureController implements IResourceController<Feature> {
+public class FeatureController implements IResourceController<RequestInfo<?>> {
 
     public final static String PATH_FEATURES = "/features";
 
@@ -38,39 +38,46 @@ public class FeatureController implements IResourceController<Feature> {
     private IFeatureCreationService featureCreationService;
 
     @Autowired
+    private IFeatureUpdateService featureUpdateService;
+
+    @Autowired
     private IResourceService resourceService;
 
     /**
-     * Receive a {@link FeatureCollection} and create for each of them a {@link FeatureCreationRequestEvent}
-     * used to create a {@link FeatureCreationRequest} we will return all {@link Feature} of those
-     * {@link FeatureCreationRequest} with their request id
-     * @param toHandle {@link FeatureCollection} contain a list of {@link Feature}
-     * @return list of created request ids
+     * Create a list of {@link FeatureCreationRequest} from a list of {@link Feature} stored in a {@link FeatureCollection}
+     * and return a {@link RequestInfo} full of request ids and occured errors
+     * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
+     * @return {@link RequestInfo}
      */
-    // FIXME KMS revoir API + documenter avec des tests IT
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "Public a feature and return the request id")
-    public ResponseEntity<List<Resource<Feature>>> createFeatures(@Valid @RequestBody FeatureCollection toHandle) {
-        List<Feature> createdFeature = new ArrayList<>();
-        List<String> requestIds = new ArrayList<>();
+    public ResponseEntity<Resource<RequestInfo<?>>> createFeatures(@Valid @RequestBody FeatureCollection toHandle) {
 
-        List<FeatureCreationRequest> createdEvents = featureCreationService.createFeatureRequestEvent(toHandle);
+        RequestInfo<String> infos = this.featureCreationService.registerScheduleProcess(toHandle);
 
-        // extract the list of feature concerned by a feature creation request
-        // and extract their request id in the same time
-        createdEvents.stream().forEach(fcr -> {
-            createdFeature.add(fcr.getFeature());
-            requestIds.add(fcr.getRequestId());
-        });
-
-        return new ResponseEntity<>(toResources(createdFeature, requestIds), HttpStatus.CREATED);
+        return new ResponseEntity<>(toResource(infos),
+                infos.getGrantedId().isEmpty() ? HttpStatus.CONFLICT : HttpStatus.CREATED);
     }
 
-    // FIXME KMS ajouter API update
+    /**
+     * Create a list of {@link FeatureUpdateRequest} from a list of {@link Feature} stored in a {@link FeatureCollection}
+     * and return a {@link RequestInfo} full of urns and occured errors
+     * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
+     * @return {@link RequestInfo}
+     */
+    @RequestMapping(method = RequestMethod.PATCH)
+    @ResourceAccess(description = "Public a feature and return the request id")
+    public ResponseEntity<Resource<RequestInfo<?>>> updateFeatures(@Valid @RequestBody FeatureCollection toHandle) {
+
+        RequestInfo<FeatureUniformResourceName> infos = this.featureUpdateService.registerScheduleProcess(toHandle);
+
+        return new ResponseEntity<>(toResource(infos),
+                infos.getGrantedId().isEmpty() ? HttpStatus.CONFLICT : HttpStatus.CREATED);
+    }
 
     @Override
-    public Resource<Feature> toResource(Feature element, Object... extras) {
-        Resource<Feature> resource = resourceService.toResource(element);
+    public Resource<RequestInfo<?>> toResource(RequestInfo<?> element, Object... extras) {
+        Resource<RequestInfo<?>> resource = resourceService.toResource(element);
         return resource;
     }
 }
