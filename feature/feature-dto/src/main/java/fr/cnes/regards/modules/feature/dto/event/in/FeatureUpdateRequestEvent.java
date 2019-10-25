@@ -53,10 +53,14 @@ public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements I
     }
 
     public static FeatureUpdateRequestEvent build(Feature feature) {
+        return build(feature, OffsetDateTime.now());
+    }
+
+    public static FeatureUpdateRequestEvent build(Feature feature, OffsetDateTime requestDate) {
         FeatureUpdateRequestEvent event = new FeatureUpdateRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
-        event.setRequestDate(OffsetDateTime.now());
+        event.setRequestDate(requestDate);
         return event;
     }
 }

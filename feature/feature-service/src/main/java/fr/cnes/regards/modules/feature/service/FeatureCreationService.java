@@ -204,13 +204,14 @@ public class FeatureCreationService implements IFeatureCreationService {
                 .saveAll(requests.stream().map(feature -> initFeatureEntity(feature)).collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(requests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(requests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() == null)
-                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
+                .filter(fcr -> fcr.getFeature().getFiles() == null
+                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
+        // FIXME publish successful requests!
     }
 
     /**

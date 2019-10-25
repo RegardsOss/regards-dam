@@ -113,7 +113,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         featureUpdateService.scheduleRequests();
 
         // Wait for feature creation
-        waitFeature(1, 10_000); // FIXME detect update with last update
+        waitUpdateRequestDeletion(0, 10_000); // FIXME detect update with last update
 
         // Do assertion
         // FIXME

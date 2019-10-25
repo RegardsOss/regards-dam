@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
-import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -27,9 +26,6 @@ public class FeatureRequestService implements IFeatureRequestService {
 
     @Autowired
     private IFeatureCreationRequestRepository fcrRepo;
-
-    @Autowired
-    private IFeatureEntityRepository featureRepo;
 
     @Autowired
     private IPublisher publisher;

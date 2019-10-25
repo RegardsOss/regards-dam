@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
+import fr.cnes.regards.framework.geojson.GeoJsonType;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
@@ -92,6 +93,9 @@ public class FeatureUpdateService implements IFeatureUpdateService {
 
     @Autowired
     private IFeatureEntityRepository featureRepo;
+
+    @Autowired
+    private IFeatureUpdateRequestRepository featureUpdateRequestRepo;
 
     @Override
     public void registerRequests(List<FeatureUpdateRequestEvent> events) {
@@ -195,20 +199,26 @@ public class FeatureUpdateService implements IFeatureUpdateService {
             // Retrieve feature from db
             // Note : entity is attached to transaction manager so all changes will be reflected in the db!
             FeatureEntity entity = featureRepo.findByUrn(patch.getUrn());
+            entity.setLastUpdate(OffsetDateTime.now());
 
             // Merge properties handling null property values to unset properties
             IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
-            // TODO : manage geometry!
+
+            // Geometry cannot be unset but can be mutated
+            if (!GeoJsonType.UNLOCATED.equals(patch.getGeometry().getType())) {
+                entity.getFeature().setGeometry(patch.getGeometry());
+            }
 
             // Publish request success
-            // TODO
+            // FIXME does not manage storage metadata at the moment
+            publisher.publish(FeatureRequestEvent.build(request.getRequestId(), entity.getProviderId(), entity.getUrn(),
+                                                        RequestState.SUCCESS));
 
             // Register
             entities.add(entity);
         }
 
         featureRepo.saveAll(entities);
-
-        // TODO Delete request
+        featureUpdateRequestRepo.deleteInBatch(requests);
     }
 }

@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MimeType;
@@ -80,7 +81,39 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         long entityCount;
         do {
             entityCount = featureRepo.count();
-            LOGGER.debug("{} SIP(s) created in database", entityCount);
+            LOGGER.debug("{} feature(s) created in database", entityCount);
+            if (entityCount == expected) {
+                break;
+            }
+            long now = System.currentTimeMillis();
+            if (end > now) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Assert.fail("Thread interrupted");
+                }
+            } else {
+                Assert.fail("Timeout");
+            }
+        } while (true);
+    }
+
+    /**
+     * Wait until feature update request(s) are properly deleted
+     * @param expected expected request number
+     * @param timeout timeout in milliseconds
+     */
+    protected void waitUpdateRequestDeletion(long expected, long timeout) {
+        waitRequestDeletion(featureUpdateRequestRepo, expected, timeout);
+    }
+
+    private void waitRequestDeletion(JpaRepository<?, ?> repo, long expected, long timeout) {
+        long end = System.currentTimeMillis() + timeout;
+        // Wait
+        long entityCount;
+        do {
+            entityCount = repo.count();
+            LOGGER.debug("{} request(s) remain(s) in database", entityCount);
             if (entityCount == expected) {
                 break;
             }
