@@ -48,7 +48,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>indexer</artifactId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>GEODE</version>
 	</parent>
 
 	<dependencies>
