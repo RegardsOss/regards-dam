@@ -63,6 +63,10 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
                            FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
 
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
+        performDefaultPost(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
+                           FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
+
     }
 
     @Test
