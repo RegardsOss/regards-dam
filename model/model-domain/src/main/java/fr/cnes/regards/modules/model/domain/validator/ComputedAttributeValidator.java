@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.model.domain.ComputationMode;
 import fr.cnes.regards.modules.model.domain.ComputationPlugin;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
@@ -63,6 +64,9 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
             return false;
         }
         PluginConfiguration computationConf = modelAttrAssoc.getComputationConf();
+        if (computationConf != null) {
+            computationConf.setMetaData(PluginUtils.getPlugins().get(computationConf.getPluginId()));
+        }
         if (modelAttrAssoc.getMode() == ComputationMode.COMPUTED) {
             // If computed attribute, check that the model is a dataset model
             Model model = modelAttrAssoc.getModel();
