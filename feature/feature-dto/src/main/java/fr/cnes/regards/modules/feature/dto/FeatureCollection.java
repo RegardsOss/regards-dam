@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.feature.dto;
 import java.util.Collection;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.geojson.AbstractFeatureCollection;
 
@@ -34,7 +33,6 @@ import fr.cnes.regards.framework.geojson.AbstractFeatureCollection;
 public class FeatureCollection extends AbstractFeatureCollection<Feature> {
 
     @Valid
-    @NotNull(message = "Feature metadata is required")
     private FeatureMetadata metadata;
 
     /**

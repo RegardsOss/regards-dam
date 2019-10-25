@@ -227,12 +227,12 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 .saveAll(requests.stream().map(feature -> initFeatureEntity(feature)).collect(Collectors.toList()));
         // update fcr with feature setted for each of them + publish files to storage
         this.featureCreationRequestRepo.saveAll(requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
         // delete fcr without files
         this.featureCreationRequestRepo.deleteByIdIn(requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() == null)
+                        || ((fcr.getFeature().getFiles() != null) && fcr.getFeature().getFiles().isEmpty()))
                 .map(fcr -> fcr.getId()).collect(Collectors.toList()));
         // FIXME publish successful requests!
     }
@@ -315,25 +315,25 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     }
 
     @Override
-    public RequestInfo registerScheduleProcess(FeatureCollection toHandle) {
+    public RequestInfo<String> registerScheduleProcess(FeatureCollection toHandle) {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
         Set<String> grantedRequestId = new HashSet<String>();
         Multimap<String, String> errorbyRequestId = ArrayListMultimap.create();
         Map<String, String> requestIdByFeature = new HashMap<String, String>();
-        RequestInfo requestInfo = new RequestInfo();
+        RequestInfo<String> requestInfo = new RequestInfo<String>();
 
         // build FeatureCreationEvent
         for (Feature feature : toHandle.getFeatures()) {
             toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
         }
 
-        // extract from generated FeatureCreationrequest a map requestID/feature id
+        // extract from generated FeatureCreationrequest a map feature id => requestID
         this.registerRequests(toTreat, grantedRequestId, errorbyRequestId).stream()
-                .forEach(fcr -> requestIdByFeature.put(fcr.getRequestId(), fcr.getFeature().getId()));
+                .forEach(fcr -> requestIdByFeature.put(fcr.getFeature().getId(), fcr.getRequestId()));
 
-        requestInfo.setRequestIdByFeatureId(requestIdByFeature);
-        requestInfo.setGrantedRequestId(grantedRequestId);
-        requestInfo.setErrorbyRequestId(errorbyRequestId);
+        requestInfo.setIdByFeatureId(requestIdByFeature);
+        requestInfo.setGrantedId(grantedRequestId);
+        requestInfo.setErrorById(errorbyRequestId);
 
         return requestInfo;
     }

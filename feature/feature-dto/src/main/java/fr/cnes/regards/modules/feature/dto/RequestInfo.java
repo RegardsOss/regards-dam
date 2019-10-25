@@ -9,40 +9,48 @@ import java.util.Set;
 import com.google.common.collect.Multimap;
 
 /**
+ * Information dto about Creation/Update feature
  *
+ * Will contain for creation:
+ * All request id generated during {@link FeatureCreationRequest} creation,
+ * all granted request id and all errors by request id
+ *
+ * Will contain for Update
+ * All urn generated during {@link FeatureUpdateRequest} update,
+ * all granted urn and all errors by urn
  * @author kevin
  *
  */
-public class RequestInfo {
+public class RequestInfo<T> {
 
-    private Map<String, String> requestIdByFeatureId;
+    private Map<String, T> idByFeatureId;
 
-    private Multimap<String, String> errorbyRequestId;
+    private Multimap<T, String> errorById;
 
-    private Set<String> grantedRequestId;
+    private Set<T> grantedId;
 
-    public Map<String, String> getRequestIdByFeatureId() {
-        return requestIdByFeatureId;
+    public Map<String, T> getIdByFeatureId() {
+        return idByFeatureId;
     }
 
-    public void setRequestIdByFeatureId(Map<String, String> requestIdByFeatureId) {
-        this.requestIdByFeatureId = requestIdByFeatureId;
+    public void setIdByFeatureId(Map<String, T> idByFeatureId) {
+        this.idByFeatureId = idByFeatureId;
     }
 
-    public Multimap<String, String> getErrorbyRequestId() {
-        return errorbyRequestId;
+    public Multimap<T, String> getErrorById() {
+        return errorById;
     }
 
-    public void setErrorbyRequestId(Multimap<String, String> errorbyRequestId) {
-        this.errorbyRequestId = errorbyRequestId;
+    public void setErrorById(Multimap<T, String> errorById) {
+        this.errorById = errorById;
     }
 
-    public Set<String> getGrantedRequestId() {
-        return grantedRequestId;
+    public Set<T> getGrantedId() {
+        return grantedId;
     }
 
-    public void setGrantedRequestId(Set<String> grantedRequestId) {
-        this.grantedRequestId = grantedRequestId;
+    public void setGrantedId(Set<T> grantedId) {
+        this.grantedId = grantedId;
     }
 
 }

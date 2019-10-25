@@ -122,12 +122,12 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         StorageMetadata.build("id ");
         FeatureCollection collection = FeatureCollection
                 .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
-        RequestInfo infos = this.featureService.registerScheduleProcess(collection);
+        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
-        assertEquals(EVENTS_NUMBER, infos.getGrantedRequestId().size());
-        assertEquals(0, infos.getErrorbyRequestId().size());
-        assertEquals(EVENTS_NUMBER, infos.getRequestIdByFeatureId().keySet().size());
+        assertEquals(EVENTS_NUMBER, infos.getGrantedId().size());
+        assertEquals(0, infos.getErrorById().size());
+        assertEquals(EVENTS_NUMBER, infos.getIdByFeatureId().keySet().size());
 
     }
 
@@ -141,11 +141,11 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         StorageMetadata.build("id ");
         FeatureCollection collection = FeatureCollection
                 .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
-        RequestInfo infos = this.featureService.registerScheduleProcess(collection);
+        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
 
-        assertEquals(0, infos.getGrantedRequestId().size());
-        assertEquals(EVENTS_NUMBER, infos.getErrorbyRequestId().size());
-        assertEquals(0, infos.getRequestIdByFeatureId().keySet().size());
+        assertEquals(0, infos.getGrantedId().size());
+        assertEquals(EVENTS_NUMBER, infos.getErrorById().size());
+        assertEquals(0, infos.getIdByFeatureId().keySet().size());
 
     }
 }

@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
@@ -105,7 +106,8 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         // Register update requests
         List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
         updateEvents.add(FeatureUpdateRequestEvent.build(updated));
-        featureUpdateService.registerRequests(updateEvents);
+        featureUpdateService.registerRequests(updateEvents, new HashSet<FeatureUniformResourceName>(),
+                                              ArrayListMultimap.create());
 
         // Schedule update job after retention delay
         try {

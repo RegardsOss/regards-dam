@@ -39,5 +39,5 @@ public interface IFeatureCreationService {
      * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    RequestInfo registerScheduleProcess(FeatureCollection toHandle);
+    RequestInfo<String> registerScheduleProcess(FeatureCollection toHandle);
 }
