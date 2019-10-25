@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +23,8 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -44,6 +47,7 @@ import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
@@ -101,20 +105,16 @@ public class FeatureCreationService implements IFeatureCreationService {
     FeatureConfigurationProperties properties;
 
     @Override
-    public List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events) {
+    public List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events,
+            Set<String> grantedRequestId, Multimap<String, String> errorByRequestId) {
 
         List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
-        events.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests));
+        events.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests, errorByRequestId));
 
+        grantedRequests.stream().forEach(request -> grantedRequestId.add(request.getRequestId()));
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
         return featureCreationRequestRepo.saveAll(grantedRequests);
-    }
-
-    @Override
-    public List<FeatureCreationRequest> registerRequests(FeatureCollection collection) {
-        // FIXME KMS : sans doute changer l'objet retourné pour avoir la liste des requests DENIED & GRANTED
-        return null;
     }
 
     @Override
@@ -157,14 +157,17 @@ public class FeatureCreationService implements IFeatureCreationService {
      *
      * @param item            request to manage
      * @param grantedRequests collection of granted requests to populate
+     * @param errorByRequestId multimap to store errors by request id
      */
     private void prepareFeatureCreationRequest(FeatureCreationRequestEvent item,
-            List<FeatureCreationRequest> grantedRequests) {
+            List<FeatureCreationRequest> grantedRequests, Multimap<String, String> errorByRequestId) {
 
         // Validate event
         Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
         validator.validate(item, errors);
         if (errors.hasErrors()) {
+            LOGGER.debug("Error during founded FeatureCreationRequestEvent validation {}", errors.toString());
+            errorByRequestId.putAll(item.getRequestId(), ErrorTranslator.getErrors(errors));
             // Publish DENIED request (do not persist it in DB)
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
@@ -175,6 +178,8 @@ public class FeatureCreationService implements IFeatureCreationService {
         // Validate feature according to the data model
         errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
         if (errors.hasErrors()) {
+            LOGGER.debug("Error during Feature validation {}", errors.toString());
+            errorByRequestId.putAll(item.getRequestId(), ErrorTranslator.getErrors(errors));
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
@@ -292,13 +297,26 @@ public class FeatureCreationService implements IFeatureCreationService {
     }
 
     @Override
-    @Deprecated // FIXME à supprimer après recablage vers register
-    public List<FeatureCreationRequest> createFeatureRequestEvent(FeatureCollection toHandle) {
+    public RequestInfo registerScheduleProcess(FeatureCollection toHandle) {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
+        Set<String> grantedRequestId = new HashSet<String>();
+        Multimap<String, String> errorbyRequestId = ArrayListMultimap.create();
+        Map<String, String> requestIdByFeature = new HashMap<String, String>();
+        RequestInfo requestInfo = new RequestInfo();
 
+        // build FeatureCreationEvent
         for (Feature feature : toHandle.getFeatures()) {
             toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
         }
-        return this.registerRequests(toTreat);
+
+        // extract from generated FeatureCreationrequest a map requestID/feature id
+        this.registerRequests(toTreat, grantedRequestId, errorbyRequestId).stream()
+                .forEach(fcr -> requestIdByFeature.put(fcr.getRequestId(), fcr.getFeature().getId()));
+
+        requestInfo.setRequestIdByFeatureId(requestIdByFeature);
+        requestInfo.setGrantedRequestId(grantedRequestId);
+        requestInfo.setErrorbyRequestId(errorbyRequestId);
+
+        return requestInfo;
     }
 }
