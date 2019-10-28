@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.notification.service;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -20,8 +19,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginPa
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
-import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.notification.domain.Recipient;
 import fr.cnes.regards.modules.notification.domain.Rule;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
@@ -39,38 +39,10 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
     @Test
     public void testRuleMacher() throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException {
 
-        Feature feature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
-                                        "id");
+        Feature feature = Feature.build("id", FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA, getDefaultTenant(), 1),IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
 
-        // properties of the feature
-        Set<AbstractProperty<?>> properties = new HashSet<>();
-        // the first property
-        AbstractProperty<Set<AbstractProperty<?>>> property1 = new AbstractProperty<Set<AbstractProperty<?>>>() {
-
-            @Override
-            public boolean represents(PropertyType pAttributeType) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        };
-        // the fist property is a set of properties
-        Set<AbstractProperty<?>> property1Set = new HashSet<AbstractProperty<?>>();
-        // sub property inside the first property
-        AbstractProperty<String> subProp = new AbstractProperty<String>() {
-
-            @Override
-            public boolean represents(PropertyType pAttributeType) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        };
-
-        property1.setName("file_infos");
-        property1.setValue(property1Set);
-        property1Set.add(subProp);
-        subProp.setName("fem_type");
-        subProp.setValue("TM");
-        properties.add(property1);
+        // Properties of the feature
+        Set<IProperty<?>> properties = IProperty.set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));        
         feature.setProperties(properties);
 
         // configuration of the rule plugin
@@ -107,8 +79,9 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         assertEquals(1, this.notificationService.handleFeatures(feature));
 
         // FIXME this feature will fail cause to the fail model  (sender not implemented)
-        Feature failingFeature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
-                                               "fail", "id");
+        Feature failingFeature = Feature.build("id", FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, 
+        		EntityType.DATA, getDefaultTenant(), 1),IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "fail");
+        
         failingFeature.setProperties(properties);
 
         assertEquals(0, this.notificationService.handleFeatures(failingFeature));
@@ -118,39 +91,12 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
     @Test
     public void testRuleMacherWithNonMatcherFeature()
             throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException {
+        
+        Feature feature = Feature.build("id", FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA, getDefaultTenant(), 1),IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
 
-        Feature feature = Feature.build(null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model",
-                                        "id");
 
-        // properties of the feature
-        Set<AbstractProperty<?>> properties = new HashSet<>();
-        // the first property
-        AbstractProperty<Set<AbstractProperty<?>>> property1 = new AbstractProperty<Set<AbstractProperty<?>>>() {
-
-            @Override
-            public boolean represents(PropertyType pAttributeType) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        };
-        // the fist property is a set of properties
-        Set<AbstractProperty<?>> property1Set = new HashSet<AbstractProperty<?>>();
-        // sub property inside the first property
-        AbstractProperty<String> subProp = new AbstractProperty<String>() {
-
-            @Override
-            public boolean represents(PropertyType pAttributeType) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-        };
-
-        property1.setName("file_infos");
-        property1.setValue(property1Set);
-        property1Set.add(subProp);
-        subProp.setName("fem_type");
-        subProp.setValue("Not TM");
-        properties.add(property1);
+        // Properties of the feature
+        Set<IProperty<?>> properties = IProperty.set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "Not TM")));        
         feature.setProperties(properties);
 
         // configuration of the rule plugin

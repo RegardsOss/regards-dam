@@ -55,6 +55,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         collection.add(featureToAdd);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
+        // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
         collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
@@ -82,6 +83,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
         MapBindingResult errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
         errors.reject("error code");
+        // we will mock validation plugin and consider the feature is unvalid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusConflict();
         performDefaultPost(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
@@ -105,9 +107,40 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         metadata.add(StorageMetadata.build("id"));
 
         collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
+        performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
+                            FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
+
+    }
+
+    @Test
+    public void testCreateUnValidFeatureUpdateRequest() throws Exception {
+        Feature feature;
+        feature = new Feature();
+        feature.setEntityType(EntityType.DATA);
+        feature.setModel("model");
+        feature.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
+        feature.setUrn(null);
+        feature.setId("id");
+        feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "tenant",
+                                                        UUID.randomUUID(), 1));
+        FeatureCollection collection = new FeatureCollection();
+        collection.add(feature);
+        List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
+        metadata.add(StorageMetadata.build("id"));
+
+        collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        // we will mock validation plugin and consider the feature is valid
+        Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
+                .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
+        MapBindingResult errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
+        errors.reject("error code");
+        // we will mock validation plugin and consider the feature is unvalid
+        Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusConflict();
         performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
                             FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
 
