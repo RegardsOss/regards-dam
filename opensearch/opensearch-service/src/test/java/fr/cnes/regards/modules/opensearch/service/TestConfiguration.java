@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.opensearch.service;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.gson.entities.IAttributeHelper;
@@ -34,16 +35,19 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
 public class TestConfiguration {
 
     @Bean
+    @Primary
     IAttributeFinder finder() {
         return Mockito.mock(IAttributeFinder.class);
     }
 
     @Bean
+    @Primary
     IAttributeModelClient attMClient() {
         return Mockito.mock(IAttributeModelClient.class);
     }
 
     @Bean
+    @Primary
     IAttributeHelper helper() {
         return Mockito.mock(IAttributeHelper.class);
     }
