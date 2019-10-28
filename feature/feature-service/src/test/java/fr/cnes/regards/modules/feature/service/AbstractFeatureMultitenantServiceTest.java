@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -73,14 +74,19 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
     /**
      * Wait until feature are properly created
      * @param expected expected feature number
+     * @param from feature updated after from date. May be <code>null</code>.
      * @param timeout timeout in milliseconds
      */
-    protected void waitFeature(long expected, long timeout) {
+    protected void waitFeature(long expected, @Nullable OffsetDateTime from, long timeout) {
         long end = System.currentTimeMillis() + timeout;
         // Wait
         long entityCount;
         do {
-            entityCount = featureRepo.count();
+            if (from != null) {
+                entityCount = featureRepo.countByLastUpdateGreaterThan(from);
+            } else {
+                entityCount = featureRepo.count();
+            }
             LOGGER.debug("{} feature(s) created in database", entityCount);
             if (entityCount == expected) {
                 break;
@@ -96,6 +102,15 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
                 Assert.fail("Timeout");
             }
         } while (true);
+    }
+
+    /**
+     * Wait until feature creation request(s) are properly deleted
+     * @param expected expected request number
+     * @param timeout timeout in milliseconds
+     */
+    protected void waitCreationRequestDeletion(long expected, long timeout) {
+        waitRequestDeletion(featureCreationRequestRepo, expected, timeout);
     }
 
     /**

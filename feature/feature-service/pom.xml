@@ -63,10 +63,6 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
-			<artifactId>feature-dto</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dao</artifactId>
 		</dependency>
 		<dependency>

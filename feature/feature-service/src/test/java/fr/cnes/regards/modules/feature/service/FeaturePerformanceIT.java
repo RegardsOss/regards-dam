@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,6 +35,9 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
@@ -42,40 +48,69 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
-        "spring.jpa.properties.hibernate.order_inserts=true" })
+        "spring.jpa.properties.hibernate.order_inserts=true", "regards.scheduler.pool.size=4" })
 @ActiveProfiles(value = { "testAmqp" })
 public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest {
 
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceIT.class);
 
-    private static final Integer NB_FEATURES = 10;
+    private static final Integer NB_FEATURES = 1000;
 
     @Autowired
     private IPublisher publisher;
 
     @Test
-    public void createAndUpdateTest() {
+    public void createAndUpdateTest() throws InterruptedException {
+
+        String format = "F%05d";
 
         // Register creation requests
         FeatureMetadata metadata = FeatureMetadata.build("sessionOwner", "session", Lists.emptyList());
         String modelName = mockModelClient("feature_mutation_model.xml");
 
+        Thread.sleep(5_000);
+
+        long creationStart = System.currentTimeMillis();
         for (int i = 1; i <= NB_FEATURES; i++) {
-            Feature feature = Feature.build(String.format("F%05d", i), null, IGeometry.unlocated(), EntityType.DATA,
+            Feature feature = Feature.build(String.format(format, i), null, IGeometry.unlocated(), EntityType.DATA,
                                             modelName);
             feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
             feature.addProperty(IProperty.buildObject("file_characterization",
                                                       IProperty.buildBoolean("valid", Boolean.TRUE)));
             publisher.publish(FeatureCreationRequestEvent.build(metadata, feature));
         }
-        //featureCreationService.registerRequests(events);
-
-        // Schedule job
-        // featureCreationService.scheduleRequests();
 
         // Wait for feature creation
-        waitFeature(NB_FEATURES, 10_000);
-        // FIXME update request
+        waitFeature(NB_FEATURES, null, 1_200_000);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - creationStart);
+
+        // Register update requests
+
+        long updateStart = System.currentTimeMillis();
+        OffsetDateTime requestDate = OffsetDateTime.now();
+        for (int i = 1; i <= NB_FEATURES; i++) {
+            String id = String.format(format, i);
+            Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, modelName);
+            feature.addProperty(IProperty.buildObject("file_characterization",
+                                                      IProperty.buildBoolean("valid", Boolean.FALSE),
+                                                      IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
+            publisher.publish(FeatureUpdateRequestEvent.build(feature, requestDate));
+        }
+
+        // Wait for feature update
+        waitFeature(NB_FEATURES, requestDate, 1_200_000);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} update requests done in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - updateStart);
+
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests and {} update requests done in {} ms", NB_FEATURES,
+                    NB_FEATURES, System.currentTimeMillis() - creationStart);
+    }
+
+    private FeatureUniformResourceName getURN(String id) {
+        UUID uuid = UUID.nameUUIDFromBytes(id.getBytes());
+        return FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, getDefaultTenant(), uuid,
+                                                1);
     }
 }
