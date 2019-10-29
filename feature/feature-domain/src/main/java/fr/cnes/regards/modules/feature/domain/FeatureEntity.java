@@ -86,12 +86,12 @@ public class FeatureEntity {
     @NotNull()
     private Integer version;
 
-    public static FeatureEntity build(String sessionOwner, String session, Feature feature, OffsetDateTime lastUpdate) {
+    public static FeatureEntity build(String sessionOwner, String session, Feature feature) {
         FeatureEntity featureEntity = new FeatureEntity();
         featureEntity.setSessionOwner(sessionOwner);
         featureEntity.setSession(session);
         featureEntity.setFeature(feature);
-        featureEntity.setLastUpdate(lastUpdate);
+        featureEntity.setLastUpdate(OffsetDateTime.now());
         featureEntity.setProviderId(feature.getId());
         featureEntity.setUrn(feature.getUrn());
         featureEntity.setVersion(feature.getUrn().getVersion());

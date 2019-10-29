@@ -63,7 +63,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != EVENTS_NUMBER));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER);
 
         assertEquals(EVENTS_NUMBER, this.featureRepo.count());
 
@@ -101,7 +101,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != (EVENTS_NUMBER - 1)));
+        } while (cpt < 100 && featureNumberInDatabase != EVENTS_NUMBER - 1);
 
         assertEquals(EVENTS_NUMBER - 1, this.featureRepo.count());
 
