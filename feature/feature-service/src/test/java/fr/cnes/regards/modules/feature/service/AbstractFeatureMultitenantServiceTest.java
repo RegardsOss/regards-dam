@@ -30,7 +30,8 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -199,8 +200,9 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             featureToAdd = Feature
                     .build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model")
                     .withFiles(file);
-            toAdd = FeatureCreationRequestEvent.build(FeatureMetadata.build("owner", "session", Lists.emptyList()),
-                                                      featureToAdd);
+            toAdd = FeatureCreationRequestEvent
+                    .build(FeatureSessionMetadata.build("owner", "session", PriorityLevel.AVERAGE, Lists.emptyList()),
+                           featureToAdd);
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now());

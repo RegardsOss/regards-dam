@@ -1,7 +1,7 @@
 /**
  *
  */
-package fr.cnes.regards.modules.feature.domain.request;
+package fr.cnes.regards.modules.feature.dto;
 
 /**
  * @author kevin

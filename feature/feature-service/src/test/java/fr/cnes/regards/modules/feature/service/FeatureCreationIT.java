@@ -19,8 +19,9 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
@@ -120,8 +121,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         }
 
         StorageMetadata.build("id ");
-        FeatureCollection collection = FeatureCollection
-                .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
+        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
+                .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
 
         assertEquals(EVENTS_NUMBER, this.featureCreationRequestRepo.count());
@@ -139,8 +140,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         }
 
         StorageMetadata.build("id ");
-        FeatureCollection collection = FeatureCollection
-                .build(FeatureMetadata.build("owner", "session", StorageMetadata.build("id ")), features);
+        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
+                .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
 
         assertEquals(0, infos.getGrantedId().size());

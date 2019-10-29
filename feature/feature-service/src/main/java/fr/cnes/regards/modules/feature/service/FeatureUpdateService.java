@@ -55,9 +55,8 @@ import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
-import fr.cnes.regards.modules.feature.domain.request.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
@@ -156,7 +155,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         // Manage granted request
         FeatureUpdateRequest request = FeatureUpdateRequest.build(item.getRequestId(), item.getRequestDate(),
                                                                   RequestState.GRANTED, null, item.getFeature(),
-                                                                  PriorityLevel.AVERAGE);
+                                                                  item.getMetadata().getPriority());
         request.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         // Publish GRANTED request
@@ -236,7 +235,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     }
 
     @Override
-    public RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureCollection toHandle) {
+    public RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureUpdateCollection toHandle) {
         List<FeatureUpdateRequestEvent> toTreat = new ArrayList<FeatureUpdateRequestEvent>();
         Set<FeatureUniformResourceName> grantedRequestId = new HashSet<FeatureUniformResourceName>();
         Multimap<FeatureUniformResourceName, String> errorbyRequestId = ArrayListMultimap.create();
@@ -245,7 +244,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         // build FeatureUpdateEvent
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureUpdateRequestEvent.build(feature, OffsetDateTime.now().minusSeconds(1)));
+            toTreat.add(FeatureUpdateRequestEvent.build(feature, toHandle.getMetadata(),
+                                                        OffsetDateTime.now().minusSeconds(1)));
         }
 
         // extract from generated FeatureUpdaterequest a map feature id => URN

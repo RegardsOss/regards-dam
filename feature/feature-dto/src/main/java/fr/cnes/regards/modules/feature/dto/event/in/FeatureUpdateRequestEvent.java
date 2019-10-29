@@ -28,6 +28,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 
 /**
  * Request for new feature creation using event driven mechanism
@@ -44,6 +45,10 @@ public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements I
     @NotNull(message = "Feature is required")
     private Feature feature;
 
+    @Valid
+    @NotNull(message = "Metadata are required")
+    private FeatureMetadata metadata;
+
     public Feature getFeature() {
         return feature;
     }
@@ -52,15 +57,25 @@ public class FeatureUpdateRequestEvent extends AbstractRequestEvent implements I
         this.feature = feature;
     }
 
-    public static FeatureUpdateRequestEvent build(Feature feature) {
-        return build(feature, OffsetDateTime.now());
+    public FeatureMetadata getMetadata() {
+        return metadata;
     }
 
-    public static FeatureUpdateRequestEvent build(Feature feature, OffsetDateTime requestDate) {
+    public void setMetadata(FeatureMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public static FeatureUpdateRequestEvent build(Feature feature, FeatureMetadata metadata) {
+        return build(feature, metadata, OffsetDateTime.now());
+    }
+
+    public static FeatureUpdateRequestEvent build(Feature feature, FeatureMetadata metadata,
+            OffsetDateTime requestDate) {
         FeatureUpdateRequestEvent event = new FeatureUpdateRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setRequestDate(requestDate);
+        event.setMetadata(metadata);
         return event;
     }
 }

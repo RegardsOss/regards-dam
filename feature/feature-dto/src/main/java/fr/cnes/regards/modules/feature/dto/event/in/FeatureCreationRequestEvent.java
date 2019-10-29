@@ -28,7 +28,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
@@ -42,13 +42,13 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
 
     @Valid
     @NotNull(message = "Feature metadata is required")
-    private FeatureMetadata metadata;
+    private FeatureSessionMetadata metadata;
 
     @Valid
     @NotNull(message = "Feature is required")
     private Feature feature;
 
-    public static FeatureCreationRequestEvent build(FeatureMetadata metadata, Feature feature) {
+    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
@@ -66,11 +66,11 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         this.feature = feature;
     }
 
-    public FeatureMetadata getMetadata() {
+    public FeatureSessionMetadata getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(FeatureMetadata metadata) {
+    public void setMetadata(FeatureSessionMetadata metadata) {
         this.metadata = metadata;
     }
 }

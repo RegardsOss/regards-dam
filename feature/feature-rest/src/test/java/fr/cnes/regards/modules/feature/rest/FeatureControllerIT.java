@@ -35,11 +35,13 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -77,6 +79,10 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IModelAttrAssocClient modelAttrAssocClientMock;
+
+    private static final String FEATURE_CREATION_REQUEST_ERROR = "Something goes wrong during FeatureCreationRequest creation";
+
+    private static final String FEATURE_UPDATE_REQUEST_ERROR = "Something goes wrong during FeatureUpdateRequest creation";
 
     /**
      * Mock model client importing model specified by its filename
@@ -118,23 +124,18 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         }
     }
 
-    /**
-     *
-     */
-    private static final String FEATURE_CREATION_REQUEST_ERROR = "Something goes wrong during FeatureCreationRequest creation";
-
     @Test
     public void testCreateValidFeatureCreationRequest() throws Exception {
 
         Feature featureToAdd = initValidFeature();
-        FeatureCollection collection = new FeatureCollection();
+        FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(featureToAdd);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
-        collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.AVERAGE, metadata));
 
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
@@ -156,12 +157,12 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         featureToAdd.setUrn(null);
         featureToAdd.setModel("model");
 
-        FeatureCollection collection = new FeatureCollection();
+        FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(featureToAdd);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.AVERAGE, metadata));
         MapBindingResult errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
         errors.reject("error code");
         // we will mock validation plugin and consider the feature is unvalid
@@ -176,14 +177,14 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testCreateValidFeatureUpdateRequest() throws Exception {
         Feature feature = initValidFeature();
-        FeatureCollection collection = new FeatureCollection();
+        FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(feature);
         feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "tenant",
                                                         UUID.randomUUID(), 1));
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.AVERAGE, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -193,7 +194,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
 
         performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
-                            FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
+                            FEATURE_UPDATE_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
     }
 
     private Feature initValidFeature() {
@@ -224,12 +225,12 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         feature.setId("id");
         feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "tenant",
                                                         UUID.randomUUID(), 1));
-        FeatureCollection collection = new FeatureCollection();
+        FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(feature);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build("me", "session", metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.AVERAGE, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -247,20 +248,23 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     private void documentFeatureCollectionRequestBody(RequestBuilderCustomizer requestBuilderCustomizer,
-            boolean setUnr) {
-        ConstrainedFields fields = new ConstrainedFields(FeatureCollection.class);
+            boolean isUpdate) {
+        ConstrainedFields fields = new ConstrainedFields(FeatureUpdateCollection.class);
 
         List<FieldDescriptor> lfd = new ArrayList<FieldDescriptor>();
-        lfd.add(fields.withPath("metadata.session", "The session name"));
-        lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
+
         lfd.add(fields.withPath("metadata.storages", "Target storages"));
         lfd.add(fields.withPath("metadata.storages[].pluginBusinessId", "Storage identifier"));
         lfd.add(fields.withPath("metadata.storages[].targetTypes",
                                 "List of data object types accepted by this storage location (when storing AIPs)"));
         lfd.add(fields.withPath("features[].entityType", "Entity Type"));
-        if (setUnr) {
+        // in case of update we will set the urn
+        if (isUpdate) {
             lfd.add(fields.withPath("features[].urn",
                                     "Unique feature identifer based on provider identifier with versionning"));
+        } else { // in case of creation we create session metadata
+            lfd.add(fields.withPath("metadata.session", "The session name"));
+            lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
         }
         lfd.add(fields.withPath("features[].model", "Model"));
         lfd.add(fields.withPath("features[].id", "Technical id"));
