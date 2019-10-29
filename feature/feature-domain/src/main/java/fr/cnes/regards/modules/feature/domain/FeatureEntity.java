@@ -29,6 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -40,14 +41,16 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
- * @author Marc SORDI
+ * {@link Feature} as database entity
  *
+ * @author Marc SORDI
  */
 @Entity
 @Table(name = "t_feature",
         indexes = { @Index(name = "idx_feature_last_update", columnList = "last_update"),
                 @Index(name = "idx_feature_urn", columnList = "urn"),
-                @Index(name = "idx_feature_session", columnList = "session_owner,session_name"), })
+                @Index(name = "idx_feature_session", columnList = "session_owner,session_name") },
+        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_urn", columnNames = { "urn" }) })
 public class FeatureEntity {
 
     @Id

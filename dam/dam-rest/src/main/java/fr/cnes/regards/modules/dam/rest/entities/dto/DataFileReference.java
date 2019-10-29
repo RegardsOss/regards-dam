@@ -18,9 +18,9 @@
  */
 package fr.cnes.regards.modules.dam.rest.entities.dto;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-import javax.validation.constraints.NotBlank;
 import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -56,12 +56,12 @@ public class DataFileReference {
     /**
      * Required width for image file
      */
-    private Integer imageWidth;
+    private Double imageWidth;
 
     /**
      * Required height for image file
      */
-    private Integer imageHeight;
+    private Double imageHeight;
 
     public String getUri() {
         return uri;
@@ -79,19 +79,19 @@ public class DataFileReference {
         this.mimeType = mimeType;
     }
 
-    public Integer getImageWidth() {
+    public Double getImageWidth() {
         return imageWidth;
     }
 
-    public void setImageWidth(Integer imageWidth) {
+    public void setImageWidth(Double imageWidth) {
         this.imageWidth = imageWidth;
     }
 
-    public Integer getImageHeight() {
+    public Double getImageHeight() {
         return imageHeight;
     }
 
-    public void setImageHeight(Integer imageHeight) {
+    public void setImageHeight(Double imageHeight) {
         this.imageHeight = imageHeight;
     }
 

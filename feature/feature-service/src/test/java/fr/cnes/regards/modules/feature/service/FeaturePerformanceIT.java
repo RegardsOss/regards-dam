@@ -52,10 +52,9 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
 @ActiveProfiles(value = { "testAmqp" })
 public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceIT.class);
 
-    private static final Integer NB_FEATURES = 1000;
+    private static final Integer NB_FEATURES = 30;
 
     @Autowired
     private IPublisher publisher;
