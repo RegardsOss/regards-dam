@@ -75,10 +75,10 @@ public class FeatureUpdateRequest extends AbstractRequest {
     private Feature feature;
 
     public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature) {
+            Set<String> errors, Feature feature, PriorityLevel priority) {
         Assert.notNull(feature, "Feature is required");
         FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.with(requestId, requestDate, state, errors);
+        fcr.with(requestId, requestDate, state, priority, errors);
         fcr.setUrn(feature.getUrn());
         fcr.setFeature(feature);
         return fcr;

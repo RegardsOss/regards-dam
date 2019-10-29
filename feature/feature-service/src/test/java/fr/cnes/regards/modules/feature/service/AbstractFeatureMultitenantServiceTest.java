@@ -150,7 +150,9 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
      * @param filename model filename found using {@link Class#getResourceAsStream(String)}
      * @return mocked model name
      */
-    protected String mockModelClient(String filename) {
+    public String mockModelClient(String filename, IComputationPluginService cps,
+            MultitenantFlattenedAttributeAdapterFactory factory, String tenant,
+            IModelAttrAssocClient modelAttrAssocClientMock) {
 
         try (InputStream input = this.getClass().getResourceAsStream(filename)) {
             // Import model
@@ -169,7 +171,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             }
 
             // Property factory registration
-            factory.registerAttributes(getDefaultTenant(), atts);
+            factory.registerAttributes(tenant, atts);
 
             // Mock client
             Mockito.when(modelAttrAssocClientMock.getModelAttrAssocs(modelName))
@@ -204,6 +206,18 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             toAdd.setRequestDate(OffsetDateTime.now());
             events.add(toAdd);
         }
+    }
+
+    public IComputationPluginService getCps() {
+        return cps;
+    }
+
+    public IModelAttrAssocClient getModelAttrAssocClientMock() {
+        return modelAttrAssocClientMock;
+    }
+
+    public MultitenantFlattenedAttributeAdapterFactory getFactory() {
+        return factory;
     }
 
 }

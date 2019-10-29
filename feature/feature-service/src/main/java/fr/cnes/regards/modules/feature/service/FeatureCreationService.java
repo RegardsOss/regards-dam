@@ -59,6 +59,7 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
@@ -74,7 +75,6 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
-import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.storagelight.client.IStorageClient;
 import fr.cnes.regards.modules.storagelight.domain.dto.request.FileReferenceRequestDTO;
@@ -145,7 +145,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
                 .findByStep(FeatureRequestStep.LOCAL_DELAYED,
-                            PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))));
+                            PageRequest.of(0, properties.getMaxBulkSize(),
+                                           Sort.by(Order.desc("registrationDate"), Order.desc("priority"))));
 
         if (page.hasContent()) {
             for (FeatureCreationRequest request : page) {
@@ -164,8 +165,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
-                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+            // the job priority will be set according the priority of the first request to schedule
+            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(), jobParameters,
+                    authResolver.getUser(), FeatureCreationJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
     }
@@ -208,9 +210,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         FeatureMetadataEntity metadata = FeatureMetadataEntity.build(item.getMetadata().getSession(),
                                                                      item.getMetadata().getSessionOwner(),
                                                                      item.getMetadata().getStorages());
-        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestDate(),
-                                                                      RequestState.GRANTED, null, item.getFeature(),
-                                                                      metadata, FeatureRequestStep.LOCAL_DELAYED);
+        FeatureCreationRequest request = FeatureCreationRequest
+                .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
+                       metadata, FeatureRequestStep.LOCAL_DELAYED, PriorityLevel.AVERAGE);
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,

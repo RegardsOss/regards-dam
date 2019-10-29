@@ -88,10 +88,11 @@ public class FeatureCreationRequest extends AbstractRequest {
     }
 
     public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step) {
+            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
+            PriorityLevel priority) {
         Assert.notNull(feature, "Feature is required");
         FeatureCreationRequest fcr = new FeatureCreationRequest();
-        fcr.with(requestId, requestDate, state, errors);
+        fcr.with(requestId, requestDate, state, priority, errors);
         fcr.setFeature(feature);
         fcr.setMetadata(metadata);
         fcr.setStep(step);

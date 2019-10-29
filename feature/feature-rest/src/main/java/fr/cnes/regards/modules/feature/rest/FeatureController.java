@@ -29,8 +29,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.cnes.regards.framework.geojson.GeoJsonMediaType;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
@@ -67,7 +69,7 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
      * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<Resource<RequestInfo<?>>> createFeatures(@Valid @RequestBody FeatureCollection toHandle) {
 
@@ -83,7 +85,7 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
      * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    @RequestMapping(method = RequestMethod.PATCH)
+    @RequestMapping(method = RequestMethod.PATCH, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<Resource<RequestInfo<?>>> updateFeatures(@Valid @RequestBody FeatureCollection toHandle) {
 
@@ -96,6 +98,8 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
     @Override
     public Resource<RequestInfo<?>> toResource(RequestInfo<?> element, Object... extras) {
         Resource<RequestInfo<?>> resource = resourceService.toResource(element);
+        resourceService.addLink(resource, this.getClass(), "updateFeatures", LinkRels.UPDATE);
+        resourceService.addLink(resource, this.getClass(), "updateFeatures", LinkRels.CREATE);
         return resource;
     }
 }

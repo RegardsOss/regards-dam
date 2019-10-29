@@ -67,7 +67,8 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
 
         // Register creation requests
         FeatureMetadata metadata = FeatureMetadata.build("sessionOwner", "session", Lists.emptyList());
-        String modelName = mockModelClient("feature_mutation_model.xml");
+        String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
+                                           this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
         Thread.sleep(5_000);
 
