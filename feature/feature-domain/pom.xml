@@ -71,4 +71,13 @@
 			<artifactId>jpa-data-regards</artifactId>
 		</dependency>
 	</dependencies>
+	<!-- <build>
+		<plugins>
+			Add lazy loading for jsonb
+			<plugin>
+                <groupId>org.hibernate.orm.tooling</groupId> 
+                <artifactId>hibernate-enhance-maven-plugin</artifactId> 
+    		</plugin>
+		</plugins>
+	</build> -->
 </project>

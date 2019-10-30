@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
@@ -79,11 +80,11 @@ public class FeatureEntity {
     private OffsetDateTime lastUpdate;
 
     @Column(name = "provider_id", nullable = false)
-    @NotNull(message = "Provider must be setted")
+    @NotBlank(message = "Provider id is required")
     private String providerId;
 
     @Column(name = "version", nullable = false)
-    @NotNull()
+    @NotNull
     private Integer version;
 
     public static FeatureEntity build(String sessionOwner, String session, Feature feature) {

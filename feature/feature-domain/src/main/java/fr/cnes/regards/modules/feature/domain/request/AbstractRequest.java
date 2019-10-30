@@ -59,6 +59,10 @@ public abstract class AbstractRequest {
 
     protected static final String COLUMN_STATE = "state";
 
+    protected static final String COLUMN_STEP = "step";
+
+    protected static final String COLUMN_PRIORITY = "priority";
+
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
 
@@ -98,12 +102,12 @@ public abstract class AbstractRequest {
      */
     @NotNull(message = "Feature request step is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "step", length = 50, nullable = false)
+    @Column(name = COLUMN_STEP, length = 50, nullable = false)
     private FeatureRequestStep step;
 
     @NotNull(message = "Priority of the request")
     @Enumerated(EnumType.ORDINAL)
-    @Column(name = "priority", length = 50, nullable = false)
+    @Column(name = COLUMN_PRIORITY, length = 50, nullable = false)
     private PriorityLevel priority;
 
     @SuppressWarnings("unchecked")

@@ -37,8 +37,10 @@ import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestLightRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequestLight;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
@@ -54,6 +56,9 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
+
+    @Autowired
+    protected IFeatureCreationRequestLightRepository featureCreationRequestLightRepo;
 
     @Autowired
     private IFeatureCreationService featureService;
@@ -88,7 +93,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != properties.getMaxBulkSize()));
+        } while (cpt < 100 && featureNumberInDatabase != properties.getMaxBulkSize());
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureRepo.count());
 
@@ -126,7 +131,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != (properties.getMaxBulkSize() - 1)));
+        } while (cpt < 100 && featureNumberInDatabase != properties.getMaxBulkSize() - 1);
 
         assertEquals(properties.getMaxBulkSize() - 1, this.featureRepo.count());
 
@@ -185,17 +190,17 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2));
+        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2);
 
         // we will set all priority to low for the (properties.getMaxBulkSize() / 2) last event
-        for (int i = properties.getMaxBulkSize(); i < (properties.getMaxBulkSize()
-                + (properties.getMaxBulkSize() / 2)); i++) {
+        for (int i = properties.getMaxBulkSize(); i < properties.getMaxBulkSize()
+                + properties.getMaxBulkSize() / 2; i++) {
             events.get(i).getMetadata().setPriority(PriorityLevel.HIGH);
         }
 
         this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
 
-        assertEquals((properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2)),
+        assertEquals(properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2,
                      this.featureCreationRequestRepo.count());
 
         featureService.scheduleRequests();
@@ -206,7 +211,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != properties.getMaxBulkSize()));
+        } while (cpt < 100 && featureNumberInDatabase != properties.getMaxBulkSize());
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureRepo.count());
 
@@ -217,11 +222,11 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         // check that half of the FeatureCreationRequest with step to LOCAL_SCHEDULED
         // have their priority to HIGH and half to AVERAGE
-        Page<FeatureCreationRequest> scheduled = this.featureCreationRequestRepo
+        Page<FeatureCreationRequestLight> scheduled = this.featureCreationRequestLightRepo
                 .findByStep(FeatureRequestStep.LOCAL_SCHEDULED, PageRequest.of(0, properties.getMaxBulkSize()));
         int highPriorityNumber = 0;
         int otherPriorityNumber = 0;
-        for (FeatureCreationRequest request : scheduled) {
+        for (FeatureCreationRequestLight request : scheduled) {
             if (request.getPriority().equals(PriorityLevel.HIGH)) {
                 highPriorityNumber++;
             } else {

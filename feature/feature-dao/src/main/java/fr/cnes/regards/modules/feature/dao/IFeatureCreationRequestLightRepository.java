@@ -18,27 +18,25 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
-import java.util.List;
-import java.util.Set;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequestLight;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 
-public interface IFeatureCreationRequestRepository extends JpaRepository<FeatureCreationRequest, Long> {
-
-    public List<FeatureCreationRequest> findByGroupId(String groupId);
+/**
+ * @author Marc SORDI
+ *
+ */
+public interface IFeatureCreationRequestLightRepository extends JpaRepository<FeatureCreationRequestLight, Long> {
 
     /**
-     * Update {@link FeatureCreationRequest} state
-     * @param state new {@link RequestState}
-     * @param ids id of {@link FeatureCreationRequest} to update
+     * Get a page {@link FeatureRequestStep}  at the {@link FeatureRequestStep} in parameter
+     * @param step
+     * @param page
+     * @return a {@link Page} of {@link FeatureCreationRequest}
      */
-    @Modifying
-    @Query("update FeatureCreationRequest fcr set fcr.state = :newState where fcr.id in :ids ")
-    public void updateState(@Param("newState") RequestState state, @Param("ids") Set<Long> ids);
+    public Page<FeatureCreationRequestLight> findByStep(FeatureRequestStep step, Pageable page);
 }

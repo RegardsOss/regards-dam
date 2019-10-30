@@ -22,13 +22,8 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -49,24 +44,31 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 @Entity
 @Table(name = "t_feature_creation_request",
         indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE) },
+                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE),
+                @Index(name = "idx_feature_step_registration_priority",
+                        columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
+                                + AbstractRequest.COLUMN_PRIORITY) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-public class FeatureCreationRequest extends AbstractRequest {
-
-    @Id
-    @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_creation_request")
-    @GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
-    private Long id;
+public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
 
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
     @Type(type = "jsonb")
     private Feature feature;
 
-    @Embedded
-    private FeatureMetadataEntity metadata;
+    public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
+            PriorityLevel priority) {
+        Assert.notNull(feature, "Feature is required");
+        FeatureCreationRequest request = new FeatureCreationRequest();
+        request.with(requestId, requestDate, state, priority, errors);
+        request.setProviderId(feature.getId());
+        request.setFeature(feature);
+        request.setMetadata(metadata);
+        request.setStep(step);
+        return request;
+    }
 
     public Feature getFeature() {
         return this.feature;
@@ -76,27 +78,4 @@ public class FeatureCreationRequest extends AbstractRequest {
         this.feature = feature;
     }
 
-    public Long getId() {
-        return this.id;
-    }
-
-    public FeatureMetadataEntity getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(FeatureMetadataEntity metadata) {
-        this.metadata = metadata;
-    }
-
-    public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
-            PriorityLevel priority) {
-        Assert.notNull(feature, "Feature is required");
-        FeatureCreationRequest fcr = new FeatureCreationRequest();
-        fcr.with(requestId, requestDate, state, priority, errors);
-        fcr.setFeature(feature);
-        fcr.setMetadata(metadata);
-        fcr.setStep(step);
-        return fcr;
-    }
 }

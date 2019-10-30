@@ -52,6 +52,8 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
 
     private static final String ID_FIELD = "id";
 
+    private static final Integer ID_LENGTH = 100;
+
     /**
      * Standard validator based on annotation
      */
@@ -76,6 +78,11 @@ public class FeatureValidationService extends AbstractValidationService<Feature>
 
         if (feature.getId() == null) {
             errors.rejectValue(ID_FIELD, "feature.id.null.error.message", "Feature id mustn't be null");
+        } else {
+            if (feature.getId().length() > ID_LENGTH) {
+                errors.rejectValue(ID_FIELD, "feature.id.length.error.message",
+                                   String.format("Feature id must not exceed %s characters", ID_LENGTH));
+            }
         }
 
         // Programmatic validation according to the context

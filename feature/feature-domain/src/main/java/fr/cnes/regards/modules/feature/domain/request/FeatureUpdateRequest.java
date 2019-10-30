@@ -31,6 +31,7 @@ import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotBlank;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -52,7 +53,10 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 @Table(name = "t_feature_update_request",
         indexes = { @Index(name = "idx_feature_update_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
                 @Index(name = "idx_feature_update_request_state", columnList = AbstractRequest.COLUMN_STATE),
-                @Index(name = "idx_feature_update_request_urn", columnList = "urn") },
+                @Index(name = "idx_feature_update_request_urn", columnList = "urn"),
+                @Index(name = "idx_feature_update_step_registration_priority",
+                        columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
+                                + AbstractRequest.COLUMN_PRIORITY) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_update_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
@@ -63,6 +67,10 @@ public class FeatureUpdateRequest extends AbstractRequest {
             sequenceName = "seq_feature_update_request")
     @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Column(name = "provider_id", nullable = false)
+    @NotBlank(message = "Provider id is required")
+    private String providerId;
 
     /**
      * Information Package ID for REST request
@@ -78,11 +86,12 @@ public class FeatureUpdateRequest extends AbstractRequest {
     public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature, PriorityLevel priority) {
         Assert.notNull(feature, "Feature is required");
-        FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.with(requestId, requestDate, state, priority, errors);
-        fcr.setUrn(feature.getUrn());
-        fcr.setFeature(feature);
-        return fcr;
+        FeatureUpdateRequest request = new FeatureUpdateRequest();
+        request.with(requestId, requestDate, state, priority, errors);
+        request.setProviderId(feature.getId());
+        request.setUrn(feature.getUrn());
+        request.setFeature(feature);
+        return request;
     }
 
     public Long getId() {
@@ -103,5 +112,13 @@ public class FeatureUpdateRequest extends AbstractRequest {
 
     public void setFeature(Feature feature) {
         this.feature = feature;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 }
