@@ -146,7 +146,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
                 .findByStep(FeatureRequestStep.LOCAL_DELAYED,
                             PageRequest.of(0, properties.getMaxBulkSize(),
-                                           Sort.by(Order.desc("registrationDate"), Order.desc("priority"))));
+                                           Sort.by(Order.asc("priority"), Order.asc("registrationDate"))));
 
         if (page.hasContent()) {
             for (FeatureCreationRequest request : page) {
@@ -326,7 +326,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // build FeatureCreationEvent
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build((FeatureSessionMetadata) toHandle.getMetadata(), feature));
+            toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
         }
 
         // extract from generated FeatureCreationrequest a map feature id => requestID
