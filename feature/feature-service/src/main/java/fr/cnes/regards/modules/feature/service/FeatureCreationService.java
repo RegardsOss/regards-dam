@@ -155,7 +155,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
                 .findByStep(FeatureRequestStep.LOCAL_DELAYED,
                             PageRequest.of(0, properties.getMaxBulkSize(),
-                                           Sort.by(Order.desc("registrationDate"), Order.desc("priority"))));
+                                           Sort.by(Order.asc("priority"), Order.asc("registrationDate"))));
 
         if (page.hasContent()) {
             LOGGER.debug("------------->>> {} creation requests read in {} ms", page.getSize(),
