@@ -38,6 +38,8 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -71,8 +73,10 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
     @Test
     public void createAndUpdateTest() {
 
-        FeatureMetadata metadata = FeatureMetadata.build("sessionOwner", "session", Lists.emptyList());
-        String modelName = mockModelClient("feature_mutation_model.xml");
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+                                                                       Lists.emptyList());
+        String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
+                                           this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
         // Build feature to create
         String id = String.format("F%05d", 1);
@@ -105,7 +109,8 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
 
         // Register update requests
         List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
-        updateEvents.add(FeatureUpdateRequestEvent.build(updated));
+        updateEvents.add(FeatureUpdateRequestEvent
+                .build(updated, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>())));
         featureUpdateService.registerRequests(updateEvents, new HashSet<FeatureUniformResourceName>(),
                                               ArrayListMultimap.create());
 

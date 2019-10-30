@@ -26,7 +26,7 @@ import javax.validation.Valid;
 import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -49,7 +49,7 @@ public interface IFeatureUpdateService {
      * @param toHandle
      * @return
      */
-    RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureCollection toHandle);
+    RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureUpdateCollection toHandle);
 
     /**
      * Schedule a job to process a batch of requests<br/>

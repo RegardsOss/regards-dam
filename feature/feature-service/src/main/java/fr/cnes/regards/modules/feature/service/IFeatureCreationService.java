@@ -7,8 +7,9 @@ import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
@@ -34,10 +35,10 @@ public interface IFeatureCreationService {
     String publishFeature(Feature toPublish, FeatureMetadata metadata);
 
     /**
-     * Create a list of {@link FeatureCreationRequest} from a list of {@link Feature} stored in a {@link FeatureCollection}
+     * Create a list of {@link FeatureCreationRequest} from a list of {@link Feature} stored in a {@link FeatureCreationCollection}
      * and return a {@link RequestInfo} full of request ids and occured errors
-     * @param toHandle {@link FeatureCollection} it contain all {@link Feature} to handle
+     * @param toHandle {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    RequestInfo<String> registerScheduleProcess(FeatureCollection toHandle);
+    RequestInfo<String> registerScheduleProcess(FeatureCreationCollection toHandle);
 }

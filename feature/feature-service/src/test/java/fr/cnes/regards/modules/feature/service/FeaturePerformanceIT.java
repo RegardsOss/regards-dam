@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.assertj.core.util.Lists;
@@ -34,6 +35,8 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
@@ -65,8 +68,10 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         String format = "F%05d";
 
         // Register creation requests
-        FeatureMetadata metadata = FeatureMetadata.build("sessionOwner", "session", Lists.emptyList());
-        String modelName = mockModelClient("feature_mutation_model.xml");
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+                                                                       Lists.emptyList());
+        String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
+                                           this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
         Thread.sleep(5_000);
 
@@ -95,7 +100,8 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
             feature.addProperty(IProperty.buildObject("file_characterization",
                                                       IProperty.buildBoolean("valid", Boolean.FALSE),
                                                       IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
-            publisher.publish(FeatureUpdateRequestEvent.build(feature, requestDate));
+            publisher.publish(FeatureUpdateRequestEvent
+                    .build(feature, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), requestDate));
         }
 
         // Wait for feature update

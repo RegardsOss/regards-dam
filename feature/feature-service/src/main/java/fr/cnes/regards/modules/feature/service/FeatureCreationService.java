@@ -59,11 +59,12 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
@@ -73,7 +74,6 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
-import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.storagelight.client.IStorageClient;
 import fr.cnes.regards.modules.storagelight.domain.dto.request.FileReferenceRequestDTO;
@@ -144,7 +144,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
                 .findByStep(FeatureRequestStep.LOCAL_DELAYED,
-                            PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.desc("registrationDate"))));
+                            PageRequest.of(0, properties.getMaxBulkSize(),
+                                           Sort.by(Order.desc("registrationDate"), Order.desc("priority"))));
 
         if (page.hasContent()) {
             for (FeatureCreationRequest request : page) {
@@ -163,7 +164,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_CREATION_JOB_PRIORITY.getPriority(),
+            // the job priority will be set according the priority of the first request to schedule
+            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
                     jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
@@ -202,14 +204,13 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             return;
         }
-
+        FeatureSessionMetadata md = item.getMetadata();
         // Manage granted request
-        FeatureMetadataEntity metadata = FeatureMetadataEntity.build(item.getMetadata().getSession(),
-                                                                     item.getMetadata().getSessionOwner(),
+        FeatureMetadataEntity metadata = FeatureMetadataEntity.build(md.getSession(), md.getSessionOwner(),
                                                                      item.getMetadata().getStorages());
-        FeatureCreationRequest request = FeatureCreationRequest.build(item.getRequestId(), item.getRequestDate(),
-                                                                      RequestState.GRANTED, null, item.getFeature(),
-                                                                      metadata, FeatureRequestStep.LOCAL_DELAYED);
+        FeatureCreationRequest request = FeatureCreationRequest
+                .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
+                       metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
@@ -308,13 +309,14 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
     @Override
     public String publishFeature(Feature toPublish, FeatureMetadata metadata) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build(metadata, toPublish);
+        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build((FeatureSessionMetadata) metadata,
+                                                                              toPublish);
         publisher.publish(event);
         return event.getRequestId();
     }
 
     @Override
-    public RequestInfo<String> registerScheduleProcess(FeatureCollection toHandle) {
+    public RequestInfo<String> registerScheduleProcess(FeatureCreationCollection toHandle) {
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
         Set<String> grantedRequestId = new HashSet<String>();
         Multimap<String, String> errorbyRequestId = ArrayListMultimap.create();
@@ -323,7 +325,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // build FeatureCreationEvent
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
+            toTreat.add(FeatureCreationRequestEvent.build((FeatureSessionMetadata) toHandle.getMetadata(), feature));
         }
 
         // extract from generated FeatureCreationrequest a map feature id => requestID

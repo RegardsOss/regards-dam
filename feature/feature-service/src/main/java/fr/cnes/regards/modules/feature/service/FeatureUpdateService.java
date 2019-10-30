@@ -56,14 +56,13 @@ import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureCollection;
+import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
-import fr.cnes.regards.modules.feature.service.job.FeatureJobPriority;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -155,7 +154,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         // Manage granted request
         FeatureUpdateRequest request = FeatureUpdateRequest.build(item.getRequestId(), item.getRequestDate(),
-                                                                  RequestState.GRANTED, null, item.getFeature());
+                                                                  RequestState.GRANTED, null, item.getFeature(),
+                                                                  item.getMetadata().getPriority());
         request.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         // Publish GRANTED request
@@ -189,8 +189,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
                     toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
-            JobInfo jobInfo = new JobInfo(false, FeatureJobPriority.FEATURE_UPDATE_JOB_PRIORITY.getPriority(),
-                    jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
+            // the job priority will be set according the priority of the first request to schedule
+            JobInfo jobInfo = new JobInfo(false, toSchedule.get(0).getPriority().getPriorityLevel(), jobParameters,
+                    authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
         }
     }
@@ -234,7 +235,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     }
 
     @Override
-    public RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureCollection toHandle) {
+    public RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureUpdateCollection toHandle) {
         List<FeatureUpdateRequestEvent> toTreat = new ArrayList<FeatureUpdateRequestEvent>();
         Set<FeatureUniformResourceName> grantedRequestId = new HashSet<FeatureUniformResourceName>();
         Multimap<FeatureUniformResourceName, String> errorbyRequestId = ArrayListMultimap.create();
@@ -243,7 +244,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         // build FeatureUpdateEvent
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureUpdateRequestEvent.build(feature, OffsetDateTime.now()));
+            toTreat.add(FeatureUpdateRequestEvent.build(feature, toHandle.getMetadata(),
+                                                        OffsetDateTime.now().minusSeconds(1)));
         }
 
         // extract from generated FeatureUpdaterequest a map feature id => URN

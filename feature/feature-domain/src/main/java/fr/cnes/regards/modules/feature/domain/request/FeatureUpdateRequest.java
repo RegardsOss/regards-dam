@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
@@ -75,10 +76,10 @@ public class FeatureUpdateRequest extends AbstractRequest {
     private Feature feature;
 
     public static FeatureUpdateRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature) {
+            Set<String> errors, Feature feature, PriorityLevel priority) {
         Assert.notNull(feature, "Feature is required");
         FeatureUpdateRequest fcr = new FeatureUpdateRequest();
-        fcr.with(requestId, requestDate, state, errors);
+        fcr.with(requestId, requestDate, state, priority, errors);
         fcr.setUrn(feature.getUrn());
         fcr.setFeature(feature);
         return fcr;

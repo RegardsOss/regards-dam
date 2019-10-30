@@ -18,14 +18,26 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
+import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 
 /**
  * @author Marc SORDI
@@ -49,5 +61,45 @@ public class FeatureTestConfiguration {
     @Bean
     public IAttributeHelper attributeHelper() {
         return Mockito.mock(IAttributeHelper.class);
+    }
+
+    /**
+     * Mock model client importing model specified by its filename
+     * @param filename model filename found using {@link Class#getResourceAsStream(String)}
+     * @return mocked model name
+     */
+    public static String mockModelClient(String filename, IComputationPluginService cps,
+            MultitenantFlattenedAttributeAdapterFactory factory, String tenant,
+            IModelAttrAssocClient modelAttrAssocClientMock) {
+
+        try (InputStream input = AbstractFeatureMultitenantServiceTest.class.getResourceAsStream(filename)) {
+            // Import model
+            Iterable<ModelAttrAssoc> assocs = XmlImportHelper.importModel(input, cps);
+
+            // Translate to resources and attribute models and extract model name
+            String modelName = null;
+            List<AttributeModel> atts = new ArrayList<>();
+            List<Resource<ModelAttrAssoc>> resources = new ArrayList<>();
+            for (ModelAttrAssoc assoc : assocs) {
+                atts.add(assoc.getAttribute());
+                resources.add(new Resource<ModelAttrAssoc>(assoc));
+                if (modelName == null) {
+                    modelName = assoc.getModel().getName();
+                }
+            }
+
+            // Property factory registration
+            factory.registerAttributes(tenant, atts);
+
+            // Mock client
+            Mockito.when(modelAttrAssocClientMock.getModelAttrAssocs(modelName))
+                    .thenReturn(ResponseEntity.ok(resources));
+
+            return modelName;
+        } catch (IOException | ImportException e) {
+            String errorMessage = "Cannot import model";
+            //            LOGGER.debug(errorMessage);
+            throw new AssertionError(errorMessage);
+        }
     }
 }

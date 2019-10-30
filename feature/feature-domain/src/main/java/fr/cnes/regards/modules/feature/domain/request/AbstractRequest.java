@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
@@ -100,17 +101,24 @@ public abstract class AbstractRequest {
     @Column(name = "step", length = 50, nullable = false)
     private FeatureRequestStep step;
 
+    @NotNull(message = "Priority of the request")
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "priority", length = 50, nullable = false)
+    private PriorityLevel priority;
+
     @SuppressWarnings("unchecked")
     protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors) {
+            PriorityLevel priority, Set<String> errors) {
         Assert.notNull(requestId, "Request id is required");
         Assert.notNull(requestDate, "Request date is required");
         Assert.notNull(state, "Request state is required");
+        Assert.notNull(priority, "Request priority is required");
         this.requestId = requestId;
         this.requestDate = requestDate;
         this.registrationDate = OffsetDateTime.now();
         this.state = state;
         this.errors = errors;
+        this.priority = priority;
         return (T) this;
     }
 
@@ -184,4 +192,13 @@ public abstract class AbstractRequest {
     public void setStep(FeatureRequestStep step) {
         this.step = step;
     }
+
+    public PriorityLevel getPriority() {
+        return priority;
+    }
+
+    public void setPriority(PriorityLevel priority) {
+        this.priority = priority;
+    }
+
 }

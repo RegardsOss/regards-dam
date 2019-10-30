@@ -58,7 +58,8 @@ public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest
     public void validationTest() throws ModuleException {
 
         // Set model client mock from model
-        String modelName = mockModelClient("feature_model_01.xml");
+        String modelName = mockModelClient("feature_model_01.xml", this.getCps(), this.getFactory(),
+                                           this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
         // Init feature without files and properties
         Feature feature = Feature.build("id01", null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,

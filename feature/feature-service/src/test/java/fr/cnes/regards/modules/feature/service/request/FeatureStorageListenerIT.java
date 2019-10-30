@@ -25,6 +25,7 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -91,7 +92,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
                                                                       "peps", UUID.randomUUID(), 1),
                                      IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
                        FeatureMetadataEntity.build("owner", "session", Lists.emptyList()),
-                       FeatureRequestStep.LOCAL_SCHEDULED);
+                       FeatureRequestStep.LOCAL_SCHEDULED, PriorityLevel.AVERAGE);
         fcr.setGroupId(info.getGroupId());
 
         FeatureEntity feature = FeatureEntity
