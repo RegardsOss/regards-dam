@@ -88,7 +88,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             } else {
                 entityCount = featureRepo.count();
             }
-            LOGGER.debug("{} feature(s) created in database", entityCount);
+            LOGGER.trace("{} feature(s) created in database", entityCount);
             if (entityCount == expected) {
                 break;
             }
@@ -129,7 +129,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         long entityCount;
         do {
             entityCount = repo.count();
-            LOGGER.debug("{} request(s) remain(s) in database", entityCount);
+            LOGGER.trace("{} request(s) remain(s) in database", entityCount);
             if (entityCount == expected) {
                 break;
             }
@@ -144,6 +144,10 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
                 Assert.fail("Timeout");
             }
         } while (true);
+    }
+
+    public String mockModelClient(String filename) {
+        return mockModelClient(filename, cps, factory, getDefaultTenant(), modelAttrAssocClientMock);
     }
 
     /**

@@ -34,8 +34,6 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 public interface IFeatureCreationRequestRepository extends JpaRepository<FeatureCreationRequest, Long> {
 
-    public void deleteByIdIn(List<Long> ids);
-
     public List<FeatureCreationRequest> findByGroupId(String groupId);
 
     /**

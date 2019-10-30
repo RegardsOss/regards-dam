@@ -88,7 +88,6 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.FileStorageReques
 @MultitenantTransactional
 public class FeatureCreationService extends AbstractFeatureService implements IFeatureCreationService {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationService.class);
 
     @Autowired
@@ -125,42 +124,61 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     public List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events,
             Set<String> grantedRequestId, Multimap<String, String> errorByRequestId) {
 
+        long registrationStart = System.currentTimeMillis();
+
         List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
+
         events.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests, errorByRequestId));
+        LOGGER.debug("------------->>> {} creation requests prepared in {} ms", grantedRequests.size(),
+                     System.currentTimeMillis() - registrationStart);
 
         grantedRequests.stream().forEach(request -> grantedRequestId.add(request.getRequestId()));
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
-        return featureCreationRequestRepo.saveAll(grantedRequests);
+        featureCreationRequestRepo.saveAll(grantedRequests);
+        LOGGER.debug("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
+                     System.currentTimeMillis() - registrationStart);
+        return grantedRequests;
     }
 
     @Override
     public void scheduleRequests() {
+
+        long scheduleStart = System.currentTimeMillis();
 
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
         Set<String> featureIdsScheduled = new HashSet<>();
         List<FeatureCreationRequest> requestsToSchedule = new ArrayList<FeatureCreationRequest>();
 
+        long pageStart = System.currentTimeMillis();
         Page<FeatureCreationRequest> page = this.featureCreationRequestRepo
                 .findByStep(FeatureRequestStep.LOCAL_DELAYED,
                             PageRequest.of(0, properties.getMaxBulkSize(),
                                            Sort.by(Order.desc("registrationDate"), Order.desc("priority"))));
 
         if (page.hasContent()) {
+            LOGGER.debug("------------->>> {} creation requests read in {} ms", page.getSize(),
+                         System.currentTimeMillis() - pageStart);
             for (FeatureCreationRequest request : page) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getFeature().getId())) {
                     requestsToSchedule.add(request);
                     request.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+                    request.setState(RequestState.GRANTED);
                     featureIdsScheduled.add(request.getFeature().getId());
                 }
             }
 
             // update FeatureCreationRequest scheduled state
-            this.featureCreationRequestRepo
-                    .updateState(RequestState.GRANTED,
-                                 requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toSet()));
+            long updateStart = System.currentTimeMillis();
+            //            this.featureCreationRequestRepo
+            //                    .updateState(RequestState.GRANTED,
+            //                                 requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toSet()));
+            this.featureCreationRequestRepo.saveAll(requestsToSchedule);
+            LOGGER.debug("------------->>> {} creation requests GRANTED updated in {} ms", requestsToSchedule.size(),
+                         System.currentTimeMillis() - updateStart);
+
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
 
@@ -168,6 +186,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
                     jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
+
+            LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
+                         System.currentTimeMillis() - scheduleStart);
         }
     }
 
@@ -183,6 +204,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // Validate event
         Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
+
         validator.validate(item, errors);
         if (errors.hasErrors()) {
             LOGGER.debug("Error during founded FeatureCreationRequestEvent validation {}", errors.toString());
@@ -196,6 +218,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // Validate feature according to the data model
         errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
+
         if (errors.hasErrors()) {
             LOGGER.debug("Error during Feature validation {}", errors.toString());
             errorByRequestId.putAll(item.getRequestId(), ErrorTranslator.getErrors(errors));
@@ -222,19 +245,38 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     @Override
     public void processRequests(List<FeatureCreationRequest> requests) {
 
-        // Register feature to insert
-        this.featureRepo
-                .saveAll(requests.stream().map(feature -> initFeatureEntity(feature)).collect(Collectors.toList()));
-        // update fcr with feature setted for each of them + publish files to storage
-        this.featureCreationRequestRepo.saveAll(requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
-                .map(fcr -> publishFiles(fcr)).collect(Collectors.toList()));
-        // delete fcr without files
-        this.featureCreationRequestRepo.deleteByIdIn(requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null
-                        || fcr.getFeature().getFiles() != null && fcr.getFeature().getFiles().isEmpty())
-                .map(fcr -> fcr.getId()).collect(Collectors.toList()));
+        long processStart = System.currentTimeMillis();
+        long subProcessStart;
+
+        // Register features
+        subProcessStart = System.currentTimeMillis();
+        List<FeatureEntity> entities = requests.stream().map(feature -> initFeatureEntity(feature))
+                .collect(Collectors.toList());
+        this.featureRepo.saveAll(entities);
+        LOGGER.debug("------------->>> {} feature saved in {} ms", entities.size(),
+                     System.currentTimeMillis() - subProcessStart);
+
+        // Update requests with feature setted for each of them + publish files to storage
+        subProcessStart = System.currentTimeMillis();
+        List<FeatureCreationRequest> requestsWithFiles = requests.stream()
+                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
+                .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
+        this.featureCreationRequestRepo.saveAll(requestsWithFiles);
+        LOGGER.debug("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
+                     System.currentTimeMillis() - subProcessStart);
+
+        // Delete requests without files
+        subProcessStart = System.currentTimeMillis();
+        List<FeatureCreationRequest> requestsWithoutFiles = requests.stream()
+                .filter(fcr -> fcr.getFeature().getFiles() == null || fcr.getFeature().getFiles().isEmpty())
+                .collect(Collectors.toList());
+        this.featureCreationRequestRepo.deleteInBatch(requestsWithoutFiles);
+        LOGGER.debug("------------->>> {} creation requests without files deleted in {} ms",
+                     requestsWithoutFiles.size(), System.currentTimeMillis() - subProcessStart);
         // FIXME publish successful requests!
+
+        LOGGER.debug("------------->>> {} creation requests processed in {} ms", requests.size(),
+                     System.currentTimeMillis() - processStart);
     }
 
     /**
@@ -325,7 +367,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // build FeatureCreationEvent
         for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build((FeatureSessionMetadata) toHandle.getMetadata(), feature));
+            toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
         }
 
         // extract from generated FeatureCreationrequest a map feature id => requestID
