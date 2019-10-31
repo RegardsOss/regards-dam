@@ -76,13 +76,14 @@ public interface ISearchService {
      *            class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
+     * @param facetsMap facets, on data, to be calculated
      * @param <S> entity class on which request is done
      * @param <R> Joined entity class ("result" type)
      * @return a page of joined entities
      */
     default <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
-            ICriterion criterion) {
-        return search(searchKey, pageRequest, criterion, null);
+            ICriterion criterion, Map<String, FacetType> facetsMap) {
+        return search(searchKey, pageRequest, criterion, null, facetsMap);
     }
 
     /**
@@ -92,12 +93,13 @@ public interface ISearchService {
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
      * @param searchResultFilter a result filter to be used before result pagination. Can be null.
+     * @param facetsMap facets, on data, to be calculated
      * @param <S> entity class on which request is done
      * @param <R> Joined entity class ("result" type)
      * @return a page of joined entities
      */
     <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
-            ICriterion criterion, Predicate<R> searchResultFilter);
+            ICriterion criterion, Predicate<R> searchResultFilter, Map<String, FacetType> facetsMap);
 
     /**
      * Searching specified page of elements from index giving page size
@@ -116,8 +118,8 @@ public interface ISearchService {
     }
 
     default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
-            ICriterion criterion) {
-        return this.search(searchKey, PageRequest.of(0, pageSize), criterion);
+            ICriterion criterion, Map<String, FacetType> facetsMap) {
+        return this.search(searchKey, PageRequest.of(0, pageSize), criterion, facetsMap);
     }
 
     default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, int pageSize, ICriterion criterion) {

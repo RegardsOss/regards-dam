@@ -24,11 +24,13 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +43,7 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 /**
@@ -347,38 +350,41 @@ public interface IEsRepository {
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pageSize page size
      * @param crit search criterion
-     * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the results documents
+     * @param sourceAttribute if the search is on a document but the result shoult be an inner property of the results documents
      * @param <T> inner result property type
      * @return first result page containing max page size documents
      */
     default <T extends IIndexable> Page<T> search(final SearchKey<?, T> searchKey, final int pageSize,
-            final ICriterion crit, final String pSourceAttribute) {
-        return this.search(searchKey, pageSize, crit, pSourceAttribute);
+            final ICriterion crit, final String sourceAttribute) {
+        return this.search(searchKey, pageSize, crit, sourceAttribute);
     }
 
     /**
-     * Searching first page of elements from index giving page size and facet map. The results are reduced to given inner property that's why no sorting can be done.
-     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
-     * @param crit search criterion
-     * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the results documents
-     * @param <T> class of inner sourceAttribute
+     * Same as {@link #search(SearchKey, ICriterion, String, Function)} without transformation
      * @return all results (ordered is garanteed to be always the same)
      */
     <T> List<T> search(SearchKey<?, T> searchKey, ICriterion crit, String pSourceAttribute);
 
     /**
-     * Same as {@link #search(SearchKey, ICriterion, String)} providing a transform function to apply on all results
-     * @param <T> class of inner sourceAttribute
-     * @param <U> result class of transform function
+     * Same as {@link #search(SearchKey, ICriterion, String, Predicate, Function, Map)} without intermediate filtering and with no facets
      */
     <T, U> List<U> search(SearchKey<?, T> searchKey, ICriterion crit, String pSourceAttribute,
             Function<T, U> transformFct);
 
     /**
-     * Same as {@link #search(SearchKey, ICriterion, String, Function)} with an intermediate filter predicate to be applied before the transform function
+     * Searching first page of elements from index giving page size and facet map. The results are reduced to given inner property that's why no sorting can be done.
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
+     * @param criterion search criterion
+     * @param sourceAttribute if the search is on a document but the result should be an inner property of the results documents
+     *                        @param filterPredicate predicate to be applied on result to filter further the results
+     *                        @param transformFct transform function to apply on all results
+     *                        @param facetsMap facets on the inner type wanted
+     * @param <T> class of inner sourceAttribute
+     * @param <U> result class of transform function
+     * @return all results (ordered is guaranteed to be always the same) and facets (order not guaranteed)
      */
-    <T, U> List<U> search(SearchKey<?, T[]> searchKey, ICriterion criterion, String sourceAttribute,
-            Predicate<T> filterPredicate, Function<T, U> transformFct);
+    <T, U> Tuple<List<U>, Set<IFacet<?>>> search(SearchKey<?, T[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<T> filterPredicate, Function<T, U> transformFct, Map<String, FacetType> facetsMap);
 
     /**
      * Count result

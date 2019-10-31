@@ -395,12 +395,12 @@ public class IndexerServiceDataSourceIT {
                 .onSingleEntityReturningJoinEntity(EntityType.DATA, EntityType.DATASET);
         dsSearchKey.setSearchIndex(tenant);
         // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
-        Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
+        Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
@@ -411,12 +411,12 @@ public class IndexerServiceDataSourceIT {
         final JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(EntityType.DATASET);
         dsSearchKey2.setSearchIndex(tenant);
-        dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
+        dsPage = searchService.search(dsSearchKey, 1, ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());

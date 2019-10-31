@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,6 +54,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 @Service
@@ -107,7 +110,7 @@ public class SearchService implements ISearchService {
 
     @Override
     public <S, T extends IIndexable> FacetPage<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
-            ICriterion criterion, Predicate<T> searchResultFilter) {
+            ICriterion criterion, Predicate<T> searchResultFilter, Map<String, FacetType> facetsMap) {
         addProjectInfos(searchKey);
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchTypeMap(), String[].class);
@@ -119,7 +122,9 @@ public class SearchService implements ISearchService {
         Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
                      tag, searchKey.getResultClass());
-        List<T> objects = repository.search(tagSearchKey, criterion, "tags", askedTypePredicate, toAskedEntityFct);
+        Tuple<List<T>, Set<IFacet<?>>> objectsNFacets = repository
+                .search(tagSearchKey, criterion, "tags", askedTypePredicate, toAskedEntityFct, facetsMap);
+        List<T> objects = objectsNFacets.v1();
         if (searchResultFilter != null) {
             objects = objects.stream().filter(searchResultFilter).collect(Collectors.toList());
         }
@@ -128,7 +133,7 @@ public class SearchService implements ISearchService {
             objects = objects.subList((int) pageRequest.getOffset(),
                                       (int) Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
         }
-        return new FacetPage<>(objects, new HashSet<>(), pageRequest, total);
+        return new FacetPage<>(objects, objectsNFacets.v2(), pageRequest, total);
     }
 
     @Override
