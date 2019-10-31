@@ -36,7 +36,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 2000;
+    private static final Integer NB_FEATURES = 1000;
 
     @Autowired
     private IFeatureCreationService featureService;

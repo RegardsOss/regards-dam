@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -34,6 +35,7 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  * @author Marc SORDI
  *
  */
+@Repository
 public interface IFeatureUpdateRequestRepository extends JpaRepository<FeatureUpdateRequest, Long> {
 
     /**

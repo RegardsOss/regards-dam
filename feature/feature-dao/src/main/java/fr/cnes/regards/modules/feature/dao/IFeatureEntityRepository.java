@@ -21,10 +21,12 @@ package fr.cnes.regards.modules.feature.dao;
 import java.time.OffsetDateTime;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
+@Repository
 public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
 
     public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);

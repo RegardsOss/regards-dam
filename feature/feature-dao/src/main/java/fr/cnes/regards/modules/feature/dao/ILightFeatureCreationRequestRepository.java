@@ -21,16 +21,18 @@ package fr.cnes.regards.modules.feature.dao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequestLight;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 
 /**
  * @author Marc SORDI
  *
  */
-public interface IFeatureCreationRequestLightRepository extends JpaRepository<FeatureCreationRequestLight, Long> {
+@Repository
+public interface ILightFeatureCreationRequestRepository extends JpaRepository<LightFeatureCreationRequest, Long> {
 
     /**
      * Get a page {@link FeatureRequestStep}  at the {@link FeatureRequestStep} in parameter
@@ -38,5 +40,5 @@ public interface IFeatureCreationRequestLightRepository extends JpaRepository<Fe
      * @param page
      * @return a {@link Page} of {@link FeatureCreationRequest}
      */
-    public Page<FeatureCreationRequestLight> findByStep(FeatureRequestStep step, Pageable page);
+    public Page<LightFeatureCreationRequest> findByStep(FeatureRequestStep step, Pageable page);
 }

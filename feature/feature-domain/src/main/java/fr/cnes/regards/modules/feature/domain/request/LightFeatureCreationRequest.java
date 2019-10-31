@@ -31,6 +31,6 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  */
 @Entity
 @Table(name = "t_feature_creation_request")
-public class FeatureCreationRequestLight extends AbstractFeatureCreationRequest {
+public class LightFeatureCreationRequest extends AbstractFeatureCreationRequest {
 
 }

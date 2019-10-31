@@ -28,11 +28,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 import org.springframework.util.Assert;
 
-import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
@@ -50,7 +47,6 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
                                 + AbstractRequest.COLUMN_PRIORITY) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
-@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
 
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)

@@ -19,26 +19,14 @@
 package fr.cnes.regards.modules.feature.dao;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
+@Repository
 public interface IFeatureCreationRequestRepository extends JpaRepository<FeatureCreationRequest, Long> {
 
     public List<FeatureCreationRequest> findByGroupId(String groupId);
-
-    /**
-     * Update {@link FeatureCreationRequest} state
-     * @param state new {@link RequestState}
-     * @param ids id of {@link FeatureCreationRequest} to update
-     */
-    @Modifying
-    @Query("update FeatureCreationRequest fcr set fcr.state = :newState where fcr.id in :ids ")
-    public void updateState(@Param("newState") RequestState state, @Param("ids") Set<Long> ids);
 }
