@@ -52,20 +52,19 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
+import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
@@ -272,13 +271,20 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // Delete requests without files
         subProcessStart = System.currentTimeMillis();
-        List<FeatureCreationRequest> requestsWithoutFiles = requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() == null || fcr.getFeature().getFiles().isEmpty())
-                .collect(Collectors.toList());
-        this.featureCreationRequestRepo.deleteInBatch(requestsWithoutFiles);
+        List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
+        for (FeatureCreationRequest request : requests) {
+            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
+                // Register request
+                requestsWithoutFiles.add(request);
+                // Publish successul request
+                publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
+                                                            request.getFeature().getUrn(), RequestState.SUCCESS));
+            }
+        }
+        // Successful requests are deleted now!
+        featureCreationRequestRepo.deleteInBatch(requestsWithoutFiles);
         LOGGER.trace("------------->>> {} creation requests without files deleted in {} ms",
                      requestsWithoutFiles.size(), System.currentTimeMillis() - subProcessStart);
-        // FIXME publish successful requests!
 
         LOGGER.debug("------------->>> {} creation requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);
@@ -352,14 +358,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
      */
     private int computeNextVersion(FeatureEntity featureEntity) {
         return featureEntity == null ? 1 : featureEntity.getVersion() + 1;
-    }
-
-    @Override
-    public String publishFeature(Feature toPublish, FeatureMetadata metadata) {
-        FeatureCreationRequestEvent event = FeatureCreationRequestEvent.build((FeatureSessionMetadata) metadata,
-                                                                              toPublish);
-        publisher.publish(event);
-        return event.getRequestId();
     }
 
     @Override

@@ -69,23 +69,18 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
 
-        long creationStart = System.currentTimeMillis();
-
+        long start = System.currentTimeMillis();
         featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
-
-        //        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
-        //                    System.currentTimeMillis() - creationStart);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
+        start = System.currentTimeMillis();
         featureService.scheduleRequests();
-
-        //        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests sheduled in {} ms", NB_FEATURES,
-        //                    System.currentTimeMillis() - creationStart);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests sheduled in {} ms", NB_FEATURES, System.currentTimeMillis() - start);
 
         waitFeature(NB_FEATURES, null, 3600_000);
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
-                    System.currentTimeMillis() - creationStart);
 
         assertEquals(NB_FEATURES.longValue(), this.featureRepo.count());
     }
