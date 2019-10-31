@@ -33,7 +33,7 @@ public class FeatureConfigurationProperties {
     /**
      * Max number of requests to process at a time
      */
-    @Value("${regards.feature.max.bulk.size:2000}")
+    @Value("${regards.feature.max.bulk.size:1000}")
     private Integer maxBulkSize;
 
     /**
