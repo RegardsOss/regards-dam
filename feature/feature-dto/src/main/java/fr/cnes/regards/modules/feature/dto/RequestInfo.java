@@ -1,56 +1,86 @@
-/**
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
 package fr.cnes.regards.modules.feature.dto;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+
 /**
- * Information dto about Creation/Update feature
+ * REST feature request response information
  *
- * Will contain for creation:
- * All request id generated during {@link FeatureCreationRequest} creation,
- * all granted request id and all errors by request id
+ * @author Marc SORDI
  *
- * Will contain for Update
- * All urn generated during {@link FeatureUpdateRequest} update,
- * all granted urn and all errors by urn
- * @author kevin
- *
+ * @param <ID> String or {@link FeatureUniformResourceName} according to the context
  */
-public class RequestInfo<T> {
+public class RequestInfo<ID> {
 
-    private Map<String, T> idByFeatureId;
+    /**
+     * Mapping between feature id or URN and request id
+     */
+    private Map<ID, String> granted = new HashMap<>();
 
-    private Multimap<T, String> errorById;
+    /**
+     * Mapping between SIP id and denied reason
+     */
+    private Multimap<ID, String> denied = ArrayListMultimap.create();
 
-    private Set<T> grantedId;
+    private List<String> messages;
 
-    public Map<String, T> getIdByFeatureId() {
-        return idByFeatureId;
+    public List<String> getMessages() {
+        return messages;
     }
 
-    public void setIdByFeatureId(Map<String, T> idByFeatureId) {
-        this.idByFeatureId = idByFeatureId;
+    public void setMessages(List<String> messages) {
+        this.messages = messages;
     }
 
-    public Multimap<T, String> getErrorById() {
-        return errorById;
+    public void addGrantedRequest(ID id, String requestId) {
+        granted.put(id, requestId);
     }
 
-    public void setErrorById(Multimap<T, String> errorById) {
-        this.errorById = errorById;
+    public void addDeniedRequest(ID id, String reason) {
+        denied.put(id, reason);
     }
 
-    public Set<T> getGrantedId() {
-        return grantedId;
+    public void addDeniedRequest(ID id, Iterable<String> reasons) {
+        denied.putAll(id, reasons);
     }
 
-    public void setGrantedId(Set<T> grantedId) {
-        this.grantedId = grantedId;
+    public Map<ID, String> getGranted() {
+        return granted;
     }
 
+    public Multimap<ID, String> getDenied() {
+        return denied;
+    }
+
+    public void setGranted(Map<ID, String> granted) {
+        this.granted = granted;
+    }
+
+    public void setDenied(Multimap<ID, String> denied) {
+        this.denied = denied;
+    }
 }

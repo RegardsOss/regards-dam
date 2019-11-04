@@ -21,14 +21,11 @@ package fr.cnes.regards.modules.feature.service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +36,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -53,9 +48,11 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.dao.ILightFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
@@ -75,7 +72,6 @@ import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 @MultitenantTransactional
 public class FeatureUpdateService extends AbstractFeatureService implements IFeatureUpdateService {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUpdateService.class);
 
     @Autowired
@@ -105,28 +101,43 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     @Autowired
     private IFeatureUpdateRequestRepository featureUpdateRequestRepo;
 
-    @Override
-    public List<FeatureUpdateRequest> registerRequests(List<FeatureUpdateRequestEvent> events,
-            Set<FeatureUniformResourceName> grantedUrn, Multimap<FeatureUniformResourceName, String> errorByUrn) {
-        List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
-        events.forEach(item -> prepareFeatureUpdateRequest(item, grantedRequests, errorByUrn));
+    @Autowired
+    private ILightFeatureUpdateRequestRepository lightFeatureUpdateRequestRepo;
 
-        grantedRequests.stream().forEach(request -> grantedUrn.add(request.getUrn()));
+    @Override
+    public RequestInfo<FeatureUniformResourceName> registerRequests(List<FeatureUpdateRequestEvent> events) {
+
+        long registrationStart = System.currentTimeMillis();
+
+        List<FeatureUpdateRequest> grantedRequests = new ArrayList<>();
+        RequestInfo<FeatureUniformResourceName> requestInfo = new RequestInfo<>();
+        events.forEach(item -> prepareFeatureUpdateRequest(item, grantedRequests, requestInfo));
 
         // Batch save
-        return updateRepo.saveAll(grantedRequests);
+        updateRepo.saveAll(grantedRequests);
 
+        LOGGER.debug("------------->>> {} update requests registered in {} ms", grantedRequests.size(),
+                     System.currentTimeMillis() - registrationStart);
+
+        return requestInfo;
+    }
+
+    @Override
+    public RequestInfo<FeatureUniformResourceName> registerRequests(FeatureUpdateCollection toHandle) {
+        // Build events to reuse event registration code
+        List<FeatureUpdateRequestEvent> toTreat = new ArrayList<>();
+        for (Feature feature : toHandle.getFeatures()) {
+            toTreat.add(FeatureUpdateRequestEvent.build(feature, toHandle.getMetadata(),
+                                                        OffsetDateTime.now().minusSeconds(1)));
+        }
+        return registerRequests(toTreat);
     }
 
     /**
      * Validate, save and publish a new request
-     *
-     * @param item            request to manage
-     * @param grantedRequests collection of granted requests to populate
-     * @param errorByUrn
      */
     private void prepareFeatureUpdateRequest(FeatureUpdateRequestEvent item, List<FeatureUpdateRequest> grantedRequests,
-            Multimap<FeatureUniformResourceName, String> errorByUrn) {
+            RequestInfo<FeatureUniformResourceName> requestInfo) {
 
         // Validate event
         Errors errors = new MapBindingResult(new HashMap<>(), FeatureUpdateRequestEvent.class.getName());
@@ -137,7 +148,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            errorByUrn.putAll(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
+            requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
             return;
         }
 
@@ -149,7 +160,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            errorByUrn.putAll(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
+            requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
             return;
         }
 
@@ -168,38 +179,44 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     }
 
     @Override
-    public void scheduleRequests() {
+    public boolean scheduleRequests() {
 
-        Set<JobParameter> jobParameters = Sets.newHashSet();
-        List<FeatureUpdateRequest> delayedRequests = this.updateRepo
+        long scheduleStart = System.currentTimeMillis();
+        List<LightFeatureUpdateRequest> requestsToSchedule = this.lightFeatureUpdateRequestRepo
                 .findRequestToSchedule(PageRequest.of(0, this.properties.getMaxBulkSize()),
                                        OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
 
-        if (!delayedRequests.isEmpty()) {
-            List<FeatureUpdateRequest> toSchedule = new ArrayList<FeatureUpdateRequest>();
-            FeatureUpdateRequest currentRequest;
+        if (!requestsToSchedule.isEmpty()) {
 
-            for (int i = 0; i < delayedRequests.size(); i++) {
-                currentRequest = delayedRequests.get(i);
-                currentRequest.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-                toSchedule.add(currentRequest);
-            }
+            List<Long> requestIds = new ArrayList<>();
 
-            this.updateRepo.saveAll(toSchedule);
+            // Switch to next step
+            requestsToSchedule.forEach(r -> {
+                requestIds.add(r.getId());
+                r.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+            });
+            lightFeatureUpdateRequestRepo.saveAll(requestsToSchedule);
 
-            jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER,
-                    toSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+            // Schedule job
+            Set<JobParameter> jobParameters = Sets.newHashSet();
+            jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER, requestIds));
 
             // the job priority will be set according the priority of the first request to schedule
-            JobInfo jobInfo = new JobInfo(false, toSchedule.get(0).getPriority().getPriorityLevel(), jobParameters,
-                    authResolver.getUser(), FeatureUpdateJob.class.getName());
+            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
+                    jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
+
+            LOGGER.debug("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
+                         System.currentTimeMillis() - scheduleStart);
+            return true;
         }
+        return false;
     }
 
     @Override
     public void processRequests(List<FeatureUpdateRequest> requests) {
 
+        long processStart = System.currentTimeMillis();
         List<FeatureEntity> entities = new ArrayList<>();
 
         Map<FeatureUniformResourceName, FeatureEntity> featureByUrn = this.featureRepo
@@ -236,30 +253,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         featureRepo.saveAll(entities);
         featureUpdateRequestRepo.deleteInBatch(requests);
-    }
 
-    @Override
-    public RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureUpdateCollection toHandle) {
-        List<FeatureUpdateRequestEvent> toTreat = new ArrayList<FeatureUpdateRequestEvent>();
-        Set<FeatureUniformResourceName> grantedRequestId = new HashSet<FeatureUniformResourceName>();
-        Multimap<FeatureUniformResourceName, String> errorbyRequestId = ArrayListMultimap.create();
-        Map<String, FeatureUniformResourceName> requestIdByFeature = new HashMap<String, FeatureUniformResourceName>();
-        RequestInfo<FeatureUniformResourceName> requestInfo = new RequestInfo<FeatureUniformResourceName>();
-
-        // build FeatureUpdateEvent
-        for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureUpdateRequestEvent.build(feature, toHandle.getMetadata(),
-                                                        OffsetDateTime.now().minusSeconds(1)));
-        }
-
-        // extract from generated FeatureUpdaterequest a map feature id => URN
-        this.registerRequests(toTreat, grantedRequestId, errorbyRequestId).stream()
-                .forEach(fcr -> requestIdByFeature.put(fcr.getFeature().getId(), fcr.getFeature().getUrn()));
-
-        requestInfo.setIdByFeatureId(requestIdByFeature);
-        requestInfo.setGrantedId(grantedRequestId);
-        requestInfo.setErrorById(errorbyRequestId);
-
-        return requestInfo;
+        LOGGER.debug("------------->>> {} update requests processed in {} ms", requests.size(),
+                     System.currentTimeMillis() - processStart);
     }
 }

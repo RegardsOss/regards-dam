@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,12 +34,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import com.google.common.collect.ArrayListMultimap;
-
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.feature.dao.ILightFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
@@ -65,13 +64,16 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
     @Autowired
     private FeatureCreationService featureService;
 
+    @Autowired
+    private ILightFeatureUpdateRequestRepository lightFeatureUpdateRequestRepository;
+
     @Test
     public void testSchedulerSteps() throws InterruptedException {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
         super.initFeatureCreationRequestEvent(events, 2);
-        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        this.featureService.registerRequests(events);
 
         this.featureService.scheduleRequests();
         int cpt = 0;
@@ -80,7 +82,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != 2));
+        } while (cpt < 100 && featureNumberInDatabase != 2);
 
         FeatureEntity toUpdate = super.featureRepo.findAll().get(0);
         FeatureEntity updatingByScheduler = super.featureRepo.findAll().get(1);
@@ -145,11 +147,11 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2));
+        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2);
 
-        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        this.featureService.registerRequests(events);
 
-        assertEquals((properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2)),
+        assertEquals(properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2,
                      this.featureCreationRequestRepo.count());
 
         featureService.scheduleRequests();
@@ -161,10 +163,9 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100)
-                && (featureNumberInDatabase != (properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2))));
+        } while (cpt < 100 && featureNumberInDatabase != properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2);
 
-        assertEquals(properties.getMaxBulkSize().intValue() + (properties.getMaxBulkSize().intValue() / 2),
+        assertEquals(properties.getMaxBulkSize().intValue() + properties.getMaxBulkSize().intValue() / 2,
                      this.featureRepo.count());
 
         // in that case all features hasn't been saved
@@ -177,8 +178,8 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
                 .collect(Collectors.toList());
 
         // we will set all priority to low for the (properties.getMaxBulkSize() / 2) last event
-        for (int i = properties.getMaxBulkSize(); i < (properties.getMaxBulkSize()
-                + (properties.getMaxBulkSize() / 2)); i++) {
+        for (int i = properties.getMaxBulkSize(); i < properties.getMaxBulkSize()
+                + properties.getMaxBulkSize() / 2; i++) {
             updateEvents.get(i).getMetadata().setPriority(PriorityLevel.HIGH);
         }
 
@@ -193,18 +194,17 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
                                                        IProperty.buildBoolean("valid", Boolean.FALSE),
                                                        IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
         });
-        this.featureUpdateService.registerRequests(updateEvents, new HashSet<FeatureUniformResourceName>(),
-                                                   ArrayListMultimap.create());
+        this.featureUpdateService.registerRequests(updateEvents);
         this.featureUpdateService.scheduleRequests();
         Thread.sleep(30000);
 
         // check that half of the FeatureUpdateRequestEvent with step to LOCAL_SCHEDULED
         // have their priority to HIGH and half to AVERAGE
-        List<FeatureUpdateRequest> scheduled = this.featureUpdateRequestRepo
+        List<LightFeatureUpdateRequest> scheduled = this.lightFeatureUpdateRequestRepository
                 .findRequestToSchedule(PageRequest.of(0, properties.getMaxBulkSize()), OffsetDateTime.now());
         int highPriorityNumber = 0;
         int otherPriorityNumber = 0;
-        for (FeatureUpdateRequest request : scheduled) {
+        for (LightFeatureUpdateRequest request : scheduled) {
             if (request.getPriority().equals(PriorityLevel.HIGH)) {
                 highPriorityNumber++;
             } else {

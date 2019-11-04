@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.assertj.core.util.Lists;
@@ -14,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-
-import com.google.common.collect.ArrayListMultimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -70,7 +67,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
 
-        featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        featureService.registerRequests(events);
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 

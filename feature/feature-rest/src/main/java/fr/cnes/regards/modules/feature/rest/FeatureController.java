@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.cnes.regards.framework.geojson.GeoJsonMediaType;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
-import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
@@ -45,7 +44,7 @@ import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 
 /**
- * Controller REST handling requests about {@link Feature}s
+ * Controller REST handling {@link Feature} collections.
  *
  * @author Kevin Marchois
  */
@@ -67,42 +66,53 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
     /**
      * Create a list of {@link FeatureCreationRequest} from a list of {@link Feature} stored in a {@link FeatureCreationCollection}
      * and return a {@link RequestInfo} full of request ids and occured errors
-     * @param toHandle {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
+     * @param collection {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
     @RequestMapping(method = RequestMethod.POST, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<Resource<RequestInfo<?>>> createFeatures(
-            @Valid @RequestBody FeatureCreationCollection toHandle) {
+            @Valid @RequestBody FeatureCreationCollection collection) {
 
-        RequestInfo<String> infos = this.featureCreationService.registerScheduleProcess(toHandle);
-
-        return new ResponseEntity<>(toResource(infos),
-                infos.getGrantedId().isEmpty() ? HttpStatus.CONFLICT : HttpStatus.CREATED);
+        RequestInfo<String> info = this.featureCreationService.registerRequests(collection);
+        return new ResponseEntity<>(toResource(info), computeStatus(info));
     }
 
     /**
      * Create a list of {@link FeatureUpdateRequest} from a list of {@link Feature} stored in a {@link FeatureUpdateCollection}
      * and return a {@link RequestInfo} full of urns and occured errors
-     * @param toHandle {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
+     * @param collection {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
     @RequestMapping(method = RequestMethod.PATCH, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
     public ResponseEntity<Resource<RequestInfo<?>>> updateFeatures(
-            @Valid @RequestBody FeatureUpdateCollection toHandle) {
+            @Valid @RequestBody FeatureUpdateCollection collection) {
 
-        RequestInfo<FeatureUniformResourceName> infos = this.featureUpdateService.registerScheduleProcess(toHandle);
+        RequestInfo<FeatureUniformResourceName> info = this.featureUpdateService.registerRequests(collection);
+        return new ResponseEntity<>(toResource(info), computeStatus(info));
+    }
 
-        return new ResponseEntity<>(toResource(infos),
-                infos.getGrantedId().isEmpty() ? HttpStatus.CONFLICT : HttpStatus.CREATED);
+    /**
+     * Compute {@link HttpStatus} according to information return by the service
+     */
+    private HttpStatus computeStatus(RequestInfo<?> info) {
+        Boolean hasGranted = !info.getGranted().isEmpty();
+        Boolean hasDenied = !info.getDenied().isEmpty();
+
+        HttpStatus status;
+        if (hasGranted && hasDenied) {
+            status = HttpStatus.PARTIAL_CONTENT; // 206
+        } else if (hasDenied) {
+            status = HttpStatus.UNPROCESSABLE_ENTITY; // 422
+        } else {
+            status = HttpStatus.CREATED; // 201
+        }
+        return status;
     }
 
     @Override
     public Resource<RequestInfo<?>> toResource(RequestInfo<?> element, Object... extras) {
-        Resource<RequestInfo<?>> resource = resourceService.toResource(element);
-        resourceService.addLink(resource, this.getClass(), "updateFeatures", LinkRels.UPDATE);
-        resourceService.addLink(resource, this.getClass(), "createFeatures", LinkRels.CREATE);
-        return resource;
+        return resourceService.toResource(element);
     }
 }

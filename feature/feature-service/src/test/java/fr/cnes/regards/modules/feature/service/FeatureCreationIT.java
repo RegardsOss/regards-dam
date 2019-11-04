@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
@@ -33,15 +32,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import com.google.common.collect.ArrayListMultimap;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
@@ -77,7 +74,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize());
 
-        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        this.featureService.registerRequests(events);
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureCreationRequestRepo.count());
 
@@ -115,7 +112,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         Feature f = events.get(0).getFeature();
         f.setEntityType(null);
 
-        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        this.featureService.registerRequests(events);
 
         assertEquals(properties.getMaxBulkSize() - 1, this.featureCreationRequestRepo.count());
 
@@ -148,13 +145,11 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         StorageMetadata.build("id ");
         FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
                 .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
-        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
+        RequestInfo<String> infos = this.featureService.registerRequests(collection);
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureCreationRequestRepo.count());
-        assertEquals(properties.getMaxBulkSize().intValue(), infos.getGrantedId().size());
-        assertEquals(0, infos.getErrorById().size());
-        assertEquals(properties.getMaxBulkSize().intValue(), infos.getIdByFeatureId().keySet().size());
-
+        assertEquals(properties.getMaxBulkSize().intValue(), infos.getGranted().size());
+        assertEquals(0, infos.getDenied().size());
     }
 
     @Test
@@ -167,12 +162,10 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         StorageMetadata.build("id ");
         FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
                 .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
-        RequestInfo<String> infos = this.featureService.registerScheduleProcess(collection);
+        RequestInfo<String> infos = this.featureService.registerRequests(collection);
 
-        assertEquals(0, infos.getGrantedId().size());
-        assertEquals(properties.getMaxBulkSize().intValue(), infos.getErrorById().size());
-        assertEquals(0, infos.getIdByFeatureId().keySet().size());
-
+        assertEquals(0, infos.getGranted().size());
+        assertEquals(properties.getMaxBulkSize().intValue(), infos.getDenied().size());
     }
 
     /**
@@ -194,7 +187,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
             events.get(i).getMetadata().setPriority(PriorityLevel.HIGH);
         }
 
-        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        this.featureService.registerRequests(events);
 
         assertEquals(properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2,
                      this.featureCreationRequestRepo.count());

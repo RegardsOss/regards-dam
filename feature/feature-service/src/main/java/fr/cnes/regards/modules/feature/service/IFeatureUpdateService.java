@@ -19,11 +19,6 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
-import java.util.Set;
-
-import javax.validation.Valid;
-
-import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
@@ -39,23 +34,20 @@ public interface IFeatureUpdateService {
 
     /**
      * Register update requests in database for further processing from incoming request events
-     * @return
      */
-    List<FeatureUpdateRequest> registerRequests(List<FeatureUpdateRequestEvent> events,
-            Set<FeatureUniformResourceName> grantedUrn, Multimap<FeatureUniformResourceName, String> errorByUrn);
+    RequestInfo<FeatureUniformResourceName> registerRequests(List<FeatureUpdateRequestEvent> events);
 
     /**
      * Register update requests in database for further processing from feature collection
-     * @param toHandle
-     * @return
      */
-    RequestInfo<FeatureUniformResourceName> registerScheduleProcess(@Valid FeatureUpdateCollection toHandle);
+    RequestInfo<FeatureUniformResourceName> registerRequests(FeatureUpdateCollection toHandle);
 
     /**
      * Schedule a job to process a batch of requests<br/>
      * A delta of time is kept between request registration and processing to manage concurrent updates.
+     * @return true if at least one request has been scheduled
      */
-    void scheduleRequests();
+    boolean scheduleRequests();
 
     /**
      * Process batch of requests during job

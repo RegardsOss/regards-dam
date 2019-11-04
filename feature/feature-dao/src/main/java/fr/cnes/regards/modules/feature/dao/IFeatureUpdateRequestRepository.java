@@ -18,17 +18,10 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
-import fr.cnes.regards.modules.feature.dto.Feature;
 
 /**
  *
@@ -37,17 +30,5 @@ import fr.cnes.regards.modules.feature.dto.Feature;
  */
 @Repository
 public interface IFeatureUpdateRequestRepository extends JpaRepository<FeatureUpdateRequest, Long> {
-
-    /**
-     * Get {@link FeatureUpdateRequest} with a {@link Feature} urn not assigned to an other {@link FeatureUpdateRequest}
-     * with it step set to LOCAL_SCHEDULED an ordered by registration date and before a delay
-     * @param page contain the number of {@link FeatureUpdateRequest} to return
-     * @param delay we want {@link FeatureUpdateRequest} with registration date before this delay
-     * @return list of  {@link FeatureUpdateRequest}
-     */
-    @Query("select request from FeatureUpdateRequest request where request.urn not in ("
-            + " select scheduledRequest.urn from FeatureUpdateRequest scheduledRequest"
-            + " where scheduledRequest.step = 'LOCAL_SCHEDULED') and request.registrationDate <= :delay order by request.priority, request.registrationDate ")
-    public List<FeatureUpdateRequest> findRequestToSchedule(Pageable page, @Param("delay") OffsetDateTime delay);
 
 }
