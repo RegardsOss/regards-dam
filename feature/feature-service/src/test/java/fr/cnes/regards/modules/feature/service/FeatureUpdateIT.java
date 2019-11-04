@@ -19,25 +19,35 @@
 package fr.cnes.regards.modules.feature.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.ArrayListMultimap;
 
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
  * @author kevin
@@ -114,7 +124,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         // wait 5 second to delay
         Thread.sleep(5000);
 
-        featureUpdateService.scheduleRequests();
+        this.featureUpdateService.scheduleRequests();
 
         List<FeatureUpdateRequest> updateRequests = this.featureUpdateRequestRepo.findAll();
 
@@ -122,5 +132,88 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
                 .filter(request -> request.getStep().equals(FeatureRequestStep.LOCAL_SCHEDULED)).count());
         assertEquals(1, updateRequests.stream()
                 .filter(request -> request.getStep().equals(FeatureRequestStep.LOCAL_DELAYED)).count());
+    }
+
+    /**
+     * Test priority level for feature update we will schedule properties.getMaxBulkSize() {@link FeatureUpdateRequestEvent}
+     * with priority set to average plus properties.getMaxBulkSize() /2 {@link FeatureUpdateRequestEvent} with {@link PriorityLevel}
+     * to average
+     * @throws InterruptedException
+     */
+    @Test
+    public void testFeaturePriority() throws InterruptedException {
+
+        List<FeatureCreationRequestEvent> events = new ArrayList<>();
+
+        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2));
+
+        this.featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+
+        assertEquals((properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2)),
+                     this.featureCreationRequestRepo.count());
+
+        featureService.scheduleRequests();
+        featureService.scheduleRequests();
+
+        int cpt = 0;
+        long featureNumberInDatabase;
+        do {
+            featureNumberInDatabase = this.featureRepo.count();
+            Thread.sleep(1000);
+            cpt++;
+        } while ((cpt < 100)
+                && (featureNumberInDatabase != (properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2))));
+
+        assertEquals(properties.getMaxBulkSize().intValue() + (properties.getMaxBulkSize().intValue() / 2),
+                     this.featureRepo.count());
+
+        // in that case all features hasn't been saved
+        if (cpt == 100) {
+            fail("Doesn't have all features at the end of time");
+        }
+        List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
+        updateEvents = events.stream()
+                .map(event -> FeatureUpdateRequestEvent.build(event.getFeature(), event.getMetadata()))
+                .collect(Collectors.toList());
+
+        // we will set all priority to low for the (properties.getMaxBulkSize() / 2) last event
+        for (int i = properties.getMaxBulkSize(); i < (properties.getMaxBulkSize()
+                + (properties.getMaxBulkSize() / 2)); i++) {
+            updateEvents.get(i).getMetadata().setPriority(PriorityLevel.HIGH);
+        }
+
+        updateEvents.stream().forEach(event -> {
+            event.getFeature().getProperties().clear();
+            event.getFeature()
+                    .setUrn(FeatureUniformResourceName
+                            .build(FeatureIdentifier.FEATURE, EntityType.DATA, getDefaultTenant(),
+                                   UUID.nameUUIDFromBytes(event.getFeature().getId().getBytes()), 1));
+            event.getFeature()
+                    .addProperty(IProperty.buildObject("file_characterization",
+                                                       IProperty.buildBoolean("valid", Boolean.FALSE),
+                                                       IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
+        });
+        this.featureUpdateService.registerRequests(updateEvents, new HashSet<FeatureUniformResourceName>(),
+                                                   ArrayListMultimap.create());
+        this.featureUpdateService.scheduleRequests();
+        Thread.sleep(30000);
+
+        // check that half of the FeatureUpdateRequestEvent with step to LOCAL_SCHEDULED
+        // have their priority to HIGH and half to AVERAGE
+        List<FeatureUpdateRequest> scheduled = this.featureUpdateRequestRepo
+                .findRequestToSchedule(PageRequest.of(0, properties.getMaxBulkSize()), OffsetDateTime.now());
+        int highPriorityNumber = 0;
+        int otherPriorityNumber = 0;
+        for (FeatureUpdateRequest request : scheduled) {
+            if (request.getPriority().equals(PriorityLevel.HIGH)) {
+                highPriorityNumber++;
+            } else {
+                otherPriorityNumber++;
+            }
+        }
+        // half of scheduled should be with priority HIGH
+        assertEquals(properties.getMaxBulkSize().intValue(), highPriorityNumber + otherPriorityNumber);
+        assertTrue(highPriorityNumber == otherPriorityNumber);
+
     }
 }

@@ -265,7 +265,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Update requests with feature setted for each of them + publish files to storage
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithFiles = requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && !fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
         this.featureCreationRequestRepo.saveAll(requestsWithFiles);
         LOGGER.trace("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
@@ -275,7 +275,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
         for (FeatureCreationRequest request : requests) {
-            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
+            if ((request.getFeature().getFiles() == null) || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
                 // Publish successul request
@@ -307,8 +307,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 if (!fcr.getMetadata().hasStorage()) {
                     this.storageClient.reference(FileReferenceRequestDTO
                             .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                   attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
-                                   loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                                   attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
+                                   loc.getStorage(), loc.getUrl()));
                 }
                 for (StorageMetadata metadata : fcr.getMetadata().getStorages()) {
                     if (loc.getStorage() == null) {
@@ -319,8 +319,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                     } else {
                         this.storageClient.reference(FileReferenceRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                       attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
-                                       loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                                       attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
+                                       loc.getStorage(), loc.getUrl()));
                     }
                 }
             }

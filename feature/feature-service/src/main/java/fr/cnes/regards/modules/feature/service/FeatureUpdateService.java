@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -201,6 +202,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         List<FeatureEntity> entities = new ArrayList<>();
 
+        Map<FeatureUniformResourceName, FeatureEntity> featureByUrn = this.featureRepo
+                .findByUrnIn(requests.stream().map(request -> request.getUrn()).collect(Collectors.toList())).stream()
+                .collect(Collectors.toMap(FeatureEntity::getUrn, Function.identity()));
         // Update feature
         for (FeatureUpdateRequest request : requests) {
 
@@ -208,7 +212,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
             // Retrieve feature from db
             // Note : entity is attached to transaction manager so all changes will be reflected in the db!
-            FeatureEntity entity = featureRepo.findByUrn(patch.getUrn());
+            FeatureEntity entity = featureByUrn.get(patch.getUrn());
             entity.setLastUpdate(OffsetDateTime.now());
 
             // Merge properties handling null property values to unset properties
