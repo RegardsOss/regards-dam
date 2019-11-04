@@ -53,7 +53,7 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfo
  *
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
-@ActiveProfiles(value = { "noscheduler" })
+@ActiveProfiles({ "noscheduler", "nohandler" })
 public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired

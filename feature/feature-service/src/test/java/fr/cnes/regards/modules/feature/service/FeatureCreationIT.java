@@ -50,7 +50,7 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp", "noscheduler" })
+@ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired

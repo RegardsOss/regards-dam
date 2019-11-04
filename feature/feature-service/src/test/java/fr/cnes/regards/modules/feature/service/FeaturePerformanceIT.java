@@ -86,7 +86,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         }
 
         // Wait for feature creation
-        waitFeature(NB_FEATURES, null, 1_200_000);
+        waitFeature(NB_FEATURES, null, 300_000);
         LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - creationStart);
 
@@ -105,7 +105,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         }
 
         // Wait for feature update
-        waitFeature(NB_FEATURES, requestDate, 1_200_000);
+        waitFeature(NB_FEATURES, requestDate, 300_000);
         LOGGER.info(">>>>>>>>>>>>>>>>> {} update requests done in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - updateStart);
 

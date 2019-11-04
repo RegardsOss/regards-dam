@@ -55,7 +55,7 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp", "noscheduler" })
+@ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
@@ -87,36 +87,22 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         FeatureEntity toUpdate = super.featureRepo.findAll().get(0);
         FeatureEntity updatingByScheduler = super.featureRepo.findAll().get(1);
 
-        FeatureUpdateRequest fur1 = new FeatureUpdateRequest();
+        FeatureUpdateRequest fur1 = FeatureUpdateRequest.build("1", OffsetDateTime.now(), RequestState.GRANTED, null,
+                                                               toUpdate.getFeature(), PriorityLevel.AVERAGE);
         fur1.setFeatureEntity(toUpdate);
         fur1.setFeature(toUpdate.getFeature());
         fur1.setStep(FeatureRequestStep.LOCAL_DELAYED);
-        fur1.setRegistrationDate(OffsetDateTime.now());
-        fur1.setState(RequestState.GRANTED);
-        fur1.setRequestDate(OffsetDateTime.now());
-        fur1.setRequestId("1");
-        fur1.setUrn(toUpdate.getFeature().getUrn());
-        fur1.setPriority(PriorityLevel.AVERAGE);
 
-        FeatureUpdateRequest fur2 = new FeatureUpdateRequest();
+        FeatureUpdateRequest fur2 = FeatureUpdateRequest.build("2", OffsetDateTime.now(), RequestState.GRANTED, null,
+                                                               updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
         fur2.setFeatureEntity(updatingByScheduler);
-        fur2.setFeature(updatingByScheduler.getFeature());
         fur2.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-        fur2.setRegistrationDate(OffsetDateTime.now());
-        fur2.setRequestDate(OffsetDateTime.now());
-        fur2.setState(RequestState.GRANTED);
-        fur2.setRequestId("2");
-        fur2.setUrn(updatingByScheduler.getFeature().getUrn());
         fur2.setPriority(PriorityLevel.AVERAGE);
 
-        FeatureUpdateRequest fur3 = new FeatureUpdateRequest();
+        FeatureUpdateRequest fur3 = FeatureUpdateRequest.build("3", OffsetDateTime.now(), RequestState.GRANTED, null,
+                                                               updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
         fur3.setFeature(updatingByScheduler.getFeature());
         fur3.setStep(FeatureRequestStep.LOCAL_DELAYED);
-        fur3.setRegistrationDate(OffsetDateTime.now());
-        fur3.setState(RequestState.GRANTED);
-        fur3.setRequestDate(OffsetDateTime.now());
-        fur3.setRequestId("3");
-        fur3.setUrn(updatingByScheduler.getFeature().getUrn());
         fur3.setPriority(PriorityLevel.AVERAGE);
 
         super.featureUpdateRequestRepo.save(fur1);

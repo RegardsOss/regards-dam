@@ -28,12 +28,12 @@ import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
+@ActiveProfiles({ "testAmqp", "noscheduler", "nohandler" })
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 10000;
+    private static final Integer NB_FEATURES = 1000;
 
     @Autowired
     private IFeatureCreationService featureService;

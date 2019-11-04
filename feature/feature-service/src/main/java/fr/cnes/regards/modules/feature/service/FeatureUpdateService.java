@@ -176,6 +176,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
         grantedRequests.add(request);
+        requestInfo.addGrantedRequest(request.getUrn(), request.getRequestId());
     }
 
     @Override
