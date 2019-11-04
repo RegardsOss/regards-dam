@@ -25,9 +25,11 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf",
-        "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
-        "spring.jpa.properties.hibernate.order_inserts=true" }, locations = { "classpath:regards_db.properties"})
+@TestPropertySource(
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true",
+                "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
+                "spring.jpa.properties.hibernate.order_inserts=true" },
+        locations = { "classpath:regards_perf.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
