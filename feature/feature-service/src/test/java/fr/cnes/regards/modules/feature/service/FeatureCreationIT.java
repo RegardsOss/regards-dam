@@ -49,7 +49,6 @@ import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
-import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
@@ -62,9 +61,6 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
     private IFeatureCreationService featureService;
-
-    @Autowired
-    FeatureConfigurationProperties properties;
 
     /**
      * Test creation of properties.getMaxBulkSize() features Check if
