@@ -49,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-boot-parent</artifactId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>GEODE</version>
 		<relativePath></relativePath>
 	</parent>
 
@@ -67,6 +67,10 @@
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-rest</artifactId>
 		</dependency>
+		<dependency>
+            <groupId>fr.cnes.regards.modules.notification</groupId>
+            <artifactId>notification-rest</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices.administration</groupId>
 			<artifactId>remote-tenant-resolver</artifactId>
