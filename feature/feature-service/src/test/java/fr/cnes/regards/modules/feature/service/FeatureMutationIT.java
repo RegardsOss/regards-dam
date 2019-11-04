@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.feature.service;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.assertj.core.util.Lists;
@@ -31,8 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import com.google.common.collect.ArrayListMultimap;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
@@ -42,7 +39,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
@@ -89,7 +85,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         // Register creation requests
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
         events.add(FeatureCreationRequestEvent.build(metadata, feature));
-        featureCreationService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
+        featureCreationService.registerRequests(events);
 
         // Schedule creation job
         featureCreationService.scheduleRequests();
@@ -111,8 +107,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
         updateEvents.add(FeatureUpdateRequestEvent
                 .build(updated, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>())));
-        featureUpdateService.registerRequests(updateEvents, new HashSet<FeatureUniformResourceName>(),
-                                              ArrayListMultimap.create());
+        featureUpdateService.registerRequests(updateEvents);
 
         // Schedule update job after retention delay
         try {

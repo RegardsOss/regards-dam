@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.feature.domain.request;
 
 import javax.persistence.Column;
-import javax.persistence.Embedded;
+import javax.persistence.Convert;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,38 +27,45 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotBlank;
 
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
+
 /**
- * Base class for feature creation requests
+ * Base class for feature update requests
  *
  * @author Marc SORDI
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureCreationRequest extends AbstractRequest {
+public abstract class AbstractFeatureUpdateRequest extends AbstractRequest {
 
     @Id
-    @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_creation_request")
-    @GeneratedValue(generator = "featureCreationRequestSequence", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,
+            sequenceName = "seq_feature_update_request")
+    @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(name = "provider_id", nullable = false)
     @NotBlank(message = "Provider id is required")
     private String providerId;
 
-    @Embedded
-    private FeatureMetadataEntity metadata;
+    /**
+     * Information Package ID for REST request
+     */
+    @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
+    @Convert(converter = FeatureUrnConverter.class)
+    private FeatureUniformResourceName urn;
 
     public Long getId() {
         return this.id;
     }
 
-    public FeatureMetadataEntity getMetadata() {
-        return metadata;
+    public FeatureUniformResourceName getUrn() {
+        return urn;
     }
 
-    public void setMetadata(FeatureMetadataEntity metadata) {
-        this.metadata = metadata;
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
     }
 
     public String getProviderId() {

@@ -33,9 +33,11 @@ import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
@@ -63,6 +65,9 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
     @Autowired
     protected IFeatureUpdateRequestRepository featureUpdateRequestRepo;
+
+    @Autowired
+    FeatureConfigurationProperties properties;
 
     @Before
     public void before() throws InterruptedException {
@@ -195,6 +200,8 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureCreationRequestEvent toAdd;
         Feature featureToAdd;
         FeatureFile file;
+        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
+                                       modelAttrAssocClientMock);
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             file = FeatureFile.build(
@@ -202,14 +209,19 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
                                                                  1024l, "MD5", "checksum"),
                                      FeatureFileLocation.build("www.google.com", "GPFS"));
             featureToAdd = Feature
-                    .build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model")
+                    .build("id" + i, null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, model)
                     .withFiles(file);
+            featureToAdd.addProperty(IProperty.buildString("data_type", "TYPE01"));
+            featureToAdd.addProperty(IProperty.buildObject("file_characterization",
+                                                           IProperty.buildBoolean("valid", Boolean.TRUE)));
+
             toAdd = FeatureCreationRequestEvent
                     .build(FeatureSessionMetadata.build("owner", "session", PriorityLevel.AVERAGE, Lists.emptyList()),
                            featureToAdd);
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now());
+
             events.add(toAdd);
         }
     }

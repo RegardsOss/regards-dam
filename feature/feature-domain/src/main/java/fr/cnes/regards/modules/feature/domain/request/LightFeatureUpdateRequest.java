@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dao;
+package fr.cnes.regards.modules.feature.domain.request;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
-import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.dto.Feature;
 
 /**
- *
- * @author Marc SORDI
- *
- */
-@Repository
-public interface IFeatureUpdateRequestRepository extends JpaRepository<FeatureUpdateRequest, Long> {
+*
+* {@link FeatureUpdateRequest} without {@link Feature}
+* @author Marc SORDI
+*
+*/
+@Entity
+@Table(name = "t_feature_update_request")
+public class LightFeatureUpdateRequest extends AbstractFeatureUpdateRequest {
 
 }

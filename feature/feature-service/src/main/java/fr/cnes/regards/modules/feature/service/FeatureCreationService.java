@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -40,8 +39,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -125,24 +122,33 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     FeatureConfigurationProperties properties;
 
     @Override
-    public List<FeatureCreationRequest> registerRequests(List<FeatureCreationRequestEvent> events,
-            Set<String> grantedRequestId, Multimap<String, String> errorByRequestId) {
+    public RequestInfo<String> registerRequests(List<FeatureCreationRequestEvent> events) {
 
         long registrationStart = System.currentTimeMillis();
 
         List<FeatureCreationRequest> grantedRequests = new ArrayList<>();
+        RequestInfo<String> requestInfo = new RequestInfo<>();
 
-        events.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests, errorByRequestId));
+        events.forEach(item -> prepareFeatureCreationRequest(item, grantedRequests, requestInfo));
         LOGGER.trace("------------->>> {} creation requests prepared in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
 
-        grantedRequests.stream().forEach(request -> grantedRequestId.add(request.getRequestId()));
         // Save a list of validated FeatureCreationRequest from a list of
         // FeatureCreationRequestEvent
         featureCreationRequestRepo.saveAll(grantedRequests);
         LOGGER.debug("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
-        return grantedRequests;
+        return requestInfo;
+    }
+
+    @Override
+    public RequestInfo<String> registerRequests(FeatureCreationCollection collection) {
+        // Build events to reuse event registration code
+        List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
+        for (Feature feature : collection.getFeatures()) {
+            toTreat.add(FeatureCreationRequestEvent.build(collection.getMetadata(), feature));
+        }
+        return registerRequests(toTreat);
     }
 
     @Override
@@ -162,26 +168,16 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                            Sort.by(Order.asc("priority"), Order.asc("registrationDate"))));
 
         if (page.hasContent()) {
-            //            LOGGER.debug("------------->>> {} creation requests read in {} ms", page.getSize(),
-            //                         System.currentTimeMillis() - pageStart);
             for (LightFeatureCreationRequest request : page) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
                     requestsToSchedule.add(request);
                     request.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-                    request.setState(RequestState.GRANTED);
                     featureIdsScheduled.add(request.getProviderId());
                 }
             }
 
-            // update FeatureCreationRequest scheduled state
-            //            long updateStart = System.currentTimeMillis();
-            //            this.featureCreationRequestRepo
-            //                    .updateState(RequestState.GRANTED,
-            //                                 requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toSet()));
             this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
-            //            LOGGER.debug("------------->>> {} creation requests GRANTED updated in {} ms", requestsToSchedule.size(),
-            //                         System.currentTimeMillis() - updateStart);
 
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
@@ -203,10 +199,10 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
      *
      * @param item            request to manage
      * @param grantedRequests collection of granted requests to populate
-     * @param errorByRequestId multimap to store errors by request id
+     * @param requestInfo store request registration state
      */
     private void prepareFeatureCreationRequest(FeatureCreationRequestEvent item,
-            List<FeatureCreationRequest> grantedRequests, Multimap<String, String> errorByRequestId) {
+            List<FeatureCreationRequest> grantedRequests, RequestInfo<String> requestInfo) {
 
         // Validate event
         Errors errors = new MapBindingResult(new HashMap<>(), FeatureCreationRequestEvent.class.getName());
@@ -214,7 +210,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         validator.validate(item, errors);
         if (errors.hasErrors()) {
             LOGGER.debug("Error during founded FeatureCreationRequestEvent validation {}", errors.toString());
-            errorByRequestId.putAll(item.getRequestId(), ErrorTranslator.getErrors(errors));
+            requestInfo.addDeniedRequest(item.getRequestId(), ErrorTranslator.getErrors(errors));
             // Publish DENIED request (do not persist it in DB)
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
@@ -227,7 +223,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         if (errors.hasErrors()) {
             LOGGER.debug("Error during Feature validation {}", errors.toString());
-            errorByRequestId.putAll(item.getRequestId(), ErrorTranslator.getErrors(errors));
+            requestInfo.addDeniedRequest(item.getRequestId(), ErrorTranslator.getErrors(errors));
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
@@ -307,8 +303,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 if (!fcr.getMetadata().hasStorage()) {
                     this.storageClient.reference(FileReferenceRequestDTO
                             .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                   attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
-                                   loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                                   attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
+                                   loc.getStorage(), loc.getUrl()));
                 }
                 for (StorageMetadata metadata : fcr.getMetadata().getStorages()) {
                     if (loc.getStorage() == null) {
@@ -319,8 +315,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                     } else {
                         this.storageClient.reference(FileReferenceRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                       attribute.getMimeType().toString(), fcr.getFeature().getUrn().getOrder(),
-                                       loc.getUrl(), loc.getStorage(), loc.getUrl()));
+                                       attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
+                                       loc.getStorage(), loc.getUrl()));
                     }
                 }
             }
@@ -362,27 +358,4 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         return featureEntity == null ? 1 : featureEntity.getVersion() + 1;
     }
 
-    @Override
-    public RequestInfo<String> registerScheduleProcess(FeatureCreationCollection toHandle) {
-        List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
-        Set<String> grantedRequestId = new HashSet<String>();
-        Multimap<String, String> errorbyRequestId = ArrayListMultimap.create();
-        Map<String, String> requestIdByFeature = new HashMap<String, String>();
-        RequestInfo<String> requestInfo = new RequestInfo<String>();
-
-        // build FeatureCreationEvent
-        for (Feature feature : toHandle.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build(toHandle.getMetadata(), feature));
-        }
-
-        // extract from generated FeatureCreationrequest a map feature id => requestID
-        this.registerRequests(toTreat, grantedRequestId, errorbyRequestId).stream()
-                .forEach(fcr -> requestIdByFeature.put(fcr.getFeature().getId(), fcr.getRequestId()));
-
-        requestInfo.setIdByFeatureId(requestIdByFeature);
-        requestInfo.setGrantedId(grantedRequestId);
-        requestInfo.setErrorById(errorbyRequestId);
-
-        return requestInfo;
-    }
 }
