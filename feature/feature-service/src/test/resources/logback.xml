@@ -30,8 +30,8 @@
 	<logger name="org.springframework" level="ERROR" />
 	<logger name="io.micrometer" level="ERROR" />
 	<logger name="fr.cnes.regards.modules" level="INFO" />
-	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR" />
-	<logger name="fr.cnes.regards.modules.feature.service" level="DEBUG"/>
+	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR"/>
+	<logger name="fr.cnes.regards.modules.feature.service" level="TRACE"/>
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
