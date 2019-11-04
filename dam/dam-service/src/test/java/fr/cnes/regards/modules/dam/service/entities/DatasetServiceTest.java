@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,6 +25,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,17 +47,18 @@ import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
-import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
-import fr.cnes.regards.modules.dam.service.models.xml.XmlImportHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.exception.ImportException;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
+import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
@@ -105,7 +107,7 @@ public class DatasetServiceTest {
      *
      * @throws ModuleException
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Before
     public void init() throws ModuleException {
         JWTService jwtService = new JWTService();
@@ -154,10 +156,10 @@ public class DatasetServiceTest {
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 
         publisherMocked = Mockito.mock(IPublisher.class);
-        dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
-                emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(IOpenSearchService.class),
-                Mockito.mock(IPluginService.class));
+        dataSetServiceMocked = new DatasetService(Mockito.mock(IModelFinder.class), dataSetRepositoryMocked,
+                pAttributeModelService, pModelAttributeService, entitiesRepositoryMocked, modelService,
+                deletedEntityRepositoryMocked, null, emMocked, publisherMocked, runtimeTenantResolver,
+                Mockito.mock(IOpenSearchService.class), Mockito.mock(IPluginService.class));
     }
 
     /**
@@ -244,7 +246,7 @@ public class DatasetServiceTest {
         try {
             input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
 
-            return XmlImportHelper.importModel(input, new ArrayList<>());
+            return XmlImportHelper.importModel(input, null);
         } catch (IOException | ImportException e) {
             LOG.debug("import of model failed", e);
             Assert.fail();

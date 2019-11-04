@@ -47,7 +47,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-domain</artifactId>
+			<artifactId>dam-gson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
@@ -65,8 +65,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-gson</artifactId>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-dao</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

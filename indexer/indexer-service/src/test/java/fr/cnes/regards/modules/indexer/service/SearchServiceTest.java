@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -44,15 +46,14 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author oroussel
@@ -193,9 +194,8 @@ public class SearchServiceTest {
         System.out.println("---------------------------------");
         System.out
                 .printf("Result count: %d, results in error: %d (%s %%), max distance error : %d (%s %%) (search only duration: %d ms)\n\n",
-                        page.getTotalElements(), errorCount,
-                        format.format((100. * errorCount) / page.getTotalElements()), (int) maxErrorDistance,
-                        format.format((100. * maxErrorDistance) / distance), duration);
+                        page.getTotalElements(), errorCount, format.format(100. * errorCount / page.getTotalElements()),
+                        (int) maxErrorDistance, format.format(100. * maxErrorDistance / distance), duration);
     }
 
     private void computePolygonTest(String label, ICriterion criterion, int expectedCount) {

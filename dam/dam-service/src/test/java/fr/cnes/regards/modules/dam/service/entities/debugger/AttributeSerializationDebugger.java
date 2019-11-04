@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -48,10 +47,10 @@ import com.google.gson.stream.JsonReader;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.service.models.exception.ImportException;
-import fr.cnes.regards.modules.dam.service.models.xml.XmlImportHelper;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.service.exception.ImportException;
+import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 
 /**
  * Tools for debugging (de)serialization problems
@@ -89,7 +88,7 @@ public class AttributeSerializationDebugger extends AbstractDaoTest {
      */
     private List<ModelAttrAssoc> importModel(Path xmlFilePath) {
         try {
-            return XmlImportHelper.importModel(Files.newInputStream(xmlFilePath), new ArrayList<>());
+            return XmlImportHelper.importModel(Files.newInputStream(xmlFilePath), null);
         } catch (IOException | ImportException e) {
             LOGGER.debug("Import of model failed", e);
             Assert.fail();

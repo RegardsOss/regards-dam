@@ -35,13 +35,13 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  *
@@ -107,11 +107,11 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
         CollectionFeature feature = new CollectionFeature(getDefaultTenant(), "FIRST", "My first collection");
 
         // Set dynamic properties
-        feature.getProperties().add(AttributeBuilder.buildString(GALAXY, MILKY_WAY));
-        feature.getProperties().add(AttributeBuilder
-                .buildString(ABSTRACT, "The Milky Way is the galaxy that contains our Solar System."));
-        feature.getProperties().add(AttributeBuilder.buildObject(DATA, AttributeBuilder.buildInteger(STAR_NB, 300),
-                                                                 AttributeBuilder.buildInteger(PLANET_NB, 100)));
+        feature.getProperties().add(IProperty.buildString(GALAXY, MILKY_WAY));
+        feature.getProperties()
+                .add(IProperty.buildString(ABSTRACT, "The Milky Way is the galaxy that contains our Solar System."));
+        feature.getProperties().add(IProperty.buildObject(DATA, IProperty.buildInteger(STAR_NB, 300),
+                                                          IProperty.buildInteger(PLANET_NB, 100)));
 
         // Set tags
         feature.addTag("first tag");
@@ -130,11 +130,11 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
         Collection collection = new Collection(galaxyModel, getDefaultTenant(), "SECOND", "My second collection");
 
         // Set dynamic properties
-        collection.addProperty(AttributeBuilder.buildString(GALAXY, MILKY_WAY));
-        collection.addProperty(AttributeBuilder
-                .buildString(ABSTRACT, "The Milky Way is the galaxy that contains our Solar System."));
-        collection.addProperty(AttributeBuilder.buildObject(DATA, AttributeBuilder.buildInteger(STAR_NB, 300),
-                                                            AttributeBuilder.buildInteger(PLANET_NB, 100)));
+        collection.addProperty(IProperty.buildString(GALAXY, MILKY_WAY));
+        collection.addProperty(IProperty.buildString(ABSTRACT,
+                                                     "The Milky Way is the galaxy that contains our Solar System."));
+        collection.addProperty(IProperty.buildObject(DATA, IProperty.buildInteger(STAR_NB, 300),
+                                                     IProperty.buildInteger(PLANET_NB, 100)));
 
         // Set tags
         collection.addTags("second tag");

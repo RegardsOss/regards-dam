@@ -57,7 +57,6 @@ import org.springframework.validation.ObjectError;
 import com.google.common.base.Strings;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -82,20 +81,13 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
-import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -103,6 +95,11 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * @author oroussel
@@ -136,9 +133,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private IPublisher publisher;
 
-    @Autowired
-    private ISubscriber subscriber;
-
     @PersistenceContext
     private EntityManager em;
 
@@ -147,9 +141,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private IDatasetService datasetService;
-
-    @Autowired
-    private IDocumentService documentService;
 
     @Autowired
     private ICollectionService collectionService;
@@ -196,7 +187,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     @EventListener
-    public void handleApplicationReady(DamGsonReadyEvent event) {
+    public void handleApplicationReady(ModelGsonReadyEvent event) {
         // TODO : subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
@@ -252,9 +243,6 @@ public class EntityIndexerService implements IEntityIndexerService {
                         dataset.getGroups().add(entry.getKey());
                     }
                 }
-            } else if (entity instanceof Document) {
-                // Add the internal AccessGroup to allow everyone to see this document
-                entity.getGroups().add(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
@@ -265,16 +253,16 @@ public class EntityIndexerService implements IEntityIndexerService {
             // previous version of dataset and current one.
             // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
             // data objects must be updated
-            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
+            boolean needAssociatedDataObjectsUpdate = lastUpdateDate != null || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
-            if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
+            if (!needAssociatedDataObjectsUpdate && entity instanceof Dataset) {
                 Dataset dataset = (Dataset) entity;
                 needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
                                                                                    esRepos.get(tenant, dataset));
             }
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
-            if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
+            if (entity instanceof Dataset && needAssociatedDataObjectsUpdate) {
                 // Subsetting clause is needed by many things
                 ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate, dsiId);
@@ -423,7 +411,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
             // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
-            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
+            if (group.getDatasetAccess() && group.getMetaDataObjectAccessFilterPluginId() != null) {
                 try {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
@@ -628,16 +616,16 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
         for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
-            AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
-            if (attributeToAdd instanceof ObjectAttribute) {
-                ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
+            IProperty<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
+            if (attributeToAdd instanceof ObjectProperty) {
+                ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
-                Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute)
+                Optional<IProperty<?>> candidate = dataset.getProperties().stream()
+                        .filter(attr -> attr instanceof ObjectProperty
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
-                    Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
+                    Set<IProperty<?>> properties = ((ObjectProperty) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
                     properties.removeAll(attrInFragment.getValue());
                     // and now set the new ones
@@ -705,14 +693,14 @@ public class EntityIndexerService implements IEntityIndexerService {
         List<String> errors = null;
         // If some validation errors occur, don't index data object
         try {
-            dataObjectService.validate(dataObject, errorsObject, false);
+            dataObjectService.validate(dataObject, errorsObject, ValidationMode.CREATION);
         } catch (EntityInvalidException e) {
             // If such an exception has been thrown, it contains all errors ( as a List<String>) else errors are
             // described into errorsObject
             errors = e.getMessages();
         }
         // No exception thrown but still validation errors
-        if ((errors == null) && errorsObject.hasErrors()) {
+        if (errors == null && errorsObject.hasErrors()) {
             errors = toErrors(errorsObject);
         }
         // No error => dataObject is valid
@@ -844,14 +832,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
-    public void updateAllDocuments(String tenant) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
-        for (Document doc : documentService.findAll()) {
-            updateEntityIntoEs(tenant, doc.getIpId(), null, now, false, null);
-        }
-    }
-
-    @Override
     public void updateAllCollections(String tenant) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
         for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
@@ -876,7 +856,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     /**
     TODO
     private class AIPEventHandler implements IHandler<AIPEvent> {
-    
+
         @Override
         public void handle(TenantWrapper<AIPEvent> wrapper) {
             AIPEvent event = wrapper.getContent();
@@ -888,7 +868,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                     String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
                     LOGGER.error(msg, e);
                 }
-    
+
             }
         }
     }

@@ -25,7 +25,7 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DataObjectMetadata;
-import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  *
@@ -132,7 +132,7 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         DataObject dataObject = new DataObject(model, feature);
         dataObject.setInternal(internal);
         dataObject.setIpId(feature.getId());
-        if ((feature.getTags() != null) && !feature.getTags().isEmpty()) {
+        if (feature.getTags() != null && !feature.getTags().isEmpty()) {
             dataObject.setTags(feature.getTags());
         }
         // FIXME manage last update?

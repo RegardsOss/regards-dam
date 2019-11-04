@@ -40,8 +40,7 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
-import fr.cnes.regards.modules.dam.domain.models.Model;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -58,15 +57,13 @@ public class EntityServiceTest {
 
     private DataObject data;
 
-    private Document doc;
-
     private Dataset dataset;
 
     private Dataset dataset2;
 
     private Model model2;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Before
     public void init() {
 
@@ -85,8 +82,6 @@ public class EntityServiceTest {
 
         data = new DataObject(new Model(), "PROJECT", "OBJ1", "object");
         data.setId(1L);
-        doc = new Document(model2, "PROJECT", "DOC1", "doc");
-        doc.setId(2L);
         dataset = new Dataset(model2, "PROJECT", "DS1", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
@@ -110,7 +105,6 @@ public class EntityServiceTest {
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(Optional.of(data));
-        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(Optional.of(doc));
         Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(Optional.of(dataset));
     }
 
@@ -123,12 +117,10 @@ public class EntityServiceTest {
         entityList.add(collection3);
         entityList.add(dataset2);
         entityList.add(data);
-        entityList.add(doc);
         Set<UniformResourceName> entityURNList = new HashSet<>();
         entityURNList.add(collection3.getIpId());
         entityURNList.add(dataset2.getIpId());
         entityURNList.add(data.getIpId());
-        entityURNList.add(doc.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(entityURNList)).thenReturn(entityList);
 
         // TODO
@@ -136,23 +128,6 @@ public class EntityServiceTest {
         Assert.assertFalse(dataset.getTags().contains(collection3.getIpId().toString()));
         Assert.assertFalse(dataset.getTags().contains(dataset2.getIpId().toString()));
         Assert.assertFalse(dataset.getTags().contains(data.getIpId().toString()));
-        Assert.assertFalse(dataset.getTags().contains(doc.getIpId().toString()));
-    }
-
-    @Test
-    @Requirement("REGARDS_DSL_SYS_ARC_450")
-    @Purpose("The URN identifier of a document is unique")
-    public void documentUrnUnicity() throws ModuleException, IOException {
-        String docName = "un document";
-
-        Document document1 = new Document(model2, "PROJECT", docName, docName);
-        Document document2 = new Document(model2, "PROJECT", docName, docName);
-
-        Assert.assertNotNull(document1);
-        Assert.assertNotNull(document2);
-        Assert.assertNotNull(document1.getIpId());
-        Assert.assertNotNull(document2.getIpId());
-        Assert.assertNotEquals(document1.getIpId(), document2.getIpId());
     }
 
     @Test

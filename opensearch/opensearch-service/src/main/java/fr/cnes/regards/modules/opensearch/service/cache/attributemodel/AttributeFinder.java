@@ -44,13 +44,13 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelCreated;
-import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.model.client.IAttributeModelClient;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.model.domain.event.AttributeModelCreated;
+import fr.cnes.regards.modules.model.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
@@ -81,7 +81,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     /**
      * Store dynamic and static properties by tenant and type for full text search
      */
-    private final Map<String, Multimap<AttributeType, AttributeModel>> typedPropertyMap = new HashMap<>();
+    private final Map<String, Multimap<PropertyType, AttributeModel>> typedPropertyMap = new HashMap<>();
 
     public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {
@@ -106,7 +106,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     }
 
     @Override
-    public Set<AttributeModel> findByType(AttributeType type) throws OpenSearchUnknownParameter {
+    public Set<AttributeModel> findByType(PropertyType type) throws OpenSearchUnknownParameter {
 
         Collection<AttributeModel> ppties = getTenantTypedMap().get(type);
         if (ppties == null) {
@@ -124,13 +124,13 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
-        if (!attribute.isDynamic() && (attribute.getId() != null)) {
+        if (!attribute.isDynamic() && attribute.getId() != null) {
             return name;
         }
 
         for (Entry<String, AttributeModel> entry : getTenantMap().entrySet()) {
             AttributeModel att = entry.getValue();
-            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
+            if (att.isDynamic() && att.getId() != null && att.getId().equals(attribute.getId())) {
                 if (entry.getKey().length() < name.length()) {
                     name = entry.getKey();
                 }
@@ -152,7 +152,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         return propertyMap.get(tenant);
     }
 
-    private Multimap<AttributeType, AttributeModel> getTenantTypedMap() {
+    private Multimap<PropertyType, AttributeModel> getTenantTypedMap() {
         String tenant = runtimeTenantResolver.getTenant();
         if (!typedPropertyMap.containsKey(tenant)) {
             computePropertyMap(tenant);
@@ -164,35 +164,35 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      * Initialize queryable static properties
      */
     private void initStaticProperties(Map<String, AttributeModel> tenantMap,
-            Multimap<AttributeType, AttributeModel> tenantTypeMap) {
+            Multimap<PropertyType, AttributeModel> tenantTypeMap) {
 
         // Unique identifier
         tenantMap.put(StaticProperties.FEATURE_ID, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_ID, AttributeType.STRING, null).isStatic().get());
+                .build(StaticProperties.FEATURE_ID, PropertyType.STRING, null).isStatic().get());
 
         // SIP identifier alias provider identifier
         tenantMap.put(StaticProperties.FEATURE_PROVIDER_ID, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_PROVIDER_ID, AttributeType.STRING, null).isStatic().get());
+                .build(StaticProperties.FEATURE_PROVIDER_ID, PropertyType.STRING, null).isStatic().get());
 
         // Required label for minimal display purpose
         tenantMap.put(StaticProperties.FEATURE_LABEL, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_LABEL, AttributeType.STRING, null).isStatic().get());
+                .build(StaticProperties.FEATURE_LABEL, PropertyType.STRING, null).isStatic().get());
 
         // Related model name
         tenantMap.put(StaticProperties.FEATURE_MODEL, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_MODEL, AttributeType.STRING, null).isStatic().get());
+                .build(StaticProperties.FEATURE_MODEL, PropertyType.STRING, null).isStatic().get());
 
         // // Geometry
         // tenantMap.put(StaticProperties.FEATURE_GEOMETRY, AttributeModelBuilder
-        // .build(StaticProperties.FEATURE_GEOMETRY, AttributeType.STRING, null).isStatic().get());
+        // .build(StaticProperties.FEATURE_GEOMETRY, PropertyType.STRING, null).isStatic().get());
 
         // Tags
         tenantMap.put(StaticProperties.FEATURE_TAGS, AttributeModelBuilder
-                .build(StaticProperties.FEATURE_TAGS, AttributeType.STRING, null).isStatic().get());
+                .build(StaticProperties.FEATURE_TAGS, PropertyType.STRING, null).isStatic().get());
 
         // Allows to filter on dataset model id when searching for dataobjects
         tenantMap.put(StaticProperties.DATASET_MODEL_NAMES, AttributeModelBuilder
-                .build(StaticProperties.DATASET_MODEL_NAMES, AttributeType.STRING, null).isInternal().get());
+                .build(StaticProperties.DATASET_MODEL_NAMES, PropertyType.STRING, null).isInternal().get());
 
         // Register static properties by types
         tenantMap.values().forEach(attModel -> tenantTypeMap.put(attModel.getType(), attModel));
@@ -217,7 +217,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
 
         // Build or rebuild the maps
         Map<String, AttributeModel> tenantMap = new HashMap<>();
-        Multimap<AttributeType, AttributeModel> tenantTypeMap = ArrayListMultimap.create();
+        Multimap<PropertyType, AttributeModel> tenantTypeMap = ArrayListMultimap.create();
 
         // Add static properties
         initStaticProperties(tenantMap, tenantTypeMap);

@@ -48,30 +48,29 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DateIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.StringArrayAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.StringAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.dto.properties.BooleanProperty;
+import fr.cnes.regards.modules.model.dto.properties.DateArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.DateIntervalProperty;
+import fr.cnes.regards.modules.model.dto.properties.DateProperty;
+import fr.cnes.regards.modules.model.dto.properties.DoubleArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.DoubleIntervalProperty;
+import fr.cnes.regards.modules.model.dto.properties.DoubleProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerIntervalProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
+import fr.cnes.regards.modules.model.dto.properties.StringArrayProperty;
+import fr.cnes.regards.modules.model.dto.properties.StringProperty;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -127,78 +126,77 @@ public class IndexerServiceIT {
 
         // Creating a Collection with all types of attributes
         final Collection collection = new Collection(model, tenant, "COL1", "coll1");
-        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
+        final HashSet<IProperty<?>> attributes = new HashSet<>();
 
-        gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
-        gsonAttributeFactory.registerSubtype(tenant, DateArrayAttribute.class, "dateArrayAtt");
-        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "dateAtt");
-        gsonAttributeFactory.registerSubtype(tenant, DateIntervalAttribute.class, "dateInterval");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "maxDoubleValue");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "minDoubleValue");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "double");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleArrayAttribute.class, "doubleArray");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleIntervalAttribute.class, "doubleInterval");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "maxInt");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "minInt");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "int");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerArrayAttribute.class, "intArray");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalAttribute.class, "intInterval");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalAttribute.class, "N");
-        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "string");
-        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "correspondance");
-        gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArrayMusset", "correspondance");
-        gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArraySand", "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, BooleanProperty.class, "booleanAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateArrayProperty.class, "dateArrayAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateProperty.class, "dateAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateIntervalProperty.class, "dateInterval");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "maxDoubleValue");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "minDoubleValue");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "double");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleArrayProperty.class, "doubleArray");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleIntervalProperty.class, "doubleInterval");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerProperty.class, "maxInt");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerProperty.class, "minInt");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerProperty.class, "int");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerArrayProperty.class, "intArray");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalProperty.class, "intInterval");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalProperty.class, "N");
+        gsonAttributeFactory.registerSubtype(tenant, StringProperty.class, "string");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectProperty.class, "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, StringArrayProperty.class, "stringArrayMusset", "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, StringArrayProperty.class, "stringArraySand", "correspondance");
 
-        attributes.add(AttributeBuilder.buildBoolean("booleanAtt", true));
-        attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt",
-                                                       OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
-                                                       OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
-                                                       OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDate("dateAtt",
-                                                  OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDateInterval("dateInterval",
-                                                          OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
-                                                          OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDouble("maxDoubleValue", Double.MAX_VALUE));
-        attributes.add(AttributeBuilder.buildDouble("minDoubleValue", Double.MIN_VALUE));
+        attributes.add(IProperty.buildBoolean("booleanAtt", true));
+        attributes.add(IProperty.buildDateArray("dateArrayAtt",
+                                                OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
+                                                OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
+                                                OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
+        attributes.add(IProperty.buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(IProperty.buildDateInterval("dateInterval",
+                                                   OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                                   OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
+        attributes.add(IProperty.buildDouble("maxDoubleValue", Double.MAX_VALUE));
+        attributes.add(IProperty.buildDouble("minDoubleValue", Double.MIN_VALUE));
 
-        // attributes.add(AttributeBuilder.buildDouble("NaN", Double.NaN));
-        // attributes.add(AttributeBuilder.buildDouble("positiveInfinity", Double.POSITIVE_INFINITY));
-        // attributes.add(AttributeBuilder.buildDouble("negativeInfinity", Double.NEGATIVE_INFINITY));
+        // attributes.add(IProperty.buildDouble("NaN", Double.NaN));
+        // attributes.add(IProperty.buildDouble("positiveInfinity", Double.POSITIVE_INFINITY));
+        // attributes.add(IProperty.buildDouble("negativeInfinity", Double.NEGATIVE_INFINITY));
 
-        attributes.add(AttributeBuilder.buildDouble("double", 1.414213562));
+        attributes.add(IProperty.buildDouble("double", 1.414213562));
 
-        attributes.add(AttributeBuilder.buildDoubleArray("doubleArray", 0., 1., Math.PI, Math.E));
+        attributes.add(IProperty.buildDoubleArray("doubleArray", 0., 1., Math.PI, Math.E));
 
-        attributes.add(AttributeBuilder.buildDoubleInterval("doubleInterval", 0., 2.));
+        attributes.add(IProperty.buildDoubleInterval("doubleInterval", 0., 2.));
 
-        // attributes.add(AttributeBuilder.buildGeometry("geometry", "POLYGON(...)"));
+        // attributes.add(IProperty.buildGeometry("geometry", "POLYGON(...)"));
 
-        attributes.add(AttributeBuilder.buildInteger("maxInt", Integer.MAX_VALUE));
-        attributes.add(AttributeBuilder.buildInteger("minInt", Integer.MIN_VALUE));
-        attributes.add(AttributeBuilder.buildInteger("int", 42));
+        attributes.add(IProperty.buildInteger("maxInt", Integer.MAX_VALUE));
+        attributes.add(IProperty.buildInteger("minInt", Integer.MIN_VALUE));
+        attributes.add(IProperty.buildInteger("int", 42));
 
-        attributes.add(AttributeBuilder.buildIntegerArray("intArray", -2, -1, 0, 1, 2));
+        attributes.add(IProperty.buildIntegerArray("intArray", -2, -1, 0, 1, 2));
 
-        attributes.add(AttributeBuilder.buildIntegerInterval("intInterval", -10, 10));
-        attributes.add(AttributeBuilder.buildIntegerInterval("N", Integer.MIN_VALUE, Integer.MAX_VALUE));
+        attributes.add(IProperty.buildIntegerInterval("intInterval", -10, 10));
+        attributes.add(IProperty.buildIntegerInterval("N", Integer.MIN_VALUE, Integer.MAX_VALUE));
 
-        attributes.add(AttributeBuilder.buildString("string", "Esope reste et se repose"));
+        attributes.add(IProperty.buildString("string", "Esope reste et se repose"));
 
-        final ObjectAttribute fragment = AttributeBuilder
+        ObjectProperty fragment = IProperty
                 .buildObject("correspondance",
-                             AttributeBuilder.buildStringArray("stringArrayMusset",
-                                                               "Quand je mets à vos pieds un éternel hommage",
-                                                               "Voulez-vous qu'un instant je change de visage ?",
-                                                               "Vous avez capturé les sentiments d'un coeur",
-                                                               "Que pour vous adorer forma le créateur.",
-                                                               "Je vous chéris, amour, et ma plume en délire",
-                                                               "Couche sur le papier ce que je n'ose dire.",
-                                                               "Avec soin de mes vers lisez les premiers mots,",
-                                                               "Vous saurez quel remède apporter à mes maux."),
-                             AttributeBuilder.buildStringArray("stringArraySand",
-                                                               "Cette indigne faveur que votre esprit réclame",
-                                                               "Nuit à mes sentiments et répugne à mon âme"));
+                             IProperty.buildStringArray("stringArrayMusset",
+                                                        "Quand je mets à vos pieds un éternel hommage",
+                                                        "Voulez-vous qu'un instant je change de visage ?",
+                                                        "Vous avez capturé les sentiments d'un coeur",
+                                                        "Que pour vous adorer forma le créateur.",
+                                                        "Je vous chéris, amour, et ma plume en délire",
+                                                        "Couche sur le papier ce que je n'ose dire.",
+                                                        "Avec soin de mes vers lisez les premiers mots,",
+                                                        "Vous saurez quel remède apporter à mes maux."),
+                             IProperty.buildStringArray("stringArraySand",
+                                                        "Cette indigne faveur que votre esprit réclame",
+                                                        "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
         collection.setProperties(attributes);
@@ -225,9 +223,9 @@ public class IndexerServiceIT {
         collModel.setName("collModel");
         collModel.setType(EntityType.COLLECTION);
 
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "altitude");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerProperty.class, "altitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "latitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "longitude");
 
         indexerService.createIndex(SEARCH);
 
@@ -256,10 +254,10 @@ public class IndexerServiceIT {
 
     private Collection createCollection(final Model collModel, final int i) {
         final Collection collection = new Collection(collModel, SEARCH, "COL" + i, "coll" + i);
-        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
-        attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
-        attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
-        attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
+        final HashSet<IProperty<?>> attributes = new HashSet<>();
+        attributes.add(IProperty.buildInteger("altitude", (int) (Math.random() * 8848)));
+        attributes.add(IProperty.buildDouble("longitude", Math.random() * 360. - 180.));
+        attributes.add(IProperty.buildDouble("latitude", Math.random() * 180. - 90.));
         collection.setProperties(attributes);
         return collection;
     }
@@ -267,9 +265,9 @@ public class IndexerServiceIT {
     @Test
     @Ignore
     public void testSimpleSearch() {
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "altitude");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
-        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerProperty.class, "altitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "latitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleProperty.class, "longitude");
 
         // FIXME : this criterion cannot be available
         final ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);

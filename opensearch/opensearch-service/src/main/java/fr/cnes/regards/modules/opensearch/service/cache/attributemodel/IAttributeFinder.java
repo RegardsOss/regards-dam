@@ -20,8 +20,8 @@ package fr.cnes.regards.modules.opensearch.service.cache.attributemodel;
 
 import java.util.Set;
 
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
@@ -45,7 +45,7 @@ public interface IAttributeFinder {
      * @return the list of {@link AttributeModel} with specified type
      * @throws OpenSearchUnknownParameter if no parameter can be found with specified type
      */
-    Set<AttributeModel> findByType(AttributeType type) throws OpenSearchUnknownParameter;
+    Set<AttributeModel> findByType(PropertyType type) throws OpenSearchUnknownParameter;
 
     /**
      * Return the smaller distinct path of the given attribute by removing if possible "feature", "properties" and

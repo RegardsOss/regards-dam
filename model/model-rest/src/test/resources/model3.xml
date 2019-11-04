@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
+    <name>model3</name>
+    <type>COLLECTION</type>
+    <attribute>
+        <label>forTests</label>
+        <name>facility</name>
+        <type>STRING</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>active</name>
+        <type>BOOLEAN</type>
+    </attribute>
+    <fragment>
+        <name>address</name>
+        <attribute>
+            <label>forTests</label>
+            <name>road</name>
+            <type>STRING</type>
+        </attribute>
+        <attribute>
+            <label>forTests</label>
+            <name>number</name>
+            <type>DOUBLE</type>
+        </attribute>
+        <attribute>
+            <label>forTests</label>
+            <name>city</name>
+            <type>STRING</type>
+        </attribute>
+    </fragment>
+</model>

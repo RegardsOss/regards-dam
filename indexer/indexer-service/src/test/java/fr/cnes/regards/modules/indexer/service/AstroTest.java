@@ -62,7 +62,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
@@ -70,6 +69,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author oroussel
@@ -135,8 +135,8 @@ public class AstroTest {
      * Transform right ascendance in decimal hours to longitude in degrees
      */
     private double toLongitude(double rightAscendance) {
-        double longitude_0_360 = (rightAscendance / 24.) * 360;
-        return EsHelper.highScaled(((longitude_0_360 >= 180.) ? longitude_0_360 - 360.0 : longitude_0_360));
+        double longitude_0_360 = rightAscendance / 24. * 360;
+        return EsHelper.highScaled(longitude_0_360 >= 180. ? longitude_0_360 - 360.0 : longitude_0_360);
     }
 
     /**

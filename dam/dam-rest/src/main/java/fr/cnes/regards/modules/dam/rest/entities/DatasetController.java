@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dam.rest.entities;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -52,12 +53,15 @@ import fr.cnes.regards.framework.module.rest.utils.Validity;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
 import fr.cnes.regards.modules.dam.rest.entities.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
@@ -107,6 +111,11 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
 
+    /**
+     * Controller path to get all attributes associated to dataset
+     */
+    public static final String ENTITY_ASSOCS_MAPPING = "{datasetUrn}/assocs";
+
     private static final Logger LOG = LoggerFactory.getLogger(DatasetController.class);
 
     /**
@@ -122,10 +131,25 @@ public class DatasetController implements IResourceController<Dataset> {
     private IDatasetService service;
 
     /**
+     * Model attribute association service
+     */
+    @Autowired
+    private IModelAttrAssocService modelAttrAssocService;
+
+    /**
      * Service parsing/converting OpenSearch string requests to {@link ICriterion}
      */
     @Autowired
     private IOpenSearchService openSearchService;
+
+    @ResourceAccess(description = "Retrieve all attributes related to given entity")
+    @RequestMapping(path = ENTITY_ASSOCS_MAPPING, method = RequestMethod.GET)
+    public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(
+            @RequestParam(name = "datasetUrn") UniformResourceName datasetUrn) throws ModuleException {
+        Dataset dataset = service.load(datasetUrn);
+        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocs(dataset.getDataModel());
+        return ResponseEntity.ok(assocs);
+    }
 
     /**
      * Create a dataset
@@ -141,7 +165,7 @@ public class DatasetController implements IResourceController<Dataset> {
             throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
-        service.validate(dataset, result, false);
+        service.validate(dataset, result, ValidationMode.CREATION);
 
         final Dataset created = service.create(dataset);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
@@ -235,7 +259,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
         // Validate dynamic model
-        service.validate(dataset, result, true);
+        service.validate(dataset, result, ValidationMode.UPDATE);
 
         Dataset dataSet = service.update(datasetId, dataset);
         Resource<Dataset> resource = toResource(dataSet);
@@ -292,8 +316,6 @@ public class DatasetController implements IResourceController<Dataset> {
 
     /**
      * Retrieve data attributes of datasets of given URNs and given model name
-     * @param urns the URNs of datasets
-     * @param modelIds the id of dataset models
      * @param pageable the page
      * @param assembler the resources assembler
      * @return the page of attribute models wrapped in an HTTP response

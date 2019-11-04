@@ -21,10 +21,10 @@ import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.models.event.ComputedAttributeModelEvent;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
+import fr.cnes.regards.modules.model.service.event.ComputedAttributeModelEvent;
 
 /**
  * Crawler service for Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -57,7 +57,7 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
 
     @Override
     @EventListener
-    public void onApplicationReadyEvent(DamGsonReadyEvent event) {
+    public void onApplicationReadyEvent(ModelGsonReadyEvent event) {
         subscriber.subscribeTo(AccessRightEvent.class, this);
     }
 

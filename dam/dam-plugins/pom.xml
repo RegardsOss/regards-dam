@@ -54,6 +54,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-dao</artifactId>			
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
 			<artifactId>dam-dao</artifactId>
 		</dependency>

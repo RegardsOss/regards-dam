@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="model_V1.0.xsd">
+	<name>GEODE001</name>
+	<description>Data model for SWOT data lifecycle</description>
+	<version>0.0.1</version>
+	<type>DATA</type>
+	<!-- System infos -->
+	<fragment>
+		<name>system</name>
+		<attribute>
+			<label>File size</label>
+			<name>filesize</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute alterable="false">
+			<label>Creation date</label>
+			<name>creation_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Modification date</label>
+			<name>modification_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Urls</label>
+			<name>urls</name>
+			<type>STRING_ARRAY</type>
+			<restriction>
+				<pattern>^(https?|ftp|file)://[-a-zA-Z0-9+&#38;@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&#38;@#/%=~_|]</pattern>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Filename</label>
+			<name>filename</name>
+			<type>STRING</type>
+		</attribute>
+		<attribute>
+			<label>Checksum</label>
+			<name>checksum</name>
+			<type>STRING</type>
+		</attribute>
+		<attribute>
+			<label>Extension</label>
+			<name>extension</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>tar</value>
+					<value>nc</value>
+					<value>shp</value>
+					<value>zip</value>
+					<value>tgz</value>
+					<value>xml</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+	</fragment>
+	<!-- File infos -->
+	<fragment>
+		<name>file_infos</name>
+		<attribute alterable="false">
+			<label>Data type</label>
+			<name>type</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>L0A_LR_Packet</value>
+					<value>L0A_HR_Packet</value>
+					<value>L0A_RAD_Packet</value>
+					<value>L0A_NALT_RAW</value>
+					<value>L0A_DORIS_RAW</value>
+					<value>L0A_GPSP_Packet</value>
+					<value>L2_LR_SSH</value>
+					<value>XDF_SURFACE_PRESSURE_ANA</value>
+					<value>L2_HR_RIVER_SP</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Nature</label>
+			<name>nature</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>TM</value>
+					<value>PRODUCT</value>
+					<value>DAD</value>
+					<value>SAD</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Type of date</label>
+			<name>date_type</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>BEGINEND</value>
+					<value>VALIDITY</value>
+					<value>GRID</value>
+					<value>DAY</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Level</label>
+			<name>level</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>L0A</value>
+					<value>LOAP</value>
+					<value>L1</value>
+					<value>L1B</value>
+					<value>L2</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Production date</label>
+			<name>production_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>UTC start date</label>
+			<name>utc_start_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>UTC end date</label>
+			<name>utc_end_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>TAI start date</label>
+			<name>tai_start_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>TAI end date</label>
+			<name>tai_end_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Validity</label>
+			<name>valid</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Validity change date</label>
+			<name>validity_change_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+	</fragment>
+	<!-- Ground segment -->
+	<fragment>
+		<name>ground_segment</name>
+		<attribute>
+			<label>sended</label>
+			<name>sended</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Sending date</label>
+			<name>sending_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Recipients</label>
+			<name>recipients</name>
+			<type>STRING_ARRAY</type>
+		</attribute>
+		<attribute>
+			<label>Archived</label>
+			<name>archived</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Archiving date</label>
+			<name>archiving_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Public</label>
+			<name>public</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute>
+			<label>Distributed</label>
+			<name>distributed</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Distribution date</label>
+			<name>distribution_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Restored</label>
+			<name>restored</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute>
+			<label>State</label>
+			<name>state</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>NOT ARCHIVED</value>
+					<value>ARCHIVED</value>
+					<value>VALIDATING</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+	</fragment>
+	<!-- SWOT -->
+	<fragment>
+		<name>swot</name>
+		<attribute>
+			<label>CRID</label>
+			<name>CRID</name>
+			<type>STRING</type>
+		</attribute>
+		<attribute>
+			<label>Product counter</label>
+			<name>product_counter</name>
+			<type>INTEGER</type>
+		</attribute>		
+		<attribute>
+			<label>Last version flag</label>
+			<name>is_last_version</name>
+			<type>BOOLEAN</type>
+		</attribute>
+		<attribute>
+			<label>Station</label>
+			<name>station</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>KUX</value>
+					<value>IVK</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Day date</label>
+			<name>day_date</name>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Cycle</label>
+			<name>cycle</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>Pass</label>
+			<name>pass</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>Tile</label>
+			<name>tile</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Tile side</label>
+			<name>tile_side</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>Full</value>
+					<value>Left</value>
+					<value>Right</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute optional="true">
+			<label>L2 LR File id</label>
+			<name>FileIdentifier</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>Basic</value>
+					<value>WindWave</value>
+					<value>Expert</value>
+					<value>Unsmoothed</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute optional="true">
+			<label>L0A or LOAP APID</label>
+			<name>APID</name>
+			<type>STRING</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Granule type</label>
+			<name>granule_type</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>Downlink unit</value>
+					<value>Cycle</value>
+					<value>Half Orbit</value>
+					<value>Tile</value>
+					<value>Full-swath scene</value>
+					<value>Bassin-cycle</value>
+					<value>Continent-pass</value>
+					<value>Daily</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<label>Continent id</label>
+			<name>continent_id</name>
+			<type>STRING_ARRAY</type>
+		</attribute>
+		<attribute>
+			<label>Bassin id</label>
+			<name>bassin_id</name>
+			<type>STRING</type>
+		</attribute>
+	</fragment>
+	<!-- CORPUS -->
+	<fragment>
+		<name>corpus</name>
+		<attribute optional="true">
+			<label>Corpus id</label>
+			<name>corpus_id</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute optional="true">
+			<label>Corpus lot id</label>
+			<name>corpus_lot</name>
+			<type>STRING</type>
+		</attribute>
+	</fragment>
+</model>

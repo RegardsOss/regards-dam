@@ -50,6 +50,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * Collection API
@@ -127,7 +128,7 @@ public class CollectionController implements IResourceController<Collection> {
             @Valid @RequestBody Collection inCollection, BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
-        collectionService.validate(inCollection, result, true);
+        collectionService.validate(inCollection, result, ValidationMode.UPDATE);
 
         final Collection collection = collectionService.update(id, inCollection);
         final Resource<Collection> resource = toResource(collection);
@@ -161,7 +162,7 @@ public class CollectionController implements IResourceController<Collection> {
             BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
-        collectionService.validate(inCollection, result, false);
+        collectionService.validate(inCollection, result, ValidationMode.CREATION);
 
         final Collection collection = collectionService.create(inCollection);
         final Resource<Collection> resource = toResource(collection);

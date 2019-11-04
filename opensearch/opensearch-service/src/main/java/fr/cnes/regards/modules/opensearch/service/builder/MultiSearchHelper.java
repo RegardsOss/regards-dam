@@ -21,8 +21,8 @@ package fr.cnes.regards.modules.opensearch.service.builder;
 import java.util.HashSet;
 import java.util.Set;
 
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
@@ -41,7 +41,7 @@ public final class MultiSearchHelper {
 
     /**
      * This method return fields than can match value type.<br/>
-     * At least attributes of type {@link AttributeType#STRING} is selected.
+     * At least attributes of type {@link PropertyType#STRING} is selected.
      *
      * @throws OpenSearchUnknownParameter
      */
@@ -49,8 +49,8 @@ public final class MultiSearchHelper {
             throws OpenSearchUnknownParameter {
         // TODO test with number, date, etc. so we can add fields with this type. Value has to be "castable" to this type.
         Set<AttributeModel> result = new HashSet<>();
-        result.addAll(finder.findByType(AttributeType.STRING));
-        result.addAll(finder.findByType(AttributeType.STRING_ARRAY));
+        result.addAll(finder.findByType(PropertyType.STRING));
+        result.addAll(finder.findByType(PropertyType.STRING_ARRAY));
         return result;
     }
 }

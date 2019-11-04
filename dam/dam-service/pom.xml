@@ -55,12 +55,16 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-gson</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
 			<artifactId>dam-plugins</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+            <artifactId>model-validation</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>

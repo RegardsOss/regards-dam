@@ -127,5 +127,4 @@ public final class StaticProperties {
 
     private StaticProperties() {
     }
-
 }

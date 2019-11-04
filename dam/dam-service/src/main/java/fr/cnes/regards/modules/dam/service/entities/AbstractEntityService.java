@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,32 +72,33 @@ import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.DeletedEntity;
 import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
+import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidFileLocation;
-import fr.cnes.regards.modules.dam.service.entities.validator.AttributeTypeValidator;
-import fr.cnes.regards.modules.dam.service.entities.validator.ComputationModeValidator;
-import fr.cnes.regards.modules.dam.service.entities.validator.NotAlterableAttributeValidator;
-import fr.cnes.regards.modules.dam.service.entities.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.dam.service.entities.validation.AbstractEntityValidationService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.dto.properties.AbstractProperty;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
+import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
+import fr.cnes.regards.modules.model.service.validation.validator.NotAlterableAttributeValidator;
 
 /**
  * Abstract parameterized entity service
  * @param <U> Entity type
  * @author oroussel
  */
-public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
-        implements IEntityService<U> {
+public abstract class AbstractEntityService<F extends EntityFeature, U extends AbstractEntity<F>>
+        extends AbstractEntityValidationService<F, U> implements IEntityService<U> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
@@ -156,12 +156,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.AipStoragePlugin}")
     private String postAipEntitiesToStoragePlugin;
 
-    public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
+    public AbstractEntityService(IModelFinder modelFinder,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
             IDatasetRepository datasetRepository, IAbstractEntityRepository<U> repository, EntityManager em,
             IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver) {
-        super(modelAttrAssocService);
+        super(modelFinder);
         this.entityRepository = entityRepository;
         this.modelService = modelService;
         this.deletedEntityRepository = deletedEntityRepository;
@@ -235,7 +235,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
         // Load model by name if id not specified
-        if ((model.getId() == null) && (model.getName() != null)) {
+        if (model.getId() == null && model.getName() != null) {
             model = modelService.getModelByName(model.getName());
             entity.setModel(model);
         }
@@ -245,57 +245,49 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      * Compute available validators
      * @param modelAttribute {@link ModelAttrAssoc}
      * @param attributeKey attribute key
-     * @param manageAlterable manage update or not
+     * @param mode manage update or not
      * @return {@link Validator} list
      */
     @Override
-    protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
-            AbstractEntity<?> entity) {
+    protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, ValidationMode mode,
+            F feature) {
+
+        List<Validator> validators = super.getValidators(modelAttribute, attributeKey, mode, feature);
 
         AttributeModel attModel = modelAttribute.getAttribute();
 
-        List<Validator> validators = new ArrayList<>();
-        // Check computation mode
-        validators.add(new ComputationModeValidator(modelAttribute.getMode(), attributeKey));
         // Check alterable attribute
         // Update mode only :
-        if (manageAlterable && !attModel.isAlterable()) {
+        if (ValidationMode.UPDATE.equals(mode) && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
-            AbstractEntity<?> fromDb = entityRepository.findByIpId(entity.getIpId());
-            AbstractAttribute<?> valueFromDb = extractProperty(fromDb, attModel);
-            AbstractAttribute<?> valueFromEntity = extractProperty(entity, attModel);
+            AbstractEntity<?> fromDb = entityRepository.findByIpId(feature.getId());
+            IProperty<?> valueFromDb = extractProperty(fromDb.getFeature(), attModel);
+            IProperty<?> valueFromEntity = extractProperty(feature, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
             validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, valueFromDb, valueFromEntity));
-        }
-        // Check attribute type
-        validators.add(new AttributeTypeValidator(attModel.getType(), attributeKey));
-        // Check restriction
-        if (attModel.hasRestriction()) {
-            validators.add(RestrictionValidatorFactory.getValidator(attModel.getRestriction(), attributeKey));
         }
         return validators;
     }
 
-    protected AbstractAttribute<?> extractProperty(AbstractEntity<?> entity, AttributeModel attribute) {
+    protected IProperty<?> extractProperty(EntityFeature feature, AttributeModel attribute) {
         Fragment fragment = attribute.getFragment();
         String attName = attribute.getName();
         String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
-        return entity.getProperty(attPath);
+        return feature.getProperty(attPath);
     }
 
     /**
-     * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
+     * Build real attribute map extracting namespace from {@link ObjectProperty} (i.e. fragment name)
      * @param attMap Map to build
      * @param namespace namespace context
-     * @param attributes {@link AbstractAttribute} list to analyze
+     * @param attributes {@link AbstractProperty} list to analyze
      */
-    protected void buildAttributeMap(Map<String, AbstractAttribute<?>> attMap, String namespace,
-            Set<AbstractAttribute<?>> attributes) {
+    protected void buildAttributeMap(Map<String, IProperty<?>> attMap, String namespace, Set<IProperty<?>> attributes) {
         if (attributes != null) {
-            for (AbstractAttribute<?> att : attributes) {
+            for (IProperty<?> att : attributes) {
                 // Compute value
-                if (ObjectAttribute.class.equals(att.getClass())) {
-                    ObjectAttribute o = (ObjectAttribute) att;
+                if (ObjectProperty.class.equals(att.getClass())) {
+                    ObjectProperty o = (ObjectProperty) att;
                     buildAttributeMap(attMap, att.getName(), o.getValue());
                 } else {
                     // Compute key
@@ -303,7 +295,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                     if (!namespace.equals(Fragment.getDefaultName())) {
                         key = namespace.concat(".").concat(key);
                     }
-                    logger.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
+                    LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     attMap.put(key, att);
                 }
             }
@@ -401,14 +393,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         if (entity instanceof Collection) {
             List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
             for (AbstractEntity<?> e : taggingEntities) {
-                if ((e instanceof Dataset) || (e instanceof Collection)) {
+                if (e instanceof Dataset || e instanceof Collection) {
                     entity.getGroups().addAll(e.getGroups());
                 }
             }
         }
 
         // If entity is a collection or a dataset => propagate its groups to tagged collections (recursively)
-        if (((entity instanceof Collection) || (entity instanceof Dataset)) && !entity.getTags().isEmpty()) {
+        if ((entity instanceof Collection || entity instanceof Dataset) && !entity.getTags().isEmpty()) {
             List<AbstractEntity<?>> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
             for (AbstractEntity<?> coll : taggedColls) {
@@ -665,7 +657,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                     ref.setDigestAlgorithm(LocalStorageService.DIGEST_ALGORITHM);
                 } catch (NoSuchAlgorithmException | IOException e) {
                     String message = String.format("Error while computing checksum");
-                    logger.error(message, e);
+                    LOGGER.error(message, e);
                     throw new ModuleException(message, e);
                 }
                 if (entity.getFiles().get(dataType) != null) {
@@ -693,7 +685,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
         String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
                                        urn.toString());
-        logger.error(message);
+        LOGGER.error(message);
         throw new EntityNotFoundException(message);
     }
 
@@ -738,14 +730,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
             return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
         } catch (ClassNotFoundException e) {
-            logger.error(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
 
         return null;
     }
 
     private void deleteAipStorage(U entity) throws NotAvailablePluginConfigurationException {
-        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
             return;
         }
         IStorageService storageService = getStorageService();
