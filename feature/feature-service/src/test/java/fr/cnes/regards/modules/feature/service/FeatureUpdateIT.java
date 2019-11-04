@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.feature.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.time.OffsetDateTime;
@@ -195,25 +195,19 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
                                                        IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
         });
         this.featureUpdateService.registerRequests(updateEvents);
-        this.featureUpdateService.scheduleRequests();
-        Thread.sleep(30000);
 
-        // check that half of the FeatureUpdateRequestEvent with step to LOCAL_SCHEDULED
-        // have their priority to HIGH and half to AVERAGE
+        // we wait for delay before schedule
+        Thread.sleep(this.properties.getDelayBeforeProcessing() * 1000 + 1000);
+
+        this.featureUpdateService.scheduleRequests();
+        this.waitUpdateRequestDeletion(properties.getMaxBulkSize() / 2, 10000);
+
         List<LightFeatureUpdateRequest> scheduled = this.lightFeatureUpdateRequestRepository
                 .findRequestToSchedule(PageRequest.of(0, properties.getMaxBulkSize()), OffsetDateTime.now());
-        int highPriorityNumber = 0;
-        int otherPriorityNumber = 0;
-        for (LightFeatureUpdateRequest request : scheduled) {
-            if (request.getPriority().equals(PriorityLevel.HIGH)) {
-                highPriorityNumber++;
-            } else {
-                otherPriorityNumber++;
-            }
-        }
         // half of scheduled should be with priority HIGH
-        assertEquals(properties.getMaxBulkSize().intValue(), highPriorityNumber + otherPriorityNumber);
-        assertTrue(highPriorityNumber == otherPriorityNumber);
+        assertEquals(properties.getMaxBulkSize().intValue() / 2, scheduled.size());
+        // check that remaining FeatureUpdateRequest all their their priority not to high
+        assertFalse(scheduled.stream().anyMatch(request -> PriorityLevel.HIGH.equals(request.getPriority())));
 
     }
 }
