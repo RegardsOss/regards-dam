@@ -146,7 +146,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     }
 
     @Override
-    public void scheduleRequests() {
+    public boolean scheduleRequests() {
 
         long scheduleStart = System.currentTimeMillis();
 
@@ -193,7 +193,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
             LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
+            return true;
         }
+        return false;
     }
 
     /**

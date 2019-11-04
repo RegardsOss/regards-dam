@@ -36,7 +36,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 1000;
+    private static final Integer NB_FEATURES = 10000;
 
     @Autowired
     private IFeatureCreationService featureService;
@@ -52,6 +52,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
     @Test
     public void createFeatures() throws InterruptedException {
 
+        long start = System.currentTimeMillis();
         String format = "F%05d";
 
         // Register creation requests
@@ -69,18 +70,19 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
 
-        long start = System.currentTimeMillis();
         featureService.registerRequests(events, new HashSet<String>(), ArrayListMultimap.create());
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
-                    System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
-        start = System.currentTimeMillis();
-        featureService.scheduleRequests();
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests sheduled in {} ms", NB_FEATURES, System.currentTimeMillis() - start);
+        boolean schedule;
+        do {
+            schedule = featureService.scheduleRequests();
+        } while (schedule);
 
         waitFeature(NB_FEATURES, null, 3600_000);
+
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests processed in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureRepo.count());
     }

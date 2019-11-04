@@ -23,8 +23,9 @@ public interface IFeatureCreationService {
     /**
      * Schedule a job to process a batch of requests<br/>
      * Inside this list there is only one occurence of {@link FeatureCreationRequest} per {@link Feature} id
+     * @return true if at least one request has been scheduled
      */
-    void scheduleRequests();
+    boolean scheduleRequests();
 
     /**
      * Process batch of requests during job
