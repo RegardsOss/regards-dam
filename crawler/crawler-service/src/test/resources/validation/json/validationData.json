@@ -22,5 +22,77 @@
       "vurl": "http://truc:201/machin"
     },
     "type": "Feature"
+  },
+  {
+    "providerId": "2",
+    "entityType": "DATA",
+    "label": "l2",
+    "model": "model",
+    "files": {},
+    "tags": [],
+    "id": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c09ce481809d:V1",
+    "geometry": null,
+    "properties": {
+      "weight": 26,
+      "vdate": "2017-05-16T16:28:00.000",
+      "vdescription": "Second test data",
+      "value_l1": "43",
+      "value_d1": 0.777,
+      "fragment1": {
+        "activated": "false",
+        "state": "STARTED"
+      },
+      "DATASET_VALIDATION_TYPE": "DS1",
+      "vurl": "http://truc:201/machin2"
+    },
+    "type": "Feature"
+  },
+  {
+    "providerId": "3",
+    "entityType": "DATA",
+    "label": "l3",
+    "model": "model",
+    "files": {},
+    "tags": [],
+    "id": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c09ce4818093:V1",
+    "geometry": null,
+    "properties": {
+      "weight": 27,
+      "vdate": "2017-05-16T17:28:00.000",
+      "vdescription": "Third test data",
+      "value_l1": "44",
+      "value_d1": 0.888,
+      "fragment1": {
+        "activated": "false",
+        "state": "DONE"
+      },
+      "DATASET_VALIDATION_TYPE": "DS2",
+      "vurl": "http://truc:201/machin3"
+    },
+    "type": "Feature"
+  },
+  {
+    "providerId": "4",
+    "entityType": "DATA",
+    "label": "l4",
+    "model": "model",
+    "files": {},
+    "tags": [],
+    "id": "URN:AIP:DATA:project1:00000000-0000-0000-0000-c09ce4818094:V1",
+    "geometry": null,
+    "properties": {
+      "weight": 28,
+      "vdate": "2017-05-16T18:28:00.000",
+      "vdescription": "Forth test data",
+      "value_l1": "45",
+      "value_d1": 0.999,
+      "fragment1": {
+        "activated": "true",
+        "state": "TRUC"
+      },
+      "DATASET_VALIDATION_TYPE": "DS3",
+      "vurl": "http://truc:201/machin4"
+    },
+    "type": "Feature"
   }
 ]

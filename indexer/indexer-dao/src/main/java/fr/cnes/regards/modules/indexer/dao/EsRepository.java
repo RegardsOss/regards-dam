@@ -812,7 +812,6 @@ public class EsRepository implements IEsRepository {
                     attributeSource + KEYWORD_SUFFIX :
                     attributeSource;
             SortedSet<Object> uniqueValues = new TreeSet<>(Comparator.comparing(Objects::hashCode));
-            ;
             Set<IFacet<?>> facets = unique(searchKey,
                                            addTypes(criterion, searchKey.getSearchTypes()),
                                            attribute,
@@ -1392,6 +1391,7 @@ public class EsRepository implements IEsRepository {
             if (twoPassRequestNeeded) {
                 request = new SearchRequest(index).types(TYPE);
                 builder = createSourceBuilder4Agg(crit);
+                builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
                 // Relaunch the request with replaced facets

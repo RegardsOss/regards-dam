@@ -117,7 +117,7 @@ public interface ISearchService {
         return multiFieldsSearch(searchKey, PageRequest.of(0, pageSize), value, fields);
     }
 
-    default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
+    default <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
             ICriterion criterion, Map<String, FacetType> facetsMap) {
         return this.search(searchKey, PageRequest.of(0, pageSize), criterion, facetsMap);
     }
