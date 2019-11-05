@@ -51,7 +51,7 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_mutation",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
+@ActiveProfiles({ "testAmqp", "noscheduler", "nohandler" })
 public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
 
     @SuppressWarnings("unused")

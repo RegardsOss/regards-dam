@@ -55,7 +55,8 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
  *
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_dao",
-        "spring.jpa.properties.hibernate.jdbc.batch_size=1024", "spring.jpa.properties.hibernate.order_inserts=true" })
+        "spring.jpa.properties.hibernate.jdbc.batch_size=1024", "spring.jpa.properties.hibernate.order_inserts=true" },
+        locations = { "classpath:regards_local.properties" })
 @ContextConfiguration(classes = FeatureDaoConfiguration.class)
 public class FeatureEntityTest extends AbstractDaoTest {
 
@@ -129,11 +130,11 @@ public class FeatureEntityTest extends AbstractDaoTest {
         if (bulk > 0) {
             bulkCreationStart = System.currentTimeMillis();
             entityRepo.saveAll(entities);
-            LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", bulk,
+            LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests saved in {} ms", bulk,
                         System.currentTimeMillis() - bulkCreationStart);
         }
 
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests saved in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - creationStart);
     }
 

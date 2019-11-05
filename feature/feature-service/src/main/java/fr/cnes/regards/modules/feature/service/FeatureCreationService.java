@@ -240,8 +240,10 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
+
         // Add to granted request collection
         grantedRequests.add(request);
+        requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }
 
     @Override

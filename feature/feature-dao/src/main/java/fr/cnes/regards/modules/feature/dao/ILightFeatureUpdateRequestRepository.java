@@ -46,8 +46,8 @@ public interface ILightFeatureUpdateRequestRepository extends JpaRepository<Ligh
      * @param delay we want {@link FeatureUpdateRequest} with registration date before this delay
      * @return list of  {@link FeatureUpdateRequest}
      */
-    @Query("select request from FeatureUpdateRequest request where request.urn not in ("
-            + " select scheduledRequest.urn from FeatureUpdateRequest scheduledRequest"
+    @Query("select request from LightFeatureUpdateRequest request where request.urn not in ("
+            + " select scheduledRequest.urn from LightFeatureUpdateRequest scheduledRequest"
             + " where scheduledRequest.step = 'LOCAL_SCHEDULED') and request.registrationDate <= :delay order by request.priority, request.registrationDate ")
     public List<LightFeatureUpdateRequest> findRequestToSchedule(Pageable page, @Param("delay") OffsetDateTime delay);
 
