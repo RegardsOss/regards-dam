@@ -68,8 +68,8 @@
 			<artifactId>feature-rest</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>fr.cnes.regards.modules.notification</groupId>
-            <artifactId>notification-rest</artifactId>
+            <groupId>fr.cnes.regards.modules.notifier</groupId>
+            <artifactId>notifier-rest</artifactId>
         </dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices.administration</groupId>

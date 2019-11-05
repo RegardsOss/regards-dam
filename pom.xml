@@ -63,7 +63,7 @@
 		<module>opensearch</module>
 		<module>feature</module>
 		<module>model</module>
-		<module>notification</module>
+		<module>notifier</module>
 	</modules>
 
 </project>
