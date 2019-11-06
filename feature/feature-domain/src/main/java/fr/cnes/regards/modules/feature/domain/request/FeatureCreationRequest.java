@@ -44,7 +44,8 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
                 @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE),
                 @Index(name = "idx_feature_step_registration_priority",
                         columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
-                                + AbstractRequest.COLUMN_PRIORITY) },
+                                + AbstractRequest.COLUMN_PRIORITY),
+                @Index(name = "idx_feature_creation_group_id", columnList = AbstractRequest.GROUP_ID) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 public class FeatureCreationRequest extends AbstractFeatureCreationRequest {

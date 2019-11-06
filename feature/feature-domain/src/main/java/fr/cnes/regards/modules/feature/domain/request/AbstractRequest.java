@@ -51,6 +51,8 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 @MappedSuperclass
 public abstract class AbstractRequest {
 
+    protected static final String GROUP_ID = "group_id";
+
     protected static final String COLUMN_REQUEST_ID = "request_id";
 
     protected static final String COLUMN_REQUEST_TIME = "request_date";
@@ -94,7 +96,7 @@ public abstract class AbstractRequest {
     @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
     private FeatureEntity featureEntity;
 
-    @Column(name = "group_id")
+    @Column(name = GROUP_ID)
     private String groupId;
 
     /**
