@@ -56,7 +56,7 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_dao",
         "spring.jpa.properties.hibernate.jdbc.batch_size=1024", "spring.jpa.properties.hibernate.order_inserts=true" },
-        locations = { "classpath:regards_local.properties" })
+        locations = { "classpath:regards_perf.properties" })
 @ContextConfiguration(classes = FeatureDaoConfiguration.class)
 public class FeatureEntityTest extends AbstractDaoTest {
 
@@ -64,7 +64,7 @@ public class FeatureEntityTest extends AbstractDaoTest {
 
     private static final Integer NB_FEATURES = 10000;
 
-    private static final Integer NB_BULK = 1000;
+    private static final Integer BULK_SIZE = 1000;
 
     @Autowired
     private IFeatureEntityRepository entityRepo;
@@ -112,15 +112,12 @@ public class FeatureEntityTest extends AbstractDaoTest {
             String id = String.format(format, i);
             Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, "model");
             addGeodeProperties(feature);
-            //            feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
-            //            feature.addProperty(IProperty.buildObject("file_characterization",
-            //                                                      IProperty.buildBoolean("valid", Boolean.TRUE)));
             entities.add(FeatureEntity.build("sessionOwner", "session", feature));
 
-            if (bulk == NB_BULK) {
+            if (bulk == BULK_SIZE) {
                 bulkCreationStart = System.currentTimeMillis();
                 entityRepo.saveAll(entities);
-                LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_BULK,
+                LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests saved in {} ms", BULK_SIZE,
                             System.currentTimeMillis() - bulkCreationStart);
                 entities.clear();
                 bulk = 0;
