@@ -31,9 +31,11 @@
 	<logger name="io.micrometer" level="ERROR" />
 	<logger name="fr.cnes.regards.modules" level="INFO" />
 	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR"/>
-	<logger name="fr.cnes.regards.modules.feature.service" level="TRACE"/>
-	<logger name="org.hibernate.SQL" level="DEBUG"/>
-    <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>
+<!-- 	<logger name="fr.cnes.regards.modules.feature.service" level="TRACE"/>
+	
+    <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/> -->
+    <!-- <logger name="org.hibernate.SQL" level="DEBUG"/> -->
+    <logger name="fr.cnes.regards.modules.feature.service" level="TRACE" />
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>

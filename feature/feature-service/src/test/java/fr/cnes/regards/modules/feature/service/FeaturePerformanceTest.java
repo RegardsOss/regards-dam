@@ -26,10 +26,8 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 @TestPropertySource(
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true",
-                "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
-                "spring.jpa.properties.hibernate.order_inserts=true" },
-        locations = { "classpath:regards_local.properties" })
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true", "regards.scheduler.pool.size=4" },
+        locations = { "classpath:regards_local.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
@@ -51,7 +49,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
     @Test
     public void createFeatures() throws InterruptedException {
 
-        long start = System.currentTimeMillis();
+
         String format = "F%05d";
 
         // Register creation requests
@@ -68,9 +66,15 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             addGeodeProperties(feature);
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
+        
+        long start = System.currentTimeMillis();
+        LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} request", NB_FEATURES);
 
         featureService.registerRequests(events);
 
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registerd in {} ms", NB_FEATURES,
+                System.currentTimeMillis() - start);
+        
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
         boolean schedule;
