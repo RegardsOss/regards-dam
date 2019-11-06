@@ -93,7 +93,7 @@ public class EsQueryTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
                     .create();
-            repository = new EsRepository(gson, null, "localhost", 9200,
+            repository = new EsRepository(gson, null, "172.26.47.52", 9200,
                                           new AggregationBuilderFacetTypeVisitor(100, 5));
 
             // This test is not intended to be executed on integration serveur but better locally to test
