@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.assertj.core.util.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,6 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
-import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 /**
  * Test feature mutation based on null property values.
@@ -49,15 +49,16 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
  * @author Marc SORDI
  *
  */
+@Ignore
 @TestPropertySource(
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perfit", "regards.amqp.enabled=true" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode", "regards.amqp.enabled=true" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp" })
-public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest {
+public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceIT.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGeodeIT.class);
 
-    private static final Integer NB_FEATURES = 10;
+    private static final Integer NB_FEATURES = 1;
 
     @Autowired
     private IPublisher publisher;
@@ -70,7 +71,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         // Register creation requests
         FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
                                                                        Lists.emptyList());
-        String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
+        String modelName = mockModelClient(GeodeProperties.getGeodeModel(), this.getCps(), this.getFactory(),
                                            this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
         Thread.sleep(5_000);
@@ -79,9 +80,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         for (int i = 1; i <= NB_FEATURES; i++) {
             Feature feature = Feature.build(String.format(format, i), null, IGeometry.unlocated(), EntityType.DATA,
                                             modelName);
-            feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
-            feature.addProperty(IProperty.buildObject("file_characterization",
-                                                      IProperty.buildBoolean("valid", Boolean.TRUE)));
+            GeodeProperties.addGeodeProperties(feature);
             publisher.publish(FeatureCreationRequestEvent.build(metadata, feature));
         }
 
@@ -97,9 +96,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         for (int i = 1; i <= NB_FEATURES; i++) {
             String id = String.format(format, i);
             Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, modelName);
-            feature.addProperty(IProperty.buildObject("file_characterization",
-                                                      IProperty.buildBoolean("valid", Boolean.FALSE),
-                                                      IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
+            GeodeProperties.addGeodeUpdateProperties(feature);
             publisher.publish(FeatureUpdateRequestEvent
                     .build(feature, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), requestDate));
         }

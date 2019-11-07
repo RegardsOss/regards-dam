@@ -2,7 +2,6 @@ package fr.cnes.regards.modules.feature.service;
 
 import static org.junit.Assert.assertEquals;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,17 +22,16 @@ import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
-import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 
 @TestPropertySource(
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true", "regards.scheduler.pool.size=4" },
-        locations = { "classpath:regards_local.properties", "classpath:batch.properties" })
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true" },
+        locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 10000;
+    private static final Integer NB_FEATURES = 1000;
 
     @Autowired
     private IFeatureCreationService featureService;
@@ -49,13 +47,12 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
     @Test
     public void createFeatures() throws InterruptedException {
 
-
         String format = "F%05d";
 
         // Register creation requests
         FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
                                                                        Lists.emptyList());
-        String modelName = mockModelClient("model_geode.xml");
+        String modelName = mockModelClient(GeodeProperties.getGeodeModel());
 
         Thread.sleep(5_000);
 
@@ -63,18 +60,18 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
         for (int i = 1; i <= NB_FEATURES; i++) {
             String id = String.format(format, i);
             Feature feature = Feature.build(id, null, IGeometry.unlocated(), EntityType.DATA, modelName);
-            addGeodeProperties(feature);
+            GeodeProperties.addGeodeProperties(feature);
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
         }
-        
+
         long start = System.currentTimeMillis();
         LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} request", NB_FEATURES);
 
         featureService.registerRequests(events);
 
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registerd in {} ms", NB_FEATURES,
-                System.currentTimeMillis() - start);
-        
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - start);
+
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
         boolean schedule;
@@ -88,54 +85,6 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
                     System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureRepo.count());
-    }
-
-    private void addGeodeProperties(Feature feature) {
-        // System
-        ObjectProperty system = IProperty.buildObject("system", IProperty.buildInteger("filesize", 8648),
-                                                      IProperty.buildDate("creation_date", OffsetDateTime.now()),
-                                                      IProperty.buildDate("modification_date", OffsetDateTime.now()),
-                                                      IProperty.buildStringArray("urls", "file://home/geode/test.tar"),
-                                                      IProperty.buildString("filename", "test.tar"),
-                                                      IProperty.buildString("checksum",
-                                                                            "4e188bd8a6288164c25c3728ce394927"),
-                                                      IProperty.buildString("extension", "tar"));
-        // File infos
-        ObjectProperty fileInfos = IProperty.buildObject("file_infos", IProperty.buildString("type", "L0A_LR_Packet"),
-                                                         IProperty.buildString("nature", "TM"),
-                                                         IProperty.buildString("date_type", "BEGINEND"),
-                                                         IProperty.buildString("level", "L0A"),
-                                                         IProperty.buildDate("production_date", OffsetDateTime.now()),
-                                                         IProperty.buildDate("utc_start_date", OffsetDateTime.now()),
-                                                         IProperty.buildDate("utc_end_date", OffsetDateTime.now()),
-                                                         IProperty.buildDate("tai_start_date", OffsetDateTime.now()),
-                                                         IProperty.buildDate("tai_end_date", OffsetDateTime.now()),
-                                                         IProperty.buildBoolean("valid", true));
-        // Ground segment
-        ObjectProperty groundSegment = IProperty
-                .buildObject("ground_segment", IProperty.buildBoolean("sended", true),
-                             IProperty.buildDate("sending_date", OffsetDateTime.now()),
-                             IProperty.buildStringArray("recipients", "JPL", "REGARDS"),
-                             IProperty.buildBoolean("archived", true),
-                             IProperty.buildDate("archiving_date", OffsetDateTime.now()),
-                             IProperty.buildBoolean("public", false), IProperty.buildBoolean("distributed", false),
-                             IProperty.buildBoolean("restored", false), IProperty.buildString("state", "NOT ARCHIVED"));
-
-        // SWOT
-        ObjectProperty swot = IProperty
-                .buildObject("swot", IProperty.buildString("CRID", "crid"),
-                             IProperty.buildInteger("product_counter", 1),
-                             IProperty.buildBoolean("is_last_version", true), IProperty.buildString("station", "KUX"),
-                             IProperty.buildDate("day_date", OffsetDateTime.now()), IProperty.buildInteger("cycle", 23),
-                             IProperty.buildInteger("pass", 125), IProperty.buildInteger("tile", 25),
-                             IProperty.buildString("tile_side", "Full"), IProperty.buildString("granule_type", "Cycle"),
-                             IProperty.buildStringArray("continent_id", "eu"),
-                             IProperty.buildString("bassin_id", "bass1"));
-        // CORPUS
-        ObjectProperty corpus = IProperty.buildObject("corpus", IProperty.buildInteger("corpus_id", 10),
-                                                      IProperty.buildString("corpus_lot", "lot2"));
-
-        feature.setProperties(IProperty.set(system, fileInfos, groundSegment, swot, corpus));
     }
 
     @SuppressWarnings("unused")
