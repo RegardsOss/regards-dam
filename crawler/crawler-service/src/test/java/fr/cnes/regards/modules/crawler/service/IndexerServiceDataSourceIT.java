@@ -66,6 +66,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -101,6 +102,7 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
@@ -394,15 +396,19 @@ public class IndexerServiceDataSourceIT {
         JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
                 .onSingleEntityReturningJoinEntity(EntityType.DATA, EntityType.DATASET);
         dsSearchKey.setSearchIndex(tenant);
-        // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
-        Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
+        Map<String, FacetType> facetsMap = new ImmutableMap.Builder<String, FacetType>()
+                .put("feature.properties.DATASET_VALIDATION_TYPE", FacetType.STRING).put("feature.properties.weight", FacetType.NUMERIC)
+                .put("feature.properties.vdate", FacetType.DATE).build();
+        FacetPage<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all(), facetsMap);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals("There should be 3 facets. Yes we have to compute data facets when looking for datasets", 3, dsPage.getFacets().size());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all(), facetsMap);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals("There should be 3 facets", 3, dsPage.getFacets().size());
         Assert.assertEquals(1, dsPage.getContent().size());
 
         // Search for Dataset but with criterion on everything
@@ -411,12 +417,12 @@ public class IndexerServiceDataSourceIT {
         final JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(EntityType.DATASET);
         dsSearchKey2.setSearchIndex(tenant);
-        dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
+        dsPage = searchService.search(dsSearchKey, 1, ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all(), null);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());

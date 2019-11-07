@@ -39,7 +39,7 @@ public class LinkedHashMapToSort implements Converter<LinkedHashMap<String, Bool
     @Override
     public Sort convert(LinkedHashMap<String, Boolean> sortMap) {
         if (sortMap == null) {
-            return null;
+            return Sort.by(Direction.ASC, "id");
         }
         List<Order> orders = new ArrayList<>();
         BiConsumer<? super String, ? super Boolean> addNewOrder = (property, ascendance) -> orders

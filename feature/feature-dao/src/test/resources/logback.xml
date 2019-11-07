@@ -23,7 +23,7 @@
 	<!-- <logger name="fr.cnes.regards" level="INFO"/> <logger name="org.springframework.security.web" 
 		level="INFO"/> -->
 	<!-- SQL statements and parameters -->
-	<!-- <logger name="org.hibernate.SQL" level="DEBUG" /> -->
+	<logger name="org.hibernate.SQL" level="DEBUG" />
 	<!-- <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/> <logger 
 		name="org.hibernate.event.internal" level="TRACE"/> <logger name="org.hibernate.persister.entity" 
 		level="TRACE"/> -->
