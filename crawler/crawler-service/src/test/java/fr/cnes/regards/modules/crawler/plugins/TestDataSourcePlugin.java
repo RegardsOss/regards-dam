@@ -64,6 +64,6 @@ public class TestDataSourcePlugin implements IDataSourcePlugin {
         } catch (FileNotFoundException e) {
             throw new DataSourceException("Could not find the file for validation data 1", e);
         }
-        return new PageImpl<>(content);
+        return new PageImpl<>(content, pageable, content.size());
     }
 }
