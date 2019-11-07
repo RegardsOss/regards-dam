@@ -96,6 +96,7 @@ import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
@@ -397,12 +398,14 @@ public class IndexerServiceDataSourceIT {
                 .onSingleEntityReturningJoinEntity(EntityType.DATA, EntityType.DATASET);
         dsSearchKey.setSearchIndex(tenant);
         Map<String, FacetType> facetsMap = new ImmutableMap.Builder<String, FacetType>()
-                .put("feature.properties.DATASET_VALIDATION_TYPE", FacetType.STRING).put("feature.properties.weight", FacetType.NUMERIC)
-                .put("feature.properties.vdate", FacetType.DATE).build();
+                .put("feature.properties.DATASET_VALIDATION_TYPE", FacetType.STRING)
+                .put("feature.properties.weight", FacetType.NUMERIC).put("feature.properties.vdate", FacetType.DATE)
+                .build();
         FacetPage<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all(), facetsMap);
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
-        Assert.assertEquals("There should be 3 facets. Yes we have to compute data facets when looking for datasets", 3, dsPage.getFacets().size());
+        Assert.assertEquals("There should be 3 facets. Yes we have to compute data facets when looking for datasets", 3,
+                            dsPage.getFacets().size());
         Assert.assertEquals(1, dsPage.getContent().size());
 
         dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all(), facetsMap);

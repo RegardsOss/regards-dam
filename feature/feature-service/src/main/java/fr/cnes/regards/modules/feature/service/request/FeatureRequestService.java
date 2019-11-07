@@ -56,7 +56,7 @@ public class FeatureRequestService implements IFeatureRequestService {
                                RequestState.SUCCESS, null)));
 
         // delete useless FeatureCreationRequest
-        this.fcrRepo.deleteAll(request);
+        this.fcrRepo.deleteInBatch(request);
     }
 
     @Override

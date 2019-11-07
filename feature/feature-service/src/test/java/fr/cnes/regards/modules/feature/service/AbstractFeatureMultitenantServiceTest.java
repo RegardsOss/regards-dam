@@ -220,7 +220,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
                            featureToAdd);
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
-            toAdd.setRequestDate(OffsetDateTime.now());
+            toAdd.setRequestDate(OffsetDateTime.now().minusDays(1));
 
             events.add(toAdd);
         }
