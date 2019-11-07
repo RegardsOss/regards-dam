@@ -18,14 +18,19 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
+import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 
 /**
  * @author Marc SORDI
@@ -41,4 +46,14 @@ public interface ILightFeatureCreationRequestRepository extends JpaRepository<Li
      * @return a {@link Page} of {@link FeatureCreationRequest}
      */
     public Page<LightFeatureCreationRequest> findByStep(FeatureRequestStep step, Pageable page);
+
+    /**
+     * Update {@link FeatureRequestStep} step
+     * @param step new {@link FeatureRequestStep}
+     * @param ids id of {@link FeatureCreationRequest} to update
+     */
+    @Modifying
+    @Query("update LightFeatureCreationRequest fcr set fcr.step = :newStep where fcr.id in :ids ")
+    public void updateStep(@Param("newStep") FeatureRequestStep step, @Param("ids") Set<Long> ids);
+
 }

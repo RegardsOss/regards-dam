@@ -159,6 +159,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
         Set<String> featureIdsScheduled = new HashSet<>();
+        Set<Long> requestIds = new HashSet<>();
         List<LightFeatureCreationRequest> requestsToSchedule = new ArrayList<>();
 
         //        long pageStart = System.currentTimeMillis();
@@ -172,12 +173,13 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
                     requestsToSchedule.add(request);
-                    request.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+                    requestIds.add(request.getId());
                     featureIdsScheduled.add(request.getProviderId());
                 }
             }
 
-            this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
+            // this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
+            featureCreationRequestLightRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
 
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
                     requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
