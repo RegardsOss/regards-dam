@@ -47,7 +47,7 @@ import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_version",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
