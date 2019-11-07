@@ -860,7 +860,7 @@ public class EsRepository implements IEsRepository {
                 PolygonCriterion polygonCrit = GeoHelper.findPolygonCriterion(criterion);
                 if (polygonCrit != null) {
                     LOGGER.debug("Searching intersection with polygon {} projected on WGS84...",
-                                 Arrays.stream(polygonCrit.getCoordinates()[0]).map(p -> Arrays.toString(p))
+                                 Arrays.stream(polygonCrit.getCoordinates()[0]).map(Arrays::toString)
                                          .collect(Collectors.joining(",")));
                 }
             } else if (GeoHelper.containsCircleCriterion(criterion)) {
@@ -949,7 +949,7 @@ public class EsRepository implements IEsRepository {
                 if (GeoHelper.isNearer(shape, center, maxRadiusOnCrs, searchKey.getCrs())) {
                     inOuterCircleEntities.add(entity);
                 } else {
-                    System.err.println("Remove " + entity);
+                    LOGGER.error("Remove " + entity);
                 }
             }
         }
@@ -976,10 +976,6 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
 
-            // Use filter instead of "direct" query (in theory, quickest because no score is computed)
-            QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                    .filter(criterion.accept(CRITERION_VISITOR));
-
             Sort sort = pageRequest.getSort();
             // page size is max or page offset is > max page size, prepare sort for search_after
             if (pageRequest.getOffset() >= MAX_RESULT_WINDOW || pageRequest.getPageSize() == MAX_RESULT_WINDOW) {
@@ -993,75 +989,34 @@ public class EsRepository implements IEsRepository {
             Object[] lastSearchAfterSortValues = null;
             // If page starts over index 10 000, advance with searchAfter just before last request
             if (pageRequest.getOffset() >= MAX_RESULT_WINDOW) {
-                lastSearchAfterSortValues = advanceWithSearchAfter(criterion,
-                                                                   searchKey,
-                                                                   pageRequest,
-                                                                   index,
-                                                                   sort,
-                                                                   critBuilder);
+                lastSearchAfterSortValues = advanceWithSearchAfter(criterion, searchKey, pageRequest, index, sort);
             }
 
-            //            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
-            SearchRequest request = new SearchRequest(index).types(TYPE);
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder)
-                    .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
-
-            // If searchAfter has been executed (in that case manageSortRequest() has already been called)
-            if (lastSearchAfterSortValues != null) {
-                builder.searchAfter(lastSearchAfterSortValues).from(0);
-                manageSortRequest(index, builder, sort);
-                // } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
-            } else if (sort != null && sort.isSorted()) {
-                manageSortRequest(index, builder, sort);
-            }
-
-            // Managing aggregations if some facets are asked
-            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
-            request.source(builder);
-            // Launch the request
-            long start = System.currentTimeMillis();
-            LOGGER.trace("ElasticsearchRequest: {}", request.toString());
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
-            LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
-
-            start = System.currentTimeMillis();
-            Set<IFacet<?>> facetResults = new HashSet<>();
-            if (response.getHits().getTotalHits() != 0) {
-                // At least one numeric facet is present, we need to replace all numeric facets by associated range
-                // facets
-                if (twoPassRequestNeeded) {
-                    // Rebuild request
-                    //                    request = new SearchRequest(index).types(searchKey.getSearchTypes());
-                    request = new SearchRequest(index).types(TYPE);
-                    builder = new SearchSourceBuilder().query(critBuilder).from((int) pageRequest.getOffset())
-                            .size(pageRequest.getPageSize());
-                    if (lastSearchAfterSortValues != null) {
-                        builder.searchAfter(lastSearchAfterSortValues).from(0); // needed by searchAfter
-                        manageSortRequest(index, builder, sort);
-                    } else if (pageRequest.getSort() != null && pageRequest.getSort()
-                            .isSorted()) { // Don't forget to manage sort if one is provided
-                        manageSortRequest(index, builder, pageRequest.getSort());
+            final Object[] finalLastSearchAfterSortValues = lastSearchAfterSortValues;
+            final Sort finalSort = sort;
+            Consumer<SearchSourceBuilder> lastSearchAfterCustomizer = (builder) -> {
+                try {
+                    // If searchAfter has been executed (in that case manageSortRequest() has already been called)
+                    if (finalLastSearchAfterSortValues != null) {
+                        builder.searchAfter(finalLastSearchAfterSortValues).from(0);
+                        manageSortRequest(index, builder, finalSort);
+                    } else if (finalSort != null && finalSort.isSorted()) {
+                        manageSortRequest(index, builder, finalSort);
                     }
-                    Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                    manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
-                    // Relaunch the request with replaced facets
-                    request.source(builder);
-                    LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
-                    response = client.search(request, RequestOptions.DEFAULT);
+                } catch (IOException e) {
+                    //not nice but if IOException would be thrown (not using a consumer), it would be simply handle like that
+                    throw new RsRuntimeException(e);
                 }
+            };
 
-                // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
-                // (not necessarly)
-                if (pageRequest.getOffset() >= MAX_RESULT_WINDOW || pageRequest.getPageSize() == MAX_RESULT_WINDOW) {
-                    saveReminder(searchKey, pageRequest, criterion, sort, response);
-                }
-
-                extractFacetsFromResponse(facetsMap, response, facetResults);
-            }
-            LOGGER.debug("After Elasticsearch request execution, aggs and searchAfter management : {} ms",
-                         System.currentTimeMillis() - start);
-
-            start = System.currentTimeMillis();
+            Tuple<SearchResponse, Set<IFacet<?>>> responseNFacets = searchWithFacets(searchKey,
+                                                                                     criterion,
+                                                                                     pageRequest,
+                                                                                     lastSearchAfterCustomizer,
+                                                                                     sort,
+                                                                                     facetsMap);
+            SearchResponse response = responseNFacets.v1();
+            long start = System.currentTimeMillis();
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 try {
@@ -1075,10 +1030,66 @@ public class EsRepository implements IEsRepository {
             }
             LOGGER.debug("After Elasticsearch request execution, gsonification : {} ms",
                          System.currentTimeMillis() - start);
-            return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
+            return new FacetPage<>(results, responseNFacets.v2(), pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
             throw new RsRuntimeException(e);
         }
+    }
+
+    private Tuple<SearchResponse, Set<IFacet<?>>> searchWithFacets(SearchKey<?, ?> searchKey, ICriterion criterion,
+            Pageable pageRequest, Consumer<SearchSourceBuilder> searchSourceBuilderCustomizer, Sort sort,
+            Map<String, FacetType> facetsMap) throws IOException {
+        String index = searchKey.getSearchIndex();
+        SearchRequest request = new SearchRequest(index).types(TYPE);
+        SearchSourceBuilder builder = createSourceBuilder4Agg(criterion,
+                                                              (int) pageRequest.getOffset(),
+                                                              pageRequest.getPageSize());
+
+        if (searchSourceBuilderCustomizer != null) {
+            searchSourceBuilderCustomizer.accept(builder);
+        }
+
+        // Managing aggregations if some facets are asked
+        boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
+        request.source(builder);
+        // Launch the request
+        long start = System.currentTimeMillis();
+        LOGGER.trace("ElasticsearchRequest: {}", request.toString());
+        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
+
+        start = System.currentTimeMillis();
+        Set<IFacet<?>> facetResults = new HashSet<>();
+        if (response.getHits().getTotalHits() != 0) {
+            // At least one numeric facet is present, we need to replace all numeric facets by associated range
+            // facets
+            if (twoPassRequestNeeded) {
+                // Rebuild request
+                request = new SearchRequest(index).types(TYPE);
+                builder = createSourceBuilder4Agg(criterion, (int) pageRequest.getOffset(), pageRequest.getPageSize());
+
+                if (searchSourceBuilderCustomizer != null) {
+                    searchSourceBuilderCustomizer.accept(builder);
+                }
+                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
+                // Relaunch the request with replaced facets
+                request.source(builder);
+                LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
+                response = client.search(request, RequestOptions.DEFAULT);
+            }
+
+            // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
+            // (not necessarly)
+            if (pageRequest.getOffset() >= MAX_RESULT_WINDOW || pageRequest.getPageSize() == MAX_RESULT_WINDOW) {
+                saveReminder(searchKey, pageRequest, criterion, sort, response);
+            }
+
+            extractFacetsFromResponse(facetsMap, response, facetResults);
+        }
+        LOGGER.debug("After Elasticsearch request execution, aggs and searchAfter management : {} ms",
+                     System.currentTimeMillis() - start);
+        return new Tuple<>(response, facetResults);
     }
 
     /**
@@ -1098,8 +1109,8 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    private <T extends IIndexable> void saveReminder(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion crit,
-            Sort sort, SearchResponse response) {
+    private void saveReminder(SearchKey<?, ?> searchKey, Pageable pageRequest, ICriterion crit, Sort sort,
+            SearchResponse response) {
         if (response.getHits().getHits().length != 0) {
             // Store last sort value in order to use searchAfter next time
             Object[] sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
@@ -1124,7 +1135,7 @@ public class EsRepository implements IEsRepository {
      * <b>NOTE: critBuilder already contains restriction on types</b>
      */
     private <T extends IIndexable> Object[] advanceWithSearchAfter(ICriterion crit, SearchKey<T, T> searchKey,
-            Pageable pageRequest, String index, Sort sort, QueryBuilder critBuilder) {
+            Pageable pageRequest, String index, Sort sort) {
         try {
             Object[] sortValues = null;
             int searchPageNumber = 0;
@@ -1160,7 +1171,7 @@ public class EsRepository implements IEsRepository {
             // By default, launch request from 0 to 10_000 (without aggregations)...
             int offset = 0;
             int pageSize = MAX_RESULT_WINDOW;
-            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(offset).size(pageSize);
+            SearchSourceBuilder builder = createSourceBuilder4Agg(crit, offset, pageSize);
             manageSortRequest(index, builder, sort);
             request.source(builder);
             // ...Except if a closer reminder has already been found
@@ -1218,15 +1229,22 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    private SearchSourceBuilder createSourceBuilder4Agg(ICriterion criterion) {
+        return createSourceBuilder4Agg(criterion, 0, 0);
+    }
+
     /**
-     * Build a SearchSourceBuilder following given ICriterion on searchKey with a result size of 0
+     * Build a SearchSourceBuilder following given ICriterion on searchKey
      */
-    private <T> SearchSourceBuilder createSourceBuilder4Agg(ICriterion criterion) {
+    private SearchSourceBuilder createSourceBuilder4Agg(ICriterion criterion, int from, int size) {
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
         QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(criterion.accept(CRITERION_VISITOR));
         // Only return hits information
-        return new SearchSourceBuilder().query(critBuilder).size(0);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(critBuilder);
+        searchSourceBuilder.from(from);
+        searchSourceBuilder.size(size);
+        return searchSourceBuilder;
     }
 
     @Override
@@ -1378,34 +1396,22 @@ public class EsRepository implements IEsRepository {
     private <T, R, S extends Set<R>> Set<IFacet<?>> unique(SearchKey<?, T> searchKey, ICriterion crit, String inAttName,
             int maxCount, S set, Map<String, FacetType> facetsMap) {
         try {
-            String index = searchKey.getSearchIndex();
-            String attName = isTextMapping(index, inAttName) ? inAttName + ".keyword" : inAttName;
-            SearchSourceBuilder builder = createSourceBuilder4Agg(crit);
-            // Assuming no more than Integer.MAX_SIZE results will be returned
-            builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
-            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
-            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
-            // Launch the request
-            LOGGER.trace("ElasticsearchRequest (1st pass): {}", request.toString());
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
-            if (twoPassRequestNeeded) {
-                request = new SearchRequest(index).types(TYPE);
-                builder = createSourceBuilder4Agg(crit);
-                builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
-                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
-                // Relaunch the request with replaced facets
-                request.source(builder);
-                LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
-                response = client.search(request, RequestOptions.DEFAULT);
-            }
-            Set<IFacet<?>> facetsResults = new HashSet<>();
-            extractFacetsFromResponse(facetsMap, response, facetsResults);
-            Terms terms = response.getAggregations().get(attName);
+
+            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + ".keyword" : inAttName;
+            Consumer<SearchSourceBuilder> addUniqueTermAgg = (builder) -> builder
+                    .aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
+
+            Tuple<SearchResponse, Set<IFacet<?>>> responseNFacets = searchWithFacets(searchKey,
+                                                                                     crit,
+                                                                                     PageRequest.of(0, 1),
+                                                                                     addUniqueTermAgg,
+                                                                                     null,
+                                                                                     facetsMap);
+            Terms terms = responseNFacets.v1().getAggregations().get(attName);
             for (Terms.Bucket bucket : terms.getBuckets()) {
                 set.add((R) bucket.getKey());
             }
-            return facetsResults;
+            return responseNFacets.v2();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
@@ -1442,16 +1448,19 @@ public class EsRepository implements IEsRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <R, U> Tuple<List<U>, Set<IFacet<?>>> search(SearchKey<?, R[]> searchKey, ICriterion criterion, String sourceAttribute,
-            Predicate<R> filterPredicate, Function<R, U> transformFct, Map<String, FacetType> facetsMap) {
+    public <R, U> Tuple<List<U>, Set<IFacet<?>>> search(SearchKey<?, R[]> searchKey, ICriterion criterion,
+            String sourceAttribute, Predicate<R> filterPredicate, Function<R, U> transformFct,
+            Map<String, FacetType> facetsMap) {
         try {
             Tuple<SortedSet<Object>, Set<IFacet<?>>> objects = searchAllCache.getUnchecked(new CacheKey(searchKey,
-                                                                                 addTypes(criterion,
-                                                                                          searchKey.getSearchTypes()),
-                                                                                 sourceAttribute,
-                                                                                 facetsMap));
-            return new Tuple<>(objects.v1().stream().map(o -> (R) o).distinct().filter(filterPredicate).map(transformFct)
-                    .collect(Collectors.toList()), objects.v2());
+                                                                                                        addTypes(
+                                                                                                                criterion,
+                                                                                                                searchKey
+                                                                                                                        .getSearchTypes()),
+                                                                                                        sourceAttribute,
+                                                                                                        facetsMap));
+            return new Tuple<>(objects.v1().stream().map(o -> (R) o).distinct().filter(filterPredicate)
+                                       .map(transformFct).collect(Collectors.toList()), objects.v2());
 
         } catch (final JsonSyntaxException e) {
             throw new RsRuntimeException(e);
@@ -1529,11 +1538,9 @@ public class EsRepository implements IEsRepository {
                 }
 
                 // Add sort to request
-                updatedAscSortMap.entrySet().forEach(entry -> builder.sort(SortBuilders.fieldSort(entry.getKey())
-                                                                                   .order(entry.getValue() ?
-                                                                                                  SortOrder.ASC :
-                                                                                                  SortOrder.DESC)
-                                                                                   .unmappedType("double")));
+                updatedAscSortMap.forEach((key, value) -> builder
+                        .sort(SortBuilders.fieldSort(key).order(value ? SortOrder.ASC : SortOrder.DESC)
+                                      .unmappedType("double")));
                 // "double" because a type is necessary. This has only an impact when seaching on several indices if
                 // property is mapped on one and no on the other(s). Will see this when it happens (if it happens a day)
                 // entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
