@@ -77,6 +77,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>notification-regards-starter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.session-manager</groupId>
+			<artifactId>session-manager-domain</artifactId>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>

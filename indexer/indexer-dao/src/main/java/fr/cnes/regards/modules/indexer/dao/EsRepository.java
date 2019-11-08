@@ -148,6 +148,8 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
@@ -724,19 +726,25 @@ public class EsRepository implements IEsRepository {
             }
             // Create Save bulk request
             BulkRequest bulkRequest = new BulkRequest();
-            Map<String, String> map = new HashMap<>();
+            Map<String, T> map = new HashMap<>();
             for (T doc : documents) {
                 bulkRequest
                         .add(new IndexRequest(index, TYPE, doc.getDocId()).source(gson.toJson(doc), XContentType.JSON));
-                map.put(doc.getDocId(), doc.getLabel());
+                map.put(doc.getDocId(), doc);
             }
             // Bulk save
             BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
             // Parse response to creata a more exploitable object
             for (BulkItemResponse itemResponse : response.getItems()) {
+                T document = map.get(itemResponse.getId());
                 if (itemResponse.isFailed()) {
                     // Add item it and its associated exception
-                    result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause());
+                    if (document instanceof DataObject) {
+                        DataObjectFeature docFeature = ((DataObjectFeature) ((DataObject) document).getFeature());
+                        result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(), docFeature.getSession(), docFeature.getSessionOwner());
+                    } else {
+                        result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(), null, null);
+                    }
                     String msg = String.format("Document of type %s and id %s with label %s cannot be saved",
                                                documents[0].getClass(),
                                                itemResponse.getId(),
@@ -754,7 +762,12 @@ public class EsRepository implements IEsRepository {
                         errorBuffer.append(exception.getMessage());
                     }
                 } else {
-                    result.addSavedDocId(itemResponse.getId());
+                    if(document instanceof DataObject) {
+                        DataObjectFeature docFeature =((DataObjectFeature)((DataObject) document).getFeature());
+                        result.addSavedDoc(itemResponse.getId(), docFeature.getSession(), docFeature.getSessionOwner());
+                    } else {
+                        result.addSavedDoc(itemResponse.getId(), null, null);
+                    }
                 }
             }
             // To make just saved documents searchable, the associated index must be refreshed
