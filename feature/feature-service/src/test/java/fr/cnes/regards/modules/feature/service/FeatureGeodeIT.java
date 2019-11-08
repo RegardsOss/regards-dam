@@ -58,7 +58,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGeodeIT.class);
 
-    private static final Integer NB_FEATURES = 1;
+    private static final Integer NB_FEATURES = 1000;
 
     @Autowired
     private IPublisher publisher;

@@ -31,7 +31,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 1000;
+    private static final Integer NB_FEATURES = 10000;
 
     @Autowired
     private IFeatureCreationService featureService;
@@ -57,23 +57,28 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
         Thread.sleep(5_000);
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
+        int bulk = 0;
         for (int i = 1; i <= NB_FEATURES; i++) {
+            bulk++;
             String id = String.format(format, i);
             Feature feature = Feature.build(id, null, IGeometry.unlocated(), EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
+
+            if (bulk == properties.getMaxBulkSize()) {
+                saveEvents(events);
+                events.clear();
+                bulk = 0;
+            }
         }
 
-        long start = System.currentTimeMillis();
-        LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} request", NB_FEATURES);
-
-        featureService.registerRequests(events);
-
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
-                    System.currentTimeMillis() - start);
+        if (bulk > 0) {
+            saveEvents(events);
+        }
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
+        long start = System.currentTimeMillis();
         boolean schedule;
         do {
             schedule = featureService.scheduleRequests();
@@ -85,6 +90,14 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
                     System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureRepo.count());
+    }
+
+    private void saveEvents(List<FeatureCreationRequestEvent> events) {
+        long start = System.currentTimeMillis();
+        LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} request", events.size());
+        featureService.registerRequests(events);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", events.size(),
+                    System.currentTimeMillis() - start);
     }
 
     @SuppressWarnings("unused")

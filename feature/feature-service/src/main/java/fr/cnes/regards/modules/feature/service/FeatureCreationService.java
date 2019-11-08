@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -34,6 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
@@ -53,6 +55,7 @@ import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.domain.IVersionByProvider;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
@@ -159,6 +162,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
         Set<String> featureIdsScheduled = new HashSet<>();
+        Set<Long> requestIds = new HashSet<>();
         List<LightFeatureCreationRequest> requestsToSchedule = new ArrayList<>();
 
         //        long pageStart = System.currentTimeMillis();
@@ -172,15 +176,15 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
                     requestsToSchedule.add(request);
-                    request.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+                    requestIds.add(request.getId());
                     featureIdsScheduled.add(request.getProviderId());
                 }
             }
 
-            this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
+            // this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
+            featureCreationRequestLightRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
 
-            jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER,
-                    requestsToSchedule.stream().map(fcr -> fcr.getId()).collect(Collectors.toList())));
+            jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER, requestIds));
 
             // the job priority will be set according the priority of the first request to schedule
             JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
@@ -252,9 +256,22 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         long processStart = System.currentTimeMillis();
         long subProcessStart;
 
+        // Look for versions
+        List<String> providerIds = new ArrayList<>();
+        requests.forEach(r -> providerIds.add(r.getProviderId()));
+        Map<String, Integer> versionByProviders = new HashMap<>();
+        for (IVersionByProvider vbp : featureRepo.findByProviderIdInOrderByVersionDesc(providerIds)) {
+            if (!versionByProviders.containsKey(vbp.getProviderId())) {
+                // Register max version
+                versionByProviders.put(vbp.getProviderId(), vbp.getVersion());
+            }
+        }
+        // FIXME end
+
         // Register features
         subProcessStart = System.currentTimeMillis();
-        List<FeatureEntity> entities = requests.stream().map(feature -> initFeatureEntity(feature))
+        List<FeatureEntity> entities = requests.stream()
+                .map(request -> initFeatureEntity(request, versionByProviders.get(request.getProviderId())))
                 .collect(Collectors.toList());
         this.featureRepo.saveAll(entities);
         LOGGER.trace("------------->>> {} feature saved in {} ms", entities.size(),
@@ -333,15 +350,14 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
      * @param feature
      * @return
      */
-    private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr) {
+    private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr, @Nullable Integer previousVersion) {
 
         Feature feature = fcr.getFeature();
 
         UUID uuid = UUID.nameUUIDFromBytes(feature.getId().getBytes());
-        feature.setUrn(FeatureUniformResourceName
-                .build(FeatureIdentifier.FEATURE, feature.getEntityType(), runtimeTenantResolver.getTenant(), uuid,
-                       computeNextVersion(featureRepo
-                               .findTop1VersionByProviderIdOrderByVersionAsc(fcr.getFeature().getId()))));
+        feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, feature.getEntityType(),
+                                                        runtimeTenantResolver.getTenant(), uuid,
+                                                        computeNextVersion(previousVersion)));
 
         FeatureEntity created = FeatureEntity.build(fcr.getMetadata().getSession(), fcr.getMetadata().getSessionOwner(),
                                                     feature);
@@ -353,11 +369,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     /**
      * Compute the next version for a specific provider id we will increment the version passed in parameter
      * a null parameter mean a first version
-     * @param featureEntity last version for a provider id null if it not exist
-     * @return the next version
      */
-    private int computeNextVersion(FeatureEntity featureEntity) {
-        return featureEntity == null ? 1 : featureEntity.getVersion() + 1;
+    private int computeNextVersion(Integer previousVersion) {
+        return previousVersion == null ? 1 : previousVersion + 1;
     }
 
 }
