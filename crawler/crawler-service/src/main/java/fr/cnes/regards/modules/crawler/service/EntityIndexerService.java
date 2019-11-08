@@ -847,12 +847,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
             BulkSaveResult bulkSaveResult) {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
-            // care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                       bulkSaveResult.getSavedDocIdsStream()
-                                                               .map(UniformResourceName::fromString)
-                                                               .toArray(UniformResourceName[]::new)));
             // Session needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
             // care)
             for (Map.Entry<String, ConcurrentMap<String, Long>> savedPerSessionOwnerEntry : bulkSaveResult
@@ -869,12 +863,6 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
         }
         if (bulkSaveResult.getInErrorDocsCount() > 0) {
-            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
-            // it doesn't care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR,
-                                                       bulkSaveResult.getInErrorDocIdsStream()
-                                                               .map(UniformResourceName::fromString)
-                                                               .toArray(UniformResourceName[]::new)));
             // Session needs to know when an internal DataObject is cannot be indexed (if DataObject is not internal, it doesn't
             // care)
             for (Map.Entry<String, ConcurrentMap<String, Long>> inErrorPerSessionOwnerEntry : bulkSaveResult
