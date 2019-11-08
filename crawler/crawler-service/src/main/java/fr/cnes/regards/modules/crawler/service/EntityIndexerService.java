@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,8 +84,6 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
-import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
@@ -849,34 +846,17 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
             // Session needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
             // care)
-            for (Map.Entry<String, ConcurrentMap<String, Long>> savedPerSessionOwnerEntry : bulkSaveResult
-                    .getSavedDocPerSessionOwner().entrySet()) {
-                String sessionOwner = savedPerSessionOwnerEntry.getKey();
-                if (sessionOwner != null) {
-                    for (Map.Entry<String, Long> savedPerSessionEntry : savedPerSessionOwnerEntry.getValue().entrySet()) {
-                        String session = savedPerSessionEntry.getKey();
-                        if (session != null) {
-                            sessionNotifier.notifyIndexedSuccess(sessionOwner, session, savedPerSessionEntry.getValue());
-                        }
-                    }
-                }
-            }
+            bulkSaveResult.getSavedDocPerSessionOwner().forEach((sessionOwner, savedDocPerSession) -> savedDocPerSession
+                    .forEach((session, savedDocCount) -> sessionNotifier
+                            .notifyIndexedSuccess(sessionOwner, session, savedDocCount)));
         }
         if (bulkSaveResult.getInErrorDocsCount() > 0) {
             // Session needs to know when an internal DataObject is cannot be indexed (if DataObject is not internal, it doesn't
             // care)
-            for (Map.Entry<String, ConcurrentMap<String, Long>> inErrorPerSessionOwnerEntry : bulkSaveResult
-                    .getInErrorDocPerSessionOwner().entrySet()) {
-                String sessionOwner = inErrorPerSessionOwnerEntry.getKey();
-                if (sessionOwner != null) {
-                    for (Map.Entry<String, Long> inErrorPerSessionEntry : inErrorPerSessionOwnerEntry.getValue().entrySet()) {
-                        String session = inErrorPerSessionEntry.getKey();
-                        if (session != null) {
-                            sessionNotifier.notifyIndexedError(sessionOwner, session, inErrorPerSessionEntry.getValue());
-                        }
-                    }
-                }
-            }
+            bulkSaveResult.getInErrorDocPerSessionOwner()
+                    .forEach((sessionOwner, inErrorDocPerSession) -> inErrorDocPerSession
+                            .forEach((session, inErrorDocCount) -> sessionNotifier
+                                    .notifyIndexedError(sessionOwner, session, inErrorDocCount)));
         }
         // If there are errors, notify Admin
         if (buf.length() > 0) {
