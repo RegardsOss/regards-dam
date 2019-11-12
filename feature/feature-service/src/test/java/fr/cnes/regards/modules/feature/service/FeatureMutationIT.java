@@ -106,7 +106,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
         // Register update requests
         List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
         updateEvents.add(FeatureUpdateRequestEvent
-                .build(updated, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>())));
+                .build(FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), updated));
         featureUpdateService.registerRequests(updateEvents);
 
         // Schedule update job after retention delay

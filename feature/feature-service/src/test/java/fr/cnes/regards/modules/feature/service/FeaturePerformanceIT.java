@@ -101,7 +101,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
                                                       IProperty.buildBoolean("valid", Boolean.FALSE),
                                                       IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
             publisher.publish(FeatureUpdateRequestEvent
-                    .build(feature, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), requestDate));
+                    .build(FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), feature, requestDate));
         }
 
         // Wait for feature update

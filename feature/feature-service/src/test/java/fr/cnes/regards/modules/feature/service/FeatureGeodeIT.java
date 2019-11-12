@@ -98,7 +98,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
             Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, modelName);
             GeodeProperties.addGeodeUpdateProperties(feature);
             publisher.publish(FeatureUpdateRequestEvent
-                    .build(feature, FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), requestDate));
+                    .build(FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), feature, requestDate));
         }
 
         // Wait for feature update

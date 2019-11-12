@@ -160,7 +160,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         }
         List<FeatureUpdateRequestEvent> updateEvents = new ArrayList<>();
         updateEvents = events.stream()
-                .map(event -> FeatureUpdateRequestEvent.build(event.getFeature(), event.getMetadata()))
+                .map(event -> FeatureUpdateRequestEvent.build(event.getMetadata(), event.getFeature()))
                 .collect(Collectors.toList());
 
         // we will set all priority to low for the (properties.getMaxBulkSize() / 2) last event

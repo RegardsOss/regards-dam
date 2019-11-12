@@ -53,8 +53,7 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
-        // FIXME on fait quoi?
-        event.setRequestDate(OffsetDateTime.now().minusDays(1));
+        event.setRequestDate(OffsetDateTime.now().minusSeconds(1));
         return event;
     }
 
