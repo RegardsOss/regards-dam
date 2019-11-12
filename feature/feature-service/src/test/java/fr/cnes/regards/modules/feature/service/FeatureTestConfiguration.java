@@ -30,10 +30,10 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 
+import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
@@ -57,10 +57,9 @@ public class FeatureTestConfiguration {
         return Mockito.mock(IComputationPluginService.class);
     }
 
-    // FIXME a implémenter réellement!
     @Bean
-    public IAttributeHelper attributeHelper() {
-        return Mockito.mock(IAttributeHelper.class);
+    public IAttributeModelClient attributeModelClient() {
+        return Mockito.mock(IAttributeModelClient.class);
     }
 
     /**

@@ -62,5 +62,9 @@
 			<groupId>fr.cnes.regards.modules.model</groupId>
 			<artifactId>model-gson</artifactId>
 		</dependency>
+		<dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>hateoas-regards</artifactId>
+        </dependency>
 	</dependencies>
 </project>
