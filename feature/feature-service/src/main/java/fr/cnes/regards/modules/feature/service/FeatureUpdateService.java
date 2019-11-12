@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.feature.service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -189,14 +190,12 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         if (!requestsToSchedule.isEmpty()) {
 
-            List<Long> requestIds = new ArrayList<>();
+            // Compute request ids
+            Set<Long> requestIds = new HashSet<>();
+            requestsToSchedule.forEach(r -> requestIds.add(r.getId()));
 
             // Switch to next step
-            requestsToSchedule.forEach(r -> {
-                requestIds.add(r.getId());
-                r.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-            });
-            lightFeatureUpdateRequestRepo.saveAll(requestsToSchedule);
+            lightFeatureUpdateRequestRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
 
             // Schedule job
             Set<JobParameter> jobParameters = Sets.newHashSet();
@@ -219,6 +218,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         long processStart = System.currentTimeMillis();
         List<FeatureEntity> entities = new ArrayList<>();
+        List<FeatureUpdateRequest> successfulRequests = new ArrayList<>();
+        List<FeatureUpdateRequest> errorRequests = new ArrayList<>();
 
         Map<FeatureUniformResourceName, FeatureEntity> featureByUrn = this.featureRepo
                 .findByUrnIn(requests.stream().map(request -> request.getUrn()).collect(Collectors.toList())).stream()
@@ -231,6 +232,19 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             // Retrieve feature from db
             // Note : entity is attached to transaction manager so all changes will be reflected in the db!
             FeatureEntity entity = featureByUrn.get(patch.getUrn());
+
+            if (entity == null) {
+                // Unknown URN : request error
+                request.setState(RequestState.ERROR);
+                request.addError(String.format("No feature referenced in database with following URN : %s",
+                                               request.getUrn()));
+                errorRequests.add(request);
+
+                // Publish request failure
+                publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
+                                                            request.getUrn(), request.getState(), request.getErrors()));
+            }
+
             entity.setLastUpdate(OffsetDateTime.now());
 
             // Merge properties handling null property values to unset properties
@@ -241,8 +255,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 entity.getFeature().setGeometry(patch.getGeometry());
             }
 
-            // Publish request success
             // FIXME does not manage storage metadata at the moment
+
+            // Publish request success
             publisher.publish(FeatureRequestEvent.build(request.getRequestId(), entity.getProviderId(), entity.getUrn(),
                                                         RequestState.SUCCESS));
 
@@ -250,10 +265,12 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
             // Register
             entities.add(entity);
+            successfulRequests.add(request);
         }
 
         featureRepo.saveAll(entities);
-        featureUpdateRequestRepo.deleteInBatch(requests);
+        featureUpdateRequestRepo.saveAll(errorRequests);
+        featureUpdateRequestRepo.deleteInBatch(successfulRequests);
 
         LOGGER.debug("------------->>> {} update requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);

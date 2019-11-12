@@ -110,7 +110,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         super.featureUpdateRequestRepo.save(fur3);
 
         // wait 5 second to delay
-        Thread.sleep(5000);
+        Thread.sleep(properties.getDelayBeforeProcessing() * 1000);
 
         this.featureUpdateService.scheduleRequests();
 

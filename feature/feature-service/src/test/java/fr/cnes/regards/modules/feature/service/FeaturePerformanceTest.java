@@ -94,7 +94,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
     private void saveEvents(List<FeatureCreationRequestEvent> events) {
         long start = System.currentTimeMillis();
-        LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} request", events.size());
+        LOGGER.info(">>>>>>>>>>>>>>>>> Registering {} requests", events.size());
         featureService.registerRequests(events);
         LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", events.size(),
                     System.currentTimeMillis() - start);

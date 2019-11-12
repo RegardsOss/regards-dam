@@ -20,14 +20,16 @@ package fr.cnes.regards.modules.feature.dao;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.LightFeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 
@@ -40,15 +42,24 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 public interface ILightFeatureUpdateRequestRepository extends JpaRepository<LightFeatureUpdateRequest, Long> {
 
     /**
-     * Get {@link FeatureUpdateRequest} with a {@link Feature} urn not assigned to an other {@link FeatureUpdateRequest}
+     * Get {@link LightFeatureUpdateRequest} with a {@link Feature} urn not assigned to an other {@link LightFeatureUpdateRequest}
      * with it step set to LOCAL_SCHEDULED an ordered by registration date and before a delay
-     * @param page contain the number of {@link FeatureUpdateRequest} to return
-     * @param delay we want {@link FeatureUpdateRequest} with registration date before this delay
-     * @return list of  {@link FeatureUpdateRequest}
+     * @param page contain the number of {@link LightFeatureUpdateRequest} to return
+     * @param delay we want {@link LightFeatureUpdateRequest} with registration date before this delay
+     * @return list of {@link LightFeatureUpdateRequest}
      */
     @Query("select request from LightFeatureUpdateRequest request where request.urn not in ("
             + " select scheduledRequest.urn from LightFeatureUpdateRequest scheduledRequest"
             + " where scheduledRequest.step = 'LOCAL_SCHEDULED') and request.registrationDate <= :delay order by request.priority, request.registrationDate ")
     public List<LightFeatureUpdateRequest> findRequestToSchedule(Pageable page, @Param("delay") OffsetDateTime delay);
+
+    /**
+     * Update {@link LightFeatureUpdateRequest} step
+     * @param step new {@link FeatureRequestStep}
+     * @param ids id of {@link LightFeatureUpdateRequest} to update
+     */
+    @Modifying
+    @Query("update LightFeatureUpdateRequest fcr set fcr.step = :newStep where fcr.id in :ids ")
+    public void updateStep(@Param("newStep") FeatureRequestStep step, @Param("ids") Set<Long> ids);
 
 }

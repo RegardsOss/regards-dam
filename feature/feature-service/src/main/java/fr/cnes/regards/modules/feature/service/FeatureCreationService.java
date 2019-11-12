@@ -180,8 +180,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                     featureIdsScheduled.add(request.getProviderId());
                 }
             }
-
-            // this.featureCreationRequestLightRepo.saveAll(requestsToSchedule);
             featureCreationRequestLightRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
 
             jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER, requestIds));
@@ -266,7 +264,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 versionByProviders.put(vbp.getProviderId(), vbp.getVersion());
             }
         }
-        // FIXME end
 
         // Register features
         subProcessStart = System.currentTimeMillis();
@@ -293,7 +290,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
-                // Publish successul request
+                // Publish successful request
                 publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
                                                             request.getFeature().getUrn(), RequestState.SUCCESS));
             }

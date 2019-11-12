@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.assertj.core.util.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
  * @author Marc SORDI
  *
  */
+@Ignore
 @TestPropertySource(
         properties = { "spring.jpa.properties.hibernate.default_schema=feature_perfit", "regards.amqp.enabled=true" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
