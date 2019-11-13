@@ -42,7 +42,6 @@ public class RecipientSenderFail implements IRecipientSender, IHandler<Notificat
 
     @Override
     public boolean send(Feature feature, FeatureManagementAction action) {
-        System.out.println("lol");
         return false;
     }
 
