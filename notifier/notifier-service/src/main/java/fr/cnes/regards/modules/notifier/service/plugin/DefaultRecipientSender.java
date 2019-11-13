@@ -16,7 +16,7 @@ import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
  * @author kevin
  *
  */
-@Plugin(author = "REGARDS Team", description = "Default rule matcher for feature", id = "DefaultRecipientSender",
+@Plugin(author = "REGARDS Team", description = "Default recipient sender for feature", id = "DefaultRecipientSender",
         version = "1.0.0", contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES",
         url = "https://regardsoss.github.io/")
 public class DefaultRecipientSender implements IRecipientSender {
