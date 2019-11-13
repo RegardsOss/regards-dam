@@ -60,15 +60,6 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
     @Test
     public void testPerf() {
-        //        sub.subscribeTo(NotificationEvent2.class, new RecipientSender2());
-        //        sub.subscribeTo(NotificationEvent3.class, new RecipientSender3());
-        //        sub.subscribeTo(NotificationEvent4.class, new RecipientSender4());
-        //        sub.subscribeTo(NotificationEvent5.class, new RecipientSender5());
-        //        sub.subscribeTo(NotificationEvent6.class, new RecipientSender6());
-        //        sub.subscribeTo(NotificationEvent7.class, new RecipientSender7());
-        //        sub.subscribeTo(NotificationEvent8.class, new RecipientSender8());
-        //        sub.subscribeTo(NotificationEvent9.class, new RecipientSender9());
-        //        sub.subscribeTo(NotificationEvent10.class, new RecipientSender10());
 
         Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, null);
         // Properties of the feature
@@ -76,6 +67,18 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
                 .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
         modifiedFeature.setProperties(properties);
 
+        initPlugins(false);
+
+        List<FeatureEvent> events = new ArrayList<>();
+        for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
+            events.add(FeatureEvent.build(modifiedFeature, FeatureManagementAction.CREATE));
+        }
+
+        assertEquals(FEATURE_EVENT_TO_RECEIVE * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+
+    }
+
+    private void initPlugins(boolean fail) {
         // configuration of the rule plugin
         PluginConfiguration rulePlugin = new PluginConfiguration();
         rulePlugin.setBusinessId("testRule");
@@ -94,12 +97,12 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
         rulePlugin = this.pluginConfRepo.save(rulePlugin);
 
-        // configuration of the recipient sender plugin
+        // configuration of the default recipient sender plugin
         PluginConfiguration recipientPlugin = new PluginConfiguration();
-        recipientPlugin.setBusinessId("testRecipient");
+        recipientPlugin.setBusinessId(fail ? "failRecipient" : "testRecipient");
         recipientPlugin.setVersion("1.0.0");
         recipientPlugin.setLabel("test recipient");
-        recipientPlugin.setPluginId("DefaultRecipientSender");
+        recipientPlugin.setPluginId(fail ? "fail" : "DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
 
         Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
@@ -108,6 +111,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         Recipient recipient = Recipient.build(rule, recipientPlugin);
         this.recipientRepo.save(recipient);
 
+        // configuration of the fake recipient sender (for test)
         for (int i = 1; i < RECIPIENTS_PER_RULE; i++) {
             recipientPlugin = new PluginConfiguration();
             recipientPlugin.setBusinessId("testRecipient" + (i + 1));
@@ -118,12 +122,27 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
             recipient = Recipient.build(rule, recipientPlugin);
             this.recipientRepo.save(recipient);
         }
+    }
+
+    /**
+     * In that test one the the fake RecipientSender will fail
+     */
+    @Test
+    public void testPerfWithFail() {
+        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, null);
+        // Properties of the feature
+        Set<IProperty<?>> properties = IProperty
+                .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
+        modifiedFeature.setProperties(properties);
+
+        initPlugins(true);
 
         List<FeatureEvent> events = new ArrayList<>();
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             events.add(FeatureEvent.build(modifiedFeature, FeatureManagementAction.CREATE));
         }
 
-        assertEquals(FEATURE_EVENT_TO_RECEIVE * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+        assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1),
+                     this.notificationService.handleFeatures(events));
     }
 }
