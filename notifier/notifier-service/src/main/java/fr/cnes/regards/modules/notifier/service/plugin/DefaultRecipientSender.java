@@ -3,9 +3,14 @@
  */
 package fr.cnes.regards.modules.notifier.service.plugin;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
+import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
 
 /**
  * @author kevin
@@ -16,10 +21,12 @@ import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
         url = "https://regardsoss.github.io/")
 public class DefaultRecipientSender implements IRecipientSender {
 
-    @Override
-    public boolean send(Feature feature) {
-        // TODO faire quelque chose! mais quoi?
-        return !feature.getModel().equals("fail");
-    }
+    @Autowired
+    private IPublisher publisher;
 
+    @Override
+    public boolean send(Feature feature, FeatureManagementAction action) {
+        this.publisher.publish(NotificationEvent.build(feature, action));
+        return true;
+    }
 }

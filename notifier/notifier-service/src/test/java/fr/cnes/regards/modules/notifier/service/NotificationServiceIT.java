@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginPa
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
@@ -81,18 +82,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         Recipient recipient = Recipient.build(rule, recipientPlugin);
         this.recipientRepo.save(recipient);
 
-        assertEquals(1, this.notificationService.handleFeatures(feature));
-
-        // FIXME this feature will fail cause to the fail model  (sender not implemented)
-        Feature failingFeature = Feature
-                .build("id",
-                       FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                  getDefaultTenant(), 1),
-                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "fail");
-
-        failingFeature.setProperties(properties);
-
-        assertEquals(0, this.notificationService.handleFeatures(failingFeature));
+        assertEquals(1, this.notificationService.handleFeature(feature, FeatureManagementAction.CREATE));
 
     }
 
@@ -142,7 +132,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         Recipient recipient = Recipient.build(rule, recipientPlugin);
 
         this.recipientRepo.save(recipient);
-        assertEquals(0, this.notificationService.handleFeatures(feature));
+        assertEquals(0, this.notificationService.handleFeature(feature, FeatureManagementAction.CREATE));
 
     }
 

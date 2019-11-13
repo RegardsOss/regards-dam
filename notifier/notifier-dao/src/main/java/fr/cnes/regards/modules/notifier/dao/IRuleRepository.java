@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.notifier.dao;
 
 import java.util.Set;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,5 +24,6 @@ public interface IRuleRepository extends JpaRepository<Rule, Long> {
      * @param type {@link NotificationType}
      * @return a set of {@link Rule}
      */
+    @EntityGraph(attributePaths = { "pluginCondConfiguration", "recipients" })
     public Set<Rule> findByEnableTrueAndType(NotificationType type);
 }
