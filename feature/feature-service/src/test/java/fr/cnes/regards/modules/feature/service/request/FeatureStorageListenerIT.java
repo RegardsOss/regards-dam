@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.feature.service.request;
 import static org.junit.Assert.assertEquals;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -30,6 +29,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -46,7 +47,6 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.AbstractFeatureMultitenantServiceTest;
 import fr.cnes.regards.modules.storagelight.client.RequestInfo;
-import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfoDTO;
 
 /**
  * @author kevin
@@ -72,7 +72,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
 
         initData(info);
 
-        this.listener.onStoreSuccess(info, new ArrayList<RequestResultInfoDTO>());
+        this.listener.onStoreSuccess(Sets.newHashSet(info));
 
         // the FeatureCreationRequest must be deleted
         assertEquals(0, fcrRepo.count());
@@ -88,7 +88,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
 
         initData(info);
 
-        this.listener.onStoreError(info, new ArrayList<RequestResultInfoDTO>(), new ArrayList<RequestResultInfoDTO>());
+        this.listener.onStoreError(Sets.newHashSet(info));
 
         // the FeatureCreationRequest must remain
         assertEquals(1, fcrRepo.count());

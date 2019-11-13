@@ -18,14 +18,13 @@
  */
 package fr.cnes.regards.modules.feature.service.request;
 
-import java.util.Collection;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.storagelight.client.IStorageRequestListener;
 import fr.cnes.regards.modules.storagelight.client.RequestInfo;
-import fr.cnes.regards.modules.storagelight.domain.dto.request.RequestResultInfoDTO;
 
 /**
  *
@@ -41,69 +40,69 @@ public class FeatureStorageListener implements IStorageRequestListener {
     private IFeatureRequestService featureRequestService;
 
     @Override
-    public void onRequestGranted(RequestInfo request) {
+    public void onRequestGranted(Set<RequestInfo> requests) {
+        // FIXME
+    }
+
+    @Override
+    public void onRequestDenied(Set<RequestInfo> requests) {
+        // FIXME
+    }
+
+    @Override
+    public void onCopySuccess(Set<RequestInfo> requests) {
+        throw new UnsupportedOperationException("onCopySuccess");
+    }
+
+    @Override
+    public void onCopyError(Set<RequestInfo> requests) {
+        throw new UnsupportedOperationException("onCopyError");
+    }
+
+    @Override
+    public void onAvailable(Set<RequestInfo> requests) {
+        throw new UnsupportedOperationException("onAvailable");
 
     }
 
     @Override
-    public void onRequestDenied(RequestInfo request) {
+    public void onAvailabilityError(Set<RequestInfo> requests) {
+        throw new UnsupportedOperationException("onAvailabilityError");
+    }
+
+    @Override
+    public void onDeletionSuccess(Set<RequestInfo> requests) {
+        // TODO
 
     }
 
     @Override
-    public void onCopySuccess(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-
+    public void onDeletionError(Set<RequestInfo> requests) {
+        // TODO
     }
 
     @Override
-    public void onCopyError(RequestInfo request, Collection<RequestResultInfoDTO> success,
-            Collection<RequestResultInfoDTO> errors) {
-
+    public void onReferenceSuccess(Set<RequestInfo> requests) {
+        // FIXME test
+        requests.forEach(request -> featureRequestService.handleSuccess(request.getGroupId()));
     }
 
     @Override
-    public void onAvailable(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-
+    public void onReferenceError(Set<RequestInfo> requests) {
+        // FIXME test
+        requests.forEach(request -> featureRequestService.handleError(request.getGroupId()));
     }
 
     @Override
-    public void onAvailabilityError(RequestInfo request, Collection<RequestResultInfoDTO> success,
-            Collection<RequestResultInfoDTO> errors) {
-
+    public void onStoreSuccess(Set<RequestInfo> requests) {
+        // FIXME test
+        requests.forEach(request -> featureRequestService.handleSuccess(request.getGroupId()));
     }
 
     @Override
-    public void onDeletionSuccess(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-
-    }
-
-    @Override
-    public void onDeletionError(RequestInfo request, Collection<RequestResultInfoDTO> success,
-            Collection<RequestResultInfoDTO> errors) {
-
-    }
-
-    @Override
-    public void onReferenceSuccess(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-        featureRequestService.handleSuccess(request.getGroupId());
-    }
-
-    @Override
-    public void onReferenceError(RequestInfo request, Collection<RequestResultInfoDTO> success,
-            Collection<RequestResultInfoDTO> errors) {
-        featureRequestService.handleError(request.getGroupId());
-
-    }
-
-    @Override
-    public void onStoreSuccess(RequestInfo request, Collection<RequestResultInfoDTO> success) {
-        featureRequestService.handleSuccess(request.getGroupId());
-    }
-
-    @Override
-    public void onStoreError(RequestInfo request, Collection<RequestResultInfoDTO> success,
-            Collection<RequestResultInfoDTO> errors) {
-        featureRequestService.handleError(request.getGroupId());
+    public void onStoreError(Set<RequestInfo> requests) {
+        // FIXME test
+        requests.forEach(request -> featureRequestService.handleError(request.getGroupId()));
     }
 
 }
