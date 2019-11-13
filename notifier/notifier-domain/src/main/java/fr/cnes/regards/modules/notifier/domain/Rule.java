@@ -15,6 +15,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -29,6 +32,9 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
  */
 @Entity
 @Table(name = "t_rule")
+@NamedEntityGraphs({ @NamedEntityGraph(name = "Rule.recipients", attributeNodes = @NamedAttributeNode("recipients")),
+        @NamedEntityGraph(name = "Rule.pluginCondConfiguration",
+                attributeNodes = @NamedAttributeNode("pluginCondConfiguration")) })
 public class Rule {
 
     @Id

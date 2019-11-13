@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.notification.domain.plugin;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 
 /**
  * @author kevin
@@ -14,6 +15,6 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 @PluginInterface(description = "Recipient sender plugin")
 public interface IRecipientSender {
 
-    boolean send(Feature feature);
+    boolean send(Feature feature, FeatureManagementAction action);
 
 }

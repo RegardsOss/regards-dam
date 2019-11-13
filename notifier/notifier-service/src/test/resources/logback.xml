@@ -27,8 +27,16 @@
 		</encoder>
 	</appender>
 
-	<logger name="org.springframework" level="INFO" />
-	<root level="info">
+	<logger name="org.springframework" level="ERROR" />
+	<logger name="io.micrometer" level="ERROR" />
+	<logger name="fr.cnes.regards.modules" level="INFO" />
+	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR"/>
+<!-- 	<logger name="fr.cnes.regards.modules.feature.service" level="TRACE"/>-->
+	
+    <!-- <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/> -->
+   <!--  <logger name="org.hibernate.SQL" level="DEBUG"/> -->
+    <logger name="fr.cnes.regards.modules.notifier.service" level="DEBUG" />
+	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
