@@ -15,6 +15,15 @@ import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationReposit
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
 import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender10;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender2;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender3;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender4;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender5;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
 import fr.cnes.regards.modules.notifier.service.flow.FeatureEventHandler;
 
 public abstract class AbstractNotificationMultitenantServiceTest extends AbstractMultitenantServiceTest {
@@ -71,5 +80,14 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     @After
     public void after() {
         cleanAMQPQueues(FeatureEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender2.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender3.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender4.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender5.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender6.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender7.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender8.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender9.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(RecipientSender10.class, Target.ONE_PER_MICROSERVICE_TYPE);
     }
 }

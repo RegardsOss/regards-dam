@@ -60,7 +60,16 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
     @Test
     public void testPerf() {
-        //        sub.subscribeTo(NotificationEvent.class, new DefaultRecipientSender());
+        //        sub.subscribeTo(NotificationEvent2.class, new RecipientSender2());
+        //        sub.subscribeTo(NotificationEvent3.class, new RecipientSender3());
+        //        sub.subscribeTo(NotificationEvent4.class, new RecipientSender4());
+        //        sub.subscribeTo(NotificationEvent5.class, new RecipientSender5());
+        //        sub.subscribeTo(NotificationEvent6.class, new RecipientSender6());
+        //        sub.subscribeTo(NotificationEvent7.class, new RecipientSender7());
+        //        sub.subscribeTo(NotificationEvent8.class, new RecipientSender8());
+        //        sub.subscribeTo(NotificationEvent9.class, new RecipientSender9());
+        //        sub.subscribeTo(NotificationEvent10.class, new RecipientSender10());
+
         Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, null);
         // Properties of the feature
         Set<IProperty<?>> properties = IProperty
@@ -96,8 +105,17 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
         rule = this.ruleRepo.save(rule);
 
-        for (int i = 0; i < RECIPIENTS_PER_RULE; i++) {
-            Recipient recipient = Recipient.build(rule, recipientPlugin);
+        Recipient recipient = Recipient.build(rule, recipientPlugin);
+        this.recipientRepo.save(recipient);
+
+        for (int i = 1; i < RECIPIENTS_PER_RULE; i++) {
+            recipientPlugin = new PluginConfiguration();
+            recipientPlugin.setBusinessId("testRecipient" + (i + 1));
+            recipientPlugin.setVersion("1.0.0");
+            recipientPlugin.setLabel("test recipient");
+            recipientPlugin.setPluginId("RecipientSender" + (i + 1));
+            recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
+            recipient = Recipient.build(rule, recipientPlugin);
             this.recipientRepo.save(recipient);
         }
 
