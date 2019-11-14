@@ -24,8 +24,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import fr.cnes.regards.modules.feature.service.IFeatureValidationService;
+import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 
 /**
@@ -40,10 +40,9 @@ public class FeatureTestConfiguration {
         return Mockito.mock(IModelAttrAssocClient.class);
     }
 
-    // FIXME a implémenter réellement!
     @Bean
-    public IAttributeHelper attributeHelper() {
-        return Mockito.mock(IAttributeHelper.class);
+    public IAttributeModelClient attModelClient() {
+        return Mockito.mock(IAttributeModelClient.class);
     }
 
     @Bean

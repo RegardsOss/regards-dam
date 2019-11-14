@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
@@ -167,7 +168,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         errors.reject("error code");
         // we will mock validation plugin and consider the feature is unvalid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
-        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusConflict();
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatus(HttpStatus.UNPROCESSABLE_ENTITY);
         requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
 
         performDefaultPost(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
@@ -239,7 +240,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         // we will mock validation plugin and consider the feature is unvalid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
 
-        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusConflict();
+        RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatus(HttpStatus.UNPROCESSABLE_ENTITY);
         requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
 
         performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
