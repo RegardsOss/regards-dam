@@ -217,7 +217,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     public void processRequests(List<FeatureUpdateRequest> requests) {
 
         long processStart = System.currentTimeMillis();
-        List<FeatureEntity> entities = new ArrayList<>();
+        Set<FeatureEntity> entities = new HashSet<>();
         List<FeatureUpdateRequest> successfulRequests = new ArrayList<>();
         List<FeatureUpdateRequest> errorRequests = new ArrayList<>();
 
@@ -272,7 +272,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         featureUpdateRequestRepo.saveAll(errorRequests);
         featureUpdateRequestRepo.deleteInBatch(successfulRequests);
 
-        LOGGER.debug("------------->>> {} update requests processed in {} ms", requests.size(),
-                     System.currentTimeMillis() - processStart);
+        LOGGER.debug("------------->>> {} update requests processed with {} entities updated in {} ms", requests.size(),
+                     entities.size(), System.currentTimeMillis() - processStart);
     }
 }

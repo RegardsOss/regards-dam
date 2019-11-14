@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -31,4 +34,9 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 @Repository
 public interface IFeatureUpdateRequestRepository extends JpaRepository<FeatureUpdateRequest, Long> {
 
+    /**
+     * Retrieve update requests to process sorted by request date.<br/>
+     * Sorting requests is useful to manage several update requests on a same target entity!
+     */
+    List<FeatureUpdateRequest> findAllByIdInOrderByRequestDateAsc(Set<Long> ids);
 }

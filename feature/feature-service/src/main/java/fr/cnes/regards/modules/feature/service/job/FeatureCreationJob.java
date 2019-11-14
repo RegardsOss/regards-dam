@@ -75,8 +75,8 @@ public class FeatureCreationJob extends AbstractJob<Void> {
         LOGGER.info("[{}] Feature creation job starts", jobInfoId);
         long start = System.currentTimeMillis();
         timer.record(() -> featureService.processRequests(featureCreationRequests));
-        LOGGER.info("[{}]{}{} feature(s) created in {} ms", jobInfoId, INFO_TAB, featureCreationRequests.size(),
-                    System.currentTimeMillis() - start);
+        LOGGER.info("[{}]{}{} creation request(s) processed in {} ms", jobInfoId, INFO_TAB,
+                    featureCreationRequests.size(), System.currentTimeMillis() - start);
     }
 
 }

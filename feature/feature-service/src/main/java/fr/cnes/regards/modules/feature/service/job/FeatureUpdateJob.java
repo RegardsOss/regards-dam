@@ -62,7 +62,8 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
         Type type = new TypeToken<Set<Long>>() {
 
         }.getType();
-        featureUpdateRequests = this.featureUpdateRequestRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
+        featureUpdateRequests = this.featureUpdateRequestRepo
+                .findAllByIdInOrderByRequestDateAsc(getValue(parameters, IDS_PARAMETER, type));
     }
 
     @Override
@@ -71,7 +72,7 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
         LOGGER.info("[{}] Feature update job starts", jobInfoId);
         long start = System.currentTimeMillis();
         timer.record(() -> featureUpdateService.processRequests(featureUpdateRequests));
-        LOGGER.info("[{}]{}{} feature(s) updated in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
+        LOGGER.info("[{}]{}{} update request(s) processed in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
                     System.currentTimeMillis() - start);
     }
 }
