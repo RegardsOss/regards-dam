@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import fr.cnes.regards.modules.model.client.IAttributeModelClient;
-import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
 /**
@@ -41,10 +40,5 @@ public class TestConfiguration {
     @Bean
     IAttributeModelClient attributeModelClient() {
         return Mockito.mock(IAttributeModelClient.class);
-    }
-
-    @Bean
-    IAttributeHelper attributeHelper() {
-        return Mockito.mock(IAttributeHelper.class);
     }
 }
