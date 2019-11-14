@@ -47,7 +47,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -56,8 +55,6 @@ import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -77,6 +74,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpda
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
+import fr.cnes.regards.modules.crawler.service.session.SessionNotifier;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
@@ -85,11 +83,8 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
-import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
@@ -133,12 +128,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private IAccessRightService accessRightService;
 
-    @Autowired
-    private IPublisher publisher;
-
-    @Autowired
-    private ISubscriber subscriber;
-
     @PersistenceContext
     private EntityManager em;
 
@@ -176,6 +165,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private ProjectGeoSettings projectGeoSettings;
 
+    @Autowired
+    private SessionNotifier sessionNotifier;
+
     private static List<String> toErrors(Errors errorsObject) {
         List<String> errors = new ArrayList<>(errorsObject.getErrorCount());
         for (ObjectError objError : errorsObject.getAllErrors()) {
@@ -192,12 +184,6 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
         }
         return errors;
-    }
-
-    @Override
-    @EventListener
-    public void handleApplicationReady(DamGsonReadyEvent event) {
-        // TODO : subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
     }
 
     /**
@@ -730,7 +716,9 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Append error msg to buffer
             buf.append("\n").append(msg);
             // Add data object in error into summary result
-            bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg));
+            bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
+                                         Optional.ofNullable(dataObject.getFeature().getSession()),
+                                         Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
         }
     }
 
@@ -812,16 +800,20 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
             BulkSaveResult bulkSaveResult) {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
-            // Ingest needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
+            // Session needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
             // care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED, bulkSaveResult.getSavedDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(UniformResourceName[]::new)));
+            bulkSaveResult.getSavedDocPerSessionOwner()
+                    .forEach((sessionOwner, savedDocPerSession) -> savedDocPerSession
+                            .forEach((session, savedDocCount) -> sessionNotifier
+                                    .notifyIndexedSuccess(sessionOwner, session, savedDocCount)));
         }
         if (bulkSaveResult.getInErrorDocsCount() > 0) {
-            // Ingest also needs to know when an internal DataObject cannot be indexed (if DataObject is not internal,
-            // it doesn't care)
-            publisher.publish(new BroadcastEntityEvent(EventType.INDEX_ERROR, bulkSaveResult.getInErrorDocIdsStream()
-                    .map(UniformResourceName::fromString).toArray(UniformResourceName[]::new)));
+            // Session needs to know when an internal DataObject is cannot be indexed (if DataObject is not internal, it doesn't
+            // care)
+            bulkSaveResult.getInErrorDocPerSessionOwner()
+                    .forEach((sessionOwner, inErrorDocPerSession) -> inErrorDocPerSession
+                            .forEach((session, inErrorDocCount) -> sessionNotifier
+                                    .notifyIndexedError(sessionOwner, session, inErrorDocCount)));
         }
         // If there are errors, notify Admin
         if (buf.length() > 0) {
@@ -872,25 +864,4 @@ public class EntityIndexerService implements IEntityIndexerService {
             eventPublisher.publishEvent(new DataSourceMessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
-
-    /**
-    TODO
-    private class AIPEventHandler implements IHandler<AIPEvent> {
-    
-        @Override
-        public void handle(TenantWrapper<AIPEvent> wrapper) {
-            AIPEvent event = wrapper.getContent();
-            if (event.getAipState() == AIPState.DELETED) {
-                runtimeTenantResolver.forceTenant(wrapper.getTenant());
-                try {
-                    deleteDataObject(wrapper.getTenant(), event.getAipId());
-                } catch (RsRuntimeException e) {
-                    String msg = String.format("Cannot delete DataObject (%s)", event.getAipId());
-                    LOGGER.error(msg, e);
-                }
-    
-            }
-        }
-    }
-    */
 }

@@ -21,7 +21,10 @@ package fr.cnes.regards.modules.indexer.dao;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 /**
@@ -32,7 +35,17 @@ public class BulkSaveResult {
 
     private final Set<String> savedDocIds = new HashSet<>();
 
+    /**
+     * Map sessionOwner to sessions which are mapped to number of document indexed
+     */
+    private final ConcurrentMap<String, ConcurrentMap<String, Long>> savedDocPerSessionOwner = new ConcurrentHashMap<>();
+
     private final Map<String, Exception> inErrorDocsMap = new HashMap<>();
+
+    /**
+     * Map sessionOwner to sessions which are mapped to number of document in error
+     */
+    private final ConcurrentMap<String, ConcurrentMap<String, Long>> inErrorDocPerSessionOwner = new ConcurrentHashMap<>();
 
     /**
      * Error detailed message is set by EsRespository when notify to admin. It is then used to show error message while
@@ -43,12 +56,60 @@ public class BulkSaveResult {
     public BulkSaveResult() {
     }
 
-    public void addSavedDocId(String docId) {
+    /**
+     * add information needed to report document that could be indexed
+     * @param docId
+     * @param session nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
+     * @param sessionOwner nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
+     */
+    public void addSavedDoc(String docId, Optional<String> session, Optional<String> sessionOwner) {
+        // Add document to the current bulk save result
         savedDocIds.add(docId);
+        // If session and sessionOwner are provided add it to the dispatched map by session owner too.
+        if (session.isPresent() && sessionOwner.isPresent()) {
+            ConcurrentMap<String, Long> savedDocForSessionOwner = savedDocPerSessionOwner.get(sessionOwner.get());
+            if (savedDocForSessionOwner == null) {
+                ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
+                value.put(session.get(), 1L);
+                savedDocPerSessionOwner.put(sessionOwner.get(), value);
+            } else {
+                Long savedDocForSession = savedDocForSessionOwner.get(session.get());
+                if (savedDocForSession == null) {
+                    savedDocForSessionOwner.put(session.get(), 1L);
+                } else {
+                    savedDocForSessionOwner.put(session.get(), savedDocForSession + 1);
+                }
+            }
+        }
     }
 
-    public void addInErrorDoc(String docId, Exception e) {
-        inErrorDocsMap.put(docId, e);
+    /**
+     * add information needed to report document that could not be indexed
+     * @param docId
+     * @param exception
+     * @param session nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
+     * @param sessionOwner nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
+     */
+    public void addInErrorDoc(String docId, Exception exception, Optional<String> session,
+            Optional<String> sessionOwner) {
+        // Add document to the current bulk save result
+        inErrorDocsMap.put(docId, exception);
+        // If session and sessionOwner are provided add it to the dispatched map by session owner too.
+        if (session.isPresent() && sessionOwner.isPresent()) {
+            ConcurrentMap<String, Long> inErrorDocForSessionOwner = inErrorDocPerSessionOwner.get(sessionOwner.get());
+            if (inErrorDocForSessionOwner == null) {
+                ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
+                value.put(session.get(), 1L);
+                inErrorDocPerSessionOwner.put(sessionOwner.get(), value);
+            } else {
+                Long inErrorDocForSession = inErrorDocForSessionOwner.get(session.get());
+                if (inErrorDocForSession == null) {
+                    inErrorDocForSessionOwner.put(session.get(), 1L);
+                } else {
+                    inErrorDocForSessionOwner.put(session.get(), inErrorDocForSession + 1);
+                }
+            }
+        }
     }
 
     public int getSavedDocsCount() {
@@ -79,6 +140,14 @@ public class BulkSaveResult {
         this.detailedErrorMsg = detailedErrorMsg;
     }
 
+    public ConcurrentMap<String, ConcurrentMap<String, Long>> getSavedDocPerSessionOwner() {
+        return savedDocPerSessionOwner;
+    }
+
+    public ConcurrentMap<String, ConcurrentMap<String, Long>> getInErrorDocPerSessionOwner() {
+        return inErrorDocPerSessionOwner;
+    }
+
     /**
      * Append another bulk save result
      * @param otherBulkSaveResult another bulk save result
@@ -88,6 +157,8 @@ public class BulkSaveResult {
         if (otherBulkSaveResult != null) {
             this.savedDocIds.addAll(otherBulkSaveResult.savedDocIds);
             this.inErrorDocsMap.putAll(otherBulkSaveResult.inErrorDocsMap);
+            this.savedDocPerSessionOwner.putAll(otherBulkSaveResult.savedDocPerSessionOwner);
+            this.inErrorDocPerSessionOwner.putAll(otherBulkSaveResult.inErrorDocPerSessionOwner);
         }
         return this;
     }
