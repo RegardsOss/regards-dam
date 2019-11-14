@@ -18,10 +18,10 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -62,19 +62,23 @@ public class BulkSaveResult {
      * @param session nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      * @param sessionOwner nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      */
-    public void addSavedDoc(String docId, @Nullable String session, @Nullable String sessionOwner) {
+    public void addSavedDoc(String docId, Optional<String> session, Optional<String> sessionOwner) {
+        // Add document to the current bulk save result
         savedDocIds.add(docId);
-        ConcurrentMap<String, Long> savedDocForSessionOwner = savedDocPerSessionOwner.get(sessionOwner);
-        if (savedDocForSessionOwner == null) {
-            ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
-            value.put(session, 1L);
-            savedDocPerSessionOwner.put(sessionOwner, value);
-        } else {
-            Long savedDocForSession = savedDocForSessionOwner.get(session);
-            if (savedDocForSession == null) {
-                savedDocForSessionOwner.put(session, 1L);
+        // If session and sessionOwner are provided add it to the dispatched map by session owner too.
+        if (session.isPresent() && sessionOwner.isPresent()) {
+            ConcurrentMap<String, Long> savedDocForSessionOwner = savedDocPerSessionOwner.get(sessionOwner.get());
+            if (savedDocForSessionOwner == null) {
+                ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
+                value.put(session.get(), 1L);
+                savedDocPerSessionOwner.put(sessionOwner.get(), value);
             } else {
-                savedDocForSessionOwner.put(session, savedDocForSession + 1);
+                Long savedDocForSession = savedDocForSessionOwner.get(session.get());
+                if (savedDocForSession == null) {
+                    savedDocForSessionOwner.put(session.get(), 1L);
+                } else {
+                    savedDocForSessionOwner.put(session.get(), savedDocForSession + 1);
+                }
             }
         }
     }
@@ -86,20 +90,24 @@ public class BulkSaveResult {
      * @param session nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      * @param sessionOwner nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      */
-    public void addInErrorDoc(String docId, Exception exception, @Nullable String session,
-            @Nullable String sessionOwner) {
+    public void addInErrorDoc(String docId, Exception exception, Optional<String> session,
+            Optional<String> sessionOwner) {
+        // Add document to the current bulk save result
         inErrorDocsMap.put(docId, exception);
-        ConcurrentMap<String, Long> inErrorDocForSessionOwner = inErrorDocPerSessionOwner.get(sessionOwner);
-        if (inErrorDocForSessionOwner == null) {
-            ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
-            value.put(session, 1L);
-            inErrorDocPerSessionOwner.put(sessionOwner, value);
-        } else {
-            Long inErrorDocForSession = inErrorDocForSessionOwner.get(session);
-            if (inErrorDocForSession == null) {
-                inErrorDocForSessionOwner.put(session, 1L);
+        // If session and sessionOwner are provided add it to the dispatched map by session owner too.
+        if (session.isPresent() && sessionOwner.isPresent()) {
+            ConcurrentMap<String, Long> inErrorDocForSessionOwner = inErrorDocPerSessionOwner.get(sessionOwner.get());
+            if (inErrorDocForSessionOwner == null) {
+                ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();
+                value.put(session.get(), 1L);
+                inErrorDocPerSessionOwner.put(sessionOwner.get(), value);
             } else {
-                inErrorDocForSessionOwner.put(session, inErrorDocForSession + 1);
+                Long inErrorDocForSession = inErrorDocForSessionOwner.get(session.get());
+                if (inErrorDocForSession == null) {
+                    inErrorDocForSessionOwner.put(session.get(), 1L);
+                } else {
+                    inErrorDocForSessionOwner.put(session.get(), inErrorDocForSession + 1);
+                }
             }
         }
     }
