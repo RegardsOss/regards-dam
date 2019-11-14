@@ -60,6 +60,7 @@
 	<modules>
 		<module>dam-dao</module>
 		<module>dam-domain</module>
+		<module>dam-dto</module>
 		<module>dam-service</module>
 		<module>dam-rest</module>
 		<module>dam-gson</module>

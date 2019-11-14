@@ -30,6 +30,12 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 public class DataObjectFeature extends EntityFeature {
 
     /**
+     * Session key information
+     */
+    private String sessionOwner;
+    private String session;
+
+    /**
      * Deserialization constructor
      */
     protected DataObjectFeature() {
@@ -45,4 +51,19 @@ public class DataObjectFeature extends EntityFeature {
               EntityType.DATA, label);
     }
 
+    public String getSessionOwner() {
+        return sessionOwner;
+    }
+
+    public void setSessionOwner(String sessionOwner) {
+        this.sessionOwner = sessionOwner;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
+    public void setSession(String session) {
+        this.session = session;
+    }
 }
