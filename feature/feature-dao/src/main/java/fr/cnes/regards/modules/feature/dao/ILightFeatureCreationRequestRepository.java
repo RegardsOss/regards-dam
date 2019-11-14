@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -39,13 +40,18 @@ import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationReques
 @Repository
 public interface ILightFeatureCreationRequestRepository extends JpaRepository<LightFeatureCreationRequest, Long> {
 
-    /**
-     * Get a page {@link FeatureRequestStep}  at the {@link FeatureRequestStep} in parameter
-     * @param step
-     * @param page
-     * @return a {@link Page} of {@link FeatureCreationRequest}
-     */
     public Page<LightFeatureCreationRequest> findByStep(FeatureRequestStep step, Pageable page);
+
+    /**
+     * Get a page of {@link LightFeatureCreationRequest} with specified step.
+     * A creation request cannot be scheduled if one is already scheduled with same provider id.
+     * @return a list of {@link FeatureCreationRequest}
+     */
+    @Query("select request from LightFeatureCreationRequest request where request.providerId not in ("
+            + " select scheduledRequest.providerId from LightFeatureCreationRequest scheduledRequest"
+            + " where scheduledRequest.step = 'LOCAL_SCHEDULED') and request.step = :step")
+    public List<LightFeatureCreationRequest> findRequestsToSchedule(@Param("step") FeatureRequestStep step,
+            Pageable page);
 
     /**
      * Update {@link FeatureRequestStep} step

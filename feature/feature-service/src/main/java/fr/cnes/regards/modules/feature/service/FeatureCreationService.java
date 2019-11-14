@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -165,14 +164,12 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         Set<Long> requestIds = new HashSet<>();
         List<LightFeatureCreationRequest> requestsToSchedule = new ArrayList<>();
 
-        //        long pageStart = System.currentTimeMillis();
-        Page<LightFeatureCreationRequest> page = this.featureCreationRequestLightRepo
-                .findByStep(FeatureRequestStep.LOCAL_DELAYED,
-                            PageRequest.of(0, properties.getMaxBulkSize(),
-                                           Sort.by(Order.asc("priority"), Order.asc("registrationDate"))));
+        List<LightFeatureCreationRequest> dbRequests = this.featureCreationRequestLightRepo
+                .findRequestsToSchedule(FeatureRequestStep.LOCAL_DELAYED, PageRequest
+                        .of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("priority"), Order.asc("requestDate"))));
 
-        if (page.hasContent()) {
-            for (LightFeatureCreationRequest request : page) {
+        if (!dbRequests.isEmpty()) {
+            for (LightFeatureCreationRequest request : dbRequests) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
                     requestsToSchedule.add(request);
@@ -278,7 +275,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Update requests with feature setted for each of them + publish files to storage
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithFiles = requests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() != null) && !fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
         this.featureCreationRequestRepo.saveAll(requestsWithFiles);
         LOGGER.trace("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
@@ -288,7 +285,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
         for (FeatureCreationRequest request : requests) {
-            if ((request.getFeature().getFiles() == null) || request.getFeature().getFiles().isEmpty()) {
+            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
                 // Publish successful request

@@ -49,11 +49,16 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
     private Feature feature;
 
     public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature) {
+        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1));
+    }
+
+    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature,
+            OffsetDateTime requestDate) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
-        event.setRequestDate(OffsetDateTime.now().minusSeconds(1));
+        event.setRequestDate(requestDate);
         return event;
     }
 
