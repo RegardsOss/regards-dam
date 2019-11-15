@@ -18,7 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.service.request;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,10 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureDeletionRequest;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
@@ -43,11 +47,17 @@ public class FeatureRequestService implements IFeatureRequestService {
     private IFeatureCreationRequestRepository fcrRepo;
 
     @Autowired
+    private IFeatureDeletionRequestRepository fdrRepo;
+
+    @Autowired
+    private IFeatureEntityRepository featureRepo;
+
+    @Autowired
     private IPublisher publisher;
 
     @Override
-    public void handleSuccess(String groupId) {
-        List<FeatureCreationRequest> request = this.fcrRepo.findByGroupId(groupId);
+    public void handleStorageSuccess(Set<String> groupIds) {
+        Set<FeatureCreationRequest> request = this.fcrRepo.findByGroupIdIn(groupIds);
 
         // publish success notification for all request id
         request.stream()
@@ -60,8 +70,8 @@ public class FeatureRequestService implements IFeatureRequestService {
     }
 
     @Override
-    public void handleError(String groupId) {
-        List<FeatureCreationRequest> request = this.fcrRepo.findByGroupId(groupId);
+    public void handleStorageError(Set<String> groupIds) {
+        Set<FeatureCreationRequest> request = this.fcrRepo.findByGroupIdIn(groupIds);
 
         // publish success notification for all request id
         request.stream()
@@ -73,6 +83,33 @@ public class FeatureRequestService implements IFeatureRequestService {
 
         this.fcrRepo.saveAll(request);
 
+    }
+
+    @Override
+    public void handleDeletionSuccess(Set<String> groupIds) {
+        Set<FeatureDeletionRequest> request = this.fdrRepo.findByGroupIdIn(groupIds);
+
+        // publish success notification for all request id
+        request.stream().forEach(item -> publisher.publish(FeatureRequestEvent
+                .build(item.getRequestId(), null, item.getUrn(), RequestState.SUCCESS, null)));
+
+        // delete all FeatureEntity with the same urn of a FeatureDeletionRequest
+        this.featureRepo.deleteByUrnIn(request.stream().map(fdr -> fdr.getUrn()).collect(Collectors.toSet()));
+        // delete useless FeatureDeletionRequest
+        this.fdrRepo.deleteAll(request);
+    }
+
+    @Override
+    public void handleDeletionError(Set<String> groupIds) {
+        Set<FeatureDeletionRequest> request = this.fdrRepo.findByGroupIdIn(groupIds);
+
+        // publish success notification for all request id
+        request.stream().forEach(item -> publisher.publish(FeatureRequestEvent
+                .build(item.getRequestId(), null, item.getUrn(), RequestState.ERROR, null)));
+        // set FeatureDeletionRequest to error state
+        request.stream().forEach(item -> item.setState(RequestState.ERROR));
+
+        this.fdrRepo.saveAll(request);
     }
 
 }

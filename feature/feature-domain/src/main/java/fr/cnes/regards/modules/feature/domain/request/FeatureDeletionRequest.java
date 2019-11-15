@@ -22,28 +22,27 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.Type;
-import org.springframework.util.Assert;
-
-import fr.cnes.regards.modules.feature.domain.FeatureEntity;
-import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
- * @author Marc SORDI
+ * @author Kevin Marchois
  *
  */
 @Entity
-@Table(name = "t_feature_creation_request",
+@Table(name = "t_feature_deletion_request",
         indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
                 @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE),
                 @Index(name = "idx_feature_step_registration_priority",
@@ -52,43 +51,44 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
                 @Index(name = "idx_feature_creation_group_id", columnList = AbstractRequest.GROUP_ID) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
-public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
+public class FeatureDeletionRequest extends AbstractRequest {
 
-    @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
-    @Type(type = "jsonb")
-    private Feature feature;
+    @Id
+    @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,
+            sequenceName = "seq_feature_update_request")
+    @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
-    private FeatureEntity featureEntity;
+    @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
+    @Convert(converter = FeatureUrnConverter.class)
+    private FeatureUniformResourceName urn;
 
-    public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
-            PriorityLevel priority) {
-        Assert.notNull(feature, "Feature is required");
-        FeatureCreationRequest request = new FeatureCreationRequest();
+    public static FeatureDeletionRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
+            Set<String> errors, FeatureRequestStep step, PriorityLevel priority, FeatureUniformResourceName urn,
+            PriorityLevel priorityLevel) {
+        FeatureDeletionRequest request = new FeatureDeletionRequest();
         request.with(requestId, requestDate, state, priority, errors);
-        request.setProviderId(feature.getId());
-        request.setFeature(feature);
-        request.setMetadata(metadata);
         request.setStep(step);
+        request.setUrn(urn);
+        request.setPriority(priorityLevel);
+
         return request;
     }
 
-    public Feature getFeature() {
-        return this.feature;
+    public FeatureUniformResourceName getUrn() {
+        return urn;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setUrn(FeatureUniformResourceName urn) {
+        this.urn = urn;
     }
 
-    public FeatureEntity getFeatureEntity() {
-        return featureEntity;
+    public Long getId() {
+        return id;
     }
 
-    public void setFeatureEntity(FeatureEntity featureEntity) {
-        this.featureEntity = featureEntity;
+    public void setId(Long id) {
+        this.id = id;
     }
 
 }

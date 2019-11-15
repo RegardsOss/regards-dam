@@ -26,9 +26,6 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 
@@ -38,7 +35,6 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
-import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
@@ -90,11 +86,6 @@ public abstract class AbstractRequest {
     @Column(columnDefinition = "jsonb", name = "errors")
     @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
     private Set<String> errors;
-
-    // FIXME enlever de la super classe si l'update ne concerna pas les ficheirs
-    @ManyToOne
-    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
-    private FeatureEntity featureEntity;
 
     @Column(name = GROUP_ID)
     private String groupId;
@@ -173,14 +164,6 @@ public abstract class AbstractRequest {
 
     public void setErrors(Set<String> errors) {
         this.errors = errors;
-    }
-
-    public FeatureEntity getFeatureEntity() {
-        return featureEntity;
-    }
-
-    public void setFeatureEntity(FeatureEntity featureEntity) {
-        this.featureEntity = featureEntity;
     }
 
     public String getGroupId() {

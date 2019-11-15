@@ -275,7 +275,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Update requests with feature setted for each of them + publish files to storage
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithFiles = requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && !fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
         this.featureCreationRequestRepo.saveAll(requestsWithFiles);
         LOGGER.trace("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
@@ -285,7 +285,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
         for (FeatureCreationRequest request : requests) {
-            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
+            if ((request.getFeature().getFiles() == null) || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
                 // Publish successful request
@@ -315,22 +315,26 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             for (FeatureFileLocation loc : file.getLocations()) {
                 // there is no metadata but a file location so we will update reference
                 if (!fcr.getMetadata().hasStorage()) {
-                    this.storageClient.reference(FileReferenceRequestDTO
-                            .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                   attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
-                                   loc.getStorage(), loc.getUrl()));
+                    fcr.setGroupId(this.storageClient
+                            .reference(FileReferenceRequestDTO
+                                    .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
+                                           attribute.getMimeType().toString(), attribute.getFilesize(),
+                                           fcr.getFeature().getUrn().toString(), loc.getStorage(), loc.getUrl()))
+                            .getGroupId());
                 }
                 for (StorageMetadata metadata : fcr.getMetadata().getStorages()) {
                     if (loc.getStorage() == null) {
-                        this.storageClient.store(FileStorageRequestDTO
+                        fcr.setGroupId(this.storageClient.store(FileStorageRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
                                        attribute.getMimeType().toString(), fcr.getFeature().getUrn().toString(),
-                                       loc.getUrl(), metadata.getPluginBusinessId(), Optional.of(loc.getUrl())));
+                                       loc.getUrl(), metadata.getPluginBusinessId(), Optional.of(loc.getUrl())))
+                                .getGroupId());
                     } else {
-                        this.storageClient.reference(FileReferenceRequestDTO
+                        fcr.setGroupId(this.storageClient.reference(FileReferenceRequestDTO
                                 .build(attribute.getFilename(), attribute.getChecksum(), attribute.getAlgorithm(),
-                                       attribute.getMimeType().toString(), attribute.getFilesize(), loc.getUrl(),
-                                       loc.getStorage(), loc.getUrl()));
+                                       attribute.getMimeType().toString(), attribute.getFilesize(),
+                                       fcr.getFeature().getUrn().toString(), loc.getStorage(), loc.getUrl()))
+                                .getGroupId());
                     }
                 }
             }

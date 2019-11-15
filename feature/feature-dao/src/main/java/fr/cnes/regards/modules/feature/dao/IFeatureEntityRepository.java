@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.feature.dao;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -37,7 +38,11 @@ public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, L
 
     public FeatureEntity findByUrn(FeatureUniformResourceName urn);
 
+    public void deleteByUrnIn(Set<FeatureUniformResourceName> urns);
+
     public List<FeatureEntity> findByUrnIn(List<FeatureUniformResourceName> urn);
+
+    public void deleteByIdIn(Set<Long> ids);
 
     // FIXME remove just for test
     public long countByLastUpdateGreaterThan(OffsetDateTime from);
