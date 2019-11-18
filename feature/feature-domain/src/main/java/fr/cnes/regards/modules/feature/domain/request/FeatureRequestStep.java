@@ -39,7 +39,9 @@ public enum FeatureRequestStep {
 
     // Awaiting processing
     LOCAL_SCHEDULED,
-
+    // Delete files
+    REMOTE_STORAGE_DELETEION_REQUESTED(true, true),
+    // Store files
     REMOTE_STORAGE_REQUESTED(true, true),
     // REMOTE_STORAGE_GRANTED(true),
     REMOTE_STORAGE_DENIED(true),

@@ -18,8 +18,9 @@
  */
 package fr.cnes.regards.modules.feature.service.request;
 
+import java.util.Set;
+
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
-import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 
 /**
  * @author kevin
@@ -28,19 +29,35 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 public interface IFeatureRequestService {
 
     /**
-     * Set the status STORAGE_OK to the {@link FeatureEntity} references by
-     * {@link FeatureCreationRequest} with the group id send in parameter
+     * Set the status STORAGE_OK to all {@link FeatureEntity} references by
+     * group id in the list send in parameter
      *
-     * @param groupId
+     * @param groupIds a list of group id
      */
-    void handleSuccess(String groupId);
+    void handleStorageSuccess(Set<String> groupIds);
 
     /**
      * Set the status STORAGE_ERROR to the {@link FeatureEntity} references by
-     * {@link FeatureCreationRequest} with the group id send in parameter
+     * group id in the list send in parameter
      *
      * @param groupId
      */
-    void handleError(String groupId);
+    void handleStorageError(Set<String> groupIds);
+
+    /**
+     * Delete all {@link FeatureEntity} references by
+     * group id in the list send in parameter
+     *
+     * @param groupIds a list of group id
+     */
+    void handleDeletionSuccess(Set<String> groupIds);
+
+    /**
+     * Set the status STORAGE_ERROR to the {@link FeatureEntity} references by
+     * group id in the list send in parameter
+     *
+     * @param groupId
+     */
+    void handleDeletionError(Set<String> groupIds);
 
 }

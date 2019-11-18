@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.feature.service.request;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -83,26 +84,26 @@ public class FeatureStorageListener implements IStorageRequestListener {
 
     @Override
     public void onReferenceSuccess(Set<RequestInfo> requests) {
-        // FIXME test
-        requests.forEach(request -> featureRequestService.handleSuccess(request.getGroupId()));
+        this.featureRequestService
+                .handleStorageSuccess(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
     }
 
     @Override
     public void onReferenceError(Set<RequestInfo> requests) {
-        // FIXME test
-        requests.forEach(request -> featureRequestService.handleError(request.getGroupId()));
+        this.featureRequestService
+                .handleStorageError(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
     }
 
     @Override
     public void onStoreSuccess(Set<RequestInfo> requests) {
-        // FIXME test
-        requests.forEach(request -> featureRequestService.handleSuccess(request.getGroupId()));
+        this.featureRequestService
+                .handleStorageSuccess(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
     }
 
     @Override
     public void onStoreError(Set<RequestInfo> requests) {
-        // FIXME test
-        requests.forEach(request -> featureRequestService.handleError(request.getGroupId()));
+        this.featureRequestService
+                .handleStorageError(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
     }
 
 }

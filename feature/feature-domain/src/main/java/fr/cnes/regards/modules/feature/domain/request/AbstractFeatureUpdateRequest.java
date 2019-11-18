@@ -20,13 +20,17 @@ package fr.cnes.regards.modules.feature.domain.request;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotBlank;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
@@ -56,6 +60,10 @@ public abstract class AbstractFeatureUpdateRequest extends AbstractRequest {
     @Convert(converter = FeatureUrnConverter.class)
     private FeatureUniformResourceName urn;
 
+    @ManyToOne
+    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
+    private FeatureEntity featureEntity;
+
     public Long getId() {
         return this.id;
     }
@@ -75,4 +83,13 @@ public abstract class AbstractFeatureUpdateRequest extends AbstractRequest {
     public void setProviderId(String providerId) {
         this.providerId = providerId;
     }
+
+    public FeatureEntity getFeatureEntity() {
+        return featureEntity;
+    }
+
+    public void setFeatureEntity(FeatureEntity featureEntity) {
+        this.featureEntity = featureEntity;
+    }
+
 }
