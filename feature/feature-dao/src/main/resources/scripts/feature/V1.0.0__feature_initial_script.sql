@@ -40,9 +40,9 @@ alter table t_feature_update_request add constraint fk_feature_id foreign key (f
 create table t_feature_deletion_request (id int8 not null, errors jsonb, registration_date timestamp not null, 
 request_date timestamp not null, request_id varchar(36) not null, state varchar(50) not null, group_id varchar(255), 
 step varchar(50) not null, urn varchar(132) not null, priority numeric not null, primary key (id));
-create index idx_feature_deletion_request_id on t_feature_delete_request (request_id);
-create index idx_feature_deletion_request_state on t_feature_delete_request (state);
-create index idx_feature_deletion_request_urn on t_feature_delete_request (urn);
+create index idx_feature_deletion_request_id on t_feature_deletion_request (request_id);
+create index idx_feature_deletion_request_state on t_feature_deletion_request (state);
+create index idx_feature_deletion_request_urn on t_feature_deletion_request (urn);
 create index idx_feature_deletion_step_registration_priority on t_feature_deletion_request (step, registration_date, priority);
 
 alter table t_feature_deletion_request add constraint uk_feature_deletion_request_id unique (request_id);
