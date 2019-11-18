@@ -117,5 +117,11 @@
 			<artifactId>model-service</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>6.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

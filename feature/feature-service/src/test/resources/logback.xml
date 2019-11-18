@@ -27,6 +27,13 @@
 		</encoder>
 	</appender>
 
+<!--     <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>172.26.47.176:5000</destination>
+
+        encoder is required
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender> -->
+
 	<logger name="org.springframework" level="ERROR" />
 	<logger name="io.micrometer" level="ERROR" />
 	<logger name="fr.cnes.regards.modules" level="INFO" />
@@ -38,5 +45,6 @@
     <logger name="fr.cnes.regards.modules.feature.service" level="DEBUG" />
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
+		<appender-ref ref="stash" />
 	</root>
 </configuration>
