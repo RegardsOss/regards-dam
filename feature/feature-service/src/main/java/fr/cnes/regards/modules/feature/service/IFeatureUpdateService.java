@@ -19,7 +19,9 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
@@ -45,13 +47,14 @@ public interface IFeatureUpdateService {
     /**
      * Schedule a job to process a batch of requests<br/>
      * A delta of time is kept between request registration and processing to manage concurrent updates.
-     * @return true if at least one request has been scheduled
+     * @return number of scheduled requests (0 if no request was scheduled)
      */
-    boolean scheduleRequests();
+    int scheduleRequests();
 
     /**
      * Process batch of requests during job
+     * @return updated features
      */
-    void processRequests(List<FeatureUpdateRequest> requests);
+    Set<FeatureEntity> processRequests(List<FeatureUpdateRequest> requests);
 
 }

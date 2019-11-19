@@ -1,7 +1,9 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
@@ -27,13 +29,14 @@ public interface IFeatureCreationService {
     /**
      * Schedule a job to process a batch of requests<br/>
      * Inside this list there is only one occurence of {@link FeatureCreationRequest} per {@link Feature} id
-     * @return true if at least one request has been scheduled
+     * @return number of scheduled requests (0 if no request was scheduled)
      */
-    boolean scheduleRequests();
+    int scheduleRequests();
 
     /**
      * Process batch of requests during job
+     * @return new feature created
      */
-    void processRequests(List<FeatureCreationRequest> requests);
+    Set<FeatureEntity> processRequests(List<FeatureCreationRequest> requests);
 
 }

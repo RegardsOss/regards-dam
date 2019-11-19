@@ -93,7 +93,7 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
         long start = System.currentTimeMillis();
         boolean schedule;
         do {
-            schedule = featureService.scheduleRequests();
+            schedule = featureService.scheduleRequests() > 0;
         } while (schedule);
 
         waitFeature(NB_FEATURES, requestDate, 3600_000);

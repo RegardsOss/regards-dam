@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
@@ -46,7 +47,6 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
 public class FeatureCreationRequestEventHandler
         implements IBatchHandler<FeatureCreationRequestEvent>, ApplicationListener<ApplicationReadyEvent> {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureCreationRequestEventHandler.class);
 
     @Autowired
@@ -70,7 +70,11 @@ public class FeatureCreationRequestEventHandler
     public void handleBatch(String tenant, List<FeatureCreationRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
-            featureService.registerRequests(messages);
+            long start = System.currentTimeMillis();
+            RequestInfo<String> requestInfo = featureService.registerRequests(messages);
+            LOGGER.info("{} granted request(s) and {} denied request(s) registered in {} ms",
+                        requestInfo.getGranted().size(), requestInfo.getDenied().keySet().size(),
+                        System.currentTimeMillis() - start);
         } finally {
             runtimeTenantResolver.clearTenant();
         }

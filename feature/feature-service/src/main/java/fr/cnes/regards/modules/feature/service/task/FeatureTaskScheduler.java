@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.service.task;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -41,6 +43,8 @@ import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 @EnableScheduling
 public class FeatureTaskScheduler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureTaskScheduler.class);
+
     private static final String LOCK_REQUEST_UPDATE = "Update_Request";
 
     private static final String LOCK_REQUEST_INSERT = "Insert_Request";
@@ -58,7 +62,7 @@ public class FeatureTaskScheduler {
     private IFeatureCreationService featureService;
 
     @Autowired
-    private IFeatureUpdateService feeatureUpdateService;
+    private IFeatureUpdateService featureUpdateService;
 
     @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
     public void scheduleUpdateRequests() {
@@ -66,10 +70,11 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    // TODO delegate to update request service ...
-                    // TODO find update request in state DELAYED and with a registration date < now - waiting delay to avoid update concurrency
-                    // TODO chech update concurrency ... only select first request for a distinct URN chronologically speaking!
-                    this.feeatureUpdateService.scheduleRequests();
+                    long start = System.currentTimeMillis();
+                    int nb = this.featureUpdateService.scheduleRequests();
+                    if (nb != 0) {
+                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                    }
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
@@ -84,7 +89,12 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-                    this.featureService.scheduleRequests();
+                    long start = System.currentTimeMillis();
+                    int nb = this.featureService.scheduleRequests();
+                    if (nb != 0) {
+                        LOGGER.info("{} creation request(s) scheduled in {} ms", nb,
+                                    System.currentTimeMillis() - start);
+                    }
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_INSERT, this);

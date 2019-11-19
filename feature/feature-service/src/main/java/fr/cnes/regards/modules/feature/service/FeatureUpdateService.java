@@ -61,6 +61,7 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics.FeatureUpdateState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureUpdateJob;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
@@ -117,7 +118,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         // Batch save
         updateRepo.saveAll(grantedRequests);
 
-        LOGGER.debug("------------->>> {} update requests registered in {} ms", grantedRequests.size(),
+        LOGGER.trace("------------->>> {} update requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
 
         return requestInfo;
@@ -148,8 +149,12 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             // Publish DENIED request (do not persist it in DB)
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
-                                                        null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+                                                        item.getFeature() != null ? item.getFeature().getUrn() : null,
+                                                        RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
+            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null,
+                                 item.getFeature() != null ? item.getFeature().getUrn() : null,
+                                 FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
         }
 
@@ -162,6 +167,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
+            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                 FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
         }
 
@@ -176,23 +183,27 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
+        FeatureMetrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_PENDING);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getUrn(), request.getRequestId());
     }
 
     @Override
-    public boolean scheduleRequests() {
+    public int scheduleRequests() {
 
         long scheduleStart = System.currentTimeMillis();
         List<LightFeatureUpdateRequest> requestsToSchedule = this.lightFeatureUpdateRequestRepo
                 .findRequestsToSchedule(PageRequest.of(0, this.properties.getMaxBulkSize()),
-                                       OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
+                                        OffsetDateTime.now().minusSeconds(this.properties.getDelayBeforeProcessing()));
 
         if (!requestsToSchedule.isEmpty()) {
 
             // Compute request ids
             Set<Long> requestIds = new HashSet<>();
-            requestsToSchedule.forEach(r -> requestIds.add(r.getId()));
+            requestsToSchedule.forEach(r -> {
+                requestIds.add(r.getId());
+                FeatureMetrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
+            });
 
             // Switch to next step
             lightFeatureUpdateRequestRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
@@ -206,15 +217,15 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                     jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
 
-            LOGGER.debug("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
+            LOGGER.trace("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
-            return true;
+            return requestIds.size();
         }
-        return false;
+        return 0;
     }
 
     @Override
-    public void processRequests(List<FeatureUpdateRequest> requests) {
+    public Set<FeatureEntity> processRequests(List<FeatureUpdateRequest> requests) {
 
         long processStart = System.currentTimeMillis();
         Set<FeatureEntity> entities = new HashSet<>();
@@ -234,6 +245,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             FeatureEntity entity = featureByUrn.get(patch.getUrn());
 
             if (entity == null) {
+
                 // Unknown URN : request error
                 request.setState(RequestState.ERROR);
                 request.addError(String.format("No feature referenced in database with following URN : %s",
@@ -243,36 +255,43 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 // Publish request failure
                 publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
                                                             request.getUrn(), request.getState(), request.getErrors()));
+
+                FeatureMetrics.state(request.getProviderId(), request.getUrn(),
+                                     FeatureUpdateState.UPDATE_REQUEST_ERROR);
+            } else {
+
+                entity.setLastUpdate(OffsetDateTime.now());
+
+                // Merge properties handling null property values to unset properties
+                IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
+
+                // Geometry cannot be unset but can be mutated
+                if (!GeoJsonType.UNLOCATED.equals(patch.getGeometry().getType())) {
+                    entity.getFeature().setGeometry(patch.getGeometry());
+                }
+
+                // FIXME does not manage storage metadata at the moment
+
+                // Publish request success
+                publisher.publish(FeatureRequestEvent.build(request.getRequestId(), entity.getProviderId(),
+                                                            entity.getUrn(), RequestState.SUCCESS));
+
+                // FIXME notify entire feature for notification manager
+
+                // Register
+                FeatureMetrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.FEATURE_MERGED);
+                entities.add(entity);
+                successfulRequests.add(request);
             }
-
-            entity.setLastUpdate(OffsetDateTime.now());
-
-            // Merge properties handling null property values to unset properties
-            IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
-
-            // Geometry cannot be unset but can be mutated
-            if (!GeoJsonType.UNLOCATED.equals(patch.getGeometry().getType())) {
-                entity.getFeature().setGeometry(patch.getGeometry());
-            }
-
-            // FIXME does not manage storage metadata at the moment
-
-            // Publish request success
-            publisher.publish(FeatureRequestEvent.build(request.getRequestId(), entity.getProviderId(), entity.getUrn(),
-                                                        RequestState.SUCCESS));
-
-            // FIXME notify entire feature for notification manager
-
-            // Register
-            entities.add(entity);
-            successfulRequests.add(request);
         }
 
         featureRepo.saveAll(entities);
         featureUpdateRequestRepo.saveAll(errorRequests);
         featureUpdateRequestRepo.deleteInBatch(successfulRequests);
 
-        LOGGER.debug("------------->>> {} update requests processed with {} entities updated in {} ms", requests.size(),
+        LOGGER.trace("------------->>> {} update requests processed with {} entities updated in {} ms", requests.size(),
                      entities.size(), System.currentTimeMillis() - processStart);
+
+        return entities;
     }
 }

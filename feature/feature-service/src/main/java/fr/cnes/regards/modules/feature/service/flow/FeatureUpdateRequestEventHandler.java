@@ -31,7 +31,9 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
@@ -70,7 +72,11 @@ public class FeatureUpdateRequestEventHandler
     public void handleBatch(String tenant, List<FeatureUpdateRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
-            featureService.registerRequests(messages);
+            long start = System.currentTimeMillis();
+            RequestInfo<FeatureUniformResourceName> requestInfo = featureService.registerRequests(messages);
+            LOGGER.info("{} granted request(s) and {} denied update request(s) registered in {} ms",
+                        requestInfo.getGranted().size(), requestInfo.getDenied().keySet().size(),
+                        System.currentTimeMillis() - start);
         } finally {
             runtimeTenantResolver.clearTenant();
         }

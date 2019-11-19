@@ -32,7 +32,10 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics.FeatureCreationState;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -71,10 +74,12 @@ public class FeatureCreationJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
-        Timer timer = Timer.builder(this.getClass().getName()).tag("job", "run").register(registry);
         LOGGER.info("[{}] Feature creation job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        timer.record(() -> featureService.processRequests(featureCreationRequests));
+        Timer.Sample sample = Timer.start(registry);
+        Set<FeatureEntity> created = featureService.processRequests(featureCreationRequests);
+        sample.stop(Timer.builder(this.getClass().getName()).tag("job", "run").register(registry));
+        created.forEach(e -> FeatureMetrics.state(e.getProviderId(), e.getUrn(), FeatureCreationState.FEATURE_CREATED));
         LOGGER.info("[{}]{}{} creation request(s) processed in {} ms", jobInfoId, INFO_TAB,
                     featureCreationRequests.size(), System.currentTimeMillis() - start);
     }
