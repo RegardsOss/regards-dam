@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.service.entities.IStorageService;
-import fr.cnes.regards.modules.storagelight.client.IStorageClient;
+import fr.cnes.regards.modules.storage.client.IStorageClient;
 
 /**
  * @author Sylvain Vissiere-Guerinet
