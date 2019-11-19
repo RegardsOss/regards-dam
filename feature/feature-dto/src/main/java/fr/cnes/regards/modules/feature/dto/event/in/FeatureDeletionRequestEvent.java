@@ -60,11 +60,12 @@ public class FeatureDeletionRequestEvent extends AbstractRequestEvent {
         this.urn = urn;
     }
 
-    public static FeatureDeletionRequestEvent build(FeatureUniformResourceName urn) {
+    public static FeatureDeletionRequestEvent build(FeatureUniformResourceName urn, PriorityLevel level) {
         FeatureDeletionRequestEvent event = new FeatureDeletionRequestEvent();
         event.setUrn(urn);
         event.setRequestDate(OffsetDateTime.now().minusSeconds(1));
         event.setRequestId(generateRequestId());
+        event.setPriority(level);
 
         return event;
     }

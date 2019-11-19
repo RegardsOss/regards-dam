@@ -54,7 +54,7 @@ import fr.cnes.regards.modules.storagelight.client.RequestInfo;
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature" })
 @ActiveProfiles({ "noscheduler", "nohandler" })
-public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceTest {
+public class FeatureStorageListenerCreationIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
     private IFeatureCreationRequestRepository fcrRepo;
@@ -92,7 +92,7 @@ public class FeatureStorageListenerIT extends AbstractFeatureMultitenantServiceT
 
         // the FeatureCreationRequest must remain
         assertEquals(1, fcrRepo.count());
-        // it
+        // it state must be an error
         assertEquals(RequestState.ERROR, fcrRepo.findAll().get(0).getState());
         // the FeatureEntity must remain
         assertEquals(1, featureRepo.count());

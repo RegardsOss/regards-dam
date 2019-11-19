@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.Validator;
@@ -42,6 +43,7 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
@@ -60,6 +62,7 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
+import fr.cnes.regards.modules.feature.service.job.FeatureDeletionJob;
 import fr.cnes.regards.modules.storagelight.client.IStorageClient;
 import fr.cnes.regards.modules.storagelight.domain.dto.request.FileDeletionRequestDTO;
 
@@ -67,6 +70,8 @@ import fr.cnes.regards.modules.storagelight.domain.dto.request.FileDeletionReque
  * @author Kevin Marchois
  *
  */
+@Service
+@MultitenantTransactional
 public class FeatureDeletetionService implements IFeatureDeletionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureDeletetionService.class);
@@ -138,7 +143,7 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
 
         FeatureDeletionRequest request = FeatureDeletionRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null,
-                       FeatureRequestStep.LOCAL_DELAYED, item.getPriority(), item.getUrn(), null);
+                       FeatureRequestStep.LOCAL_DELAYED, item.getPriority(), item.getUrn());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(), null, item.getUrn(), RequestState.GRANTED,
                                                     null));
@@ -172,10 +177,10 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
 
             // the job priority will be set according the priority of the first request to schedule
             JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
-                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+                    jobParameters, authResolver.getUser(), FeatureDeletionJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
 
-            LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
+            LOGGER.debug("------------->>> {} deletion requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
             return true;
         }
@@ -195,8 +200,7 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
         this.featureRepo.deleteByIdIn(requests.stream().filter(fdr -> !haveFiles(fdr, featureByUrn.get(fdr.getUrn())))
                 .map(fdr -> featureByUrn.get(fdr.getUrn()).getId()).collect(Collectors.toSet()));
         // delete all FeatureEntityConcerned
-        this.deletionRepo.deleteByIdIn(requests.stream()
-                .filter(fdr -> !FeatureRequestStep.REMOTE_STORAGE_DELETEION_REQUESTED.equals(fdr.getStep()))
+        this.deletionRepo.deleteByIdIn(requests.stream().filter(fdr -> !haveFiles(fdr, featureByUrn.get(fdr.getUrn())))
                 .map(fdr -> fdr.getId()).collect(Collectors.toSet()));
     }
 
@@ -212,11 +216,13 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
      * @return
      */
     private FeatureDeletionRequest publishFiles(FeatureDeletionRequest fdr, FeatureEntity feature) {
-        fdr.setStep(FeatureRequestStep.REMOTE_STORAGE_DELETEION_REQUESTED);
+        fdr.setStep(FeatureRequestStep.REMOTE_STORAGE_DELETION_REQUESTED);
         for (FeatureFile file : feature.getFeature().getFiles()) {
             FeatureFileAttributes attribute = file.getAttributes();
-            this.storageClient.delete(FileDeletionRequestDTO.build(attribute.getChecksum(), ONLINE_CONF,
-                                                                   feature.getFeature().getUrn().toString(), false));
+            fdr.setGroupId(this.storageClient
+                    .delete(FileDeletionRequestDTO.build(attribute.getChecksum(), ONLINE_CONF,
+                                                         feature.getFeature().getUrn().toString(), false))
+                    .getGroupId());
         }
         return fdr;
     }

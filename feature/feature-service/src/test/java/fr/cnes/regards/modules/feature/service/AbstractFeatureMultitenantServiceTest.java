@@ -1,10 +1,14 @@
 package fr.cnes.regards.modules.feature.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
@@ -13,6 +17,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +29,7 @@ import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantService
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
+import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -33,6 +39,8 @@ import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -46,6 +54,8 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractFeatureMultitenantServiceTest.class);
+
+    private static final String RESOURCE_PATH = "fr/cnes/regards/modules/feature/service/";
 
     // Mock for test purpose
     @Autowired
@@ -67,12 +77,19 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
     protected IFeatureUpdateRequestRepository featureUpdateRequestRepo;
 
     @Autowired
-    FeatureConfigurationProperties properties;
+    protected IFeatureDeletionRequestRepository featureDeletionRepo;
+
+    @Autowired
+    protected FeatureConfigurationProperties properties;
+
+    @Autowired
+    protected FeatureCreationService featureCreationService;
 
     @Before
     public void before() throws InterruptedException {
         this.featureCreationRequestRepo.deleteAllInBatch();
         this.featureUpdateRequestRepo.deleteAllInBatch();
+        this.featureDeletionRepo.deleteAllInBatch();
         this.featureRepo.deleteAllInBatch();
         simulateApplicationReadyEvent();
     }
@@ -164,7 +181,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             MultitenantFlattenedAttributeAdapterFactory factory, String tenant,
             IModelAttrAssocClient modelAttrAssocClientMock) {
 
-        try (InputStream input = this.getClass().getResourceAsStream(filename)) {
+        try (InputStream input = new ClassPathResource(RESOURCE_PATH + filename).getInputStream()) {
             // Import model
             Iterable<ModelAttrAssoc> assocs = XmlImportHelper.importModel(input, cps);
 
@@ -236,6 +253,62 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
     public MultitenantFlattenedAttributeAdapterFactory getFactory() {
         return factory;
+    }
+
+    protected List<FeatureDeletionRequestEvent> prepareDeletionTestData(boolean prepareFeatureWithFiles,
+            Integer featureToCreateNumber) throws InterruptedException {
+        List<FeatureCreationRequestEvent> events = new ArrayList<>();
+
+        initFeatureCreationRequestEvent(events, featureToCreateNumber);
+
+        if (!prepareFeatureWithFiles) {
+            // remove files inside features
+            events.stream().forEach(event -> event.getFeature().setFiles(null));
+        }
+
+        this.featureCreationService.registerRequests(events);
+
+        assertEquals(featureToCreateNumber.intValue(), this.featureCreationRequestRepo.count());
+
+        this.featureCreationService.scheduleRequests();
+        // if they are several page to create
+        for (int i = 0; i < (featureToCreateNumber % properties.getMaxBulkSize()); i++) {
+            this.featureCreationService.scheduleRequests();
+        }
+
+        int cpt = 0;
+        long featureNumberInDatabase;
+        do {
+            featureNumberInDatabase = this.featureRepo.count();
+            Thread.sleep(1000);
+            cpt++;
+        } while ((cpt < 100) && (featureNumberInDatabase != featureToCreateNumber));
+
+        assertEquals(featureToCreateNumber.intValue(), this.featureRepo.count());
+
+        // in that case all features hasn't been saved
+        if (cpt == 100) {
+            fail("Doesn't have all features at the end of time");
+        }
+
+        // get urn from feature we just created
+        List<FeatureUniformResourceName> entityCreatedUrn = this.featureRepo.findAll().stream()
+                .map(feature -> feature.getUrn()).collect(Collectors.toList());
+
+        // preparation of the FeatureDeletionRequestEvent
+        List<FeatureDeletionRequestEvent> deletionEvents = entityCreatedUrn.stream()
+                .map(urn -> FeatureDeletionRequestEvent.build(urn, PriorityLevel.AVERAGE)).collect(Collectors.toList());
+
+        // if we have more than a page of request can handle we will upgrade the priority level of the request out of the page
+        if (deletionEvents.size() > properties.getMaxBulkSize()) {
+            // we will set all priority to low for the (featureToCreateNumber / 2) last event
+            for (int i = properties.getMaxBulkSize(); i < featureToCreateNumber; i++) {
+                deletionEvents.get(i).setPriority(PriorityLevel.HIGH);
+            }
+        }
+
+        return deletionEvents;
+
     }
 
 }

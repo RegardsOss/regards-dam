@@ -73,19 +73,21 @@ public class FeatureStorageListener implements IStorageRequestListener {
 
     @Override
     public void onDeletionSuccess(Set<RequestInfo> requests) {
-        // TODO
+        this.featureRequestService.handleDeletionSuccess(requests.stream().map(request -> request.getGroupId())
+                .collect(Collectors.toSet()));
 
     }
 
     @Override
     public void onDeletionError(Set<RequestInfo> requests) {
-        // TODO
+        this.featureRequestService
+                .handleStorageError(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
     }
 
     @Override
     public void onReferenceSuccess(Set<RequestInfo> requests) {
-        this.featureRequestService
-                .handleStorageSuccess(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
+        this.featureRequestService.handleStorageSuccess(requests.stream().map(request -> request.getGroupId())
+                .collect(Collectors.toSet()));
     }
 
     @Override
@@ -96,8 +98,8 @@ public class FeatureStorageListener implements IStorageRequestListener {
 
     @Override
     public void onStoreSuccess(Set<RequestInfo> requests) {
-        this.featureRequestService
-                .handleStorageSuccess(requests.stream().map(request -> request.getGroupId()).collect(Collectors.toSet()));
+        this.featureRequestService.handleStorageSuccess(requests.stream().map(request -> request.getGroupId())
+                .collect(Collectors.toSet()));
     }
 
     @Override
