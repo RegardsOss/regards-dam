@@ -72,6 +72,7 @@ import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics.FeatureCreationState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
@@ -153,46 +154,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         return registerRequests(toTreat);
     }
 
-    @Override
-    public boolean scheduleRequests() {
-
-        long scheduleStart = System.currentTimeMillis();
-
-        // Shedule job
-        Set<JobParameter> jobParameters = Sets.newHashSet();
-        Set<String> featureIdsScheduled = new HashSet<>();
-        Set<Long> requestIds = new HashSet<>();
-        List<LightFeatureCreationRequest> requestsToSchedule = new ArrayList<>();
-
-        List<LightFeatureCreationRequest> dbRequests = this.featureCreationRequestLightRepo
-                .findRequestsToSchedule(FeatureRequestStep.LOCAL_DELAYED, PageRequest
-                        .of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("priority"), Order.asc("requestDate"))));
-
-        if (!dbRequests.isEmpty()) {
-            for (LightFeatureCreationRequest request : dbRequests) {
-                // we will schedule only one feature request for a feature id
-                if (!featureIdsScheduled.contains(request.getProviderId())) {
-                    requestsToSchedule.add(request);
-                    requestIds.add(request.getId());
-                    featureIdsScheduled.add(request.getProviderId());
-                }
-            }
-            featureCreationRequestLightRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
-
-            jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER, requestIds));
-
-            // the job priority will be set according the priority of the first request to schedule
-            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
-                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
-            jobInfoService.createAsQueued(jobInfo);
-
-            LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
-                         System.currentTimeMillis() - scheduleStart);
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Validate a list of {@link FeatureCreationRequestEvent}
      * and if validated create a list of {@link FeatureCreationRequest}
@@ -215,6 +176,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                 FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
 
@@ -227,6 +190,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
+            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                 FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
         FeatureSessionMetadata md = item.getMetadata();
@@ -242,12 +207,55 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                     RequestState.GRANTED, null));
 
         // Add to granted request collection
+        FeatureMetrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_PENDING);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }
 
     @Override
-    public void processRequests(List<FeatureCreationRequest> requests) {
+    public boolean scheduleRequests() {
+
+        long scheduleStart = System.currentTimeMillis();
+
+        // Shedule job
+        Set<JobParameter> jobParameters = Sets.newHashSet();
+        Set<String> featureIdsScheduled = new HashSet<>();
+        Set<Long> requestIds = new HashSet<>();
+        List<LightFeatureCreationRequest> requestsToSchedule = new ArrayList<>();
+
+        List<LightFeatureCreationRequest> dbRequests = this.featureCreationRequestLightRepo
+                .findRequestsToSchedule(FeatureRequestStep.LOCAL_DELAYED, PageRequest
+                        .of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("priority"), Order.asc("requestDate"))));
+
+        if (!dbRequests.isEmpty()) {
+            for (LightFeatureCreationRequest request : dbRequests) {
+                // we will schedule only one feature request for a feature id
+                if (!featureIdsScheduled.contains(request.getProviderId())) {
+                    FeatureMetrics.state(request.getProviderId(), null,
+                                         FeatureCreationState.CREATION_REQUEST_SCHEDULED);
+                    requestsToSchedule.add(request);
+                    requestIds.add(request.getId());
+                    featureIdsScheduled.add(request.getProviderId());
+                }
+            }
+            featureCreationRequestLightRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
+
+            jobParameters.add(new JobParameter(FeatureCreationJob.IDS_PARAMETER, requestIds));
+
+            // the job priority will be set according the priority of the first request to schedule
+            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
+                    jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
+            jobInfoService.createAsQueued(jobInfo);
+
+            LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
+                         System.currentTimeMillis() - scheduleStart);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Set<FeatureEntity> processRequests(List<FeatureCreationRequest> requests) {
 
         long processStart = System.currentTimeMillis();
         long subProcessStart;
@@ -265,9 +273,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         // Register features
         subProcessStart = System.currentTimeMillis();
-        List<FeatureEntity> entities = requests.stream()
+        Set<FeatureEntity> entities = requests.stream()
                 .map(request -> initFeatureEntity(request, versionByProviders.get(request.getProviderId())))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         this.featureRepo.saveAll(entities);
         LOGGER.trace("------------->>> {} feature saved in {} ms", entities.size(),
                      System.currentTimeMillis() - subProcessStart);
@@ -275,7 +283,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Update requests with feature setted for each of them + publish files to storage
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithFiles = requests.stream()
-                .filter(fcr -> (fcr.getFeature().getFiles() != null) && !fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
         this.featureCreationRequestRepo.saveAll(requestsWithFiles);
         LOGGER.trace("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
@@ -285,7 +293,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
         for (FeatureCreationRequest request : requests) {
-            if ((request.getFeature().getFiles() == null) || request.getFeature().getFiles().isEmpty()) {
+            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
                 // Publish successful request
@@ -300,6 +308,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         LOGGER.debug("------------->>> {} creation requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);
+
+        return entities;
     }
 
     /**
@@ -362,6 +372,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                     feature);
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
+
+        FeatureMetrics.state(fcr.getProviderId(), created.getUrn(), FeatureCreationState.FEATURE_INITIALIZED);
+
         return created;
     }
 
@@ -372,5 +385,4 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     private int computeNextVersion(Integer previousVersion) {
         return previousVersion == null ? 1 : previousVersion + 1;
     }
-
 }

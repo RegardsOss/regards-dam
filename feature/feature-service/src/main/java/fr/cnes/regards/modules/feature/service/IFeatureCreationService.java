@@ -1,7 +1,9 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
@@ -33,7 +35,8 @@ public interface IFeatureCreationService {
 
     /**
      * Process batch of requests during job
+     * @return new feature created
      */
-    void processRequests(List<FeatureCreationRequest> requests);
+    Set<FeatureEntity> processRequests(List<FeatureCreationRequest> requests);
 
 }

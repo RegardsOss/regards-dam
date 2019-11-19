@@ -19,7 +19,9 @@
 package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
+import java.util.Set;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
@@ -51,7 +53,8 @@ public interface IFeatureUpdateService {
 
     /**
      * Process batch of requests during job
+     * @return updated features
      */
-    void processRequests(List<FeatureUpdateRequest> requests);
+    Set<FeatureEntity> processRequests(List<FeatureUpdateRequest> requests);
 
 }

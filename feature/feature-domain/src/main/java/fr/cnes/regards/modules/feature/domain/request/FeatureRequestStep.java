@@ -25,8 +25,6 @@ package fr.cnes.regards.modules.feature.domain.request;
  *
  * @author Marc SORDI
  *
- *         FIXME : compléter les steps si besoin
- *
  */
 public enum FeatureRequestStep {
 

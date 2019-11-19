@@ -32,7 +32,10 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics;
+import fr.cnes.regards.modules.feature.service.FeatureMetrics.FeatureUpdateState;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -68,10 +71,13 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
 
     @Override
     public void run() {
-        Timer timer = Timer.builder(this.getClass().getName()).tag("job", "run").register(registry);
         LOGGER.info("[{}] Feature update job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        timer.record(() -> featureUpdateService.processRequests(featureUpdateRequests));
+        Timer.Sample sample = Timer.start(registry);
+        Set<FeatureEntity> updated = featureUpdateService.processRequests(featureUpdateRequests);
+        sample.stop(Timer.builder(this.getClass().getName()).tag("job", "run").register(registry));
+        updated.forEach(e -> FeatureMetrics.state(e.getProviderId(), e.getFeature().getUrn(),
+                                                  FeatureUpdateState.FEATURE_UPDATED));
         LOGGER.info("[{}]{}{} update request(s) processed in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
                     System.currentTimeMillis() - start);
     }

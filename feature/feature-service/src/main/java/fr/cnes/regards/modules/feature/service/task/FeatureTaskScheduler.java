@@ -58,7 +58,7 @@ public class FeatureTaskScheduler {
     private IFeatureCreationService featureService;
 
     @Autowired
-    private IFeatureUpdateService feeatureUpdateService;
+    private IFeatureUpdateService featureUpdateService;
 
     @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
     public void scheduleUpdateRequests() {
@@ -66,10 +66,7 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    // TODO delegate to update request service ...
-                    // TODO find update request in state DELAYED and with a registration date < now - waiting delay to avoid update concurrency
-                    // TODO chech update concurrency ... only select first request for a distinct URN chronologically speaking!
-                    this.feeatureUpdateService.scheduleRequests();
+                    this.featureUpdateService.scheduleRequests();
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
