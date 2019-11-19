@@ -55,14 +55,18 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 @TestPropertySource(
         properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode", "regards.amqp.enabled=true" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
+//@ActiveProfiles(value = { "testAmqp", "nohandler", "noscheduler" })
+//@ActiveProfiles(value = { "testAmqp", "noscheduler" })
 @ActiveProfiles(value = { "testAmqp" })
 public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGeodeIT.class);
 
-    private static final Integer NB_FEATURES = 1;
+    private static final Integer NB_FEATURES = 10_000;
 
     private static final String PROVIDER_ID_FORMAT = "F%05d";
+
+    private static final Integer PUBLISH_BULK_SIZE = 2000;
 
     private String modelName;
 
@@ -86,7 +90,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
         long creationStart = System.currentTimeMillis();
         requestCreation();
         // Wait for request handling and feature creation
-        waitFeature(NB_FEATURES, null, 300_000);
+        waitFeature(NB_FEATURES, null, 3_000_000);
         LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - creationStart);
 
@@ -94,7 +98,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
         long updateStart = System.currentTimeMillis();
         OffsetDateTime requestDate = requestUpdate();
         // Wait for request handling and feature update
-        waitFeature(NB_FEATURES, requestDate, 300_000);
+        waitFeature(NB_FEATURES, requestDate, 3_000_000);
         LOGGER.info(">>>>>>>>>>>>>>>>> {} update requests done in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - updateStart);
 
@@ -102,7 +106,18 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
                     NB_FEATURES, System.currentTimeMillis() - creationStart);
     }
 
-    private void requestCreation() {
+    //    @Test
+    //    public void justHandleCreation() throws InterruptedException {
+    //        // Request creations
+    //        long creationStart = System.currentTimeMillis();
+    //        // Wait for request handling and feature creation
+    //        waitFeature(NB_FEATURES, null, 3_000_000);
+    //        LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests done in {} ms", NB_FEATURES,
+    //                    System.currentTimeMillis() - creationStart);
+    //    }
+    //
+    //    @Test
+    public void requestCreation() {
         FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
                                                                        Lists.emptyList());
 
@@ -116,15 +131,15 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
             GeodeProperties.addGeodeProperties(feature);
             events.add(FeatureCreationRequestEvent.build(metadata, feature));
 
-            if (bulk == properties.getMaxBulkSize()) {
-                publish(events);
+            if (bulk == PUBLISH_BULK_SIZE) {
+                publish(events, "creation", i, NB_FEATURES);
                 events.clear();
                 bulk = 0;
             }
         }
 
         if (bulk > 0) {
-            publish(events);
+            publish(events, "creation", NB_FEATURES, NB_FEATURES);
         }
 
         LOGGER.info(">>>>>>>>>>>>>>>>> {} creation requests published in {} ms", NB_FEATURES,
@@ -136,26 +151,36 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
         OffsetDateTime requestDate = OffsetDateTime.now();
         FeatureMetadata featureMetadata = FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>());
         List<FeatureUpdateRequestEvent> uEvents = new ArrayList<>();
+        int bulk = 0;
         for (int i = 1; i <= NB_FEATURES; i++) {
+            bulk++;
             String id = String.format(PROVIDER_ID_FORMAT, i);
             Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, modelName);
             GeodeProperties.addGeodeUpdateProperties(feature);
             uEvents.add(FeatureUpdateRequestEvent.build(featureMetadata, feature, requestDate));
+
+            if (bulk == PUBLISH_BULK_SIZE) {
+                publish(uEvents, "update", i, NB_FEATURES);
+                uEvents.clear();
+                bulk = 0;
+            }
         }
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} update requests batched in {} ms", NB_FEATURES,
-                    System.currentTimeMillis() - updateStart);
-        publisher.publish(uEvents);
+
+        if (bulk > 0) {
+            publish(uEvents, "update", NB_FEATURES, NB_FEATURES);
+        }
+
         LOGGER.info(">>>>>>>>>>>>>>>>> {} update requests published in {} ms", NB_FEATURES,
                     System.currentTimeMillis() - updateStart);
 
         return requestDate;
     }
 
-    private void publish(List<? extends ISubscribable> events) {
+    private void publish(List<? extends ISubscribable> events, String type, int count, int total) {
         long creationStart = System.currentTimeMillis();
         publisher.publish(events);
-        LOGGER.info(">>>>>>>>>>>>>>>>> {} event published in {} ms", events.size(),
-                    System.currentTimeMillis() - creationStart);
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} {} events published in {} ms ({}/{})", events.size(), type,
+                    System.currentTimeMillis() - creationStart, count, total);
     }
 
     private FeatureUniformResourceName getURN(String id) {

@@ -41,7 +41,7 @@ public final class FeatureMetrics {
 
     //private static final String METRICS_FORMAT = "Feature ID [{}] - URN [{}] - State [{}]";
 
-    private static final boolean enableMetrics = false;
+    private static final boolean enableMetrics = true;
 
     public static enum FeatureCreationState {
         // Related request state

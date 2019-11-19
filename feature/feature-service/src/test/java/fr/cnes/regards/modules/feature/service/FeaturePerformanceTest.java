@@ -56,6 +56,8 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
         Thread.sleep(5_000);
 
+        long start = System.currentTimeMillis();
+
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
         int bulk = 0;
         for (int i = 1; i <= NB_FEATURES; i++) {
@@ -78,10 +80,9 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
-        long start = System.currentTimeMillis();
         boolean schedule;
         do {
-            schedule = featureService.scheduleRequests();
+            schedule = featureService.scheduleRequests() > 0;
         } while (schedule);
 
         waitFeature(NB_FEATURES, null, 3600_000);

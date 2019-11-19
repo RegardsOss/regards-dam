@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.feature.service.task;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -40,6 +42,8 @@ import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 @Profile("!noscheduler")
 @EnableScheduling
 public class FeatureTaskScheduler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureTaskScheduler.class);
 
     private static final String LOCK_REQUEST_UPDATE = "Update_Request";
 
@@ -66,7 +70,11 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    this.featureUpdateService.scheduleRequests();
+                    long start = System.currentTimeMillis();
+                    int nb = this.featureUpdateService.scheduleRequests();
+                    if (nb != 0) {
+                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                    }
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
@@ -81,7 +89,12 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-                    this.featureService.scheduleRequests();
+                    long start = System.currentTimeMillis();
+                    int nb = this.featureService.scheduleRequests();
+                    if (nb != 0) {
+                        LOGGER.info("{} creation request(s) scheduled in {} ms", nb,
+                                    System.currentTimeMillis() - start);
+                    }
                 }
             } finally {
                 lockService.releaseLock(LOCK_REQUEST_INSERT, this);

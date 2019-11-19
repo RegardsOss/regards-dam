@@ -47,9 +47,9 @@ public interface IFeatureUpdateService {
     /**
      * Schedule a job to process a batch of requests<br/>
      * A delta of time is kept between request registration and processing to manage concurrent updates.
-     * @return true if at least one request has been scheduled
+     * @return number of scheduled requests (0 if no request was scheduled)
      */
-    boolean scheduleRequests();
+    int scheduleRequests();
 
     /**
      * Process batch of requests during job

@@ -118,7 +118,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         // Batch save
         updateRepo.saveAll(grantedRequests);
 
-        LOGGER.debug("------------->>> {} update requests registered in {} ms", grantedRequests.size(),
+        LOGGER.trace("------------->>> {} update requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
 
         return requestInfo;
@@ -189,7 +189,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     }
 
     @Override
-    public boolean scheduleRequests() {
+    public int scheduleRequests() {
 
         long scheduleStart = System.currentTimeMillis();
         List<LightFeatureUpdateRequest> requestsToSchedule = this.lightFeatureUpdateRequestRepo
@@ -217,11 +217,11 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                     jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
 
-            LOGGER.debug("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
+            LOGGER.trace("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
-            return true;
+            return requestIds.size();
         }
-        return false;
+        return 0;
     }
 
     @Override
@@ -289,7 +289,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         featureUpdateRequestRepo.saveAll(errorRequests);
         featureUpdateRequestRepo.deleteInBatch(successfulRequests);
 
-        LOGGER.debug("------------->>> {} update requests processed with {} entities updated in {} ms", requests.size(),
+        LOGGER.trace("------------->>> {} update requests processed with {} entities updated in {} ms", requests.size(),
                      entities.size(), System.currentTimeMillis() - processStart);
 
         return entities;

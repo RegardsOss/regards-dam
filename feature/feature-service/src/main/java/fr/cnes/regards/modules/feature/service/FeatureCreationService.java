@@ -136,10 +136,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         LOGGER.trace("------------->>> {} creation requests prepared in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
 
-        // Save a list of validated FeatureCreationRequest from a list of
-        // FeatureCreationRequestEvent
+        // Save a list of validated FeatureCreationRequest from a list of FeatureCreationRequestEvent
         featureCreationRequestRepo.saveAll(grantedRequests);
-        LOGGER.debug("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
+        LOGGER.trace("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
         return requestInfo;
     }
@@ -213,7 +212,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     }
 
     @Override
-    public boolean scheduleRequests() {
+    public int scheduleRequests() {
 
         long scheduleStart = System.currentTimeMillis();
 
@@ -247,11 +246,11 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                     jobParameters, authResolver.getUser(), FeatureCreationJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
 
-            LOGGER.debug("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
+            LOGGER.trace("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
-            return true;
+            return requestIds.size();
         }
-        return false;
+        return 0;
     }
 
     @Override
@@ -306,7 +305,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         LOGGER.trace("------------->>> {} creation requests without files deleted in {} ms",
                      requestsWithoutFiles.size(), System.currentTimeMillis() - subProcessStart);
 
-        LOGGER.debug("------------->>> {} creation requests processed in {} ms", requests.size(),
+        LOGGER.trace("------------->>> {} creation requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);
 
         return entities;
