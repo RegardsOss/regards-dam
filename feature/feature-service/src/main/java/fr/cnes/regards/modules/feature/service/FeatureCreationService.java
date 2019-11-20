@@ -122,7 +122,10 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Autowired
-    FeatureConfigurationProperties properties;
+    private FeatureConfigurationProperties properties;
+
+    @Autowired
+    private FeatureMetrics metrics;
 
     @Override
     public RequestInfo<String> registerRequests(List<FeatureCreationRequestEvent> events) {
@@ -175,8 +178,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
-                                 FeatureCreationState.CREATION_REQUEST_DENIED);
+            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                          FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
 
@@ -189,8 +192,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
-                                 FeatureCreationState.CREATION_REQUEST_DENIED);
+            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                          FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
         FeatureSessionMetadata md = item.getMetadata();
@@ -206,7 +209,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                     RequestState.GRANTED, null));
 
         // Add to granted request collection
-        FeatureMetrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_PENDING);
+        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_PENDING);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }
@@ -230,8 +233,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             for (LightFeatureCreationRequest request : dbRequests) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
-                    FeatureMetrics.state(request.getProviderId(), null,
-                                         FeatureCreationState.CREATION_REQUEST_SCHEDULED);
+                    metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_SCHEDULED);
                     requestsToSchedule.add(request);
                     requestIds.add(request.getId());
                     featureIdsScheduled.add(request.getProviderId());
@@ -372,7 +374,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
 
-        FeatureMetrics.state(fcr.getProviderId(), created.getUrn(), FeatureCreationState.FEATURE_INITIALIZED);
+        metrics.state(fcr.getProviderId(), created.getUrn(), FeatureCreationState.FEATURE_INITIALIZED);
 
         return created;
     }

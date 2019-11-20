@@ -100,7 +100,7 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
     private IStorageClient storageClient;
 
     @Autowired
-    FeatureConfigurationProperties properties;
+    private FeatureConfigurationProperties properties;
 
     @Override
     public RequestInfo<FeatureUniformResourceName> registerRequests(List<FeatureDeletionRequestEvent> events) {
@@ -205,7 +205,7 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
     }
 
     private boolean haveFiles(FeatureDeletionRequest fdr, FeatureEntity feature) {
-        return (feature.getFeature().getFiles() != null) && !feature.getFeature().getFiles().isEmpty();
+        return feature.getFeature().getFiles() != null && !feature.getFeature().getFiles().isEmpty();
     }
 
     /**

@@ -54,6 +54,17 @@ public class FeatureConfigurationProperties {
     @Value("${regards.feature.remote.request.timeout:5}")
     private Long remoteRequestTimeout;
 
+    @Value("${regards.feature.metrics.enabled:false}")
+    private Boolean metricsEnabled;
+
+    public Boolean isMetricsEnabled() {
+        return metricsEnabled;
+    }
+
+    public void setMetricsEnabled(Boolean metricsEnabled) {
+        this.metricsEnabled = metricsEnabled;
+    }
+
     public Integer getMaxBulkSize() {
         return maxBulkSize;
     }
