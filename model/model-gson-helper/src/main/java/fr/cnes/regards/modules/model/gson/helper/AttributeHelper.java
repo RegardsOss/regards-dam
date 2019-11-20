@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.service;
+package fr.cnes.regards.modules.model.gson.helper;
 
 import java.util.List;
 
@@ -35,8 +35,6 @@ import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 *
 * Helper class to retrieve model attributes
 * @author Kevin Marchois
-*
-* FIXME centralize code (catalog + feature + notification)
 *
 */
 @Component

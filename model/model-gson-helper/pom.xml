@@ -22,13 +22,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules</groupId>
-	<artifactId>model</artifactId>
-	<packaging>pom</packaging>
-
-	<description>Feature management module</description>
+	<groupId>fr.cnes.regards.modules.model</groupId>
+  	<artifactId>model-gson-helper</artifactId>
+	<description>Model GSON helper</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-	<inceptionYear>2019</inceptionYear>
+	<inceptionYear>2016</inceptionYear>
 	<licenses>
 		<license>
 			<name>GNU General Public License (GNU GPL)</name>
@@ -49,22 +47,19 @@
 	</developers>
 
 	<parent>
-		<groupId>fr.cnes.regards</groupId>
-		<artifactId>regards-parent</artifactId>
+		<groupId>fr.cnes.regards.modules</groupId>
+		<artifactId>model</artifactId>
 		<version>GEODE</version>
-		<relativePath />
 	</parent>
 
-	<modules>
-		<module>model-dto</module>
-		<module>model-gson</module>
-		<module>model-domain</module>
-		<module>model-client</module>
-		<module>model-dao</module>
-		<module>model-service</module>
-		<module>model-rest</module>
-		<module>model-validation</module>
-		<module>model-gson-helper</module>
-	</modules>
+	<dependencies>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>feign-regards-starter</artifactId>
+		</dependency>
+	</dependencies>
 </project>
-	

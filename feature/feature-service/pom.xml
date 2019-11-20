@@ -67,6 +67,10 @@
 			<artifactId>model-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-gson-helper</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dao</artifactId>
 		</dependency>
