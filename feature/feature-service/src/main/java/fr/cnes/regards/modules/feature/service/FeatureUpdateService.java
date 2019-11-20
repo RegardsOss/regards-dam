@@ -47,6 +47,7 @@ import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
+import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureUpdateRequestRepository;
@@ -105,6 +106,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
     @Autowired
     private ILightFeatureUpdateRequestRepository lightFeatureUpdateRequestRepo;
+
+    @Autowired
+    private IFeatureDeletionRequestRepository featureDeletionRepo;
 
     @Autowired
     private FeatureMetrics metrics;
@@ -201,6 +205,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
 
         if (!requestsToSchedule.isEmpty()) {
 
+            filterUrnInDeletion(requestsToSchedule);
+
             // Compute request ids
             Set<Long> requestIds = new HashSet<>();
             requestsToSchedule.forEach(r -> {
@@ -225,6 +231,25 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             return requestIds.size();
         }
         return 0;
+    }
+
+    /**
+     * From a list of {@link LightFeatureUpdateRequest} to schedule remove those it have their urn
+     * in a {@link FeatureDeletionrequest} at the step REMOTE_STORAGE_DELETION_REQUESTED
+     * For those {@link LightFeatureUpdateRequest} We will set their status to error and save them
+     * @param requestsToSchedule list to filter
+     */
+    private void filterUrnInDeletion(List<LightFeatureUpdateRequest> requestsToSchedule) {
+        Set<FeatureUniformResourceName> deletionUrnScheduled = this.featureDeletionRepo
+                .findByStep(FeatureRequestStep.REMOTE_STORAGE_DELETION_REQUESTED).stream()
+                .map(request -> request.getUrn()).collect(Collectors.toSet());
+        Set<LightFeatureUpdateRequest> errors = requestsToSchedule.stream()
+                .filter(request -> deletionUrnScheduled.contains(request.getUrn())).collect(Collectors.toSet());
+        errors.stream().forEach(request -> request.setState(RequestState.ERROR));
+
+        this.lightFeatureUpdateRequestRepo.saveAll(errors);
+
+        requestsToSchedule.removeAll(errors);
     }
 
     @Override

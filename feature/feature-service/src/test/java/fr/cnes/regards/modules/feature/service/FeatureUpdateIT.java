@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -37,11 +38,13 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.domain.request.FeatureDeletionRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.FeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.domain.request.LightFeatureUpdateRequest;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
@@ -62,17 +65,28 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
     private IFeatureUpdateService featureUpdateService;
 
     @Autowired
-    private FeatureCreationService featureService;
+    private IFeatureCreationService featureService;
+
+    @Autowired
+    private IFeatureDeletionService featureDeletionService;
 
     @Autowired
     private ILightFeatureUpdateRequestRepository lightFeatureUpdateRequestRepository;
 
+    /**
+     * Test update scheduler we will create 4 {@link FeatureUpdateRequest}
+     * fur1, fur2, fur3, fur4
+     * fur2 is already scheduled and fur3 is on the same {@link Feature} that fur2
+     * fur4 has a {@link FeatureDeletionRequest} scheduled with the same {@link Feature}
+     * When we will call the scheduler it will schedule fur1 only
+     * @throws InterruptedException
+     */
     @Test
     public void testSchedulerSteps() throws InterruptedException {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        super.initFeatureCreationRequestEvent(events, 2);
+        super.initFeatureCreationRequestEvent(events, 3);
         this.featureService.registerRequests(events);
 
         this.featureService.scheduleRequests();
@@ -82,32 +96,40 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != 2);
+        } while ((cpt < 100) && (featureNumberInDatabase != 3));
 
         FeatureEntity toUpdate = super.featureRepo.findAll().get(0);
         FeatureEntity updatingByScheduler = super.featureRepo.findAll().get(1);
+        FeatureEntity toDelete = super.featureRepo.findAll().get(2);
 
+        FeatureDeletionRequestEvent featureDeletionRequest = FeatureDeletionRequestEvent.build(toDelete.getUrn(),
+                                                                                               PriorityLevel.AVERAGE);
+        this.featureDeletionService.registerRequests(Lists.list(featureDeletionRequest));
+        this.featureDeletionService.scheduleRequests();
+
+        // prepare and save update request
         FeatureUpdateRequest fur1 = FeatureUpdateRequest.build("1", OffsetDateTime.now(), RequestState.GRANTED, null,
                                                                toUpdate.getFeature(), PriorityLevel.AVERAGE);
-        fur1.setFeatureEntity(toUpdate);
-        fur1.setFeature(toUpdate.getFeature());
         fur1.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         FeatureUpdateRequest fur2 = FeatureUpdateRequest.build("2", OffsetDateTime.now(), RequestState.GRANTED, null,
                                                                updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
-        fur2.setFeatureEntity(updatingByScheduler);
         fur2.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
-        fur2.setPriority(PriorityLevel.AVERAGE);
 
+        //this update cannot be scheduled because fur2 is already scheduled and on the same feature
         FeatureUpdateRequest fur3 = FeatureUpdateRequest.build("3", OffsetDateTime.now(), RequestState.GRANTED, null,
                                                                updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
-        fur3.setFeature(updatingByScheduler.getFeature());
         fur3.setStep(FeatureRequestStep.LOCAL_DELAYED);
-        fur3.setPriority(PriorityLevel.AVERAGE);
 
-        super.featureUpdateRequestRepo.save(fur1);
-        super.featureUpdateRequestRepo.save(fur2);
-        super.featureUpdateRequestRepo.save(fur3);
+        FeatureUpdateRequest fur4 = FeatureUpdateRequest.build("4", OffsetDateTime.now(), RequestState.GRANTED, null,
+                                                               toDelete.getFeature(), PriorityLevel.AVERAGE);
+        fur4.setStep(FeatureRequestStep.LOCAL_DELAYED);
+
+        // create a deletion request
+        fur1 = super.featureUpdateRequestRepo.save(fur1);
+        fur2 = super.featureUpdateRequestRepo.save(fur2);
+        fur3 = super.featureUpdateRequestRepo.save(fur3);
+        fur4 = super.featureUpdateRequestRepo.save(fur4);
 
         // wait 5 second to delay
         Thread.sleep(properties.getDelayBeforeProcessing() * 1000);
@@ -116,10 +138,16 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
         List<FeatureUpdateRequest> updateRequests = this.featureUpdateRequestRepo.findAll();
 
+        // fur1 and fur2 should be scheduled
         assertEquals(2, updateRequests.stream()
                 .filter(request -> request.getStep().equals(FeatureRequestStep.LOCAL_SCHEDULED)).count());
-        assertEquals(1, updateRequests.stream()
+        // fur3 stay delayed cause a update on the same feature is scheduled and fur4 concern a feature in deletion
+        assertEquals(2, updateRequests.stream()
                 .filter(request -> request.getStep().equals(FeatureRequestStep.LOCAL_DELAYED)).count());
+
+        fur4 = super.featureUpdateRequestRepo.findById(fur4.getId()).get();
+
+        assertEquals(RequestState.ERROR, fur4.getState());
     }
 
     /**
@@ -133,11 +161,11 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
 
-        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2);
+        super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2));
 
         this.featureService.registerRequests(events);
 
-        assertEquals(properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2,
+        assertEquals(properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2),
                      this.featureCreationRequestRepo.count());
 
         featureService.scheduleRequests();
@@ -149,9 +177,10 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != properties.getMaxBulkSize() + properties.getMaxBulkSize() / 2);
+        } while ((cpt < 100)
+                && (featureNumberInDatabase != (properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2))));
 
-        assertEquals(properties.getMaxBulkSize().intValue() + properties.getMaxBulkSize().intValue() / 2,
+        assertEquals(properties.getMaxBulkSize().intValue() + (properties.getMaxBulkSize().intValue() / 2),
                      this.featureRepo.count());
 
         // in that case all features hasn't been saved
@@ -164,8 +193,8 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
                 .collect(Collectors.toList());
 
         // we will set all priority to low for the (properties.getMaxBulkSize() / 2) last event
-        for (int i = properties.getMaxBulkSize(); i < properties.getMaxBulkSize()
-                + properties.getMaxBulkSize() / 2; i++) {
+        for (int i = properties.getMaxBulkSize(); i < (properties.getMaxBulkSize()
+                + (properties.getMaxBulkSize() / 2)); i++) {
             updateEvents.get(i).getMetadata().setPriority(PriorityLevel.HIGH);
         }
 
@@ -183,7 +212,7 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         this.featureUpdateService.registerRequests(updateEvents);
 
         // we wait for delay before schedule
-        Thread.sleep(this.properties.getDelayBeforeProcessing() * 1000 + 1000);
+        Thread.sleep((this.properties.getDelayBeforeProcessing() * 1000) + 1000);
 
         this.featureUpdateService.scheduleRequests();
         this.waitUpdateRequestDeletion(properties.getMaxBulkSize() / 2, 10000);
