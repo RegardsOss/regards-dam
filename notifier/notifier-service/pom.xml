@@ -33,14 +33,15 @@
 	</developers>
 
 	<dependencies>
-		<dependency>
+	<!-- FIXME -->
+<!-- 		<dependency>
 			<groupId>fr.cnes.regards.modules.model</groupId>
 			<artifactId>model-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>feign-regards-starter</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dto</artifactId>
