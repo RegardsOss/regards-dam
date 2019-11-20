@@ -22,8 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
 /**
  * Dedicated class for feature metrics
@@ -31,7 +34,8 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
  * @author Marc SORDI
  *
  */
-public final class FeatureMetrics {
+@Component
+public class FeatureMetrics {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureMetrics.class);
 
@@ -41,7 +45,8 @@ public final class FeatureMetrics {
 
     //private static final String METRICS_FORMAT = "Feature ID [{}] - URN [{}] - State [{}]";
 
-    private static final boolean enableMetrics = true;
+    @Autowired
+    private FeatureConfigurationProperties properties;
 
     public static enum FeatureCreationState {
         // Related request state
@@ -68,15 +73,15 @@ public final class FeatureMetrics {
     }
 
     // FIXME add urn to log?
-    public static void state(String providerId, FeatureUniformResourceName urn, FeatureCreationState state) {
-        if (enableMetrics) {
+    public void state(String providerId, FeatureUniformResourceName urn, FeatureCreationState state) {
+        if (properties.isMetricsEnabled()) {
             LOGGER.debug(METRICS_MARKER, METRICS_FORMAT, providerId, state);
         }
     }
 
     // FIXME add urn to log?
-    public static void state(String providerId, FeatureUniformResourceName urn, FeatureUpdateState state) {
-        if (enableMetrics) {
+    public void state(String providerId, FeatureUniformResourceName urn, FeatureUpdateState state) {
+        if (properties.isMetricsEnabled()) {
             LOGGER.debug(METRICS_MARKER, METRICS_FORMAT, providerId, state);
         }
     }

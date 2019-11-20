@@ -53,6 +53,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         // configuration of the rule plugin
         PluginConfiguration rulePlugin = new PluginConfiguration();
+
         rulePlugin.setBusinessId("testRule");
         rulePlugin.setVersion("1.0.0");
         rulePlugin.setLabel("test");

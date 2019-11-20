@@ -110,6 +110,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
     @Autowired
     private IFeatureDeletionRequestRepository featureDeletionRepo;
 
+    @Autowired
+    private FeatureMetrics metrics;
+
     @Override
     public RequestInfo<FeatureUniformResourceName> registerRequests(List<FeatureUpdateRequestEvent> events) {
 
@@ -156,9 +159,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
-            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null,
-                                 item.getFeature() != null ? item.getFeature().getUrn() : null,
-                                 FeatureUpdateState.UPDATE_REQUEST_DENIED);
+            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null,
+                          item.getFeature() != null ? item.getFeature().getUrn() : null,
+                          FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
         }
 
@@ -171,8 +174,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
-            FeatureMetrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
-                                 FeatureUpdateState.UPDATE_REQUEST_DENIED);
+            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+                          FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
         }
 
@@ -187,7 +190,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
-        FeatureMetrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_PENDING);
+        metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_PENDING);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getUrn(), request.getRequestId());
     }
@@ -208,7 +211,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
             Set<Long> requestIds = new HashSet<>();
             requestsToSchedule.forEach(r -> {
                 requestIds.add(r.getId());
-                FeatureMetrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
+                metrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
             });
 
             // Switch to next step
@@ -281,8 +284,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
                                                             request.getUrn(), request.getState(), request.getErrors()));
 
-                FeatureMetrics.state(request.getProviderId(), request.getUrn(),
-                                     FeatureUpdateState.UPDATE_REQUEST_ERROR);
+                metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_ERROR);
             } else {
 
                 entity.setLastUpdate(OffsetDateTime.now());
@@ -304,7 +306,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 // FIXME notify entire feature for notification manager
 
                 // Register
-                FeatureMetrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.FEATURE_MERGED);
+                metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.FEATURE_MERGED);
                 entities.add(entity);
                 successfulRequests.add(request);
             }

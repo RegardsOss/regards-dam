@@ -62,6 +62,9 @@ public class FeatureCreationJob extends AbstractJob<Void> {
     @Autowired
     private MeterRegistry registry;
 
+    @Autowired
+    private FeatureMetrics metrics;
+
     @Override
     public void setParameters(Map<String, JobParameter> parameters)
             throws JobParameterMissingException, JobParameterInvalidException {
@@ -79,7 +82,7 @@ public class FeatureCreationJob extends AbstractJob<Void> {
         Timer.Sample sample = Timer.start(registry);
         Set<FeatureEntity> created = featureService.processRequests(featureCreationRequests);
         sample.stop(Timer.builder(this.getClass().getName()).tag("job", "run").register(registry));
-        created.forEach(e -> FeatureMetrics.state(e.getProviderId(), e.getUrn(), FeatureCreationState.FEATURE_CREATED));
+        created.forEach(e -> metrics.state(e.getProviderId(), e.getUrn(), FeatureCreationState.FEATURE_CREATED));
         LOGGER.info("[{}]{}{} creation request(s) processed in {} ms", jobInfoId, INFO_TAB,
                     featureCreationRequests.size(), System.currentTimeMillis() - start);
     }
