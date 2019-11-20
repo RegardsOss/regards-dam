@@ -120,12 +120,6 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
         return requestInfo;
     }
 
-    /**
-     * @param item
-     * @param grantedRequests
-     * @param requestInfo
-     * @return
-     */
     private void prepareFeatureDeletionRequest(FeatureDeletionRequestEvent item,
             List<FeatureDeletionRequest> grantedRequests, RequestInfo<FeatureUniformResourceName> requestInfo) {
         // Validate event

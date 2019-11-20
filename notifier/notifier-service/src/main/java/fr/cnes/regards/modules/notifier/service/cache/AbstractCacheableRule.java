@@ -1,7 +1,7 @@
 /**
  *
  */
-package fr.cnes.regards.modules.notifier.cache;
+package fr.cnes.regards.modules.notifier.service.cache;
 
 import java.util.HashMap;
 import java.util.Map;
