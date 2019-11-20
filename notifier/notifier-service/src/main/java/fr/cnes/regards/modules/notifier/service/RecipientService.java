@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
@@ -22,6 +24,8 @@ import fr.cnes.reguards.modules.notifier.dto.RuleDto;
  * @author kevin
  *
  */
+@Service
+@MultitenantTransactional
 public class RecipientService implements IRecipientService {
 
     @Autowired

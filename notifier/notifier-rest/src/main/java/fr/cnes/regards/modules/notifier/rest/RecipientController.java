@@ -41,7 +41,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
     public static final String ID = "/{id}";
 
     @Autowired
-    private IRecipientService recipientServcie;
+    private IRecipientService recipientService;
 
     @Autowired
     private IResourceService resourceService;
@@ -56,7 +56,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<PagedResources<Resource<RecipientDto>>> getRecipients(Pageable page,
             final PagedResourcesAssembler<RecipientDto> assembler) {
-        return ResponseEntity.ok(toPagedResources(this.recipientServcie.getRecipients(page), assembler));
+        return ResponseEntity.ok(toPagedResources(this.recipientService.getRecipients(page), assembler));
     }
 
     /**
@@ -66,7 +66,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
     @ResourceAccess(description = "Create a recipient")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<RecipientDto>> createRecipient(@Valid @RequestBody RecipientDto toCreate) {
-        return ResponseEntity.ok(toResource(this.recipientServcie.createOrUpdateRecipient(toCreate)));
+        return ResponseEntity.ok(toResource(this.recipientService.createOrUpdateRecipient(toCreate)));
     }
 
     /**
@@ -76,7 +76,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
     @ResourceAccess(description = "Update a recipient")
     @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity<Resource<RecipientDto>> updateRecipient(@Valid @RequestBody RecipientDto toUpdate) {
-        return ResponseEntity.ok(toResource(this.recipientServcie.createOrUpdateRecipient(toUpdate)));
+        return ResponseEntity.ok(toResource(this.recipientService.createOrUpdateRecipient(toUpdate)));
     }
 
     /**
@@ -85,7 +85,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
     @ResourceAccess(description = "Delete a recipient")
     @RequestMapping(method = RequestMethod.DELETE)
     public ResponseEntity<Void> deleteRecipient(@PathVariable("id") Long id) {
-        this.recipientServcie.deleteRecipient(id);
+        this.recipientService.deleteRecipient(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
