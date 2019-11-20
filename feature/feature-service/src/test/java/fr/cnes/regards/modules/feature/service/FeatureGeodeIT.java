@@ -53,7 +53,8 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
  */
 //@Ignore
 @TestPropertySource(
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode", "regards.amqp.enabled=true" },
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode", "regards.amqp.enabled=true",
+                "spring.task.scheduling.pool.size=2" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 //@ActiveProfiles(value = { "testAmqp", "nohandler", "noscheduler" })
 //@ActiveProfiles(value = { "testAmqp", "noscheduler" })
