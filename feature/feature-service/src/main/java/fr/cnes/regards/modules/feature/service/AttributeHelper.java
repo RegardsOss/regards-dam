@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.model.client;
+package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 
@@ -34,6 +35,8 @@ import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 *
 * Helper class to retrieve model attributes
 * @author Kevin Marchois
+*
+* FIXME centralize code (catalog + feature + notification)
 *
 */
 @Component

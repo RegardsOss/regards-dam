@@ -44,6 +44,7 @@ import fr.cnes.regards.modules.notifier.service.INotificationRuleService;
 @Profile("!nohandler")
 public class FeatureEventHandler implements IBatchHandler<FeatureEvent>, ApplicationListener<ApplicationReadyEvent> {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureEventHandler.class);
 
     @Autowired
