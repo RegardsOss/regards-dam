@@ -38,6 +38,8 @@ public interface IFeatureDeletionRequestRepository extends JpaRepository<Feature
 
     public Set<FeatureDeletionRequest> findByGroupIdIn(Set<String> groupId);
 
+    public Set<FeatureDeletionRequest> findByStep(FeatureRequestStep step);
+
     public Page<FeatureDeletionRequest> findByStep(FeatureRequestStep step, Pageable page);
 
     public void deleteByIdIn(Set<Long> ids);
