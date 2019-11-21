@@ -58,6 +58,23 @@
             <groupId>fr.cnes.regards.framework</groupId>
             <artifactId>geojson-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.model</groupId>
+            <artifactId>model-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.model</groupId>
+            <artifactId>model-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.model</groupId>
+            <artifactId>model-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.model</groupId>
+            <artifactId>model-gson-helper</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>fr.cnes.regards.framework</groupId>

@@ -60,8 +60,9 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
     @Test
     public void testPerf() {
-
-        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, null);
+        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
+                                       modelAttrAssocClientMock);
+        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, model);
         // Properties of the feature
         Set<IProperty<?>> properties = IProperty
                 .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
@@ -129,7 +130,9 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
      */
     @Test
     public void testPerfWithFail() {
-        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, null);
+        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
+                                       modelAttrAssocClientMock);
+        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, model);
         // Properties of the feature
         Set<IProperty<?>> properties = IProperty
                 .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
