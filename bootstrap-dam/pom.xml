@@ -69,6 +69,10 @@
 			<artifactId>dam-rest</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-rest</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.opensearch</groupId>
 			<artifactId>opensearch-rest</artifactId>
 		</dependency>
