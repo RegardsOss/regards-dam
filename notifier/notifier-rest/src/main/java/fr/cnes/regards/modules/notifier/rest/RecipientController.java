@@ -50,7 +50,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
      * Get all {@link Recipient} from database the result will be paginated and transformed to {@link RecipientDto}
      * @param page
      * @param assembler
-     * @return
+     * @return paged list of {@link RecipientDto}
      */
     @ResourceAccess(description = "List all recipient")
     @RequestMapping(method = RequestMethod.GET)

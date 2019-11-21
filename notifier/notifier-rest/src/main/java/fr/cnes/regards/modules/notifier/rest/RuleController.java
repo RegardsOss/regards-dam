@@ -51,7 +51,7 @@ public class RuleController implements IResourceController<RuleDto> {
      * Get all {@link Rule} from database the result will be paginated and transformed to {@link RuleDto}
      * @param page
      * @param assembler
-     * @return
+     * @return paged list of {@link RuleDto}
      */
     @ResourceAccess(description = "List all rules")
     @RequestMapping(method = RequestMethod.GET)

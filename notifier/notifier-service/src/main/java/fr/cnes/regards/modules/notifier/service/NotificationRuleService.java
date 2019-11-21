@@ -118,7 +118,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         }
         LOGGER.debug("------------->>> End of notification process in {} ms, {} notifications sended"
                 + " with a average feature treatment time of {} ms", System.currentTimeMillis() - startTime, nbSend,
-                     averageFeatureTreatmentTime / nbSend);
+                     averageFeatureTreatmentTime / (nbSend == 0 ? 1 : nbSend));
         return nbSend;
     }
 

@@ -30,7 +30,8 @@ import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 
 /**
- * @author kevin
+ * Feature notification service interface
+ * @author Kevin Marchois
  *
  */
 public interface INotificationRuleService {
@@ -52,8 +53,8 @@ public interface INotificationRuleService {
      * Handle a list of {@link FeatureEvent} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
      * Check if this event is compliant with a {@link Rule} and in that case notify all {@link Recipient} associated
      * with this {@link Rule}
-     * @param toHandles
-     * @return
+     * @param toHandles event to handle
+     * @return number of notification sended
      */
     public int handleFeatures(List<FeatureEvent> toHandles);
 }
