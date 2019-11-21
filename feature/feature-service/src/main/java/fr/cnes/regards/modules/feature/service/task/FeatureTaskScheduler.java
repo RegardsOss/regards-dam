@@ -64,26 +64,28 @@ public class FeatureTaskScheduler {
     @Autowired
     private IFeatureUpdateService featureUpdateService;
 
-    @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
-    public void scheduleUpdateRequests() {
-        for (String tenant : tenantResolver.getAllActiveTenants()) {
-            try {
-                runtimeTenantResolver.forceTenant(tenant);
-                if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    long start = System.currentTimeMillis();
-                    int nb = this.featureUpdateService.scheduleRequests();
-                    if (nb != 0) {
-                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
-                    }
-                }
-            } finally {
-                lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
-                runtimeTenantResolver.clearTenant();
-            }
-        }
-    }
+    //    @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
+    //            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+    //    public void scheduleUpdateRequests() {
+    //        for (String tenant : tenantResolver.getAllActiveTenants()) {
+    //            try {
+    //                runtimeTenantResolver.forceTenant(tenant);
+    //                if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
+    //                    long start = System.currentTimeMillis();
+    //                    int nb = this.featureUpdateService.scheduleRequests();
+    //                    if (nb != 0) {
+    //                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+    //                    }
+    //                }
+    //            } finally {
+    //                lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
+    //                runtimeTenantResolver.clearTenant();
+    //            }
+    //        }
+    //    }
 
-    @Scheduled(fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+    @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
+            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
     public void scheduleInsertRequests() {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
