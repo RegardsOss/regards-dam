@@ -37,6 +37,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.Range;
@@ -50,6 +52,8 @@ import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
  * @author Marc Sordi
  */
 public interface IProperty<T> extends Comparable<IProperty<T>> {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(IProperty.class);
 
     /**
      * Get attribute name
@@ -281,7 +285,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
     @SuppressWarnings("unchecked")
     public static IProperty<?> forType(PropertyType attributeType, String name, Object value)
             throws IllegalArgumentException {
-        if (name == null || attributeType == null) {
+        if ((name == null) || (attributeType == null)) {
             throw new IllegalArgumentException("An attribute cannot have a null name");
         }
         if (value == null) {
@@ -351,7 +355,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
             throw new IllegalArgumentException(attributeType + " with name " + name + " is not an interval type");
         }
 
-        if (lowerBound == null && upperBound == null) {
+        if ((lowerBound == null) && (upperBound == null)) {
             return forTypeWithNullValue(attributeType, name);
         }
 
@@ -774,7 +778,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
             }
         } else {
             StringBuilder builder = new StringBuilder();
-            if (namespace != null && !namespace.isEmpty()) {
+            if ((namespace != null) && !namespace.isEmpty()) {
                 builder.append(namespace);
                 builder.append(DOT);
             }
@@ -783,7 +787,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
     }
 
     public static Optional<String> getPropertyNamespace(String propertyKey) {
-        if (propertyKey != null && propertyKey.contains(DOT)) {
+        if ((propertyKey != null) && propertyKey.contains(DOT)) {
             return Optional.of(propertyKey.substring(0, propertyKey.indexOf(DOT)));
         }
         return Optional.empty();
@@ -820,6 +824,8 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                 }
             } else {
                 if (refMap.containsKey(entry.getKey())) {
+                    LOGGER.info("Update property {} : replace {} previous value by {}", entry.getKey(),
+                                refMap.get(entry.getKey()).getValue(), property.getValue());
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
                 } else {
