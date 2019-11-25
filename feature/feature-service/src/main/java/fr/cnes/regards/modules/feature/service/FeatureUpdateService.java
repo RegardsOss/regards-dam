@@ -290,7 +290,8 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 entity.setLastUpdate(OffsetDateTime.now());
 
                 // Merge properties handling null property values to unset properties
-                IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties());
+                IProperty.mergeProperties(entity.getFeature().getProperties(), patch.getProperties(),
+                                          patch.getUrn().toString());
 
                 // Geometry cannot be unset but can be mutated
                 if (!GeoJsonType.UNLOCATED.equals(patch.getGeometry().getType())) {

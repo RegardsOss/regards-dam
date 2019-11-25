@@ -797,8 +797,9 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      * Merge patch properties into reference ones
      * @param reference not <code>null</code> reference properties
      * @param patch not <code>null</code> patch properties
+     * @param urn not <code>null</code>
      */
-    public static void mergeProperties(Set<IProperty<?>> reference, Set<IProperty<?>> patch) {
+    public static void mergeProperties(Set<IProperty<?>> reference, Set<IProperty<?>> patch, String urn) {
 
         Assert.notNull(reference, "Reference properties must not be null");
         Assert.notNull(patch, "Patch properties must not be null");
@@ -824,7 +825,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                 }
             } else {
                 if (refMap.containsKey(entry.getKey())) {
-                    LOGGER.info("Update property {} : replace {} previous value by {}", entry.getKey(),
+                    LOGGER.info("Update - \"{}\" - \"{}\" - \"{}\" -> \"{}\"", urn, entry.getKey(),
                                 refMap.get(entry.getKey()).getValue(), property.getValue());
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
