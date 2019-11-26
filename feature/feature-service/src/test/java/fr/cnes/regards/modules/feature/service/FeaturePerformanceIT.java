@@ -70,7 +70,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         String format = "F%05d";
 
         // Register creation requests
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
                                                                        Lists.emptyList());
         String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
                                            this.getDefaultTenant(), this.getModelAttrAssocClientMock());
@@ -103,7 +103,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
                                                       IProperty.buildBoolean("valid", Boolean.FALSE),
                                                       IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
             publisher.publish(FeatureUpdateRequestEvent
-                    .build(FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>()), feature, requestDate));
+                    .build(FeatureMetadata.build(PriorityLevel.NORMAL, new ArrayList<>()), feature, requestDate));
         }
 
         // Wait for feature update
