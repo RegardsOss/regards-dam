@@ -141,7 +141,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         StorageMetadata.build("id ");
         FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
-                .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
+                .build("owner", "session", PriorityLevel.NORMAL, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureCreationService.registerRequests(collection);
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureCreationRequestRepo.count());
@@ -158,7 +158,7 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
 
         StorageMetadata.build("id ");
         FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
-                .build("owner", "session", PriorityLevel.AVERAGE, StorageMetadata.build("id ")), features);
+                .build("owner", "session", PriorityLevel.NORMAL, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureCreationService.registerRequests(collection);
 
         assertEquals(0, infos.getGranted().size());

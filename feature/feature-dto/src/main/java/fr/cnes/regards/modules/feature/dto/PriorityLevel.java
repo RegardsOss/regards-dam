@@ -10,7 +10,7 @@ package fr.cnes.regards.modules.feature.dto;
 public enum PriorityLevel {
 
     HIGH(0),
-    AVERAGE(1),
+    NORMAL(1),
     LOW(2);
 
     private int priority;

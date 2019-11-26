@@ -104,26 +104,26 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
         FeatureEntity toDelete = super.featureRepo.findAll().get(2);
 
         FeatureDeletionRequestEvent featureDeletionRequest = FeatureDeletionRequestEvent.build(toDelete.getUrn(),
-                                                                                               PriorityLevel.AVERAGE);
+                                                                                               PriorityLevel.NORMAL);
         this.featureDeletionService.registerRequests(Lists.list(featureDeletionRequest));
         this.featureDeletionService.scheduleRequests();
 
         // prepare and save update request
         FeatureUpdateRequest fur1 = FeatureUpdateRequest.build("1", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               toUpdate.getFeature(), PriorityLevel.AVERAGE);
+                                                               toUpdate.getFeature(), PriorityLevel.NORMAL);
         fur1.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         FeatureUpdateRequest fur2 = FeatureUpdateRequest.build("2", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
+                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL);
         fur2.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
 
         //this update cannot be scheduled because fur2 is already scheduled and on the same feature
         FeatureUpdateRequest fur3 = FeatureUpdateRequest.build("3", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               updatingByScheduler.getFeature(), PriorityLevel.AVERAGE);
+                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL);
         fur3.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         FeatureUpdateRequest fur4 = FeatureUpdateRequest.build("4", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               toDelete.getFeature(), PriorityLevel.AVERAGE);
+                                                               toDelete.getFeature(), PriorityLevel.NORMAL);
         fur4.setStep(FeatureRequestStep.LOCAL_DELAYED);
 
         // create a deletion request
