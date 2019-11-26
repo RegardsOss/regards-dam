@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.notifier.service.plugin;
 
+import java.util.Map;
 import java.util.Set;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -49,9 +50,7 @@ public class DefaultRuleMatcher implements IRuleMatcher {
 
     @Override
     public boolean match(Feature feature) {
-
         return handleProperties(feature.getProperties());
-
     }
 
     /**
@@ -60,20 +59,18 @@ public class DefaultRuleMatcher implements IRuleMatcher {
      * @param properties
      */
     private boolean handleProperties(Set<IProperty<?>> properties) {
-        boolean match = false;
         if (properties == null) {
             return false;
         }
-        for (IProperty<?> property : properties) {
-            if (property.getValue() instanceof Set) {
-                match = handleProperties((Set<IProperty<?>>) property.getValue());
-            } else {
-                if (property.getName().equals(attributeToSeek)) {
-                    return property.getValue().equals(attributeValueToSeek);
-                }
-            }
+
+        Map<String, IProperty<?>> map = IProperty.getPropertyMap(properties);
+        IProperty<?> property = map.get(attributeToSeek);
+        if (property == null) {
+            return false;
         }
-        return match;
+
+        // FIXME test with all property type
+        return property.getValue().equals(attributeValueToSeek);
     }
 
 }

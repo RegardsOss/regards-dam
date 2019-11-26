@@ -167,6 +167,10 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         }
     }
 
+    public String mockModelClient(String filename) {
+        return mockModelClient(filename, cps, factory, getDefaultTenant(), modelAttrAssocClientMock);
+    }
+
     @After
     public void after() {
         cleanAMQPQueues(FeatureEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);

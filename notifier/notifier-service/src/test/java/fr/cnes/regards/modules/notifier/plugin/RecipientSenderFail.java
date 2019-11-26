@@ -18,15 +18,9 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.domain.IHandler;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
 
 /**
@@ -35,10 +29,7 @@ import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
  */
 @Plugin(author = "REGARDS Team", description = "Fail recipient sender", id = "fail", version = "1.0.0",
         contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES", url = "https://regardsoss.github.io/")
-public class RecipientSenderFail implements IRecipientSender, IHandler<NotificationEvent10> {
-
-    @Autowired
-    IPublisher publisher;
+public class RecipientSenderFail extends AbstractRecipientSender<NotificationEvent10> {
 
     @Override
     public boolean send(Feature feature, FeatureManagementAction action) {
@@ -46,9 +37,7 @@ public class RecipientSenderFail implements IRecipientSender, IHandler<Notificat
     }
 
     @Override
-    public void handle(TenantWrapper<NotificationEvent10> wrapper) {
-        // TODO Auto-generated method stub
-
+    NotificationEvent10 buildEvent(Feature feature, FeatureManagementAction action) {
+        return null;
     }
-
 }

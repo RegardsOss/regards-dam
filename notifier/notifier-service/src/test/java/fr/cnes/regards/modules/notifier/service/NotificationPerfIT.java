@@ -24,13 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginParam;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -39,44 +43,94 @@ import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent2;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent3;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent4;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent5;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent6;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent7;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent8;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent9;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender10;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender2;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender3;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender4;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender5;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
  * @author kevin
  *
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=notification",
-        "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
-        "spring.jpa.properties.hibernate.order_inserts=true" })
+@TestPropertySource(
+        properties = { "spring.jpa.properties.hibernate.default_schema=notification", "regards.amqp.enabled=true" },
+        locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp" })
 public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTest {
 
     private static final int RECIPIENTS_PER_RULE = 10;
 
-    private static final int FEATURE_EVENT_TO_RECEIVE = 1000;
+    private static final int FEATURE_EVENT_TO_RECEIVE = 10_000;
+
+    private static final int FEATURE_EVENT_BULK = 1_000;
 
     @Autowired
-    ISubscriber sub;
+    private ISubscriber subscriber;
+
+    @Override
+    @Before
+    public void before() throws InterruptedException {
+        super.before();
+
+        subOrNot(NotificationEvent2.class, new RecipientSender2());
+        subOrNot(NotificationEvent3.class, new RecipientSender3());
+        subOrNot(NotificationEvent4.class, new RecipientSender4());
+        subOrNot(NotificationEvent5.class, new RecipientSender5());
+        subOrNot(NotificationEvent6.class, new RecipientSender6());
+        subOrNot(NotificationEvent7.class, new RecipientSender7());
+        subOrNot(NotificationEvent8.class, new RecipientSender8());
+        subOrNot(NotificationEvent9.class, new RecipientSender9());
+        subOrNot(NotificationEvent10.class, new RecipientSender10());
+    }
+
+    private <E extends ISubscribable> void subOrNot(Class<E> eventType, IHandler<E> handler) {
+        subscriber.subscribeTo(eventType, handler);
+        subscriber.unsubscribeFrom(eventType);
+    }
 
     @Test
-    public void testPerf() {
-        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
-                                       modelAttrAssocClientMock);
-        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, model);
+    public void testPerf() throws InterruptedException {
+
+        String modelName = mockModelClient(GeodeProperties.getGeodeModel());
+
+        Thread.sleep(5_000);
+
+        Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, modelName);
         // Properties of the feature
-        Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
-        modifiedFeature.setProperties(properties);
+        GeodeProperties.addGeodeProperties(modifiedFeature);
 
         initPlugins(false);
 
         List<FeatureEvent> events = new ArrayList<>();
+        int bulk = 0;
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
+            bulk++;
             events.add(FeatureEvent.build(modifiedFeature, FeatureManagementAction.CREATE));
+            if (bulk == FEATURE_EVENT_BULK) {
+                bulk = 0;
+                assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+                events.clear();
+            }
         }
 
-        assertEquals(FEATURE_EVENT_TO_RECEIVE * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
-
+        if (bulk > 0) {
+            assertEquals(bulk * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+        }
     }
 
     private void initPlugins(boolean fail) {
@@ -87,13 +141,9 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         rulePlugin.setLabel("test");
         rulePlugin.setPluginId("DefaultRuleMatcher");
 
-        StringPluginParam param = new StringPluginParam();
-        param.setName("attributeToSeek");
-        param.setValue("fem_type");
+        StringPluginParam param = IPluginParam.build("attributeToSeek", "file_infos.nature");
         rulePlugin.getParameters().add(param);
-        param = new StringPluginParam();
-        param.setName("attributeValueToSeek");
-        param.setValue("TM");
+        param = IPluginParam.build("attributeValueToSeek", "TM");
         rulePlugin.getParameters().add(param);
 
         rulePlugin = this.pluginConfRepo.save(rulePlugin);

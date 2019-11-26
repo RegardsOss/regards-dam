@@ -18,17 +18,10 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.domain.IHandler;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
-import fr.cnes.regards.modules.notifier.dto.NotificationEvent9;
 
 /**
  * @author kevin
@@ -37,21 +30,10 @@ import fr.cnes.regards.modules.notifier.dto.NotificationEvent9;
 @Plugin(author = "REGARDS Team", description = "Recipient sender 10 for feature", id = "RecipientSender10",
         version = "1.0.0", contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES",
         url = "https://regardsoss.github.io/")
-public class RecipientSender10 implements IRecipientSender, IHandler<NotificationEvent10> {
-
-    @Autowired
-    IPublisher publisher;
+public class RecipientSender10 extends AbstractRecipientSender<NotificationEvent10> {
 
     @Override
-    public boolean send(Feature feature, FeatureManagementAction action) {
-        this.publisher.publish(NotificationEvent9.build(feature, action));
-        return true;
+    NotificationEvent10 buildEvent(Feature feature, FeatureManagementAction action) {
+        return NotificationEvent10.build(feature, action);
     }
-
-    @Override
-    public void handle(TenantWrapper<NotificationEvent10> wrapper) {
-        // TODO Auto-generated method stub
-
-    }
-
 }
