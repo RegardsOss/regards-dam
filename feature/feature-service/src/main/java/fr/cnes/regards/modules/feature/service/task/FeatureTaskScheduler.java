@@ -71,14 +71,17 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    long start = System.currentTimeMillis();
-                    int nb = this.featureUpdateService.scheduleRequests();
-                    if (nb != 0) {
-                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureUpdateService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                        }
+                    } finally{
+                        lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
                     }
                 }
             } finally {
-                lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
                 runtimeTenantResolver.clearTenant();
             }
         }
@@ -91,15 +94,17 @@ public class FeatureTaskScheduler {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-                    long start = System.currentTimeMillis();
-                    int nb = this.featureService.scheduleRequests();
-                    if (nb != 0) {
-                        LOGGER.info("{} creation request(s) scheduled in {} ms", nb,
-                                    System.currentTimeMillis() - start);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} creation request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                        }
+                    } finally {
+                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
                     }
                 }
             } finally {
-                lockService.releaseLock(LOCK_REQUEST_INSERT, this);
                 runtimeTenantResolver.clearTenant();
             }
         }
