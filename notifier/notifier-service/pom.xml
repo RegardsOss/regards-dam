@@ -33,15 +33,6 @@
 	</developers>
 
 	<dependencies>
-	<!-- FIXME -->
-<!-- 		<dependency>
-			<groupId>fr.cnes.regards.modules.model</groupId>
-			<artifactId>model-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>feign-regards-starter</artifactId>
-		</dependency> -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.feature</groupId>
 			<artifactId>feature-dto</artifactId>
@@ -66,17 +57,18 @@
             <groupId>fr.cnes.regards.modules.model</groupId>
             <artifactId>model-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>fr.cnes.regards.modules.model</groupId>
-            <artifactId>model-service</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>fr.cnes.regards.modules.model</groupId>
-            <artifactId>model-gson-helper</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- Test -->
-        <dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-gson-helper</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-service</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
             <groupId>fr.cnes.regards.framework</groupId>
             <artifactId>jpa-multitenant-regards-test</artifactId>
             <scope>test</scope>

@@ -70,15 +70,22 @@ public class FeatureTaskScheduler {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
+                LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_UPDATE, this, 60)) {
-                    long start = System.currentTimeMillis();
-                    int nb = this.featureUpdateService.scheduleRequests();
-                    if (nb != 0) {
-                        LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                    LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureUpdateService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                        }
+                    } finally{
+                        LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
+                        lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
+                        LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
                     }
                 }
             } finally {
-                lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
                 runtimeTenantResolver.clearTenant();
             }
         }
@@ -90,16 +97,22 @@ public class FeatureTaskScheduler {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
+                LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
                 if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
-                    long start = System.currentTimeMillis();
-                    int nb = this.featureService.scheduleRequests();
-                    if (nb != 0) {
-                        LOGGER.info("{} creation request(s) scheduled in {} ms", nb,
-                                    System.currentTimeMillis() - start);
+                    LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} creation request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                        }
+                    } finally {
+                        LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
+                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
+                        LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
                     }
                 }
             } finally {
-                lockService.releaseLock(LOCK_REQUEST_INSERT, this);
                 runtimeTenantResolver.clearTenant();
             }
         }

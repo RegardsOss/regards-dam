@@ -79,7 +79,7 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
 
     @Test
     public void requestCreation() {
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
                                                                        Lists.emptyList());
 
         long creationStart = System.currentTimeMillis();

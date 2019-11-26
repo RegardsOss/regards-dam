@@ -152,6 +152,6 @@ public class FeatureDeletionIT extends AbstractFeatureMultitenantServiceTest {
         List<FeatureDeletionRequest> scheduled = this.featureDeletionRepo.findAll();
 
         assertEquals(properties.getMaxBulkSize() / 2, scheduled.size());
-        assertTrue(scheduled.stream().allMatch(request -> PriorityLevel.AVERAGE.equals(request.getPriority())));
+        assertTrue(scheduled.stream().allMatch(request -> PriorityLevel.NORMAL.equals(request.getPriority())));
     }
 }

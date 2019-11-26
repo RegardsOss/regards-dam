@@ -119,7 +119,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
     //
     //    @Test
     public void requestCreation() {
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
                                                                        Lists.emptyList());
 
         long creationStart = System.currentTimeMillis();
@@ -150,7 +150,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
     private OffsetDateTime requestUpdate() {
         long updateStart = System.currentTimeMillis();
         OffsetDateTime requestDate = OffsetDateTime.now();
-        FeatureMetadata featureMetadata = FeatureMetadata.build(PriorityLevel.AVERAGE, new ArrayList<>());
+        FeatureMetadata featureMetadata = FeatureMetadata.build(PriorityLevel.NORMAL, new ArrayList<>());
         List<FeatureUpdateRequestEvent> uEvents = new ArrayList<>();
         int bulk = 0;
         for (int i = 1; i <= NB_FEATURES; i++) {

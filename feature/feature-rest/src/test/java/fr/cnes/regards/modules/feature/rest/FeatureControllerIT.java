@@ -136,7 +136,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
-        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.AVERAGE, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.NORMAL, metadata));
 
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
@@ -163,7 +163,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.AVERAGE, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.NORMAL, metadata));
         MapBindingResult errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
         errors.reject("error code");
         // we will mock validation plugin and consider the feature is unvalid
@@ -185,7 +185,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build(PriorityLevel.AVERAGE, metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -231,7 +231,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build(PriorityLevel.AVERAGE, metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -259,17 +259,12 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         lfd.add(fields.withPath("metadata.storages[].targetTypes",
                                 "List of data object types accepted by this storage location (when storing AIPs)"));
         lfd.add(fields.withPath("features[].entityType", "Entity Type"));
-        // in case of update we will set the urn
-        if (isUpdate) {
-            lfd.add(fields.withPath("features[].urn",
-                                    "Unique feature identifer based on provider identifier with versionning"));
-        } else { // in case of creation we create session metadata
-            lfd.add(fields.withPath("metadata.session", "The session name"));
-            lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
-        }
+        lfd.add(fields.withPath("features[].urn",
+                                "Unique feature identifer based on provider identifier with versionning"));
+        lfd.add(fields.withPath("metadata.session", "The session name"));
+        lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
         lfd.add(fields.withPath("features[].model", "Model"));
         lfd.add(fields.withPath("features[].id", "Technical id"));
-        lfd.add(fields.withPath("features[].model", "Model"));
         lfd.add(fields.withPath("features[].geometry", "GeoJson Coordinates"));
         lfd.add(fields.withPath("features[].properties", "Properties"));
         lfd.add(fields.withPath("features[].files[].locations[].storage", "Storage"));

@@ -55,7 +55,7 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
     public void createFeatures() throws InterruptedException {
 
         // Register creation requests
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.AVERAGE,
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
                                                                        Lists.emptyList());
         String modelName = mockModelClient(GeodeProperties.getGeodeModel());
 
