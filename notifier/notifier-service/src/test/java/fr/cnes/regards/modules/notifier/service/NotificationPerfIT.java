@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +39,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
-import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
@@ -111,6 +109,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         Thread.sleep(5_000);
 
         Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, modelName);
+
         // Properties of the feature
         GeodeProperties.addGeodeProperties(modifiedFeature);
 
@@ -183,10 +182,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
                                        modelAttrAssocClientMock);
         Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, model);
-        // Properties of the feature
-        Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
-        modifiedFeature.setProperties(properties);
+        GeodeProperties.addGeodeProperties(modifiedFeature);
 
         initPlugins(true);
 

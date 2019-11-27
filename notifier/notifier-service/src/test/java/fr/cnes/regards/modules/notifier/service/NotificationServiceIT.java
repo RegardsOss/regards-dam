@@ -78,7 +78,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         StringPluginParam param = new StringPluginParam();
         param.setName("attributeToSeek");
-        param.setValue("fem_type");
+        param.setValue("file_infos.fem_type");
         rulePlugin.getParameters().add(param);
         param = new StringPluginParam();
         param.setName("attributeValueToSeek");
