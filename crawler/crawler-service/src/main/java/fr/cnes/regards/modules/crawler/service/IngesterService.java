@@ -18,131 +18,67 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
-import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.framework.notification.NotificationLevel;
-import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
-import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
-import fr.cnes.regards.modules.crawler.domain.IngestionResult;
-import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
-import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
-@Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
-public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
+/**
+ * Component used to schedule new {@link DatasourceIngestion} to ingest features in ES catalog for each tenants
+ *
+ * @author oroussel
+ * @author Sébastien Binda
+ */
+@Component
+public class IngesterService implements IHandler<PluginConfEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
 
     /**
-     * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
+     * An atomic boolean used to determine whether manage() method is currently executing (and avoid launching it
      * in parallel)
      */
     private static final AtomicBoolean managing = new AtomicBoolean(false);
 
     /**
-     * An atomic boolean permitting to take into account a new datasource creation or update while managing current ones
+     * An atomic boolean permitting to take into account a new data source creation or update while managing current ones
      * (or inverse)
      */
     private static AtomicBoolean doItAgain = new AtomicBoolean(false);
 
-    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
-
-    /**
-     * All tenants resolver
-     */
     @Autowired
     private ITenantResolver tenantResolver;
 
-    /**
-     * Current tenant resolver
-     */
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
-
-    @Autowired
-    private IDatasourceIngestionRepository dsIngestionRepos;
-
-    @Autowired
-    private IDatasourceIngesterService datasourceIngester;
-
-    /**
-     * Only used to delete all data objects from a removed datasource
-     */
-    @Autowired
-    private IEsRepository esRepos;
-
-    @Autowired
-    private IPluginService pluginService;
 
     @Autowired
     private ISubscriber subscriber;
 
     @Autowired
-    private INotificationClient notifClient;
+    private DatasourceIngestionService dsIngestionService;
 
     /**
-     * The spring application name ~= microservice type
-     */
-    @Value("${spring.application.name}")
-    private String applicationName;
-
-    /**
-     * Proxied version of this service
-     */
-    @Autowired
-    @Lazy
-    private IIngesterService self;
-
-    /**
-     * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
+     * Boolean indicating whether or not crawler service is in "consume only" mode (to be used by tests only)
      */
     private boolean consumeOnlyMode = false;
 
-    @Override
     @EventListener
     public void handleApplicationReadyEvent(DamGsonReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
@@ -151,26 +87,17 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     /**
      * Receiving a message from crawler
      */
-    @Override
     @EventListener
-    @RegardsTransactional
     public void handleMessageEvent(DataSourceMessageEvent event) {
         runtimeTenantResolver.forceTenant(event.getTenant());
-        String dsId = event.getDataSourceId();
-        String msg = event.getMessage();
-        Optional<DatasourceIngestion> dsiOpt = dsIngestionRepos.findById(dsId);
-        if (dsiOpt.isPresent()) {
-            DatasourceIngestion dsi = dsiOpt.get();
-            dsi.setStackTrace(dsi.getStackTrace() == null ? msg : dsi.getStackTrace() + "\n" + msg);
-            dsIngestionRepos.save(dsi);
-        }
+        dsIngestionService.addMessageToStackTrace(event.getDataSourceId(), event.getMessage());
     }
 
     @Override
     public void handle(TenantWrapper<PluginConfEvent> wrapper) {
         try {
             runtimeTenantResolver.forceTenant(wrapper.getTenant());
-            // If it concerns a Datasource, manage it
+            // If it concerns a data source, manage it
             if (wrapper.getContent().getPluginTypes().contains(IDataSourcePlugin.class.getName())) {
                 if (!this.consumeOnlyMode) {
                     this.manage();
@@ -185,26 +112,21 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
      * By default, launched 5 mn after last one. BUT this method is also executed each time a datasource is created
      * Initial delay of 2 mn to avoid been launched too soon.
      */
-    @Override
     @Scheduled(initialDelay = 300000, fixedDelayString = "${regards.ingester.rate.ms:300000}")
     public void manage() {
         LOGGER.info("IngesterService.manage() called...");
         try {
-            // if this method is called while currently been executed, doItAgain is set to true and nothing else is
-            // done
+            // if this method is called while currently been executed, doItAgain is set to true and nothing else is done
             if (managing.getAndSet(true)) {
                 doItAgain.set(true);
                 return;
             }
-
             do {
-                // First, update all DatasourceIngestions of all tenants (to reflect all datasource plugin
-                // configurations
+                // First, update all DatasourceIngestions of all tenants (to reflect all datasource plugin configurations
                 // states and to update nextPlannedIngestDate)
                 for (String tenant : tenantResolver.getAllActiveTenants()) {
                     runtimeTenantResolver.forceTenant(tenant);
-
-                    self.updateAndCleanTenantDatasourceIngestions(tenant);
+                    dsIngestionService.updateAndCleanTenantDatasourceIngestions();
                 }
                 // Then ingest...
                 boolean atLeastOneIngestionDone;
@@ -212,63 +134,11 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                     atLeastOneIngestionDone = false;
                     for (String tenant : tenantResolver.getAllActiveTenants()) {
                         runtimeTenantResolver.forceTenant(tenant);
-
                         // Pick an available dsIngestion marking it as STARTED if present
-                        Optional<DatasourceIngestion> dsIngestionOpt = self.pickAndStartDatasourceIngestion(tenant);
+                        Optional<String> dsIngestionOpt = dsIngestionService.pickAndStartDatasourceIngestion();
                         if (dsIngestionOpt.isPresent()) {
                             atLeastOneIngestionDone = true;
-                            DatasourceIngestion dsIngestion = dsIngestionOpt.get();
-
-                            try {
-                                // Launch datasource ingestion
-                                PluginConfiguration pluginConf = pluginService
-                                        .getPluginConfiguration(dsIngestion.getId());
-                                IngestionResult summary = datasourceIngester
-                                        .ingest(pluginService.loadPluginConfiguration(pluginConf.getBusinessId()),
-                                                dsIngestion);
-                                // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
-                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
-                                if (summary.getInErrorObjectsCount() > 0) {
-                                    dsIngestion.setStatus(IngestionStatus.FINISHED_WITH_WARNINGS);
-                                } else {
-                                    dsIngestion.setStatus(IngestionStatus.FINISHED);
-                                }
-
-                                dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
-                                dsIngestion.setInErrorObjectsCount(summary.getInErrorObjectsCount());
-                                dsIngestion.setLastIngestDate(summary.getDate());
-                            } catch (InactiveDatasourceException ide) {
-                                dsIngestion.setStatus(IngestionStatus.INACTIVE);
-                                dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException
-                                    | DataSourceException | ModuleException e) {
-                                // Set Status to Error... (and status date)
-                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
-                                dsIngestion.setStatus(IngestionStatus.ERROR);
-                                // and log stack trace into database
-                                StringWriter sw = new StringWriter();
-                                e.printStackTrace(new PrintWriter(sw));
-                                String stackTrace = dsIngestion.getStackTrace() == null ? sw.toString()
-                                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
-                                dsIngestion.setStackTrace(stackTrace);
-                            } catch (NotFinishedException e) {
-                                dsIngestion = dsIngestionRepos.findById(dsIngestion.getId()).get();
-                                dsIngestion.setStatus(IngestionStatus.NOT_FINISHED);
-                                dsIngestion.setErrorPageNumber(e.getPageNumber());
-                                // and log stack trace into database
-                                StringWriter sw = new StringWriter();
-                                e.getCause().printStackTrace(new PrintWriter(sw));
-                                String stackTrace = dsIngestion.getStackTrace() == null ? sw.toString()
-                                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
-                                dsIngestion.setStackTrace(stackTrace);
-                                dsIngestion.setSavedObjectsCount(e.getSaveResult().getSavedDocsCount());
-                                dsIngestion.setInErrorObjectsCount(e.getSaveResult().getInErrorDocsCount());
-                            }
-                            // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
-                            dsIngestion.setNextPlannedIngestDate(null);
-                            // Save ingestion status
-                            dsIngestionRepos.save(dsIngestion);
-                            sendNotificationSummary(dsIngestion);
+                            dsIngestionService.runDataSourceIngestion(dsIngestionOpt.get());
                         }
                     }
                     // At least one ingestion has to be done while looping through all tenants
@@ -282,145 +152,10 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         LOGGER.info("...IngesterService.manage() ended.");
     }
 
-    private void sendNotificationSummary(DatasourceIngestion dsIngestion) {
-        // Send admin notification for ingestion ends if something as been done
-        if ((dsIngestion.getSavedObjectsCount() != 0) || (dsIngestion.getInErrorObjectsCount() != 0)) {
-            String title = String.format("%s indexation ends.", dsIngestion.getLabel());
-            switch (dsIngestion.getStatus()) {
-                case ERROR:
-                    notifClient.notify(String.format("Indexation error. Cause : %s", dsIngestion.getStackTrace()),
-                                       title, NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
-                    break;
-                case FINISHED_WITH_WARNINGS:
-                    notifClient.notify(
-                                       String.format("Indexation ends with %s new indexed objects and %s errors.",
-                                                     dsIngestion.getSavedObjectsCount(),
-                                                     dsIngestion.getInErrorObjectsCount()),
-                                       title, NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
-                    break;
-                case NOT_FINISHED:
-                    notifClient.notify(String
-                            .format("Indexation ends with %s new indexed objects and %s errors but is not completely terminated.\n"
-                                    + "Something went wrong concerning datasource or Elasticsearch.\nAssociated datasets "
-                                    + "haven't been updated, ingestion may be manualy re-scheduled\nto be laucnhed as "
-                                    + "soon as possible or will continue at its planned date",
-                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
-                                       NotificationLevel.WARNING, DefaultRole.PROJECT_ADMIN);
-                    break;
-                default:
-                    notifClient.notify(String
-                            .format("Indexation finished. %s new objects indexed. %s objects in error.",
-                                    dsIngestion.getSavedObjectsCount(), dsIngestion.getInErrorObjectsCount()), title,
-                                       NotificationLevel.INFO, DefaultRole.PROJECT_ADMIN);
-                    break;
-            }
-        }
-    }
-
-    @Override
-    @MultitenantTransactional
-    public void updateAndCleanTenantDatasourceIngestions(String tenant) {
-        // First, check if all existing datasource plugins are managed
-        // Find all current datasource ingestions
-        Map<String, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
-                .collect(Collectors.toMap(DatasourceIngestion::getId, Function.identity()));
-
-        // Find all datasource plugins less inactive ones => find all ACTIVE datasource plugins
-        List<PluginConfiguration> pluginConfs = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)
-                .stream().filter(PluginConfiguration::isActive).collect(Collectors.toList());
-
-        // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
-        pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.existsById(pluginConf.getBusinessId()))
-                .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getBusinessId(),
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
-                .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
-        // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
-        dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
-                .peek(id -> this.planDatasourceDataObjectsDeletion(tenant, id)).forEach(dsIngestionRepos::deleteById);
-        // For previously ingested datasources, compute next planned ingestion date
-        pluginConfs.forEach(pluginConf -> {
-            try {
-                self.updatePlannedDate(dsIngestionsMap.get(pluginConf.getBusinessId()));
-            } catch (RuntimeException | ModuleException | NotAvailablePluginConfigurationException e) {
-                LOGGER.error("Cannot compute next ingestion planned date", e);
-            }
-        });
-    }
-
     /**
-     * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
-     *
-     * @param tenant
-     * @param dataSourceId
+     * Set or unset "consume only" mode where messages are polled but nothing is done
+     * @param b true or false (it's a boolean, what do you expect ?)
      */
-    public void planDatasourceDataObjectsDeletion(String tenant, String dataSourceId) {
-        threadPoolExecutor.submit(() -> {
-            try {
-                LOGGER.info("Removing all data objects associated to data source {}...", dataSourceId);
-                long deletedCount = esRepos.deleteByQuery(tenant, ICriterion.eq("dataSourceId", dataSourceId));
-                LOGGER.info("...{} data objects removed.", deletedCount);
-            } catch (RsRuntimeException e) {
-                LOGGER.error("...Cannot remove data objects associated to data source", e);
-            }
-        });
-    }
-
-    /**
-     * Compute next ingestion planned date if needed in its own transaction to prevent making
-     * updateAndCleanTenantDatasourceIngestions failing and rollbacking its transaction
-     * @throws NotAvailablePluginConfigurationException
-     */
-    @Override
-    @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
-    public void updatePlannedDate(DatasourceIngestion dsIngestion)
-            throws ModuleException, NotAvailablePluginConfigurationException {
-        int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(dsIngestion.getId())).getRefreshRate();
-        // Take into account ONLY data source with null nextPlannedIngestDate
-        if (dsIngestion.getNextPlannedIngestDate() == null) {
-            switch (dsIngestion.getStatus()) {
-                case ERROR: // last ingest in error, do not launch as soon as possible, if it is the only ingestion, user
-                    // may not have time to see the error
-                case NOT_FINISHED: // last ingest hasn't finished because of Datasource or Elasticsearch, no need no
-                    // relaunch now, it will probably fails again
-                    OffsetDateTime nextPlannedIngestDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
-                            .plus(refreshRate, ChronoUnit.SECONDS);
-                    dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
-                    dsIngestionRepos.save(dsIngestion);
-                    break;
-                case FINISHED: // last ingest + refreshRate
-                case FINISHED_WITH_WARNINGS: // last ingest + refreshRate
-                    dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
-                                                                                              ChronoUnit.SECONDS));
-                    dsIngestionRepos.save(dsIngestion);
-                    break;
-                case STARTED: // Already in progress
-                case NEW: // dsIngestion just been created with a next planned date as now() ie launch as soon as possible
-                default:
-            }
-        }
-    }
-
-    /**
-     * Find a Datasource ready to be ingested and mark it at "CREATED" in a transaction
-     */
-    @Override
-    @MultitenantTransactional
-    public Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String pTenant) {
-        Optional<DatasourceIngestion> dsIngestionOpt = dsIngestionRepos
-                .findNextReady(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        if (dsIngestionOpt.isPresent()) {
-            DatasourceIngestion dsIngestion = dsIngestionOpt.get();
-            // Reinit old DatasourceIngestion properties
-            dsIngestion.setStackTrace(null);
-            dsIngestion.setSavedObjectsCount(0);
-            dsIngestion.setInErrorObjectsCount(0);
-            dsIngestion.setStatus(IngestionStatus.STARTED);
-            dsIngestionRepos.save(dsIngestion);
-        }
-        return dsIngestionOpt;
-    }
-
-    @Override
     public void setConsumeOnlyMode(boolean b) {
         consumeOnlyMode = b;
     }
