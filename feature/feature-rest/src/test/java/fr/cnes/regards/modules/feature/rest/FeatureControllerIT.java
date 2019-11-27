@@ -39,7 +39,6 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
-import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
@@ -185,7 +184,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -231,7 +230,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
         metadata.add(StorageMetadata.build("id"));
 
-        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -259,8 +258,10 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         lfd.add(fields.withPath("metadata.storages[].targetTypes",
                                 "List of data object types accepted by this storage location (when storing AIPs)"));
         lfd.add(fields.withPath("features[].entityType", "Entity Type"));
-        lfd.add(fields.withPath("features[].urn",
-                                "Unique feature identifer based on provider identifier with versionning"));
+        if (isUpdate) {
+            lfd.add(fields.withPath("features[].urn",
+                                    "Unique feature identifer based on provider identifier with versionning"));
+        }
         lfd.add(fields.withPath("metadata.session", "The session name"));
         lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
         lfd.add(fields.withPath("features[].model", "Model"));
