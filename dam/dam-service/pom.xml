@@ -78,10 +78,6 @@
 			<artifactId>opensearch-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.storage</groupId>
-			<artifactId>storage-client</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>notification-regards-starter</artifactId>
 		</dependency>

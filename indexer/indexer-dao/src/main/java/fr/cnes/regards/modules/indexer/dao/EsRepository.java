@@ -767,10 +767,12 @@ public class EsRepository implements IEsRepository {
                 } else {
                     if (document instanceof DataObject) {
                         DataObjectFeature docFeature = (((DataObject) document).getFeature());
-                        result.addSavedDoc(itemResponse.getId(), Optional.ofNullable(docFeature.getSession()),
+                        result.addSavedDoc(itemResponse.getId(), itemResponse.getResponse().getResult(),
+                                           Optional.ofNullable(docFeature.getSession()),
                                            Optional.ofNullable(docFeature.getSessionOwner()));
                     } else {
-                        result.addSavedDoc(itemResponse.getId(), Optional.empty(), Optional.empty());
+                        result.addSavedDoc(itemResponse.getId(), itemResponse.getResponse().getResult(),
+                                           Optional.empty(), Optional.empty());
                     }
                 }
             }

@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
+import org.elasticsearch.action.DocWriteResponse.Result;
+
 /**
  * Object permitting to know what IEsRepository.saveBulk() method has really done.
  * @author oroussel
@@ -62,11 +64,13 @@ public class BulkSaveResult {
      * @param session nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      * @param sessionOwner nullable, must not be null for document which are internal {@link fr.cnes.regards.modules.dam.domain.entities.DataObject}
      */
-    public void addSavedDoc(String docId, Optional<String> session, Optional<String> sessionOwner) {
+    public void addSavedDoc(String docId, Result docResultType, Optional<String> session,
+            Optional<String> sessionOwner) {
         // Add document to the current bulk save result
         savedDocIds.add(docId);
+        // Only notify sessions for newly created documents. Updated ones should not be notified
         // If session and sessionOwner are provided add it to the dispatched map by session owner too.
-        if (session.isPresent() && sessionOwner.isPresent()) {
+        if ((docResultType == Result.CREATED) && session.isPresent() && sessionOwner.isPresent()) {
             ConcurrentMap<String, Long> savedDocForSessionOwner = savedDocPerSessionOwner.get(sessionOwner.get());
             if (savedDocForSessionOwner == null) {
                 ConcurrentMap<String, Long> value = new ConcurrentHashMap<>();

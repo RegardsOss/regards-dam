@@ -18,13 +18,11 @@
  */
 package fr.cnes.regards.modules.dam.service.entities.plugins;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.service.entities.IStorageService;
-import fr.cnes.regards.modules.storage.client.IStorageClient;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -34,9 +32,6 @@ import fr.cnes.regards.modules.storage.client.IStorageClient;
         version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
 public class AipStoragePlugin implements IStorageService {
-
-    @Autowired
-    private IStorageClient storageClient;
 
     @Value("${zuul.prefix}")
     private String gatewayPrefix;
@@ -49,7 +44,6 @@ public class AipStoragePlugin implements IStorageService {
         throw new UnsupportedOperationException("Storage of AIP created by Datamanagement is not implemented yet ....");
     }
 
-    @SuppressWarnings("serial")
     @Override
     public <T extends AbstractEntity<?>> T updateAIP(T toUpdate) {
         throw new UnsupportedOperationException("Storage of AIP created by Datamanagement is not implemented yet ....");
