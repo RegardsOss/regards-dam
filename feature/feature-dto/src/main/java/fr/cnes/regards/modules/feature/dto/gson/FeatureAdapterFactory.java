@@ -87,7 +87,7 @@ public class FeatureAdapterFactory extends PolymorphicTypeAdapterFactory<Feature
 
         JsonObject entity = jsonElement.getAsJsonObject();
         JsonElement attEl = entity.get(PROPERTIES_FIELD_NAME);
-        if (attEl != null) {
+        if (attEl != null && !attEl.isJsonNull()) {
             if (attEl.isJsonObject()) {
                 entity.add(PROPERTIES_FIELD_NAME, restoreArray(attEl.getAsJsonObject()));
             } else {
