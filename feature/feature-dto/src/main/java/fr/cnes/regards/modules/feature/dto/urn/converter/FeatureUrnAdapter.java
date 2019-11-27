@@ -20,6 +20,9 @@ package fr.cnes.regards.modules.feature.dto.urn.converter;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -35,8 +38,11 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 @GsonTypeAdapter(adapted = FeatureUniformResourceName.class)
 public class FeatureUrnAdapter extends TypeAdapter<FeatureUniformResourceName> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUrnAdapter.class);
+
     @Override
     public FeatureUniformResourceName read(JsonReader reader) throws IOException {
+        LOGGER.trace("FeatureUrnAdapter with peek!");
         JsonToken token = reader.peek();
         if (JsonToken.NULL.equals(token)) {
             reader.nextNull(); // Consume
