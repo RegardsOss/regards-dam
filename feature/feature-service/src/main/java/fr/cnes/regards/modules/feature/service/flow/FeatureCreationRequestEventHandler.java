@@ -82,7 +82,7 @@ public class FeatureCreationRequestEventHandler
 
     @Override
     public int getBatchSize() {
-        return confProperties.getMaxBulkSize();
+        return confProperties.getBatchSize();
     }
 
     @Override

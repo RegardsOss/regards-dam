@@ -37,6 +37,12 @@ public class FeatureConfigurationProperties {
     private Integer maxBulkSize;
 
     /**
+     * Batch message size
+     */
+    @Value("${regards.feature.batch.size:3000}")
+    private Integer batchSize;
+
+    /**
      * Batch message reception in millisecond
      */
     @Value("${regards.feature.batch.receive.timeout:1000}")
@@ -71,6 +77,14 @@ public class FeatureConfigurationProperties {
 
     public void setMaxBulkSize(Integer maxBulkSize) {
         this.maxBulkSize = maxBulkSize;
+    }
+
+    public Integer getBatchSize() {
+        return batchSize;
+    }
+
+    public void setBatchSize(Integer batchSize) {
+        this.batchSize = batchSize;
     }
 
     public Long getRemoteRequestTimeout() {

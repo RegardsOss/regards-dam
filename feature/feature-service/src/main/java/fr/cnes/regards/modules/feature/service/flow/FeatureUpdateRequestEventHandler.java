@@ -48,7 +48,6 @@ import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperti
 public class FeatureUpdateRequestEventHandler
         implements IBatchHandler<FeatureUpdateRequestEvent>, ApplicationListener<ApplicationReadyEvent> {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureUpdateRequestEventHandler.class);
 
     @Autowired
@@ -84,7 +83,7 @@ public class FeatureUpdateRequestEventHandler
 
     @Override
     public int getBatchSize() {
-        return confProperties.getMaxBulkSize();
+        return confProperties.getBatchSize();
     }
 
     @Override
