@@ -39,7 +39,7 @@ public class FeatureConfigurationProperties {
     /**
      * Batch message size
      */
-    @Value("${regards.feature.batch.size:3000}")
+    @Value("${regards.feature.batch.size:1000}")
     private Integer batchSize;
 
     /**
