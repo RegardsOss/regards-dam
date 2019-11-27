@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapter;
@@ -36,6 +37,11 @@ public class FeatureUrnAdapter extends TypeAdapter<FeatureUniformResourceName> {
 
     @Override
     public FeatureUniformResourceName read(JsonReader reader) throws IOException {
+        JsonToken token = reader.peek();
+        if (JsonToken.NULL.equals(token)) {
+            reader.nextNull(); // Consume
+            return null;
+        }
         return FeatureUniformResourceName.fromString(reader.nextString());
     }
 
