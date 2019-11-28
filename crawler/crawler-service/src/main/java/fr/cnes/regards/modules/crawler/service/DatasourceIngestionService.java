@@ -145,8 +145,13 @@ public class DatasourceIngestionService {
     /**
      * Launch ingestion associated to the given {@link DatasourceIngestion}
      * @param dsIngestion
+     * @throws NotFinishedException
+     * @throws DataSourceException
+     * @throws ModuleException
+     * @throws InactiveDatasourceException
      */
-    public void runDataSourceIngestion(String dsIngestionId) {
+    public void runDataSourceIngestion(String dsIngestionId)
+            throws NotFinishedException, DataSourceException, InactiveDatasourceException, ModuleException {
         Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepos.findById(dsIngestionId);
         if (oDsIngestion.isPresent()) {
             DatasourceIngestion dsIngestion = oDsIngestion.get();
@@ -163,38 +168,60 @@ public class DatasourceIngestionService {
                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                 dsIngestion.setInErrorObjectsCount(summary.getInErrorObjectsCount());
                 dsIngestion.setLastIngestDate(summary.getDate());
-            } catch (InactiveDatasourceException ide) {
-                dsIngestion.setStatus(IngestionStatus.INACTIVE);
-                dsIngestion.setStackTrace(ide.getMessage());
-            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException | DataSourceException
-                    | ModuleException e) {
-                // Set Status to Error... (and status date)
-                dsIngestion.setStatus(IngestionStatus.ERROR);
-                // and log stack trace into database
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                String stackTrace = dsIngestion.getStackTrace() == null ? sw.toString()
-                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
-                dsIngestion.setStackTrace(stackTrace);
-            } catch (NotFinishedException e) {
-                dsIngestion.setStatus(IngestionStatus.NOT_FINISHED);
-                dsIngestion.setErrorPageNumber(e.getPageNumber());
-                // and log stack trace into database
-                StringWriter sw = new StringWriter();
-                e.getCause().printStackTrace(new PrintWriter(sw));
-                String stackTrace = dsIngestion.getStackTrace() == null ? sw.toString()
-                        : dsIngestion.getStackTrace() + "\n" + sw.toString();
-                dsIngestion.setStackTrace(stackTrace);
-                dsIngestion.setSavedObjectsCount(e.getSaveResult().getSavedDocsCount());
-                dsIngestion.setInErrorObjectsCount(e.getSaveResult().getInErrorDocsCount());
-
+                // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
+                dsIngestion.setNextPlannedIngestDate(null);
+                // Save ingestion status
+                sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException e) {
+                throw new DataSourceException(e);
             }
-            // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
-            dsIngestion.setNextPlannedIngestDate(null);
-            // Save ingestion status
-            sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
         } else {
             LOGGER.error("Datasource with id {} cannot be run as it does not exists", dsIngestionId);
+        }
+    }
+
+    public void setInactive(String datasourceId, String cause) {
+        Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepos.findById(datasourceId);
+        if (oDsIngestion.isPresent()) {
+            DatasourceIngestion dsIngestion = oDsIngestion.get();
+            dsIngestion.setStatus(IngestionStatus.INACTIVE);
+            dsIngestion.setStackTrace(cause);
+            dsIngestion.setNextPlannedIngestDate(null);
+            sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+        }
+    }
+
+    public void setError(String dsIngestionId, String cause) {
+        Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepos.findById(dsIngestionId);
+        if (oDsIngestion.isPresent()) {
+            DatasourceIngestion dsIngestion = oDsIngestion.get();
+            // Set Status to Error... (and status date)
+            dsIngestion.setStatus(IngestionStatus.ERROR);
+            // and log stack trace into database
+            String stackTrace = dsIngestion.getStackTrace() == null ? cause
+                    : dsIngestion.getStackTrace() + "\n" + cause;
+            dsIngestion.setStackTrace(stackTrace);
+            dsIngestion.setNextPlannedIngestDate(null);
+            sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+        }
+    }
+
+    public void setNotFinished(String dsIngestionId, NotFinishedException notFinishedException) {
+        Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepos.findById(dsIngestionId);
+        if (oDsIngestion.isPresent()) {
+            DatasourceIngestion dsIngestion = oDsIngestion.get();
+            dsIngestion.setStatus(IngestionStatus.NOT_FINISHED);
+            dsIngestion.setErrorPageNumber(notFinishedException.getPageNumber());
+            // and log stack trace into database
+            StringWriter sw = new StringWriter();
+            notFinishedException.getCause().printStackTrace(new PrintWriter(sw));
+            String stackTrace = dsIngestion.getStackTrace() == null ? sw.toString()
+                    : dsIngestion.getStackTrace() + "\n" + sw.toString();
+            dsIngestion.setStackTrace(stackTrace);
+            dsIngestion.setSavedObjectsCount(notFinishedException.getSaveResult().getSavedDocsCount());
+            dsIngestion.setInErrorObjectsCount(notFinishedException.getSaveResult().getInErrorDocsCount());
+            dsIngestion.setNextPlannedIngestDate(null);
+            sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
         }
     }
 

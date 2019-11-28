@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,11 +34,15 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
+import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 
@@ -137,8 +144,25 @@ public class IngesterService implements IHandler<PluginConfEvent> {
                         // Pick an available dsIngestion marking it as STARTED if present
                         Optional<String> dsIngestionOpt = dsIngestionService.pickAndStartDatasourceIngestion();
                         if (dsIngestionOpt.isPresent()) {
+                            String dsId = dsIngestionOpt.get();
                             atLeastOneIngestionDone = true;
-                            dsIngestionService.runDataSourceIngestion(dsIngestionOpt.get());
+                            try {
+                                dsIngestionService.runDataSourceIngestion(dsId);
+                            } catch (InactiveDatasourceException ide) {
+                                LOGGER.error(ide.getMessage(), ide);
+                                dsIngestionService.setInactive(dsId, ide.getMessage());
+                            } catch (NotFinishedException nfe) {
+                                LOGGER.error(nfe.getMessage(), nfe);
+                                dsIngestionService.setNotFinished(dsId, nfe);
+                            } catch (DataSourceException | ModuleException e) {
+                                LOGGER.error(e.getMessage(), e);
+                                try (StringWriter sw = new StringWriter()) {
+                                    e.printStackTrace(new PrintWriter(sw));
+                                    dsIngestionService.setError(dsId, sw.toString());
+                                } catch (IOException e1) {
+                                    LOGGER.error(e.getMessage(), e);
+                                }
+                            }
                         }
                     }
                     // At least one ingestion has to be done while looping through all tenants

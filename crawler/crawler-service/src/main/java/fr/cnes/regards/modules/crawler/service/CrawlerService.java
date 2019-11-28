@@ -140,8 +140,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, DatasourceIngestion dsi) throws ModuleException,
-            InterruptedException, ExecutionException, DataSourceException, NotFinishedException {
+    public IngestionResult ingest(PluginConfiguration pluginConf, DatasourceIngestion dsi)
+            throws ModuleException, InterruptedException, ExecutionException, DataSourceException, NotFinishedException,
+            InactiveDatasourceException {
         String tenant = runtimeTenantResolver.getTenant();
         OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
         // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
