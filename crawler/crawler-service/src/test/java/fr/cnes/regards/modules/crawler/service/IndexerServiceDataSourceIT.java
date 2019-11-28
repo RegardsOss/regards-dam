@@ -196,7 +196,7 @@ public class IndexerServiceDataSourceIT {
     private ISearchService searchService;
 
     @Autowired
-    private IIngesterService ingesterService;
+    private IngesterService ingesterService;
 
     @Autowired
     private ICrawlerAndIngesterService crawlerService;

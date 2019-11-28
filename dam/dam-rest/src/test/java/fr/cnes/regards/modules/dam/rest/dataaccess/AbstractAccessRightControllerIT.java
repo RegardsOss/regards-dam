@@ -44,7 +44,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityFilter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -84,7 +83,7 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsIT 
 
     protected final AccessLevel al = AccessLevel.FULL_ACCESS;
 
-    protected DataAccessRight dar;
+    protected DataAccessLevel dal;
 
     protected Dataset ds1;
 
@@ -163,7 +162,7 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsIT 
                 .thenReturn(new ResponseEntity<>(new Resource<>(projectUser), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
-        dar = new DataAccessRight(DataAccessLevel.NO_ACCESS);
+        dal = DataAccessLevel.NO_ACCESS;
         user = new User();
         user.setEmail(email);
 
@@ -182,7 +181,7 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsIT 
         ag1.addUser(user);
         ag1 = agRepo.save(ag1);
         ar1 = new AccessRight(qf, al, ds1, ag1);
-        ar1.setDataAccessRight(dar);
+        ar1.setDataAccessLevel(dal);
         ar1 = arRepo.save(ar1);
         ag2 = new AccessGroup(ag2Name);
         ag2 = agRepo.save(ag2);

@@ -38,7 +38,7 @@ public enum AccessLevel {
      */
     CUSTOM_ACCESS,
     /**
-     * full acces to the dataset(so the meta data of the dataset and the meta data of its data), the access to the
+     * full access to the dataset(so the meta data of the dataset and the meta data of its data), the access to the
      * physical data of the datum is constrained by the {@link DataAccessRight}
      */
     FULL_ACCESS

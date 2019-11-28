@@ -24,10 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.plugin.entities.AbstractDataObjectComputePlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.CountPlugin;
 import fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin;
@@ -123,8 +122,8 @@ public class DamComputationPluginService implements IComputationPluginService {
     private PluginConfiguration createPluginConfiguration(Attribute xmlAtt, Class<?> pluginClass,
             ParamPluginType xmlParamPluginType) throws ImportException {
 
-        PluginMetaData plgMetaData = PluginUtils.createPluginMetaData(pluginClass);
-        PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
+        PluginConfiguration compConf = new PluginConfiguration(xmlAtt.getComputation().getLabel(),
+                pluginClass.getAnnotation(Plugin.class).id());
         // Add plugin parameters (from attribute and associated fragment)
         Set<IPluginParam> parameters = IPluginParam.set();
         // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)

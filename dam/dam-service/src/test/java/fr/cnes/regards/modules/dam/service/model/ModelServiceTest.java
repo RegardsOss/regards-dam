@@ -41,6 +41,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -349,7 +350,14 @@ public class ModelServiceTest {
         Set<IPluginParam> parameters = IPluginParam.set(IPluginParam.build("parameterAttributeName", "paramName"),
                                                         IPluginParam.build("parameterAttributeFragmentName", ""));
 
-        PluginConfiguration sumComputeConf = PluginUtils.getPluginConfiguration(parameters, LongSumComputePlugin.class);
+        PluginConfiguration sumComputeConf = new PluginConfiguration("",
+                                                                     parameters,
+                                                                     LongSumComputePlugin.class
+                                                                             .getAnnotation(Plugin.class).id());
+
+        // Because of mockito, lets get the plugin metadata in place here
+        sumComputeConf.setMetaData(PluginUtils.getPluginMetadata(LongSumComputePlugin.class
+                                                                         .getAnnotation(Plugin.class).id()));
 
         modAtt.setComputationConf(sumComputeConf);
         modelAttrAssocs.add(modAtt);

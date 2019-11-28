@@ -30,6 +30,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
@@ -42,12 +43,12 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDBConnectionPlugi
 @MultitenantTransactional
 public class DBConnectionService implements IDBConnectionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionService.class);
+
     /**
      * Attribute plugin service
      */
     private final IPluginService pluginService;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionService.class);
 
     /**
      * The constructor with an instance of the {@link PluginService}
@@ -65,8 +66,6 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public PluginConfiguration createDBConnection(PluginConfiguration dbConnection) throws ModuleException {
-        dbConnection.setMetaData(pluginService.checkPluginClassName(IDBConnectionPlugin.class,
-                                                                    dbConnection.getPluginClassName()));
         return pluginService.savePluginConfiguration(dbConnection);
     }
 

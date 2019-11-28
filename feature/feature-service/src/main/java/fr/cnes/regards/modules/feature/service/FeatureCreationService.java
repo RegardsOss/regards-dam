@@ -76,9 +76,9 @@ import fr.cnes.regards.modules.feature.service.FeatureMetrics.FeatureCreationSta
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.model.service.validation.ValidationMode;
-import fr.cnes.regards.modules.storagelight.client.IStorageClient;
-import fr.cnes.regards.modules.storagelight.domain.dto.request.FileReferenceRequestDTO;
-import fr.cnes.regards.modules.storagelight.domain.dto.request.FileStorageRequestDTO;
+import fr.cnes.regards.modules.storage.client.IStorageClient;
+import fr.cnes.regards.modules.storage.domain.dto.request.FileReferenceRequestDTO;
+import fr.cnes.regards.modules.storage.domain.dto.request.FileStorageRequestDTO;
 
 /**
  * Feature service management
@@ -284,7 +284,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Update requests with feature setted for each of them + publish files to storage
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithFiles = requests.stream()
-                .filter(fcr -> fcr.getFeature().getFiles() != null && !fcr.getFeature().getFiles().isEmpty())
+                .filter(fcr -> (fcr.getFeature().getFiles() != null) && !fcr.getFeature().getFiles().isEmpty())
                 .map(fcr -> publishFiles(fcr)).collect(Collectors.toList());
         this.featureCreationRequestRepo.saveAll(requestsWithFiles);
         LOGGER.trace("------------->>> {} creation requests with files updated in {} ms", requestsWithFiles.size(),
@@ -294,7 +294,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         subProcessStart = System.currentTimeMillis();
         List<FeatureCreationRequest> requestsWithoutFiles = new ArrayList<>();
         for (FeatureCreationRequest request : requests) {
-            if (request.getFeature().getFiles() == null || request.getFeature().getFiles().isEmpty()) {
+            if ((request.getFeature().getFiles() == null) || request.getFeature().getFiles().isEmpty()) {
                 // Register request
                 requestsWithoutFiles.add(request);
                 // Publish successful request
