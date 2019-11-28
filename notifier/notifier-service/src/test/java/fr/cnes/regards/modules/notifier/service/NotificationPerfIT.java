@@ -73,9 +73,9 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
     private static final int RECIPIENTS_PER_RULE = 10;
 
-    private static final int FEATURE_EVENT_TO_RECEIVE = 10_000;
+    private static final int FEATURE_EVENT_TO_RECEIVE = 10000;
 
-    private static final int FEATURE_EVENT_BULK = 1_000;
+    private static final int FEATURE_EVENT_BULK = 1000;
 
     @Autowired
     private ISubscriber subscriber;
