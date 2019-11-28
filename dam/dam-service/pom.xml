@@ -85,6 +85,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>geojson-starter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>microservice-logger</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

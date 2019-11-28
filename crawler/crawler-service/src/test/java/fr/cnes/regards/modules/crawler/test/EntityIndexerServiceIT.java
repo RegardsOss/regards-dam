@@ -60,7 +60,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessRight;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityFilter;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
@@ -279,7 +278,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
 
         AccessRight ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.CUSTOM_ACCESS,
                 dataset, group1);
-        ar.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar.setDataAccessLevel(DataAccessLevel.INHERITED_ACCESS);
         ar.setDataAccessPlugin(newPluginConf);
         ar = rightsService.createAccessRight(ar);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
@@ -316,7 +315,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // -------------------------------------------------------------------------------
 
         ar = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group1);
-        ar.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar.setDataAccessLevel(DataAccessLevel.INHERITED_ACCESS);
         ar = rightsService.createAccessRight(ar);
         // All data should be only in group1
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
@@ -327,7 +326,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // 4. Create a second accessRight without filter and check that all dataObjects are associated to the GROUP1 and GROUP2
         // -------------------------------------------------------------------------------
         ar2 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset, group2);
-        ar2.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar2.setDataAccessLevel(DataAccessLevel.INHERITED_ACCESS);
         rightsService.createAccessRight(ar2);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         // All data should be only in group1 and group2
@@ -351,9 +350,8 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         // -------------------------------------------------------------------------------
         ar3 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.CUSTOM_ACCESS, dataset,
                 group3);
-        DataAccessRight dataright = new DataAccessRight(DataAccessLevel.INHERITED_ACCESS);
         ar3.setDataAccessPlugin(dataAccessPlugin);
-        ar3.setDataAccessRight(dataright);
+        ar3.setDataAccessLevel(DataAccessLevel.INHERITED_ACCESS);
         rightsService.createAccessRight(ar3);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
         // All data should be in group2 and only one (DO1) in group3
@@ -403,7 +401,7 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         indexerService.updateEntityIntoEs(TENANT, dataset2.getIpId(), OffsetDateTime.now(), false);
         ar4 = new AccessRight(new QualityFilter(0, 0, QualityLevel.ACCEPTED), AccessLevel.FULL_ACCESS, dataset2,
                 group4);
-        ar4.setDataAccessRight(new DataAccessRight(DataAccessLevel.INHERITED_ACCESS));
+        ar4.setDataAccessLevel(DataAccessLevel.INHERITED_ACCESS);
         ar4 = rightsService.createAccessRight(ar4);
         indexerService.updateEntityIntoEs(TENANT, dataset2.getIpId(), OffsetDateTime.now(), false);
         results = searchService.search(searchKey, 100, ICriterion.contains("groups", "group4"));

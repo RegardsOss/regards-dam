@@ -236,7 +236,7 @@ public final class XmlImportHelper {
             throws ImportException {
         if (pluginClass != null) {
             PluginMetaData plgMetaData = PluginUtils.createPluginMetaData(pluginClass);
-            PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
+            PluginConfiguration compConf = new PluginConfiguration(xmlAtt.getComputation().getLabel(), plgMetaData.getPluginId());
             // Add plugin parameters (from attribute and associated fragment)
             Set<IPluginParam> parameters = IPluginParam.set();
             // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)
