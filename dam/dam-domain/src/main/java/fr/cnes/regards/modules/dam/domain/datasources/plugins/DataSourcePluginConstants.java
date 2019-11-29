@@ -80,7 +80,7 @@ public final class DataSourcePluginConstants {
 
     public static final String SUBSETTING_TAGS = "subsettingTags";
 
-    public static final String SUBSETTING_CATEGORIES = "cat";
+    public static final String SUBSETTING_CATEGORIES = "subsettingCategories";
 
     /**
      * The table parameter name
