@@ -136,8 +136,10 @@ public interface IEntityIndexerService {
      * @param now          update date (usually now)
      * @param objects      objects to save
      * @return bulk save result
+     * @throws ModuleException
      */
-    BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
+    BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects)
+            throws ModuleException;
 
     /**
      * Merge given data objects into Elasticsearch
@@ -147,8 +149,10 @@ public interface IEntityIndexerService {
      * @param now          update date (usually now)
      * @param objects      objects to save
      * @return bulk save result
+     * @throws ModuleException
      */
-    BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
+    BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects)
+            throws ModuleException;
 
     /**
      * Delete given data object from Elasticsearch
