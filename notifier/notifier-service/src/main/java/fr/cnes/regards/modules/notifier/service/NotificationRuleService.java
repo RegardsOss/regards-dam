@@ -60,7 +60,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         for (Rule rule : getRules()) {
             try {
                 // check if the  feature match with the rule
-                if (((IRuleMatcher) this.pluginService.getPlugin(rule.getPluginCondConfiguration().getBusinessId()))
+                if (((IRuleMatcher) this.pluginService.getPlugin(rule.getRulePlugin().getBusinessId()))
                         .match(toHandle)) {
 
                     for (Recipient recipient : rule.getRecipients()) {
@@ -73,7 +73,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
                     }
                 }
             } catch (ModuleException | NotAvailablePluginConfigurationException e) {
-                LOGGER.error("Error while get plugin with id {}", rule.getPluginCondConfiguration().getId(), e);
+                LOGGER.error("Error while get plugin with id {}", rule.getRulePlugin().getId(), e);
                 throw e;
             }
         }
@@ -91,7 +91,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         try {
             // check that all send method of recipiens return true
             return ((IRecipientSender) this.pluginService
-                    .getPlugin(recipient.getPluginCondConfiguration().getBusinessId())).send(toHandle, action);
+                    .getPlugin(recipient.getRecipientPlugin().getBusinessId())).send(toHandle, action);
         } catch (ModuleException | NotAvailablePluginConfigurationException e) {
             LOGGER.error("Error while sending notification to receiver ", e);
             return false;

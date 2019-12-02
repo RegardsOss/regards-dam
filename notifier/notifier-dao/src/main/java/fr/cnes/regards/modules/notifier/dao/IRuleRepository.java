@@ -39,6 +39,6 @@ public interface IRuleRepository extends JpaRepository<Rule, Long> {
      * @param type {@link NotificationType}
      * @return a set of {@link Rule}
      */
-    @EntityGraph(attributePaths = { "pluginCondConfiguration", "recipients" })
+    @EntityGraph(attributePaths = { "rulePlugin", "recipients" })
     public Set<Rule> findByEnableTrueAndType(NotificationType type);
 }
