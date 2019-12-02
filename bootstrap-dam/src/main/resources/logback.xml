@@ -18,11 +18,11 @@
  along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
 -->
 <configuration>
+        <property name="APP_NAME"
+              value="rs-dam"/>
         <include resource="fr/cnes/regards/framework/logbackappender/console_appender.xml" />
         <include resource="fr/cnes/regards/framework/logbackappender/syslog_appender.xml" />
         <include resource="fr/cnes/regards/framework/logbackappender/file_appender.xml" />
-        <property name="APP_NAME"
-              value="rs-dam"/>
         <root level="INFO">
                 <appender-ref ref="STDOUT"/>
         </root>
