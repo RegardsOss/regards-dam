@@ -118,10 +118,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{plgBusinessId}")
-    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable(name = "plgBusinessId") Long plgBusinessId,
+    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable(name = "plgBusinessId") String plgBusinessId,
             @Valid @RequestBody PluginConfiguration dbConnection) throws ModuleException {
-        if (!plgBusinessId.equals(dbConnection.getId())) {
-            throw new EntityInconsistentIdentifierException(plgBusinessId, dbConnection.getId(),
+        if (!plgBusinessId.equals(dbConnection.getBusinessId())) {
+            throw new EntityInconsistentIdentifierException(plgBusinessId, dbConnection.getBusinessId(),
                     PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dbConnectionService.updateDBConnection(dbConnection)));
