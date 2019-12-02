@@ -51,10 +51,6 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 @Component
 public class DamConfigurationManager extends AbstractModuleManager<Void> {
 
-    public static final String PLUGIN_CONFIGURATION_ALREADY_EXISTS = "A plugin configuration already exists with same label, skipping import of %s.";
-
-    public static final String VALIDATION_ISSUES = "Skipping import of %s for these reasons: %s";
-
     @Autowired
     private IPluginService pluginService;
 
