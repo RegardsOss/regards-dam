@@ -33,10 +33,10 @@ import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfi
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
-import fr.cnes.regards.modules.notification.domain.plugin.IRuleMatcher;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
+import fr.cnes.regards.modules.notifier.plugin.IRecipientNotifier;
+import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 import fr.cnes.regards.modules.notifier.service.cache.AbstractCacheableRule;
 
 /**
@@ -90,7 +90,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     private boolean notifyRecipient(Feature toHandle, Recipient recipient, FeatureManagementAction action) {
         try {
             // check that all send method of recipiens return true
-            return ((IRecipientSender) this.pluginService
+            return ((IRecipientNotifier) this.pluginService
                     .getPlugin(recipient.getRecipientPlugin().getBusinessId())).send(toHandle, action);
         } catch (ModuleException | NotAvailablePluginConfigurationException e) {
             LOGGER.error("Error while sending notification to receiver ", e);

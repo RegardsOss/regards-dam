@@ -8,5 +8,3 @@ create sequence seq_rule start 1 increment 50;
 create sequence seq_recipient start 1 increment 50;
 
 -- tables for notification errors
---create table feature_error (id int8 not null, feature jsonb not null, primary key (id);
---create table recipient_error (id int8 not null, );

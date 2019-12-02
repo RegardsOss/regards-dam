@@ -28,13 +28,13 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
+import fr.cnes.regards.modules.notifier.plugin.IRecipientNotifier;
 
 /**
  * @author Marc SORDI
  *
  */
-public abstract class AbstractRecipientSender<E extends ISubscribable> implements IRecipientSender, IHandler<E> {
+public abstract class AbstractRecipientSender<E extends ISubscribable> implements IRecipientNotifier, IHandler<E> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientSender.class);
 

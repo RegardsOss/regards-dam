@@ -24,7 +24,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
+import fr.cnes.regards.modules.notifier.plugin.IRecipientNotifier;
 import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
 
 /**
@@ -34,7 +34,7 @@ import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
 @Plugin(author = "REGARDS Team", description = "Default recipient sender for feature", id = "DefaultRecipientSender",
         version = "1.0.0", contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES",
         url = "https://regardsoss.github.io/")
-public class DefaultRecipientSender implements IRecipientSender {
+public class DefaultRecipientSender implements IRecipientNotifier {
 
     @Autowired
     private IPublisher publisher;

@@ -25,7 +25,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
-import fr.cnes.regards.modules.notification.domain.plugin.IRuleMatcher;
+import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 
 /**
  * @author kevin
