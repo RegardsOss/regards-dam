@@ -48,7 +48,7 @@ public class RuleService implements IRuleService {
     public Page<RuleDto> getRules(Pageable page) {
         Page<Rule> rules = ruleRepo.findAll(page);
         return new PageImpl<>(
-                rules.get().map(rule -> RuleDto.build(rule.getId(), rule.getPluginCondConfiguration(), rule.isEnable(),
+                rules.get().map(rule -> RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(),
                                                       rule.getType()))
                         .collect(Collectors.toList()));
     }
@@ -57,7 +57,7 @@ public class RuleService implements IRuleService {
     public RuleDto createOrUpdateRule(@Valid RuleDto toCreate) {
         Rule toSave = Rule.build(toCreate.getId(), toCreate.getPluginConf(), toCreate.isEnabled(), toCreate.getType());
         Rule created = this.ruleRepo.save(toSave);
-        return RuleDto.build(created.getId(), created.getPluginCondConfiguration(), toCreate.isEnabled(),
+        return RuleDto.build(created.getId(), created.getRulePlugin(), toCreate.isEnabled(),
                              toCreate.getType());
     }
 

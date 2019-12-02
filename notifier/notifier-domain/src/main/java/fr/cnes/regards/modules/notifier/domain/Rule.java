@@ -48,8 +48,7 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
 @Entity
 @Table(name = "t_rule")
 @NamedEntityGraphs({ @NamedEntityGraph(name = "Rule.recipients", attributeNodes = @NamedAttributeNode("recipients")),
-        @NamedEntityGraph(name = "Rule.pluginCondConfiguration",
-                attributeNodes = @NamedAttributeNode("pluginCondConfiguration")) })
+        @NamedEntityGraph(name = "Rule.rulePlugin", attributeNodes = @NamedAttributeNode("rulePlugin")) })
 public class Rule {
 
     @Id
@@ -63,10 +62,9 @@ public class Rule {
     private NotificationType type;
 
     @ManyToOne
-    @NotNull(message = "Plugin configuration is required")
-    @JoinColumn(name = "plugin_configuration_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_rule_plugin_configuration_id"))
-    private PluginConfiguration pluginCondConfiguration;
+    @NotNull(message = "Rule plugin is required")
+    @JoinColumn(name = "rule_plugin_id", nullable = false, foreignKey = @ForeignKey(name = "fk_rule_plugin_id"))
+    private PluginConfiguration rulePlugin;
 
     @Column(name = "enable", nullable = false)
     private boolean enable = true;
@@ -90,12 +88,12 @@ public class Rule {
         this.type = type;
     }
 
-    public PluginConfiguration getPluginCondConfiguration() {
-        return pluginCondConfiguration;
+    public PluginConfiguration getRulePlugin() {
+        return rulePlugin;
     }
 
-    public void setPluginCondConfiguration(PluginConfiguration pluginCondConfiguration) {
-        this.pluginCondConfiguration = pluginCondConfiguration;
+    public void setRulePlugin(PluginConfiguration rulePlugin) {
+        this.rulePlugin = rulePlugin;
     }
 
     public boolean isEnable() {
@@ -116,7 +114,7 @@ public class Rule {
 
     public static Rule build(Long id, PluginConfiguration pluginConf, boolean enabled, NotificationType type) {
         Rule rule = new Rule();
-        rule.setPluginCondConfiguration(pluginConf);
+        rule.setRulePlugin(pluginConf);
         rule.setType(type);
         rule.setEnable(enabled);
         rule.setId(id);
