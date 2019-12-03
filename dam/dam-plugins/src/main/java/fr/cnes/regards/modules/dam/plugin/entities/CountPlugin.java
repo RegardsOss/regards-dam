@@ -32,6 +32,7 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.dam.domain.models.PluginComputationIdentifierEnum;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
@@ -44,7 +45,8 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "CountPlugin", description = "allows to compute the number of data of a Dataset", author = "REGARDS Team",
+@Plugin(id = PluginComputationIdentifierEnum.COUNT_VALUE,
+        description = "allows to compute the number of data of a Dataset", author = "REGARDS Team",
         contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI", url = "https://github.com/RegardsOss",
         version = "1.0.0")
 @ComputationPlugin(supportedType = AttributeType.LONG)

@@ -237,9 +237,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                                               page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(mergeDataObjectCallable(tenant, now, datasourceId, dsiId, otherList));
@@ -293,13 +294,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, list));
 
                 while (page.hasNext()) {
-                    sendMessage(String.format("  Finding at most %d records from datasource...",
-                                              IEsRepository.BULK_SIZE),
+                    sendMessage(String.format("  Finding %d records from datasource...",
+                                              page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, otherList));
