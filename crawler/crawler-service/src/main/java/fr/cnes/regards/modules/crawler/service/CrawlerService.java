@@ -195,7 +195,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
             if (!datasetsToUpdate.isEmpty()) {
                 sendMessage("Start updating datasets associated to datasource...", dsiId);
-                entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+                try {
+                    entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+                } catch (ModuleException e) {
+                    sendMessage(String.format("Error updating datasets associated to datasource. Cause : %s.",
+                                              e.getMessage()),
+                                dsiId);
+                }
                 sendMessage("...End updating datasets.", dsiId);
             }
 
