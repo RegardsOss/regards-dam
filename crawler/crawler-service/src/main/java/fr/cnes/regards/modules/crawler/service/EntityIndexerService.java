@@ -734,6 +734,17 @@ public class EntityIndexerService implements IEntityIndexerService {
         notifClient.notify(message, title, level, DefaultRole.PROJECT_ADMIN);
     }
 
+    @Override
+    public void deleteIndexNRecreateEntities(String tenant) throws ModuleException {
+        //1. Delete existing index
+        deleteIndex(tenant);
+        sessionNotifier.notifyIndexDeletion();
+        //2. Then re-create all entities
+        updateAllDatasets(tenant);
+        updateAllDocuments(tenant);
+        updateAllCollections(tenant);
+    }
+
     /**
      * Validate given DataObject. If no error, add it to given set else log validation errors
      */
@@ -897,7 +908,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     public void updateAllDatasets(String tenant) throws ModuleException {
-        updateDatasets(tenant, datasetService.findAll(), null, true, null);
+        self.updateDatasets(tenant, datasetService.findAll(), null, true, null);
     }
 
     @Override
