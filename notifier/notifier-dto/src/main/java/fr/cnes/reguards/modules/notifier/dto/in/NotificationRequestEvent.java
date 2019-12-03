@@ -16,24 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dto.event.out;
+package fr.cnes.reguards.modules.notifier.dto.in;
+
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 
 /**
+ * An event contain a JSON element plus an action
  * @author Kevin Marchois
  *
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-public class FeatureEvent implements ISubscribable {
+public class NotificationRequestEvent implements ISubscribable {
 
+    @NotNull(message = "JSON element is required")
     private Feature feature;
 
+    @NotNull(message = "Notification action is required")
     private FeatureManagementAction action;
 
     public Feature getFeature() {
@@ -52,8 +57,8 @@ public class FeatureEvent implements ISubscribable {
         this.action = action;
     }
 
-    public static FeatureEvent build(Feature feature, FeatureManagementAction action) {
-        FeatureEvent toCreate = new FeatureEvent();
+    public static NotificationRequestEvent build(Feature feature, FeatureManagementAction action) {
+        NotificationRequestEvent toCreate = new NotificationRequestEvent();
         toCreate.setAction(action);
         toCreate.setFeature(feature);
         return toCreate;

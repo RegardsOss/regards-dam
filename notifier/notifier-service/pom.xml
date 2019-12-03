@@ -34,10 +34,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.feature</groupId>
-			<artifactId>feature-dto</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
 		</dependency>
@@ -56,6 +52,10 @@
         <dependency>
             <groupId>fr.cnes.regards.modules.model</groupId>
             <artifactId>model-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework.modules.jobs</groupId>
+            <artifactId>jobs-service</artifactId>
         </dependency>
 		<!-- Test -->
 		<dependency>

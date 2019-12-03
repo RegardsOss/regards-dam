@@ -38,7 +38,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginPa
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
+import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
@@ -115,20 +115,20 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
         initPlugins(false);
 
-        List<FeatureEvent> events = new ArrayList<>();
+        List<NotificationRequest> events = new ArrayList<>();
         int bulk = 0;
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             bulk++;
-            events.add(FeatureEvent.build(modifiedFeature, FeatureManagementAction.CREATE));
+            events.add(NotificationRequest.build(modifiedFeature, FeatureManagementAction.CREATE));
             if (bulk == FEATURE_EVENT_BULK) {
                 bulk = 0;
-                assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+                assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE, this.notificationService.processRequest(events));
                 events.clear();
             }
         }
 
         if (bulk > 0) {
-            assertEquals(bulk * RECIPIENTS_PER_RULE, this.notificationService.handleFeatures(events));
+            assertEquals(bulk * RECIPIENTS_PER_RULE, this.notificationService.processRequest(events));
         }
     }
 
@@ -186,12 +186,12 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
         initPlugins(true);
 
-        List<FeatureEvent> events = new ArrayList<>();
+        List<NotificationRequest> events = new ArrayList<>();
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
-            events.add(FeatureEvent.build(modifiedFeature, FeatureManagementAction.CREATE));
+            events.add(NotificationRequest.build(modifiedFeature, FeatureManagementAction.CREATE));
         }
 
         assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1),
-                     this.notificationService.handleFeatures(events));
+                     this.notificationService.processRequest(events));
     }
 }

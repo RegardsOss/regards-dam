@@ -25,9 +25,10 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
+import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationRequestEvent;
 
 /**
  * Feature notification service interface
@@ -50,11 +51,22 @@ public interface INotificationRuleService {
             throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException;
 
     /**
-     * Handle a list of {@link FeatureEvent} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
+     * Handle a list of {@link NotificationRequest} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
      * Check if this event is compliant with a {@link Rule} and in that case notify all {@link Recipient} associated
      * with this {@link Rule}
      * @param toHandles event to handle
      * @return number of notification sended
      */
-    public int handleFeatures(List<FeatureEvent> toHandles);
+    public int processRequest(List<NotificationRequest> toHandles);
+
+    /**
+     * Register {@link NotificationRequestEvent} to schedule notifications
+     */
+    public void registerNotifications(List<NotificationRequestEvent> events);
+
+    /**
+     * Schedule a job to process a batch of {@link NotificationRequest}<br/>
+     * @return number of scheduled notification (0 if no request was scheduled)
+     */
+    int scheduleRequests();
 }
