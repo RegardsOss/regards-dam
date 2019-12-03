@@ -319,7 +319,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
         } catch (ExecutionException e) { // ES indexation has failed
             // Failed at first indexation => "classical" ERROR
-            int errorPageNumber = page.previousPageable().getPageNumber();
+            int errorPageNumber;
+            if (page.hasPrevious()) {
+                errorPageNumber = page.previousPageable().getPageNumber();
+            } else {
+                errorPageNumber = 0;
+            }
             if (errorPageNumber == pageNumber) {
                 throw e;
             }

@@ -729,6 +729,8 @@ public class EsRepository implements IEsRepository {
     public <T extends IIndexable> BulkSaveResult saveBulk(String inIndex, BulkSaveResult bulkSaveResult,
             StringBuilder errorBuffer, @SuppressWarnings("unchecked") T... documents) {
         try {
+            long start = System.currentTimeMillis();
+            LOGGER.info("[TEST SBA] Start save bulk.");
             // Use existing one or create
             BulkSaveResult result = bulkSaveResult == null ? new BulkSaveResult() : bulkSaveResult;
             if (documents.length == 0) {
@@ -749,6 +751,9 @@ public class EsRepository implements IEsRepository {
             }
             // Bulk save
             BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            LOGGER.info("[TEST SBA] Bulk save done in {}ms.", System.currentTimeMillis() - start);
+            start = System.currentTimeMillis();
+            LOGGER.info("[TEST SBA] dispatch save bulk responses.");
             // Parse response to creata a more exploitable object
             for (BulkItemResponse itemResponse : response.getItems()) {
                 T document = map.get(itemResponse.getId());
@@ -790,8 +795,11 @@ public class EsRepository implements IEsRepository {
                     }
                 }
             }
+            LOGGER.info("[TEST SBA] Bulk responses dispatched in {}ms.", System.currentTimeMillis() - start);
             // To make just saved documents searchable, the associated index must be refreshed
+            start = System.currentTimeMillis();
             this.refresh(index);
+            LOGGER.info("[TEST SBA] Bulk index refreshed in {}ms.", System.currentTimeMillis() - start);
             return result;
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
