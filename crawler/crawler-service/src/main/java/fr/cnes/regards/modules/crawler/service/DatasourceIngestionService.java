@@ -140,7 +140,8 @@ public class DatasourceIngestionService {
 
     /**
      * Launch ingestion associated to the given {@link DatasourceIngestion}
-     * @param dsIngestion
+     * @param dsIngestionId
+     * @param summary
      * @throws NotFinishedException
      * @throws DataSourceException
      * @throws ModuleException
