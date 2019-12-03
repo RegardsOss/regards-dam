@@ -309,12 +309,12 @@ public class IndexerServiceDataSourceIT {
         dsi.setLabel("Label");
         dsIngestionRepos.save(dsi);
 
-        IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf, dsi);
+        IngestionResult summary1 = crawlerService.ingest(dsi.getId()).get();
         System.out.println("Insertion : " + (System.currentTimeMillis() - start) + " ms");
 
         // Update
         start = System.currentTimeMillis();
-        IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf, dsi);
+        IngestionResult summary2 = crawlerService.ingest(dsi.getId()).get();
         System.out.println("Update : " + (System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(summary1.getSavedObjectsCount(), summary2.getSavedObjectsCount());
 

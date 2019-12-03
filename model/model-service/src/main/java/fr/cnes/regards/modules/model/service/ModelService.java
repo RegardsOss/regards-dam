@@ -460,26 +460,16 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         return newModel;
     }
 
-    //    private void eventualyCreateComputationConfigurations(List<PluginConfiguration> plgConfigurations)
-    //            throws ModuleException {
-    //        for (PluginConfiguration plgConf : plgConfigurations) {
-    //            eventualyCreateComputationConfiguration(plgConf);
-    //        }
-    //    }
-
     private PluginConfiguration eventualyCreateComputationConfiguration(PluginConfiguration plgConf)
             throws ModuleException {
         // If plugin configuration already exists
-        if (pluginService.existsByLabel(plgConf.getLabel())) {
+        if (pluginService.exists(plgConf.getBusinessId())) {
             // New one must be consistent with existing one
-            PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
+            PluginConfiguration currentPlgConf = pluginService.getPluginConfiguration(plgConf.getBusinessId());
             // Lets check that we are talking about same plugin implementation
             if (!Objects.equals(plgConf, currentPlgConf)) {
-                String msg = String.format(
-                                           "Compute plugin with label %s is inconsistent with existing one: "
-                                                   + "existing plugin configuration points to %s plugin implementation "
-                                                   + "while importing one points to %s plugin implementation.",
-                                           plgConf.getLabel(), currentPlgConf.getPluginId(), plgConf.getPluginId());
+                String msg = String.format("Computation plugin %s with businessId %s is inconsistent with existing one",
+                                           plgConf.getLabel(), plgConf.getBusinessId());
                 LOGGER.error(msg);
                 throw new ImportException(msg);
             }
@@ -489,17 +479,19 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 // Plugin parameter found
                 if (curValue != null) {
                     if (!Objects.equals(param.getValue(), curValue)) {
-                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one: "
-                                + "plugin parameter %s with value %s differs from existing value (%s)",
-                                                   plgConf.getLabel(), param.getName(), curValue, param.getValue());
+                        String msg = String
+                                .format("Computation plugin %s whith businessId %s is inconsistent with existing one: "
+                                        + "plugin parameter %s with value %s differs from existing value (%s)",
+                                        plgConf.getLabel(), plgConf.getBusinessId(), param.getName(), curValue,
+                                        param.getValue());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }
                 } else { // Plugin parameter not found
-                    String msg = String.format(
-                                               "Compute plugin with label %s is inconsistent with existing one: "
-                                                       + "no plugin parameter %s found",
-                                               plgConf.getLabel(), param.getName());
+                    String msg = String
+                            .format("Computation plugin  %s with businessId %s is inconsistent with existing one: "
+                                    + "no plugin parameter %s found", plgConf.getLabel(), plgConf.getBusinessId(),
+                                    param.getName());
                     LOGGER.error(msg);
                     throw new ImportException(msg);
                 }

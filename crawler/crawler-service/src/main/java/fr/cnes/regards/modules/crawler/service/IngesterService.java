@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
@@ -80,6 +82,9 @@ public class IngesterService implements IHandler<PluginConfEvent> {
 
     @Autowired
     private DatasourceIngestionService dsIngestionService;
+
+    @Autowired
+    private IDatasourceIngesterService datasourceIngester;
 
     /**
      * Boolean indicating whether or not crawler service is in "consume only" mode (to be used by tests only)
@@ -147,14 +152,18 @@ public class IngesterService implements IHandler<PluginConfEvent> {
                             String dsId = dsIngestionOpt.get();
                             atLeastOneIngestionDone = true;
                             try {
-                                dsIngestionService.runDataSourceIngestion(dsId);
+                                Optional<IngestionResult> summary = datasourceIngester.ingest(dsId);
+                                if (summary.isPresent()) {
+                                    dsIngestionService.updateIngesterResult(dsId, summary.get());
+                                }
                             } catch (InactiveDatasourceException ide) {
                                 LOGGER.error(ide.getMessage(), ide);
                                 dsIngestionService.setInactive(dsId, ide.getMessage());
                             } catch (NotFinishedException nfe) {
                                 LOGGER.error(nfe.getMessage(), nfe);
                                 dsIngestionService.setNotFinished(dsId, nfe);
-                            } catch (DataSourceException | ModuleException e) {
+                            } catch (ExecutionException | InterruptedException | DataSourceException
+                                    | ModuleException e) {
                                 LOGGER.error(e.getMessage(), e);
                                 try (StringWriter sw = new StringWriter()) {
                                     e.printStackTrace(new PrintWriter(sw));

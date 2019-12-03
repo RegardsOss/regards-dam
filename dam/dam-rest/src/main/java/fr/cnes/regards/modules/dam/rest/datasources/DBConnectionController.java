@@ -101,25 +101,25 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @throws ModuleException if plugin configuration cannot be retrieved
      */
     @ResourceAccess(description = "Get a plugin configuration for a plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}")
-    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable String plgBusinessId)
+    @RequestMapping(method = RequestMethod.GET, value = "/{plgBusinessId}")
+    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable(name = "plgBusinessId") String plgBusinessId)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dbConnectionService.getDBConnection(plgBusinessId)));
     }
 
     /**
      * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
-     * @param connectionId a {@link PluginConfiguration} identifier
+     * @param plgBusinessId a {@link PluginConfiguration} identifier
      * @param dbConnection the {@link PluginConfiguration} to update
      * @return updated {@link PluginConfiguration}
      * @throws ModuleException if plugin configuration cannot be updated
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{connectionId}")
-    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable Long connectionId,
+    @RequestMapping(method = RequestMethod.PUT, value = "/{plgBusinessId}")
+    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable(name = "plgBusinessId") String plgBusinessId,
             @Valid @RequestBody PluginConfiguration dbConnection) throws ModuleException {
-        if (!connectionId.equals(dbConnection.getId())) {
-            throw new EntityInconsistentIdentifierException(connectionId, dbConnection.getId(),
+        if (!plgBusinessId.equals(dbConnection.getBusinessId())) {
+            throw new EntityInconsistentIdentifierException(plgBusinessId, dbConnection.getBusinessId(),
                     PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dbConnectionService.updateDBConnection(dbConnection)));
@@ -132,8 +132,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @throws ModuleException if plugin configuration cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{connectionId}")
-    public ResponseEntity<Void> deleteDBConnection(@PathVariable String plgBusinessId) throws ModuleException {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{plgBusinessId}")
+    public ResponseEntity<Void> deleteDBConnection(@PathVariable(name = "plgBusinessId") String plgBusinessId) throws ModuleException {
         dbConnectionService.deleteDBConnection(plgBusinessId);
         return ResponseEntity.noContent().build();
     }
@@ -145,8 +145,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @throws ModuleException if problem occurs during test of the connection
      */
     @ResourceAccess(description = "Test the connection to the database")
-    @RequestMapping(method = RequestMethod.POST, value = "/{connectionId}")
-    public ResponseEntity<GenericResponseBody> testDBConnection(@PathVariable String plgBusinessId)
+    @RequestMapping(method = RequestMethod.POST, value = "/{plgBusinessId}")
+    public ResponseEntity<GenericResponseBody> testDBConnection(@PathVariable(name = "plgBusinessId") String plgBusinessId)
             throws ModuleException {
 
         if (dbConnectionService.testDBConnection(plgBusinessId)) {
@@ -164,8 +164,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @throws NotAvailablePluginConfigurationException
      */
     @ResourceAccess(description = "Get the tables of the database")
-    @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables")
-    public ResponseEntity<Map<String, Table>> getTables(@PathVariable String plgBusinessId)
+    @RequestMapping(method = RequestMethod.GET, value = "/{plgBusinessId}/tables")
+    public ResponseEntity<Map<String, Table>> getTables(@PathVariable(name = "plgBusinessId") String plgBusinessId)
             throws ModuleException, NotAvailablePluginConfigurationException {
         Map<String, Table> tables;
         tables = dbConnectionService.getTables(plgBusinessId);
@@ -181,9 +181,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * @throws NotAvailablePluginConfigurationException
      */
     @ResourceAccess(description = "Get the columns of a specific table of the database")
-    @RequestMapping(method = RequestMethod.GET, value = "/{connectionId}/tables/{tableName}/columns")
-    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable String plgBusinessId,
-            @PathVariable String tableName) throws ModuleException, NotAvailablePluginConfigurationException {
+    @RequestMapping(method = RequestMethod.GET, value = "/{plgBusinessId}/tables/{tableName}/columns")
+    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable(name = "plgBusinessId") String plgBusinessId,
+            @PathVariable(name = "tableName") String tableName) throws ModuleException, NotAvailablePluginConfigurationException {
         return ResponseEntity.ok(dbConnectionService.getColumns(plgBusinessId, tableName));
     }
 
@@ -191,11 +191,11 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     public Resource<PluginConfiguration> toResource(PluginConfiguration element, Object... extras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "getDBConnection", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, element.getId()));
+                                MethodParamFactory.build(String.class, element.getBusinessId()));
         resourceService.addLink(resource, this.getClass(), "deleteDBConnection", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, element.getId()));
+                                MethodParamFactory.build(String.class, element.getBusinessId()));
         resourceService.addLink(resource, this.getClass(), "updateDBConnection", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, element.getId()),
+                                MethodParamFactory.build(String.class, element.getBusinessId()),
                                 MethodParamFactory.build(PluginConfiguration.class));
         resourceService.addLink(resource, this.getClass(), "getAllDBConnections", LinkRels.LIST);
         return resource;

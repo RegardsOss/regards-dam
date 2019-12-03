@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.elasticsearch.ElasticsearchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -301,8 +302,9 @@ public class EntityIndexerService implements IEntityIndexerService {
      *
      * @param tenant concerned tenant
      * @param ipId   dataset identifier
+     * @throws ModuleException
      */
-    private void manageDatasetDelete(String tenant, String ipId, String dsiId) {
+    private void manageDatasetDelete(String tenant, String ipId, String dsiId) throws ModuleException {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
         sendDataSourceMessage(String.format("      Searching for all data objects tagging dataset IP_ID %s", ipId),
@@ -326,23 +328,31 @@ public class EntityIndexerService implements IEntityIndexerService {
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
-                esRepos.saveBulk(tenant, toSaveObjects);
-                objectsCount.addAndGet(toSaveObjects.size());
-                toSaveObjects.clear();
+                try {
+                    esRepos.saveBulk(tenant, toSaveObjects);
+                    objectsCount.addAndGet(toSaveObjects.size());
+                    toSaveObjects.clear();
+                } catch (ElasticsearchException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
             }
         };
         // Apply updateTag function to all tagging objects
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         addProjectInfos(tenant, searchKey);
-        esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
-        // Bulk save remaining objects to save
-        if (!toSaveObjects.isEmpty()) {
-            esRepos.saveBulk(tenant, toSaveObjects);
-            objectsCount.addAndGet(toSaveObjects.size());
+        try {
+            esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
+            // Bulk save remaining objects to save
+            if (!toSaveObjects.isEmpty()) {
+                esRepos.saveBulk(tenant, toSaveObjects);
+                objectsCount.addAndGet(toSaveObjects.size());
+            }
+            sendDataSourceMessage(String.format("      ...Removed dataset IP_ID from %d data objects tags.",
+                                                objectsCount.get()),
+                                  dsiId);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
         }
-        sendDataSourceMessage(String.format("      ...Removed dataset IP_ID from %d data objects tags.",
-                                            objectsCount.get()),
-                              dsiId);
     }
 
     /**
@@ -368,17 +378,36 @@ public class EntityIndexerService implements IEntityIndexerService {
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
                 tenant, dataset.getId());
         // Remove association between dataobjects and dataset for all dataobjects which does not match the dataset filter anymore.
-        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
-
+        try {
+            removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, executor, saveDataObjectsCallable, dsiId);
+        } catch (ModuleException e) {
+            LOGGER.error(e.getMessage(), e);
+            sendDataSourceMessage(String.format("Error removing all dataset objects. Cause: %s.", e.getMessage()),
+                                  dsiId);
+        }
         // Associate dataset to all dataobjets. Associate groups of dataset to the dataobjets through metadata
-        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, executor,
-                                           saveDataObjectsCallable, dsiId);
+        try {
+            addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, executor,
+                                               saveDataObjectsCallable, dsiId);
+        } catch (ModuleException e) {
+            LOGGER.error(e.getMessage(), e);
+            sendDataSourceMessage(String.format("Error updating new dataset objects. Cause: %s.", e.getMessage()),
+                                  dsiId);
+        }
 
         // Update dataset access groups for dynamic plugin access rights
-        manageDatasetUpdateFilteredAccessrights(tenant, dataset, updateDate, executor, saveDataObjectsCallable, dsiId);
+        try {
+            manageDatasetUpdateFilteredAccessrights(tenant, dataset, updateDate, executor, saveDataObjectsCallable,
+                                                    dsiId);
+        } catch (ModuleException e) {
+            LOGGER.error(e.getMessage(), e);
+            sendDataSourceMessage(String.format("Error updating dataset access rights. Cause: %s.", e.getMessage()),
+                                  dsiId);
+        }
 
         // To remove thread used by executor
         executor.shutdown();
+
         computeComputedAttributes(dataset, dsiId, tenant);
 
         esRepos.save(tenant, dataset);
@@ -393,9 +422,11 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Handle Access rights filter for the given dataset. An Access right filter is an accessRight with a {@link IDataObjectAccessFilterPlugin}.
+     * @throws ModuleException
      */
     private void manageDatasetUpdateFilteredAccessrights(String tenant, Dataset dataset, OffsetDateTime updateDate,
-            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, String dsiId) {
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, String dsiId)
+            throws ModuleException {
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         addProjectInfos(tenant, searchKey);
         // handle association between dataobjects and groups for all access rights set by plugin
@@ -470,10 +501,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param executor                {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId                   {@link DatasourceIngestion} identifier
+     * @throws ModuleException
      */
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
-            SaveDataObjectsCallable saveDataObjectsCallable, String dsiId) {
+            SaveDataObjectsCallable saveDataObjectsCallable, String dsiId) throws ModuleException {
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendDataSourceMessage("          Adding or updating dataset data objects association...", dsiId);
@@ -485,7 +517,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (lastUpdateDate != null) {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
         }
-        esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
+        try {
+            esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        }
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
         sendDataSourceMessage(String.format("          ...%d data objects dataset association saved.",
@@ -505,11 +541,12 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param dsiId                   {@link DatasourceIngestion} identifier
      * @param groupName               Name of the group to associate to DATA entities.
      * @param groupSubsettingClause   {@link ICriterion} group subsetting clause. Caculate by {@link IDataObjectAccessFilterPlugin} plugin.
+     * @throws ModuleException
      */
     private void addOrUpdateDataObectGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, String dsiId, String groupName,
-            ICriterion groupSubsettingClause) {
+            ICriterion groupSubsettingClause) throws ModuleException {
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendDataSourceMessage(String.format("          Adding or Updating data objects group <%s> association...",
@@ -521,12 +558,17 @@ public class EntityIndexerService implements IEntityIndexerService {
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
                 toSaveObjects, saveDataObjectsCallable, executor, groupName);
-        esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
-        // Saving remaining objects...
-        dataObjectAssocUpdater.finalSave();
-        sendDataSourceMessage(String.format("          ...%d data objects group <%s> association saved.",
-                                            dataObjectAssocUpdater.getObjectsCount(), groupName),
-                              dsiId);
+        try {
+            esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
+            // Saving remaining objects...
+            dataObjectAssocUpdater.finalSave();
+            sendDataSourceMessage(String.format("          ...%d data objects group <%s> association saved.",
+                                                dataObjectAssocUpdater.getObjectsCount(), groupName),
+                                  dsiId);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        }
+
     }
 
     /**
@@ -541,10 +583,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param executor                {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId                   {@link DatasourceIngestion} identifier
+     * @throws ModuleException
      */
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
-            SaveDataObjectsCallable saveDataObjectsCallable, String dsiId) {
+            SaveDataObjectsCallable saveDataObjectsCallable, String dsiId) throws ModuleException {
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendDataSourceMessage("          Removing old dataset data objects association...", dsiId);
@@ -556,12 +599,16 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
                 saveDataObjectsCallable, executor);
-        esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
-        // Saving remaining objects...
-        dataObjectAssocRemover.finalSave();
-        sendDataSourceMessage(String.format("          ...%d data objects dataset association removed.",
-                                            dataObjectAssocRemover.getObjectsCount()),
-                              dsiId);
+        try {
+            esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+            // Saving remaining objects...
+            dataObjectAssocRemover.finalSave();
+            sendDataSourceMessage(String.format("          ...%d data objects dataset association removed.",
+                                                dataObjectAssocRemover.getObjectsCount()),
+                                  dsiId);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        }
     }
 
     /**
@@ -576,11 +623,12 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param executor                {@link ExecutorService}
      * @param saveDataObjectsCallable {@link SaveDataObjectsCallable} used to save data
      * @param dsiId                   {@link DatasourceIngestion} identifier
+     * @throws ModuleException
      */
     private void removeOldDataObjectsGroupAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, ExecutorService executor,
             SaveDataObjectsCallable saveDataObjectsCallable, String dsiId, String groupName,
-            ICriterion groupSubsettingClause) {
+            ICriterion groupSubsettingClause) throws ModuleException {
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         sendDataSourceMessage(String.format("          Removing old data objects group <%s> association...", groupName),
@@ -592,7 +640,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
                 toSaveObjects, saveDataObjectsCallable, executor, groupName);
-        esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+        try {
+            esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        }
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
         sendDataSourceMessage(String.format("          ...%d data objects group <%s> association removed.",
@@ -661,11 +713,12 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
-
         for (Dataset dataset : datasets) {
+            LOGGER.info("Updating dataset {} ...", dataset.getLabel());
             sendDataSourceMessage(String.format("  Updating dataset %s...", dataset.getLabel()), dsiId);
             updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
             sendDataSourceMessage(String.format("  ...Dataset %s updated.", dataset.getLabel()), dsiId);
+            LOGGER.info("Dataset {} updated.", dataset.getLabel());
         }
     }
 
@@ -716,7 +769,7 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) {
+            List<DataObject> objects) throws ModuleException {
         StringBuilder buf = new StringBuilder();
         BulkSaveResult bulkSaveResult = new BulkSaveResult();
         // For all objects, it is necessary to set datasourceId, creation date AND to validate them
@@ -732,15 +785,20 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Validate data object
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
-        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
-        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        try {
+            esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        } finally {
+            publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        }
 
         return bulkSaveResult;
     }
 
     @Override
     public BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) {
+            List<DataObject> objects) throws ModuleException {
         StringBuilder buf = new StringBuilder();
         BulkSaveResult bulkSaveResult = new BulkSaveResult();
         // Set of data objects to be saved (depends on existence of data objects into ES)
@@ -750,8 +808,13 @@ public class EntityIndexerService implements IEntityIndexerService {
             mergeDataObject(tenant, datasourceId, now, dataObject);
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
         }
-        esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
-        publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        try {
+            esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
+        } catch (ElasticsearchException e) {
+            throw new ModuleException(e);
+        } finally {
+            publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+        }
         return bulkSaveResult;
     }
 
@@ -810,10 +873,13 @@ public class EntityIndexerService implements IEntityIndexerService {
         // If there are errors, notify Admin
         if (buf.length() > 0) {
             // Also add detailed message to datasource ingestion
-            DatasourceIngestion dsIngestion = dsIngestionRepository.findById(datasourceId).get();
-            String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
-            self.createNotificationForAdmin(tenant, notifTitle, buf.toString(), NotificationLevel.ERROR);
-            bulkSaveResult.setDetailedErrorMsg(buf.toString());
+            Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepository.findById(datasourceId);
+            if (oDsIngestion.isPresent()) {
+                DatasourceIngestion dsIngestion = oDsIngestion.get();
+                String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
+                self.createNotificationForAdmin(tenant, notifTitle, buf.toString(), NotificationLevel.ERROR);
+                bulkSaveResult.setDetailedErrorMsg(buf.toString());
+            }
         }
     }
 
