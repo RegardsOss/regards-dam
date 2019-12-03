@@ -26,7 +26,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -77,9 +76,6 @@ public class DatasourceIngestionService {
 
     @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
-
-    @Autowired
-    private IDatasourceIngesterService datasourceIngester;
 
     @Autowired
     private IPluginService pluginService;
@@ -150,33 +146,25 @@ public class DatasourceIngestionService {
      * @throws ModuleException
      * @throws InactiveDatasourceException
      */
-    public void runDataSourceIngestion(String dsIngestionId)
+    public void updateIngesterResult(String dsIngestionId, IngestionResult summary)
             throws NotFinishedException, DataSourceException, InactiveDatasourceException, ModuleException {
         Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepos.findById(dsIngestionId);
         if (oDsIngestion.isPresent()) {
             DatasourceIngestion dsIngestion = oDsIngestion.get();
-            try {
-                PluginConfiguration pluginConf = pluginService.getPluginConfiguration(dsIngestion.getId());
-                IngestionResult summary = datasourceIngester
-                        .ingest(pluginService.loadPluginConfiguration(pluginConf.getBusinessId()), dsIngestion);
-                // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
-                if (summary.getInErrorObjectsCount() > 0) {
-                    dsIngestion.setStatus(IngestionStatus.FINISHED_WITH_WARNINGS);
-                } else {
-                    dsIngestion.setStatus(IngestionStatus.FINISHED);
-                }
-                dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
-                dsIngestion.setInErrorObjectsCount(summary.getInErrorObjectsCount());
-                dsIngestion.setLastIngestDate(summary.getDate());
-                // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
-                dsIngestion.setNextPlannedIngestDate(null);
-                // Save ingestion status
-                sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
-            } catch (RuntimeException | LinkageError | InterruptedException | ExecutionException e) {
-                throw new DataSourceException(e);
+            // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
+            if (summary.getInErrorObjectsCount() > 0) {
+                dsIngestion.setStatus(IngestionStatus.FINISHED_WITH_WARNINGS);
+            } else {
+                dsIngestion.setStatus(IngestionStatus.FINISHED);
             }
-        } else {
-            LOGGER.error("Datasource with id {} cannot be run as it does not exists", dsIngestionId);
+            dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
+            dsIngestion.setInErrorObjectsCount(summary.getInErrorObjectsCount());
+            dsIngestion.setLastIngestDate(summary.getDate());
+            // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
+            dsIngestion.setNextPlannedIngestDate(null);
+            // Save ingestion status
+            sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+
         }
     }
 

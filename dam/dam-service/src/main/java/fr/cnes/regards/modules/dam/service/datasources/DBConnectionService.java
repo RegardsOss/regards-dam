@@ -76,8 +76,6 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public PluginConfiguration updateDBConnection(PluginConfiguration dbConnection) throws ModuleException {
-        dbConnection.setMetaData(pluginService.checkPluginClassName(IDBConnectionPlugin.class,
-                                                                    dbConnection.getPluginClassName()));
         return pluginService.updatePluginConfiguration(dbConnection);
     }
 

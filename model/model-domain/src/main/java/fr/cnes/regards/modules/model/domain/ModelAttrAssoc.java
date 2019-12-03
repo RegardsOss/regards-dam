@@ -38,6 +38,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.PluginParamType;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.models.PluginComputationIdentifierEnum;
 import fr.cnes.regards.modules.model.domain.schema.Attribute;
 import fr.cnes.regards.modules.model.domain.schema.Computation;
 import fr.cnes.regards.modules.model.domain.schema.NoParamPluginType;
@@ -172,8 +173,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             // Cyclic dependency between dam-plugin and dam-domain
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
-            String pluginClassName = computationConf.getPluginClassName();
-            if ("fr.cnes.regards.modules.dam.plugin.entities.CountPlugin".equals(pluginClassName)) {
+            PluginComputationIdentifierEnum pluginId = PluginComputationIdentifierEnum
+                    .parse(computationConf.getPluginId());
+            if (pluginId == PluginComputationIdentifierEnum.COUNT) {
                 computation.setCount(new NoParamPluginType());
             } else {
                 // For plugins which are calculated according to a data object property, let's set the parameters and
@@ -186,7 +188,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                 }
                 paramPluginType.setParameterAttributeName(parameterAttributeName);
                 IPluginParam paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
-                if (paramAttrFragment != null && paramAttrFragment.getType() == PluginParamType.STRING) {
+                if ((paramAttrFragment != null) && (paramAttrFragment.getType() == PluginParamType.STRING)) {
                     String paramAttrFragmentName = (String) paramAttrFragment.getValue();
                     if (paramAttrFragmentName != null) {
                         if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
@@ -196,15 +198,15 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                         paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
                     }
                 }
-                switch (pluginClassName) {
-                    case "fr.cnes.regards.modules.dam.plugin.entities.IntSumComputePlugin":
-                    case "fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin":
+                switch (pluginId) {
+                    case INT_SUM_COUNT:
+                    case LONG_SUM_COUNT:
                         computation.setSumCompute(paramPluginType);
                         break;
-                    case "fr.cnes.regards.modules.dam.plugin.entities.MaxDateComputePlugin":
+                    case MAX_DATE:
                         computation.setMaxCompute(paramPluginType);
                         break;
-                    case "fr.cnes.regards.modules.dam.plugin.entities.MinDateComputePlugin":
+                    case MIN_DATE:
                         computation.setMinCompute(paramPluginType);
                         break;
                     default:
@@ -245,7 +247,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
         }
 
@@ -260,7 +262,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     @Override
     public int hashCode() {
         int result = attribute != null ? attribute.hashCode() : 0;
-        result = 31 * result + (model != null ? model.hashCode() : 0);
+        result = (31 * result) + (model != null ? model.hashCode() : 0);
         return result;
     }
 
