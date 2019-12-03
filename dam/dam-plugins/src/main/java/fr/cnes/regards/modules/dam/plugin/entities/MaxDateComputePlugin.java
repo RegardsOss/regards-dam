@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.DateAttribute;
 import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
+import fr.cnes.regards.modules.dam.domain.models.PluginComputationIdentifierEnum;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 
@@ -40,7 +41,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "MaxDateComputePlugin",
+@Plugin(id = PluginComputationIdentifierEnum.MAX_DATE_VALUE,
         description = "allows to compute the maximum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")

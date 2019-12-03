@@ -195,7 +195,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
             if (!datasetsToUpdate.isEmpty()) {
                 sendMessage("Start updating datasets associated to datasource...", dsiId);
-                entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+                try {
+                    entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+                } catch (ModuleException e) {
+                    sendMessage(String.format("Error updating datasets associated to datasource. Cause : %s.",
+                                              e.getMessage()),
+                                dsiId);
+                }
                 sendMessage("...End updating datasets.", dsiId);
             }
 
@@ -231,9 +237,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                                               page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(mergeDataObjectCallable(tenant, now, datasourceId, dsiId, otherList));
@@ -287,13 +294,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, list));
 
                 while (page.hasNext()) {
-                    sendMessage(String.format("  Finding at most %d records from datasource...",
-                                              IEsRepository.BULK_SIZE),
+                    sendMessage(String.format("  Finding %d records from datasource...",
+                                              page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, otherList));
@@ -311,7 +319,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
         } catch (ExecutionException e) { // ES indexation has failed
             // Failed at first indexation => "classical" ERROR
-            int errorPageNumber = page.previousPageable().getPageNumber();
+            int errorPageNumber;
+            if (page.hasPrevious()) {
+                errorPageNumber = page.previousPageable().getPageNumber();
+            } else {
+                errorPageNumber = 0;
+            }
             if (errorPageNumber == pageNumber) {
                 throw e;
             }

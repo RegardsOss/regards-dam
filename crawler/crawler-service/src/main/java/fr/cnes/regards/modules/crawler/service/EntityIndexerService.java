@@ -721,11 +721,12 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
         OffsetDateTime now = OffsetDateTime.now();
-
         for (Dataset dataset : datasets) {
+            LOGGER.info("Updating dataset {} ...", dataset.getLabel());
             sendDataSourceMessage(String.format("  Updating dataset %s...", dataset.getLabel()), dsiId);
             updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
             sendDataSourceMessage(String.format("  ...Dataset %s updated.", dataset.getLabel()), dsiId);
+            LOGGER.info("Dataset {} updated.", dataset.getLabel());
         }
     }
 
