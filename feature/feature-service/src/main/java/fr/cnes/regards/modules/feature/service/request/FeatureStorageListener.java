@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fr.cnes.regards.modules.storagelight.client.IStorageRequestListener;
-import fr.cnes.regards.modules.storagelight.client.RequestInfo;
+import fr.cnes.regards.modules.storage.client.IStorageRequestListener;
+import fr.cnes.regards.modules.storage.client.RequestInfo;
 
 /**
  *

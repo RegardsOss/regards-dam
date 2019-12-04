@@ -49,10 +49,10 @@ public class Recipient {
     private Rule rule;
 
     @ManyToOne
-    @NotNull(message = "Plugin configuration is required")
-    @JoinColumn(name = "plugin_configuration_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_rule_plugin_configuration_id"))
-    private PluginConfiguration pluginCondConfiguration;
+    @NotNull(message = "Plugin id is required")
+    @JoinColumn(name = "recipient_plugin_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_recipient_plugin_id"))
+    private PluginConfiguration recipientPlugin;
 
     public Long getId() {
         return id;
@@ -70,18 +70,18 @@ public class Recipient {
         this.rule = rule;
     }
 
-    public PluginConfiguration getPluginCondConfiguration() {
-        return pluginCondConfiguration;
+    public PluginConfiguration getRecipientPlugin() {
+        return recipientPlugin;
     }
 
-    public void setPluginCondConfiguration(PluginConfiguration pluginCondConfiguration) {
-        this.pluginCondConfiguration = pluginCondConfiguration;
+    public void setRecipientPlugin(PluginConfiguration recipientPlugin) {
+        this.recipientPlugin = recipientPlugin;
     }
 
     public static Recipient build(Rule rule, PluginConfiguration plugin) {
         Recipient recipient = new Recipient();
         recipient.setRule(rule);
-        recipient.setPluginCondConfiguration(plugin);
+        recipient.setRecipientPlugin(plugin);
 
         return recipient;
     }

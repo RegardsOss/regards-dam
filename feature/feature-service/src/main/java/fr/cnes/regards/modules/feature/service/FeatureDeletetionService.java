@@ -63,8 +63,8 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
 import fr.cnes.regards.modules.feature.service.job.FeatureDeletionJob;
-import fr.cnes.regards.modules.storagelight.client.IStorageClient;
-import fr.cnes.regards.modules.storagelight.domain.dto.request.FileDeletionRequestDTO;
+import fr.cnes.regards.modules.storage.client.IStorageClient;
+import fr.cnes.regards.modules.storage.domain.dto.request.FileDeletionRequestDTO;
 
 /**
  * @author Kevin Marchois
@@ -199,7 +199,7 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
     }
 
     private boolean haveFiles(FeatureDeletionRequest fdr, FeatureEntity feature) {
-        return feature.getFeature().getFiles() != null && !feature.getFeature().getFiles().isEmpty();
+        return (feature.getFeature().getFiles() != null) && !feature.getFeature().getFiles().isEmpty();
     }
 
     /**

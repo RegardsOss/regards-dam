@@ -30,6 +30,7 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.domain.models.PluginComputationIdentifierEnum;
 import fr.cnes.regards.modules.model.dto.properties.DateProperty;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
@@ -40,7 +41,7 @@ import fr.cnes.regards.modules.model.dto.properties.PropertyType;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "MinDateComputePlugin",
+@Plugin(id = PluginComputationIdentifierEnum.MIN_DATE_VALUE,
         description = "allows to compute the minimum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")

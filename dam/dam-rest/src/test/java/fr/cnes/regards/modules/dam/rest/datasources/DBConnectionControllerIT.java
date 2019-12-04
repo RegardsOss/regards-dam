@@ -362,7 +362,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     private void addFakePluginConf() {
         // Add fake plugin
         PluginMetaData metadata = PluginUtils.createPluginMetaData(FakeConnectionPlugin.class);
-        PluginConfiguration configuration = new PluginConfiguration(metadata, "Fake");
+        PluginConfiguration configuration = new PluginConfiguration("Fake", metadata.getPluginId());
         pluginConfR.save(configuration);
     }
 }

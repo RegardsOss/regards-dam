@@ -51,14 +51,14 @@ public class RecipientService implements IRecipientService {
         Page<Recipient> recipients = recipientRepo.findAll(page);
         return new PageImpl<>(recipients.get()
                 .map(recipient -> RecipientDto.build(recipient.getId(), intiRuleDto(recipient),
-                                                     recipient.getPluginCondConfiguration()))
+                                                     recipient.getRecipientPlugin()))
                 .collect(Collectors.toList()));
     }
 
     private RuleDto intiRuleDto(Recipient recipient) {
         Rule rule = recipient.getRule();
         return rule == null ? null
-                : RuleDto.build(rule.getId(), rule.getPluginCondConfiguration(), rule.isEnable(), rule.getType());
+                : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(), rule.getType());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class RecipientService implements IRecipientService {
                 : Recipient.build(Rule.build(rule.getId(), rule.getPluginConf(), rule.isEnabled(), rule.getType()),
                                   toCreate.getPluginConf());
         Recipient created = this.recipientRepo.save(toSave);
-        return RecipientDto.build(created.getId(), intiRuleDto(created), created.getPluginCondConfiguration());
+        return RecipientDto.build(created.getId(), intiRuleDto(created), created.getRecipientPlugin());
     }
 
     @Override

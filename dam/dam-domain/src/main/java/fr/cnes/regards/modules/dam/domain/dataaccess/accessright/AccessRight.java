@@ -95,10 +95,11 @@ public class AccessRight implements IIdentifiable<Long> {
     private PluginConfiguration dataAccessPlugin;
 
     /**
-     * The data access right
+     * Data access level
      */
-    @Embedded
-    protected DataAccessRight dataAccessRight;
+    @Column(length = 30, name = "data_access_level")
+    @Enumerated(EnumType.STRING)
+    private DataAccessLevel dataAccessLevel;
 
     /**
      * It is mandatory to have no cascade at all on Dataset (a Dataset CRUD must be done through DatasetService)
@@ -169,12 +170,12 @@ public class AccessRight implements IIdentifiable<Long> {
     /**
      * @return the data access right
      */
-    public DataAccessRight getDataAccessRight() {
-        return dataAccessRight;
+    public DataAccessLevel getDataAccessLevel() {
+        return dataAccessLevel;
     }
 
-    public void setDataAccessRight(final DataAccessRight pDataAccessRight) {
-        dataAccessRight = pDataAccessRight;
+    public void setDataAccessLevel(final DataAccessLevel dataAccessLevel) {
+        this.dataAccessLevel = dataAccessLevel;
     }
 
     /**
