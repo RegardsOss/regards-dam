@@ -163,4 +163,10 @@ public interface IEntityIndexerService {
      * @param level   {@link NotificationLevel}
      */
     void createNotificationForAdmin(String tenant, String title, String message, NotificationLevel level);
+
+    /**
+     * Delete index and recreate entities
+     * @param tenant
+     */
+    void deleteIndexNRecreateEntities(String tenant) throws ModuleException;
 }

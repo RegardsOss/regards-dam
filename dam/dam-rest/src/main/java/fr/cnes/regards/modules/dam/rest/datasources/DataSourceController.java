@@ -103,7 +103,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
 
     /**
      * Get a data source
-     * @param pluginConfId {@link PluginConfiguration} identifier
+     * @param businessId {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException if plugin configuration cannot be retrieved
      */
@@ -116,7 +116,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
 
     /**
      * Allow to update {@link PluginConfiguration} for the plugin type {@link IDataSourcePlugin}
-     * @param pluginConfId {@link PluginConfiguration} identifier
+     * @param businessId {@link PluginConfiguration} identifier
      * @param dataSource data source to update
      * @return updated {@link PluginConfiguration}
      * @throws ModuleException if plugin configuration cannot be updated
@@ -135,7 +135,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
 
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
-     * @param pluginConfId {@link PluginConfiguration} identifier
+     * @param businessId {@link PluginConfiguration} identifier
      * @return nothing
      * @throws AssociatedDatasetExistsException
      * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
