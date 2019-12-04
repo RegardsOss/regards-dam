@@ -22,6 +22,8 @@ import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -32,6 +34,7 @@ import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
 
 /**
  * Entity to store notification request
@@ -40,7 +43,7 @@ import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
  */
 @Entity
 @Table(name = "t_notification_request")
-public class NotificationRequest {
+public class NotificationAction {
 
     @Id
     @SequenceGenerator(name = "notificationSequence", initialValue = 1, sequenceName = "seq_notification_request")
@@ -52,10 +55,15 @@ public class NotificationRequest {
     private Feature feature;
 
     @Column(name = "action", nullable = false)
+    @Enumerated(EnumType.STRING)
     private FeatureManagementAction action;
 
     @Column(name = "request", nullable = false)
     private OffsetDateTime requestDate;
+
+    @Column(name = "state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private NotificationState state;
 
     public Feature getFeature() {
         return feature;
@@ -85,11 +93,20 @@ public class NotificationRequest {
         return id;
     }
 
-    public static NotificationRequest build(Feature feature, FeatureManagementAction action) {
-        NotificationRequest toCreate = new NotificationRequest();
+    public NotificationState getState() {
+        return state;
+    }
+
+    public void setState(NotificationState state) {
+        this.state = state;
+    }
+
+    public static NotificationAction build(Feature feature, FeatureManagementAction action, NotificationState state) {
+        NotificationAction toCreate = new NotificationAction();
         toCreate.setAction(action);
         toCreate.setFeature(feature);
         toCreate.setRequestDate(OffsetDateTime.now());
+        toCreate.setState(state);
 
         return toCreate;
     }

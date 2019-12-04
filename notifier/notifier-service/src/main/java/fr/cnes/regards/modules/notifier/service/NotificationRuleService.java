@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.notifier.service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -47,16 +48,17 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notifier.dao.INotificationRequestRepository;
-import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
+import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
+import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
 import fr.cnes.regards.modules.notifier.plugin.IRecipientNotifier;
 import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 import fr.cnes.regards.modules.notifier.service.cache.AbstractCacheableRule;
 import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.job.NotificationJob;
-import fr.cnes.reguards.modules.notifier.dto.in.NotificationRequestEvent;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
  * Service for checking {@link Rule} applied to {@link Feature} for notification sending
@@ -67,13 +69,13 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationRequestEvent;
 @MultitenantTransactional
 public class NotificationRuleService extends AbstractCacheableRule implements INotificationRuleService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationRuleService.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(NotificationRuleService.class);
 
     @Autowired
     private IPluginService pluginService;
 
     @Autowired
-    private INotificationRequestRepository notificationRequestRepo;
+    private INotificationActionRepository notificationRequestRepo;
 
     @Autowired
     private Validator validator;
@@ -87,20 +89,33 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     @Autowired
     private IJobInfoService jobInfoService;
 
-    @Override
-    public int handleFeature(Feature toHandle, FeatureManagementAction action)
+    /**
+     * Handle a {@link NotificationAction} and check if it matches with enabled {@link Rule} in that case
+     * send a notification to {@link Recipient}
+     * @param toHandle {@link NotificationAction} to handle
+     * @param notificationsInErrors list of {@link NotificationAction} where a {@link Recipient} fail
+     * @return number of notification sended
+     * @throws NotAvailablePluginConfigurationException
+     * @throws ModuleException
+     * @throws ExecutionException
+     */
+    private int handleNotificationRequest(NotificationAction notification,
+            Set<NotificationAction> notificationsInErrors)
             throws ExecutionException, ModuleException, NotAvailablePluginConfigurationException {
         int notificationNumber = 0;
         for (Rule rule : getRules()) {
             try {
                 // check if the  feature match with the rule
                 if (((IRuleMatcher) this.pluginService.getPlugin(rule.getRulePlugin().getBusinessId()))
-                        .match(toHandle)) {
+                        .match(notification.getFeature())) {
 
                     for (Recipient recipient : rule.getRecipients()) {
-                        if (notifyRecipient(toHandle, recipient, action)) {
+                        if (notifyRecipient(notification.getFeature(), recipient, notification.getAction())) {
                             notificationNumber++;
                         } else {
+                            notification.setState(NotificationState.ERROR);
+                            notificationsInErrors.add(notification);
+                            // FIXME ce TODO est il vraimment toujours d'actualité?
                             // TODO notifier feature manager
 
                         }
@@ -133,7 +148,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     }
 
     @Override
-    public int processRequest(List<NotificationRequest> toHandles) {
+    public int processRequest(List<NotificationAction> toHandles) {
         long startTime = System.currentTimeMillis();
         LOGGER.debug("------------->>> Reception of {} Feature event, start of notification process {} ms",
                      toHandles.size(), startTime);
@@ -141,24 +156,31 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         long averageFeatureTreatmentTime = 0;
         long startFeatureTreatmentTime = 0;
 
-        for (NotificationRequest feature : toHandles) {
+        Set<NotificationAction> notificationsInErrors = new HashSet<NotificationAction>();
+
+        for (NotificationAction notification : toHandles) {
             startFeatureTreatmentTime = System.currentTimeMillis();
             try {
-                nbSend += handleFeature(feature.getFeature(), feature.getAction());
+                nbSend += handleNotificationRequest(notification, notificationsInErrors);
             } catch (ExecutionException | ModuleException | NotAvailablePluginConfigurationException e) {
                 LOGGER.error("Error during feature notification", e);
             }
             averageFeatureTreatmentTime += System.currentTimeMillis() - startFeatureTreatmentTime;
         }
-        LOGGER.debug("------------->>> End of notification process in {} ms, {} notifications sended"
-                + " with a average feature treatment time of {} ms", System.currentTimeMillis() - startTime, nbSend,
-                     averageFeatureTreatmentTime / (nbSend == 0 ? 1 : nbSend));
+        this.LOGGER.debug(
+                          "------------->>> End of notification process in {} ms, {} notifications sended"
+                                  + " with a average feature treatment time of {} ms",
+                          System.currentTimeMillis() - startTime, nbSend,
+                          averageFeatureTreatmentTime / (nbSend == 0 ? 1 : nbSend));
+        // delete all Notification not in the list in errors
+        toHandles.removeAll(notificationsInErrors);
+        this.notificationRequestRepo.deleteAll(toHandles);
         return nbSend;
     }
 
     @Override
-    public void registerNotifications(List<NotificationRequestEvent> events) {
-        Set<NotificationRequest> notificationToRegister = events.stream().map(event -> initNotificationRequest(event))
+    public void registerNotifications(List<NotificationActionEvent> events) {
+        Set<NotificationAction> notificationToRegister = events.stream().map(event -> initNotificationRequest(event))
                 .collect(Collectors.toSet());
         notificationToRegister.removeAll(null);
         this.notificationRequestRepo.saveAll(notificationToRegister);
@@ -167,14 +189,14 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     /**
      * Check if a notification event is valid and create a request publish an error otherwise
      * @param event
-     * @return a implemented {@link NotificationRequest} or null if invalid
+     * @return a implemented {@link NotificationAction} or null if invalid
      */
-    private NotificationRequest initNotificationRequest(NotificationRequestEvent event) {
-        Errors errors = new MapBindingResult(new HashMap<>(), NotificationRequestEvent.class.getName());
+    private NotificationAction initNotificationRequest(NotificationActionEvent event) {
+        Errors errors = new MapBindingResult(new HashMap<>(), NotificationActionEvent.class.getName());
         this.validator.validate(event, errors);
 
         if (!errors.hasErrors()) {
-            return NotificationRequest.build(event.getFeature(), event.getAction());
+            return NotificationAction.build(event.getFeature(), event.getAction(), NotificationState.DELAYED);
         }
         //TODO on fait quoi?
         return null;
@@ -182,17 +204,15 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
 
     @Override
     public int scheduleRequests() {
-        List<NotificationRequest> notificationToschedule = this.notificationRequestRepo
-                .findAll(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("requestDate"))))
-                .getContent();
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
-        Set<Long> requestIds = notificationToschedule.stream().map(request -> request.getId())
-                .collect(Collectors.toSet());
+        Set<Long> requestIds = this.notificationRequestRepo
+                .findIdToSchedule(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("requestDate"))));
         long scheduleStart = System.currentTimeMillis();
 
         jobParameters.add(new JobParameter(NotificationJob.IDS_PARAMETER, requestIds));
 
+        this.notificationRequestRepo.updateState(NotificationState.SCHEDULED, requestIds);
         // the job priority will be set according the priority of the first request to schedule
         JobInfo jobInfo = new JobInfo(false, 0, jobParameters, authResolver.getUser(), NotificationJob.class.getName());
         jobInfoService.createAsQueued(jobInfo);

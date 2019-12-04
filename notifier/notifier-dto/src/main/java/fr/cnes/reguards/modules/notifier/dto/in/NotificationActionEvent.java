@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
  *
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-public class NotificationRequestEvent implements ISubscribable {
+public class NotificationActionEvent implements ISubscribable {
 
     @NotNull(message = "JSON element is required")
     private Feature feature;
@@ -57,8 +57,8 @@ public class NotificationRequestEvent implements ISubscribable {
         this.action = action;
     }
 
-    public static NotificationRequestEvent build(Feature feature, FeatureManagementAction action) {
-        NotificationRequestEvent toCreate = new NotificationRequestEvent();
+    public static NotificationActionEvent build(Feature feature, FeatureManagementAction action) {
+        NotificationActionEvent toCreate = new NotificationActionEvent();
         toCreate.setAction(action);
         toCreate.setFeature(feature);
         return toCreate;

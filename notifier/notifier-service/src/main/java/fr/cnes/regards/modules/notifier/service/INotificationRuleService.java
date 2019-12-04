@@ -19,16 +19,12 @@
 package fr.cnes.regards.modules.notifier.service;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
-import fr.cnes.reguards.modules.notifier.dto.in.NotificationRequestEvent;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
  * Feature notification service interface
@@ -38,34 +34,21 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationRequestEvent;
 public interface INotificationRuleService {
 
     /**
-     * Handle a {@link Feature} and check if it matches with enabled {@link Rule} in that case
-     * send a notification to a {@link Recipient}
-     * @param toHandle {@link Feature} to handle
-     * @param action action did of the {@link Feature} to handle
-     * @return number of notification sended
-     * @throws NotAvailablePluginConfigurationException
-     * @throws ModuleException
-     * @throws ExecutionException
-     */
-    public int handleFeature(Feature toHandle, FeatureManagementAction action)
-            throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException;
-
-    /**
-     * Handle a list of {@link NotificationRequest} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
+     * Handle a list of {@link NotificationAction} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
      * Check if this event is compliant with a {@link Rule} and in that case notify all {@link Recipient} associated
      * with this {@link Rule}
      * @param toHandles event to handle
      * @return number of notification sended
      */
-    public int processRequest(List<NotificationRequest> toHandles);
+    public int processRequest(List<NotificationAction> toHandles);
 
     /**
-     * Register {@link NotificationRequestEvent} to schedule notifications
+     * Register {@link NotificationActionEvent} to schedule notifications
      */
-    public void registerNotifications(List<NotificationRequestEvent> events);
+    public void registerNotifications(List<NotificationActionEvent> events);
 
     /**
-     * Schedule a job to process a batch of {@link NotificationRequest}<br/>
+     * Schedule a job to process a batch of {@link NotificationAction}<br/>
      * @return number of scheduled notification (0 if no request was scheduled)
      */
     int scheduleRequests();

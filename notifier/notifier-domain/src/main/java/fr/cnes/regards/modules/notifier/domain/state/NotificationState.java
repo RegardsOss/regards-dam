@@ -16,19 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.notifier.dao;
+package fr.cnes.regards.modules.notifier.domain.state;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 
 /**
- * Repository to manipulate {@link NotificationRequest}
- * @author Kevin Marchois
+ * States of a {@link NotificationAction}
+ * @author kevin
  *
  */
-@Repository
-public interface INotificationRequestRepository extends JpaRepository<NotificationRequest, Long> {
-
+public enum NotificationState {
+    SCHEDULED,
+    DELAYED,
+    ERROR
 }

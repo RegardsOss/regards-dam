@@ -18,15 +18,17 @@
  */
 package fr.cnes.regards.modules.notifier.service;
 
-import static org.junit.Assert.assertEquals;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -40,7 +42,9 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
+import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
  * @author kevin
@@ -51,6 +55,12 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp" })
 public class NotificationServiceIT extends AbstractNotificationMultitenantServiceTest {
+
+    @Autowired
+    private NotificationConfigurationProperties configuration;
+
+    @Autowired
+    private IPublisher publisher;
 
     @Test
     public void testRuleMacher() throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException {
@@ -100,8 +110,12 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         Recipient recipient = Recipient.build(rule, recipientPlugin);
         this.recipientRepo.save(recipient);
 
-        assertEquals(1, this.notificationService.handleFeature(feature, FeatureManagementAction.CREATE));
-
+        List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
+        for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
+            events.add(NotificationActionEvent.build(feature, FeatureManagementAction.CREATE));
+        }
+        this.publisher.publish(events);
+        this.notificationService.scheduleRequests();
     }
 
     @Test
@@ -148,9 +162,6 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         recipientPlugin.setPluginId("DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
         Recipient recipient = Recipient.build(rule, recipientPlugin);
-
-        this.recipientRepo.save(recipient);
-        assertEquals(0, this.notificationService.handleFeature(feature, FeatureManagementAction.CREATE));
 
     }
 

@@ -31,8 +31,8 @@ import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
-import fr.cnes.regards.modules.notifier.dao.INotificationRequestRepository;
-import fr.cnes.regards.modules.notifier.domain.NotificationRequest;
+import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.regards.modules.notifier.service.INotificationRuleService;
@@ -46,10 +46,10 @@ public class NotificationJob extends AbstractJob<Void> {
 
     public static final String IDS_PARAMETER = "ids";
 
-    private List<NotificationRequest> notificationRequests;
+    private List<NotificationAction> notificationRequests;
 
     @Autowired
-    private INotificationRequestRepository notificationRequestsRepo;
+    private INotificationActionRepository notificationRequestsRepo;
 
     @Autowired
     private INotificationRuleService notificationService;
@@ -68,7 +68,7 @@ public class NotificationJob extends AbstractJob<Void> {
         LOGGER.info("[{}] Notification job starts", jobInfoId);
         long start = System.currentTimeMillis();
         int notificationNumber = this.notificationService.processRequest(notificationRequests);
-        LOGGER.info("[{}]{}{} notification processed in {} ms", jobInfoId, INFO_TAB, notificationNumber,
+        LOGGER.info("[{}]{}{} Notification processed in {} ms", jobInfoId, INFO_TAB, notificationNumber,
                     System.currentTimeMillis() - start);
 
     }
