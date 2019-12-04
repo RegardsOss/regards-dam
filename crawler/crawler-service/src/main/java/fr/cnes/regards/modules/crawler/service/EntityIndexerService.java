@@ -244,16 +244,16 @@ public class EntityIndexerService implements IEntityIndexerService {
             // previous version of dataset and current one.
             // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
             // data objects must be updated
-            boolean needAssociatedDataObjectsUpdate = lastUpdateDate != null || forceAssociatedEntitiesUpdate;
+            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
-            if (!needAssociatedDataObjectsUpdate && entity instanceof Dataset) {
+            if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
                 Dataset dataset = (Dataset) entity;
                 needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
                                                                                    esRepos.get(tenant, dataset));
             }
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
-            if (entity instanceof Dataset && needAssociatedDataObjectsUpdate) {
+            if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
                 // Subsetting clause is needed by many things
                 ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate, dsiId);
@@ -432,7 +432,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
             // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
-            if (group.getDatasetAccess() && group.getMetaDataObjectAccessFilterPluginId() != null) {
+            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
                 try {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
@@ -663,7 +663,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<IProperty<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> attr instanceof ObjectProperty
+                        .filter(attr -> (attr instanceof ObjectProperty)
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
@@ -734,7 +734,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         sessionNotifier.notifyIndexDeletion();
         //2. Then re-create all entities
         updateAllDatasets(tenant);
-        updateAllDocuments(tenant);
         updateAllCollections(tenant);
     }
 
@@ -754,7 +753,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             errors = e.getMessages();
         }
         // No exception thrown but still validation errors
-        if (errors == null && errorsObject.hasErrors()) {
+        if ((errors == null) && errorsObject.hasErrors()) {
             errors = toErrors(errorsObject);
         }
         // No error => dataObject is valid
