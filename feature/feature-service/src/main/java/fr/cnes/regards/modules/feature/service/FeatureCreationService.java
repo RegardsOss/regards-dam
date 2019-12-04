@@ -209,7 +209,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                     RequestState.GRANTED, null));
 
         // Add to granted request collection
-        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_PENDING);
+        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_GRANTED);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }

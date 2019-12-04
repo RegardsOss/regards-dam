@@ -54,10 +54,9 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 //@Ignore
 @TestPropertySource(
         properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode", "regards.amqp.enabled=true",
-                "spring.task.scheduling.pool.size=2" },
-        locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
-//@ActiveProfiles(value = { "testAmqp", "nohandler", "noscheduler" })
-//@ActiveProfiles(value = { "testAmqp", "noscheduler" })
+                "spring.task.scheduling.pool.size=2", "regards.feature.metrics.enabled=true" },
+        locations = { "classpath:regards_perf.properties", "classpath:batch.properties",
+                "classpath:metrics.properties" })
 @ActiveProfiles(value = { "testAmqp" })
 public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 

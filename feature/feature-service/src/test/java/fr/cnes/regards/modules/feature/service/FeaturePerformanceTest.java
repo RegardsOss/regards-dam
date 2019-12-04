@@ -24,14 +24,16 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
 @TestPropertySource(
-        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true" },
-        locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
+        properties = { "spring.jpa.properties.hibernate.default_schema=feature_perf", "regards.amqp.enabled=true",
+                "regards.feature.metrics.enabled=true" },
+        locations = { "classpath:regards_local.properties", "classpath:batch.properties",
+                "classpath:metrics.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);
 
-    private static final Integer NB_FEATURES = 10000;
+    private static final Integer NB_FEATURES = 10_000;
 
     @Autowired
     private IFeatureCreationService featureService;
@@ -77,6 +79,9 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
         if (bulk > 0) {
             saveEvents(events);
         }
+
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - start);
 
         assertEquals(NB_FEATURES.longValue(), this.featureCreationRequestRepo.count());
 
