@@ -140,7 +140,8 @@ public class DatasourceIngestionService {
 
     /**
      * Launch ingestion associated to the given {@link DatasourceIngestion}
-     * @param dsIngestion
+     * @param dsIngestionId
+     * @param summary
      * @throws NotFinishedException
      * @throws DataSourceException
      * @throws ModuleException
@@ -164,7 +165,8 @@ public class DatasourceIngestionService {
             dsIngestion.setNextPlannedIngestDate(null);
             // Save ingestion status
             sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
-
+        } else {
+            LOGGER.warn("Unable to find datasource with id {} to set indexation results", dsIngestionId);
         }
     }
 
@@ -176,6 +178,8 @@ public class DatasourceIngestionService {
             dsIngestion.setStackTrace(cause);
             dsIngestion.setNextPlannedIngestDate(null);
             sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+        } else {
+            LOGGER.warn("Unable to find datasource with id {} to set status to inactive", datasourceId);
         }
     }
 
@@ -191,6 +195,8 @@ public class DatasourceIngestionService {
             dsIngestion.setStackTrace(stackTrace);
             dsIngestion.setNextPlannedIngestDate(null);
             sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+        } else {
+            LOGGER.warn("Unable to find datasource with id {} to set error={}", dsIngestionId, cause);
         }
     }
 
@@ -210,6 +216,8 @@ public class DatasourceIngestionService {
             dsIngestion.setInErrorObjectsCount(notFinishedException.getSaveResult().getInErrorDocsCount());
             dsIngestion.setNextPlannedIngestDate(null);
             sendNotificationSummary(dsIngestionRepos.save(dsIngestion));
+        } else {
+            LOGGER.warn("Unable to find datasource with id {} to set status to not finished", dsIngestionId);
         }
     }
 

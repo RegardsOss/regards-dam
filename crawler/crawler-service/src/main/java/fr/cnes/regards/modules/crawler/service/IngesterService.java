@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -36,7 +35,6 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
@@ -44,7 +42,6 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
@@ -162,8 +159,8 @@ public class IngesterService implements IHandler<PluginConfEvent> {
                             } catch (NotFinishedException nfe) {
                                 LOGGER.error(nfe.getMessage(), nfe);
                                 dsIngestionService.setNotFinished(dsId, nfe);
-                            } catch (ExecutionException | InterruptedException | DataSourceException
-                                    | ModuleException e) {
+                            } catch (Exception e) {
+                                // Catch all other possible exceptions to set ingestion to error status
                                 LOGGER.error(e.getMessage(), e);
                                 try (StringWriter sw = new StringWriter()) {
                                     e.printStackTrace(new PrintWriter(sw));
