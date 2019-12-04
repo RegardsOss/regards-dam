@@ -12,3 +12,9 @@ action varchar(30) not null, action_date timestamp not null, state varchar(30) n
 
 create sequence seq_notification_action start 1 increment 50;
 
+create table t_recipient_error (id int8 not null, recipient_id int8 not null, job_id uuid not null, primary key(id));
+alter table t_recipient_error add constraint fk_job_id foreign key (job_id) references t_job_info(id);
+alter table t_recipient_error add constraint fk_recipient_id foreign key (recipient_id) references t_recipient(id);
+
+create sequence seq_recipient_error start 1 increment 50;
+

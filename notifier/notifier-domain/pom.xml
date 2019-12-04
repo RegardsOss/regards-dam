@@ -9,7 +9,7 @@
 		<version>GEODE</version>
 	</parent>
 	<artifactId>notifier-domain</artifactId>
-    <groupId>fr.cnes.regards.modules.notifier</groupId>
+	<groupId>fr.cnes.regards.modules.notifier</groupId>
 
 	<description>Notification domain layer</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
@@ -53,8 +53,12 @@
 			<artifactId>notifier-dto</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>fr.cnes.regards.modules.feature</groupId>
-            <artifactId>feature-dto</artifactId>
-        </dependency>
+			<groupId>fr.cnes.regards.modules.feature</groupId>
+			<artifactId>feature-dto</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.jobs</groupId>
+			<artifactId>jobs-domain</artifactId>
+		</dependency>
 	</dependencies>
 </project>
