@@ -190,7 +190,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
-        metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_PENDING);
+        metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_GRANTED);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getUrn(), request.getRequestId());
     }
