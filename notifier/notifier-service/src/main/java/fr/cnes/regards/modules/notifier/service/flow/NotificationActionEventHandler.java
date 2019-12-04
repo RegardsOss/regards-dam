@@ -42,11 +42,11 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
  */
 @Component
 @Profile("!nohandler")
-public class FeatureEventHandler
+public class NotificationActionEventHandler
         implements IBatchHandler<NotificationActionEvent>, ApplicationListener<ApplicationReadyEvent> {
 
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationActionEventHandler.class);
 
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;

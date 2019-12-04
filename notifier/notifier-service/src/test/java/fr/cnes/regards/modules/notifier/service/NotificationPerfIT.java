@@ -121,7 +121,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             bulk++;
             events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
-                                                 NotificationState.DELAYED));
+                                                NotificationState.DELAYED));
             if (bulk == FEATURE_EVENT_BULK) {
                 bulk = 0;
                 assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE, this.notificationService.processRequest(events));
@@ -181,8 +181,8 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
      */
     @Test
     public void testPerfWithFail() {
-        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
-                                       modelAttrAssocClientMock);
+        String model = mockModelClient(GeodeProperties.getGeodeModel());
+
         Feature modifiedFeature = Feature.build("id", null, null, EntityType.DATA, model);
         GeodeProperties.addGeodeProperties(modifiedFeature);
 
@@ -191,7 +191,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         List<NotificationAction> events = new ArrayList<>();
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
-                                                 NotificationState.DELAYED));
+                                                NotificationState.DELAYED));
         }
 
         assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1),

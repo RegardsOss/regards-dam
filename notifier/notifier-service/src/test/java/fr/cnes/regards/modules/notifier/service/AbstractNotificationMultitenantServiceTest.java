@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.notifier.service;
 
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFa
 import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
+import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
 import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender10;
@@ -60,7 +63,7 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
-import fr.cnes.regards.modules.notifier.service.flow.FeatureEventHandler;
+import fr.cnes.regards.modules.notifier.service.flow.NotificationActionEventHandler;
 
 public abstract class AbstractNotificationMultitenantServiceTest extends AbstractMultitenantServiceTest {
 
@@ -76,6 +79,9 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
 
     @Autowired
     protected IPluginConfigurationRepository pluginConfRepo;
+
+    @Autowired
+    protected INotificationActionRepository notificationRepo;
 
     @Autowired
     protected NotificationRuleService notificationService;
@@ -105,6 +111,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         this.recipientRepo.deleteAll();
         this.ruleRepo.deleteAll();
         this.pluginConfRepo.deleteAll();
+        this.notificationRepo.deleteAll();
         simulateApplicationReadyEvent();
     }
 
@@ -171,9 +178,24 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         return mockModelClient(filename, cps, factory, getDefaultTenant(), modelAttrAssocClientMock);
     }
 
+    public void waitNotificationRegistry(int expectedNumber, int timeout) throws InterruptedException {
+        long notificationActionNumber = 0;
+        int cpt = 0;
+        do {
+            notificationActionNumber = this.notificationRepo.count();
+            cpt++;
+            Thread.sleep(1000);
+        } while ((notificationActionNumber != expectedNumber) && (cpt != timeout));
+
+        if (notificationActionNumber != expectedNumber) {
+            fail(String.format("Wrong notifications number in database after timeout expected %s got %s",
+                               expectedNumber, notificationActionNumber));
+        }
+    }
+
     @After
     public void after() {
-        cleanAMQPQueues(FeatureEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(NotificationActionEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender2.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender3.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender4.class, Target.ONE_PER_MICROSERVICE_TYPE);

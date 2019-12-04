@@ -37,16 +37,16 @@ import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
 
 /**
- * Entity to store notification request
+ * Entity to store notification action
  * @author Kevin Marchois
  *
  */
 @Entity
-@Table(name = "t_notification_request")
+@Table(name = "t_notification_action")
 public class NotificationAction {
 
     @Id
-    @SequenceGenerator(name = "notificationSequence", initialValue = 1, sequenceName = "seq_notification_request")
+    @SequenceGenerator(name = "notificationSequence", initialValue = 1, sequenceName = "seq_notification_action")
     @GeneratedValue(generator = "notificationSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
@@ -58,8 +58,8 @@ public class NotificationAction {
     @Enumerated(EnumType.STRING)
     private FeatureManagementAction action;
 
-    @Column(name = "request", nullable = false)
-    private OffsetDateTime requestDate;
+    @Column(name = "action_date", nullable = false)
+    private OffsetDateTime actionDate;
 
     @Column(name = "state", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -81,12 +81,12 @@ public class NotificationAction {
         this.action = action;
     }
 
-    public OffsetDateTime getRequestDate() {
-        return requestDate;
+    public OffsetDateTime getActionDate() {
+        return actionDate;
     }
 
-    public void setRequestDate(OffsetDateTime requestDate) {
-        this.requestDate = requestDate;
+    public void setActionDate(OffsetDateTime actionDate) {
+        this.actionDate = actionDate;
     }
 
     public Long getId() {
@@ -105,7 +105,7 @@ public class NotificationAction {
         NotificationAction toCreate = new NotificationAction();
         toCreate.setAction(action);
         toCreate.setFeature(feature);
-        toCreate.setRequestDate(OffsetDateTime.now());
+        toCreate.setActionDate(OffsetDateTime.now());
         toCreate.setState(state);
 
         return toCreate;

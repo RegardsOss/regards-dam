@@ -63,10 +63,10 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
     private IPublisher publisher;
 
     @Test
-    public void testRuleMacher() throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException {
+    public void testRuleMacher()
+            throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException, InterruptedException {
 
-        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
-                                       modelAttrAssocClientMock);
+        String model = mockModelClient(GeodeProperties.getGeodeModel());
         Feature feature = Feature
                 .build("id",
                        FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
@@ -75,7 +75,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         // Properties of the feature
         Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "TM")));
+                .set(IProperty.buildObject("file_infos", IProperty.buildString("nature", "TM")));
         feature.setProperties(properties);
 
         // configuration of the rule plugin
@@ -88,7 +88,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         StringPluginParam param = new StringPluginParam();
         param.setName("attributeToSeek");
-        param.setValue("file_infos.fem_type");
+        param.setValue("file_infos.nature");
         rulePlugin.getParameters().add(param);
         param = new StringPluginParam();
         param.setName("attributeValueToSeek");
@@ -115,7 +115,9 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
             events.add(NotificationActionEvent.build(feature, FeatureManagementAction.CREATE));
         }
         this.publisher.publish(events);
+        waitNotificationRegistry(configuration.getMaxBulkSize(), 100);
         this.notificationService.scheduleRequests();
+        waitNotificationRegistry(0, 100);
     }
 
     @Test

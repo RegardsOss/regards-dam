@@ -150,7 +150,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     @Override
     public int processRequest(List<NotificationAction> toHandles) {
         long startTime = System.currentTimeMillis();
-        LOGGER.debug("------------->>> Reception of {} Feature event, start of notification process {} ms",
+        LOGGER.debug("------------->>> Reception of {} notification  event, start of notification process {} ms",
                      toHandles.size(), startTime);
         int nbSend = 0;
         long averageFeatureTreatmentTime = 0;
@@ -182,7 +182,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     public void registerNotifications(List<NotificationActionEvent> events) {
         Set<NotificationAction> notificationToRegister = events.stream().map(event -> initNotificationRequest(event))
                 .collect(Collectors.toSet());
-        notificationToRegister.removeAll(null);
+        notificationToRegister.remove(null);
         this.notificationRequestRepo.saveAll(notificationToRegister);
     }
 
@@ -206,8 +206,8 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     public int scheduleRequests() {
         // Shedule job
         Set<JobParameter> jobParameters = Sets.newHashSet();
-        Set<Long> requestIds = this.notificationRequestRepo
-                .findIdToSchedule(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("requestDate"))));
+        List<Long> requestIds = this.notificationRequestRepo
+                .findIdToSchedule(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("actionDate"))));
         long scheduleStart = System.currentTimeMillis();
 
         jobParameters.add(new JobParameter(NotificationJob.IDS_PARAMETER, requestIds));

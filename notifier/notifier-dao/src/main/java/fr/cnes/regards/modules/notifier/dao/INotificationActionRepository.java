@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.notifier.dao;
 
-import java.util.Set;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,11 +38,11 @@ import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
 @Repository
 public interface INotificationActionRepository extends JpaRepository<NotificationAction, Long> {
 
-    @Query("Select request.id From NotificationAction request  "
-            + " where request.state = 'DELAYED' Order by request.requestDate")
-    public Set<Long> findIdToSchedule(Pageable pageable);
+    @Query("Select notif.id From NotificationAction notif  "
+            + " where notif.state = 'DELAYED' Order by notif.actionDate")
+    public List<Long> findIdToSchedule(Pageable pageable);
 
     @Modifying
-    @Query("Update NotificationAction request set request.state = :state Where request.id in :ids")
-    public void updateState(@Param("state") NotificationState state, @Param("ids") Set<Long> ids);
+    @Query("Update NotificationAction notif set notif.state = :state Where notif.id in :ids")
+    public void updateState(@Param("state") NotificationState state, @Param("ids") List<Long> ids);
 }
