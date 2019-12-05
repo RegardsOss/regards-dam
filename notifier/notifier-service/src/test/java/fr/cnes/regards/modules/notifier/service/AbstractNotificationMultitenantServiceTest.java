@@ -52,6 +52,7 @@ import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
+import fr.cnes.regards.modules.notifier.dao.IRecipientErrorRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
 import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender10;
@@ -84,6 +85,9 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     protected INotificationActionRepository notificationRepo;
 
     @Autowired
+    protected IRecipientErrorRepository recipientErrorRepo;
+
+    @Autowired
     protected NotificationRuleService notificationService;
 
     @Autowired
@@ -112,6 +116,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         this.ruleRepo.deleteAll();
         this.pluginConfRepo.deleteAll();
         this.notificationRepo.deleteAll();
+        this.recipientErrorRepo.deleteAll();
         simulateApplicationReadyEvent();
     }
 

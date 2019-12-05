@@ -47,6 +47,7 @@ import fr.cnes.reguards.modules.dto.type.NotificationType;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
+ * Test class for service {@link NotificationRuleService}
  * @author kevin
  *
  */
