@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -49,7 +50,7 @@ public class NotificationJob extends AbstractJob<Void> {
     private List<NotificationAction> notificationRequests;
 
     @Autowired
-    private INotificationActionRepository notificationRequestsRepo;
+    private INotificationActionRepository notificationActionRepo;
 
     @Autowired
     private INotificationRuleService notificationService;
@@ -60,16 +61,16 @@ public class NotificationJob extends AbstractJob<Void> {
         Type type = new TypeToken<Set<Long>>() {
 
         }.getType();
-        notificationRequests = this.notificationRequestsRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
+        notificationRequests = this.notificationActionRepo.findAllById(getValue(parameters, IDS_PARAMETER, type));
     }
 
     @Override
     public void run() {
         LOGGER.info("[{}] Notification job starts", jobInfoId);
         long start = System.currentTimeMillis();
-        int notificationNumber = this.notificationService.processRequest(notificationRequests);
-        LOGGER.info("[{}]{}{} Notification processed in {} ms", jobInfoId, INFO_TAB, notificationNumber,
-                    System.currentTimeMillis() - start);
+        Pair<Integer, Integer> notifications = this.notificationService.processRequest(notificationRequests, jobInfoId);
+        LOGGER.info("[{}]{}{} Notifications sended in {} ms, {} notifications failed", jobInfoId, INFO_TAB,
+                    notifications.getFirst(), System.currentTimeMillis() - start, notifications.getSecond());
 
     }
 

@@ -19,8 +19,10 @@
 package fr.cnes.regards.modules.notifier.service;
 
 import java.util.List;
+import java.util.UUID;
 
-import fr.cnes.regards.modules.feature.dto.Feature;
+import org.springframework.data.util.Pair;
+
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
@@ -34,13 +36,15 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 public interface INotificationRuleService {
 
     /**
-     * Handle a list of {@link NotificationAction} it can be CREATE/UPDATE/DELETE event on a {@link Feature}
+     * Handle a list of {@link NotificationAction} it can be CREATE/UPDATE/DELETE event
      * Check if this event is compliant with a {@link Rule} and in that case notify all {@link Recipient} associated
      * with this {@link Rule}
+     * If some {@link Recipient} failed we will save them
      * @param toHandles event to handle
-     * @return number of notification sended
+     * @param jobInfoId job id will be saved in case of failed {@link Recipient}
+     * @return pair of nbSended/nbErrors notifications
      */
-    public int processRequest(List<NotificationAction> toHandles);
+    public Pair<Integer, Integer> processRequest(List<NotificationAction> toHandles, UUID jobInfoId);
 
     /**
      * Register {@link NotificationActionEvent} to schedule notifications

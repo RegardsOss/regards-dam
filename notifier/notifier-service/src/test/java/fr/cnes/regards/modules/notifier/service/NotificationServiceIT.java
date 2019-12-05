@@ -18,33 +18,46 @@
  */
 package fr.cnes.regards.modules.notifier.service;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.UUID;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginParam;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
+import fr.cnes.regards.framework.modules.jobs.domain.JobStatus;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
-import fr.cnes.regards.modules.model.dto.properties.IProperty;
-import fr.cnes.regards.modules.notifier.domain.Recipient;
-import fr.cnes.regards.modules.notifier.domain.Rule;
-import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
-import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
+import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent2;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent3;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent4;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent5;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent6;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent7;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent8;
+import fr.cnes.regards.modules.notifier.dto.NotificationEvent9;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender10;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender2;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender3;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender4;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender5;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
+import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
 
 /**
  * Test class for service {@link NotificationRuleService}
@@ -58,113 +71,93 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 public class NotificationServiceIT extends AbstractNotificationMultitenantServiceTest {
 
     @Autowired
-    private NotificationConfigurationProperties configuration;
+    private ISubscriber subscriber;
 
-    @Autowired
-    private IPublisher publisher;
+    @Override
+    @Before
+    public void before() throws InterruptedException {
+        super.before();
 
-    @Test
-    public void testRuleMacher()
-            throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException, InterruptedException {
+        subOrNot(NotificationEvent2.class, new RecipientSender2());
+        subOrNot(NotificationEvent3.class, new RecipientSender3());
+        subOrNot(NotificationEvent4.class, new RecipientSender4());
+        subOrNot(NotificationEvent5.class, new RecipientSender5());
+        subOrNot(NotificationEvent6.class, new RecipientSender6());
+        subOrNot(NotificationEvent7.class, new RecipientSender7());
+        subOrNot(NotificationEvent8.class, new RecipientSender8());
+        subOrNot(NotificationEvent9.class, new RecipientSender9());
+        subOrNot(NotificationEvent10.class, new RecipientSender10());
+    }
 
-        String model = mockModelClient(GeodeProperties.getGeodeModel());
-        Feature feature = Feature
-                .build("id",
-                       FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                  getDefaultTenant(), 1),
-                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, model);
-
-        // Properties of the feature
-        Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("nature", "TM")));
-        feature.setProperties(properties);
-
-        // configuration of the rule plugin
-        PluginConfiguration rulePlugin = new PluginConfiguration();
-
-        rulePlugin.setBusinessId("testRule");
-        rulePlugin.setVersion("1.0.0");
-        rulePlugin.setLabel("test");
-        rulePlugin.setPluginId("DefaultRuleMatcher");
-
-        StringPluginParam param = new StringPluginParam();
-        param.setName("attributeToSeek");
-        param.setValue("file_infos.nature");
-        rulePlugin.getParameters().add(param);
-        param = new StringPluginParam();
-        param.setName("attributeValueToSeek");
-        param.setValue("TM");
-        rulePlugin.getParameters().add(param);
-
-        rulePlugin = this.pluginConfRepo.save(rulePlugin);
-
-        Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
-        this.ruleRepo.save(rule);
-
-        // configuration of the recipient sender plugin
-        PluginConfiguration recipientPlugin = new PluginConfiguration();
-        recipientPlugin.setBusinessId("testRecipient");
-        recipientPlugin.setVersion("1.0.0");
-        recipientPlugin.setLabel("test recipient");
-        recipientPlugin.setPluginId("DefaultRecipientSender");
-        recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
-        Recipient recipient = Recipient.build(rule, recipientPlugin);
-        this.recipientRepo.save(recipient);
-
-        List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
-        for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(feature, FeatureManagementAction.CREATE));
-        }
-        this.publisher.publish(events);
-        waitNotificationRegistry(configuration.getMaxBulkSize(), 100);
-        this.notificationService.scheduleRequests();
-        waitNotificationRegistry(0, 100);
+    private <E extends ISubscribable> void subOrNot(Class<E> eventType, IHandler<E> handler) {
+        subscriber.subscribeTo(eventType, handler);
+        subscriber.unsubscribeFrom(eventType);
     }
 
     @Test
-    public void testRuleMacherWithNonMatcherFeature()
-            throws NotAvailablePluginConfigurationException, ModuleException, ExecutionException {
+    public void testProcess() throws InterruptedException {
 
-        Feature feature = Feature
-                .build("id",
-                       FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                  getDefaultTenant(), 1),
-                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model");
+        // JobInfo created for test only we don't need a job start in this test
+        JobInfo job = new JobInfo(false);
+        job.setId(UUID.randomUUID());
+        job.updateStatus(JobStatus.ABORTED);
+        job = this.jobInforepo.save(job);
+
+        Thread.sleep(5_000);
+
+        Feature modifiedFeature = initFeature();
 
         // Properties of the feature
-        Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("fem_type", "Not TM")));
-        feature.setProperties(properties);
+        GeodeProperties.addGeodeProperties(modifiedFeature);
 
-        // configuration of the rule plugin
-        PluginConfiguration rulePlugin = new PluginConfiguration();
-        rulePlugin.setBusinessId("testRule");
-        rulePlugin.setVersion("1.0.0");
-        rulePlugin.setLabel("test");
-        rulePlugin.setPluginId("DefaultRuleMatcher");
+        initPlugins(false);
 
-        StringPluginParam param = new StringPluginParam();
-        param.setName("attributeToSeek");
-        param.setValue("fem_type");
-        rulePlugin.getParameters().add(param);
-        param = new StringPluginParam();
-        param.setName("attributeValueToSeek");
-        param.setValue("TM");
-        rulePlugin.getParameters().add(param);
+        List<NotificationAction> events = new ArrayList<>();
+        int bulk = 0;
+        for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
+            bulk++;
+            events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
+                                                NotificationState.DELAYED));
+            if (bulk == FEATURE_EVENT_BULK) {
+                bulk = 0;
+                assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE,
+                             this.notificationService.processRequest(events, job.getId()).getFirst().intValue());
+                events.clear();
+            }
+        }
 
-        rulePlugin = this.pluginConfRepo.save(rulePlugin);
+        if (bulk > 0) {
+            assertEquals(bulk * RECIPIENTS_PER_RULE,
+                         this.notificationService.processRequest(events, job.getId()).getFirst().intValue());
+        }
+    }
 
-        Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
-        this.ruleRepo.save(rule);
+    /**
+     * In that test one the the fake RecipientSender will fail
+     */
+    @Test
+    public void testProcessWithFail() {
+        // JobInfo created for test only we don't need a job start in this test
+        JobInfo job = new JobInfo(false);
+        job.setId(UUID.randomUUID());
+        job.updateStatus(JobStatus.ABORTED);
+        job = this.jobInforepo.save(job);
 
-        // configuration of the recipient sender plugin
-        PluginConfiguration recipientPlugin = new PluginConfiguration();
-        recipientPlugin.setBusinessId("testRecipient");
-        recipientPlugin.setVersion("1.0.0");
-        recipientPlugin.setLabel("test recipient");
-        recipientPlugin.setPluginId("DefaultRecipientSender");
-        recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
-        Recipient recipient = Recipient.build(rule, recipientPlugin);
+        Feature modifiedFeature = initFeature();
+        GeodeProperties.addGeodeProperties(modifiedFeature);
+
+        initPlugins(true);
+
+        List<NotificationAction> events = new ArrayList<>();
+        for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
+            events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
+                                                NotificationState.DELAYED));
+        }
+
+        Pair<Integer, Integer> results = this.notificationService.processRequest(events, job.getId());
+        assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1), results.getFirst().intValue());
+        assertEquals(FEATURE_EVENT_TO_RECEIVE, results.getSecond().intValue());
+        assertEquals(FEATURE_EVENT_TO_RECEIVE, this.recipientErrorRepo.count());
 
     }
 
