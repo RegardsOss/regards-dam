@@ -77,8 +77,6 @@ public abstract class AbstractCacheableRule {
         return rules;
     }
 
-    // TODO cette methode est en public pour faire passer les TU en attendant que la partie gestion des rules soit implémentées
-    // il faudra ensuite la passer en protected
     public void cleanTenantCache(String tenant) {
         LoadingCache<String, Set<Rule>> ruleCache = ruleCacheMap.get(tenant);
         if (ruleCache != null) {

@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -68,6 +69,7 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp" })
+@DirtiesContext
 public class NotificationServiceIT extends AbstractNotificationMultitenantServiceTest {
 
     @Autowired

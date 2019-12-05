@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -45,6 +46,7 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
         properties = { "spring.jpa.properties.hibernate.default_schema=notification", "regards.amqp.enabled=true" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp" })
+@DirtiesContext
 public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTest {
 
     @Autowired
@@ -89,11 +91,11 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         }
         this.publisher.publish(events);
         // we should have  configuration.getMaxBulkSize() NotificationAction in database
-        waitDatabaseCreation(this.notificationRepo, configuration.getMaxBulkSize(), 30);
+        waitDatabaseCreation(this.notificationRepo, configuration.getMaxBulkSize(), 6000);
         this.notificationService.scheduleRequests();
         // we will wait util configuration.getMaxBulkSize() recipient errors are stored in database
         // cause one of the RECIPIENTS_PER_RULE will fail so we will get 1 error per NotificationAction to send
-        waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 30);
+        waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 6000);
         assertEquals(this.notificationRepo.count(), configuration.getMaxBulkSize().intValue());
 
     }
