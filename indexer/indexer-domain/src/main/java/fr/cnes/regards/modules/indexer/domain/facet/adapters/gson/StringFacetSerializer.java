@@ -19,13 +19,13 @@
 package fr.cnes.regards.modules.indexer.domain.facet.adapters.gson;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
@@ -34,11 +34,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
  * @author Xavier-Alexandre Brochard
  */
 public class StringFacetSerializer implements JsonSerializer<StringFacet> {
-
-    @Override
-    public JsonElement serialize(StringFacet src, Type srcType, JsonSerializationContext context) {
-        return context.serialize(new AdaptedFacet(src));
-    }
 
     /**
      * A POJO describing the adapted shape
@@ -89,6 +84,9 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      */
     static class AdaptedFacetValue {
 
+        private static final String[] CHARACTER_TO_ESCAPE = { "\\", "+", "-", "&&", "||", "!", "(", ")", "{", "}", "[",
+                "]", "^", "\"", "~", "*", "?", ":", "/", " " };
+
         private final String word;
 
         private final Long count;
@@ -103,10 +101,11 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
             super();
             this.word = word;
             this.count = count;
-            if (word.contains(" ")) {
-                openSearchQuery = attributeName + ":" + "\"" + word + "\"";
+            boolean shouldAddQuote = Arrays.stream(CHARACTER_TO_ESCAPE).anyMatch(this.word::contains);
+            if (shouldAddQuote) {
+                openSearchQuery = attributeName + ":" + "\"" + this.word + "\"";
             } else {
-                openSearchQuery = attributeName + ":" + word;
+                openSearchQuery = attributeName + ":" + this.word;
             }
         }
 
@@ -117,6 +116,11 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
             return openSearchQuery;
         }
 
+    }
+
+    @Override
+    public JsonElement serialize(StringFacet src, Type srcType, JsonSerializationContext context) {
+        return context.serialize(new AdaptedFacet(src));
     }
 
 }
