@@ -102,7 +102,7 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         String attName = criterion.getName();
         switch (criterion.getType()) {
             case EQUALS:
-                return QueryBuilders.matchPhraseQuery(attName, searchValue);
+                return QueryBuilders.termQuery(attName + KEYWORD, searchValue);
             case STARTS_WITH:
                 return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue).maxExpansions(10_000);
             case ENDS_WITH:
