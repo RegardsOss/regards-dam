@@ -122,7 +122,6 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 }
                 return IFeatureCriterion.eq(attributeModel, valL);
             case STRING:
-                return IFeatureCriterion.eq(attributeModel, value);
             case STRING_ARRAY:
                 return IFeatureCriterion.contains(attributeModel, value);
             case DATE_ISO8601:
