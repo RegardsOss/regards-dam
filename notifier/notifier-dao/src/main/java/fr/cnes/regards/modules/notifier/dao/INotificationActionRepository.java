@@ -45,4 +45,8 @@ public interface INotificationActionRepository extends JpaRepository<Notificatio
     @Modifying
     @Query("Update NotificationAction notif set notif.state = :state Where notif.id in :ids")
     public void updateState(@Param("state") NotificationState state, @Param("ids") List<Long> ids);
+
+    @Modifying
+    @Query("Delete From NotificationAction notif where notif not in (Select error.notification From RecipientError error)")
+    public void deleteNoticationWithoutErrors();
 }

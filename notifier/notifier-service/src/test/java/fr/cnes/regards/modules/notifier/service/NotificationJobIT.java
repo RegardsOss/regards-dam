@@ -22,21 +22,20 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
+import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
+import fr.cnes.regards.framework.modules.jobs.domain.JobStatus;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
- * Performance tests on Notification manager
+ * Test notification job restart after recipient failure
  * @author Kevin Marchois
  *
  */
@@ -45,34 +44,12 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp" })
 @DirtiesContext
-public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTest {
+public class NotificationJobIT extends AbstractNotificationMultitenantServiceTest {
+
+    public static boolean RECIPIENT_FAIL = true;
 
     @Test
-    public void testRegistrationAndProcessing()
-            throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException, InterruptedException {
-
-        Feature feature = initFeature();
-
-        initPlugins(false);
-
-        List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
-        for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(feature, FeatureManagementAction.CREATE));
-        }
-        this.publisher.publish(events);
-        // we should have  configuration.getMaxBulkSize() NotificationAction in database
-        waitDatabaseCreation(this.notificationRepo, configuration.getMaxBulkSize(), 60);
-        this.notificationService.scheduleRequests();
-        // all send should work so we should have 0 NotificationAction left in database
-        waitDatabaseCreation(this.notificationRepo, 0, 60);
-        assertEquals(0, this.recipientErrorRepo.count());
-
-    }
-
-    @Test
-    public void testRegistrationAndProcessingWith1RecipientFail()
-            throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException, InterruptedException {
-
+    public void testRestartAfterFailure() throws InterruptedException {
         Feature feature = initFeature();
 
         initPlugins(true);
@@ -88,7 +65,12 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
         // we will wait util configuration.getMaxBulkSize() recipient errors are stored in database
         // cause one of the RECIPIENTS_PER_RULE will fail so we will get 1 error per NotificationAction to send
         waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 60);
-        assertEquals(this.notificationRepo.count(), configuration.getMaxBulkSize().intValue());
-
+        JobInfo failJob = this.jobInforepo.findAll().iterator().next();
+        failJob.updateStatus(JobStatus.QUEUED);
+        RECIPIENT_FAIL = false;
+        this.jobInforepo.save(failJob);
+        waitDatabaseCreation(this.recipientErrorRepo, 0, 60);
+        waitDatabaseCreation(this.notificationRepo, 0, 60);
+        assertEquals(JobStatus.SUCCEEDED, this.jobInforepo.findAll().iterator().next().getStatus().getStatus());
     }
 }

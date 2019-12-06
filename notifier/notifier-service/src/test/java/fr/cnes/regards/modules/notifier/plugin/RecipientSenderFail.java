@@ -22,6 +22,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
+import fr.cnes.regards.modules.notifier.service.NotificationJobIT;
 
 /**
  * @author kevin
@@ -33,7 +34,7 @@ public class RecipientSenderFail extends AbstractRecipientSender<NotificationEve
 
     @Override
     public boolean send(Feature feature, FeatureManagementAction action) {
-        return false;
+        return !NotificationJobIT.RECIPIENT_FAIL;
     }
 
     @Override

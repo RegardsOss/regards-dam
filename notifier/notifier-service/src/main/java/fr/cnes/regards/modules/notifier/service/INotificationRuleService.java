@@ -25,6 +25,7 @@ import org.springframework.data.util.Pair;
 
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
+import fr.cnes.regards.modules.notifier.domain.RecipientError;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
@@ -40,6 +41,7 @@ public interface INotificationRuleService {
      * Check if this event is compliant with a {@link Rule} and in that case notify all {@link Recipient} associated
      * with this {@link Rule}
      * If some {@link Recipient} failed we will save them
+     * If {@link RecipientError} exist for the jobInfoId we will only send notification to contained {@link Recipient}
      * @param toHandles event to handle
      * @param jobInfoId job id will be saved in case of failed {@link Recipient}
      * @return pair of nbSended/nbErrors notifications

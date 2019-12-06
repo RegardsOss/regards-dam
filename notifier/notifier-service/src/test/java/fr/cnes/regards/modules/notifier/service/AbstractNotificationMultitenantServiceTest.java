@@ -38,6 +38,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.AmqpConstants;
 import fr.cnes.regards.framework.amqp.configuration.IAmqpAdmin;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
@@ -78,6 +79,7 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
+import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.flow.NotificationActionEventHandler;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
 
@@ -133,6 +135,12 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     @Autowired
     protected IModelAttrAssocClient modelAttrAssocClientMock;
 
+    @Autowired
+    protected NotificationConfigurationProperties configuration;
+
+    @Autowired
+    protected IPublisher publisher;
+
     @Before
     public void before() throws InterruptedException {
         mockModelClient(GeodeProperties.getGeodeModel());
@@ -142,6 +150,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         this.ruleRepo.deleteAll();
         this.pluginConfRepo.deleteAll();
         this.notificationRepo.deleteAll();
+        this.jobInforepo.deleteAll();
         simulateApplicationReadyEvent();
     }
 

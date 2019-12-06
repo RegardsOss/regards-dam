@@ -51,6 +51,12 @@ public class RecipientError {
     private Recipient recipient;
 
     @ManyToOne
+    @NotNull(message = "Ntofication is required")
+    @JoinColumn(name = "notification_action_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_notification_action_id"))
+    private NotificationAction notification;
+
+    @ManyToOne
     @NotNull(message = "Job info is required")
     @JoinColumn(name = "job_id", nullable = false, foreignKey = @ForeignKey(name = "fk_job_id"))
     private JobInfo job;
@@ -75,10 +81,19 @@ public class RecipientError {
         this.job = job;
     }
 
-    public static RecipientError build(Recipient recipient, JobInfo jobInfo) {
+    public NotificationAction getNotification() {
+        return notification;
+    }
+
+    public void setNotification(NotificationAction notification) {
+        this.notification = notification;
+    }
+
+    public static RecipientError build(Recipient recipient, JobInfo jobInfo, NotificationAction notification) {
         RecipientError error = new RecipientError();
         error.setJob(jobInfo);
         error.setRecipient(recipient);
+        error.setNotification(notification);
 
         return error;
     }

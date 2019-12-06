@@ -32,6 +32,7 @@ import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissingException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
@@ -71,7 +72,10 @@ public class NotificationJob extends AbstractJob<Void> {
         Pair<Integer, Integer> notifications = this.notificationService.processRequest(notificationRequests, jobInfoId);
         LOGGER.info("[{}]{}{} Notifications sended in {} ms, {} notifications failed", jobInfoId, INFO_TAB,
                     notifications.getFirst(), System.currentTimeMillis() - start, notifications.getSecond());
-
+        // if there are exception we throw an exception to stop the job in error
+        if (!notifications.getSecond().equals(0)) {
+            throw new RsRuntimeException(String.format("Some Recipient failed for the Job %s", jobInfoId));
+        }
     }
 
 }

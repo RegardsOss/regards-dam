@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.notifier.service;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -162,41 +162,77 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         LOGGER.debug("------------->>> Reception of {} notification  event, start of notification process {} ms",
                      toHandles.size(), startTime);
         int nbSend = 0;
+        int nbError = 0;
         long averageNotificationTreatmentTime = 0;
         long startNotificationTreatmentTime = 0;
 
-        ListMultimap<NotificationAction, Recipient> notificationsInErrors = ArrayListMultimap.create();
+        //get RecipientRrror for jobInfoId if exists
+        List<RecipientError> recipientErrros = this.recipientErrorRepo.findByJobId(jobInfoId);
 
-        for (NotificationAction notification : toHandles) {
-            startNotificationTreatmentTime = System.currentTimeMillis();
-            try {
-                nbSend += handleNotificationRequest(notification, notificationsInErrors);
-            } catch (ExecutionException | ModuleException | NotAvailablePluginConfigurationException e) {
-                LOGGER.error("Error during feature notification", e);
+        // if empty we send notifications according rules
+        if (recipientErrros.isEmpty()) {
+            ListMultimap<NotificationAction, Recipient> notificationsInErrors = ArrayListMultimap.create();
+
+            for (NotificationAction notification : toHandles) {
+                startNotificationTreatmentTime = System.currentTimeMillis();
+                try {
+                    nbSend += handleNotificationRequest(notification, notificationsInErrors);
+                } catch (ExecutionException | ModuleException | NotAvailablePluginConfigurationException e) {
+                    LOGGER.error("Error during feature notification", e);
+                }
+                averageNotificationTreatmentTime += System.currentTimeMillis() - startNotificationTreatmentTime;
             }
-            averageNotificationTreatmentTime += System.currentTimeMillis() - startNotificationTreatmentTime;
+            this.LOGGER.debug(
+                              "------------->>> End of notification process in {} ms, {} notifications sended"
+                                      + " with a average feature treatment time of {} ms",
+                              System.currentTimeMillis() - startTime, nbSend,
+                              averageNotificationTreatmentTime / (nbSend == 0 ? 1 : nbSend));
+            // delete all Notification not in the list in errors
+            toHandles.removeAll(notificationsInErrors.keySet());
+            this.notificationActionRepo.saveAll(notificationsInErrors.keySet());
+            // save notification in error for resend them later
+            saveRecipientErrors(notificationsInErrors, this.jobInfoService.retrieveJob(jobInfoId));
+            nbError = notificationsInErrors.values().size();
+            this.notificationActionRepo.deleteAll(toHandles);
+
+        } else { //if not empty we resend notification only for failed recipient
+            nbSend = resendNotification(recipientErrros);
+            nbError = recipientErrros.size() - nbSend;
         }
-        this.LOGGER.debug(
-                          "------------->>> End of notification process in {} ms, {} notifications sended"
-                                  + " with a average feature treatment time of {} ms",
-                          System.currentTimeMillis() - startTime, nbSend,
-                          averageNotificationTreatmentTime / (nbSend == 0 ? 1 : nbSend));
-        // delete all Notification not in the list in errors
-        toHandles.removeAll(notificationsInErrors.keySet());
-        // save notification in error for resend them later
-        saveRecipientErrors(notificationsInErrors.values(), this.jobInfoService.retrieveJob(jobInfoId));
-        this.notificationActionRepo.deleteAll(toHandles);
-        return Pair.of(nbSend, notificationsInErrors.values().size());
+        return Pair.of(nbSend, nbError);
+    }
+
+    /**
+     * Try to resend failed {@link Recipient}
+     * @param recipientErrors list of previous notification failed
+     * @return the number of notification sended
+     */
+    private int resendNotification(List<RecipientError> recipientErrors) {
+        int nbSend = 0;
+        List<RecipientError> succededRecipient = new ArrayList<RecipientError>();
+        for (RecipientError error : recipientErrors) {
+
+            if (notifyRecipient(error.getNotification().getFeature(), error.getRecipient(),
+                                error.getNotification().getAction())) {
+                succededRecipient.add(error);
+                nbSend++;
+            }
+        }
+        this.recipientErrorRepo.deleteAll(succededRecipient);
+        // delete notification it have no errors left
+        this.notificationActionRepo.deleteNoticationWithoutErrors();
+        return nbSend;
     }
 
     /**
      * Create and save {@link RecipientError} from {@link Recipient}
-     * @param errors List of failed {@link Recipient}
+     * @param notificationsInErrors Map of failed {@link NotificationAction}=>{@link Recipient}
      * @param jobInfo current {@link JobInfo}
      */
-    private void saveRecipientErrors(Collection<Recipient> errors, JobInfo jobInfo) {
-        // FIXME que faire su le jobInfo est null?
-        this.recipientErrorRepo.saveAll(errors.stream().map(recipient -> RecipientError.build(recipient, jobInfo))
+    private void saveRecipientErrors(ListMultimap<NotificationAction, Recipient> notificationsInErrors,
+            JobInfo jobInfo) {
+        this.recipientErrorRepo.saveAll(notificationsInErrors.entries().stream()
+                .map(entry -> RecipientError.build(entry.getValue(), jobInfo, entry.getKey()))
                 .collect(Collectors.toList()));
     }
 
