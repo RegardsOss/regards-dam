@@ -32,6 +32,9 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobStatus;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
+import fr.cnes.regards.modules.notifier.domain.Recipient;
+import fr.cnes.regards.modules.notifier.domain.RecipientError;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
@@ -46,8 +49,15 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 @DirtiesContext
 public class NotificationJobIT extends AbstractNotificationMultitenantServiceTest {
 
+    // used to param if the test Recipient will fail
     public static boolean RECIPIENT_FAIL = true;
 
+    /**
+     * Test notification job restart after {@link Recipient} fail
+     * After the job fail we will restart ir then the {@link Recipient} should work
+     * All {@link RecipientError} and {@link NotificationAction} must be deleted
+     * @throws InterruptedException
+     */
     @Test
     public void testRestartAfterFailure() throws InterruptedException {
         Feature feature = initFeature();
@@ -72,5 +82,31 @@ public class NotificationJobIT extends AbstractNotificationMultitenantServiceTes
         waitDatabaseCreation(this.recipientErrorRepo, 0, 60);
         waitDatabaseCreation(this.notificationRepo, 0, 60);
         assertEquals(JobStatus.SUCCEEDED, this.jobInforepo.findAll().iterator().next().getStatus().getStatus());
+    }
+
+    @Test
+    public void testRestartAfterFailureWithFailureAgain() throws InterruptedException {
+        Feature feature = initFeature();
+
+        initPlugins(true);
+
+        List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
+        for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
+            events.add(NotificationActionEvent.build(feature, FeatureManagementAction.CREATE));
+        }
+        this.publisher.publish(events);
+        // we should have  configuration.getMaxBulkSize() NotificationAction in database
+        waitDatabaseCreation(this.notificationRepo, configuration.getMaxBulkSize(), 60);
+        this.notificationService.scheduleRequests();
+        // we will wait util configuration.getMaxBulkSize() recipient errors are stored in database
+        // cause one of the RECIPIENTS_PER_RULE will fail so we will get 1 error per NotificationAction to send
+        waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 60);
+        JobInfo failJob = this.jobInforepo.findAll().iterator().next();
+        failJob.updateStatus(JobStatus.QUEUED);
+        RECIPIENT_FAIL = true;
+        this.jobInforepo.save(failJob);
+        waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 60);
+        waitDatabaseCreation(this.notificationRepo, configuration.getMaxBulkSize(), 60);
+        assertEquals(JobStatus.FAILED, this.jobInforepo.findAll().iterator().next().getStatus().getStatus());
     }
 }

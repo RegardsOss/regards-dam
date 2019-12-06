@@ -233,6 +233,11 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         }
     }
 
+    /**
+     * Init 1 rule and RECIPIENTS_PER_RULE {@link Recipient}, one of the {@link Recipient} will fail
+     * if the param fail is set to true
+     * @param fail
+     */
     protected void initPlugins(boolean fail) {
         // configuration of the rule plugin
         PluginConfiguration rulePlugin = new PluginConfiguration();
