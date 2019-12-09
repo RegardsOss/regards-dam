@@ -81,7 +81,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
@@ -91,7 +90,6 @@ import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.entities.IDocumentService;
 import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -137,9 +135,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private IDatasetService datasetService;
-
-    @Autowired
-    private IDocumentService documentService;
 
     @Autowired
     private ICollectionService collectionService;
@@ -239,10 +234,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                         dataset.getGroups().add(entry.getKey());
                     }
                 }
-            } else if (entity instanceof Document) {
-                // Add the internal AccessGroup to allow everyone to see this document
-                entity.getGroups().add(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
-            }
+            } 
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
             // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
@@ -742,7 +734,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         sessionNotifier.notifyIndexDeletion();
         //2. Then re-create all entities
         updateAllDatasets(tenant);
-        updateAllDocuments(tenant);
         updateAllCollections(tenant);
     }
 
@@ -910,14 +901,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     public void updateAllDatasets(String tenant) throws ModuleException {
         self.updateDatasets(tenant, datasetService.findAll(), null, true, null);
-    }
-
-    @Override
-    public void updateAllDocuments(String tenant) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
-        for (Document doc : documentService.findAll()) {
-            updateEntityIntoEs(tenant, doc.getIpId(), null, now, false, null);
-        }
     }
 
     @Override

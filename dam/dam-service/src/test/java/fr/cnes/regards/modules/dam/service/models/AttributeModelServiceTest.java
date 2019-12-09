@@ -38,7 +38,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.entities.IDocumentRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
 import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
 import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
@@ -95,7 +94,6 @@ public class AttributeModelServiceTest {
 
     private ICollectionRepository collectionRepository;
 
-    private IDocumentRepository documentRepository;
 
     /**
      * Publish for model changes
@@ -111,10 +109,9 @@ public class AttributeModelServiceTest {
         mockModelAttrAssocR = Mockito.mock(IModelAttrAssocRepository.class);
         datasetRepository = Mockito.mock(IDatasetRepository.class);
         collectionRepository = Mockito.mock(ICollectionRepository.class);
-        documentRepository = Mockito.mock(IDocumentRepository.class);
         mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                mockAttPropertyR, mockModelAttrAssocR, datasetRepository, collectionRepository, documentRepository,
+                mockAttPropertyR, mockModelAttrAssocR, datasetRepository, collectionRepository,
                 mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
     }
 

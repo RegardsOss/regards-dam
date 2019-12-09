@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumHashBiMap;
+
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.Document;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 
@@ -44,7 +44,6 @@ public final class Searches {
         TYPE_MAP.put(EntityType.COLLECTION, fr.cnes.regards.modules.dam.domain.entities.Collection.class);
         TYPE_MAP.put(EntityType.DATASET, Dataset.class);
         TYPE_MAP.put(EntityType.DATA, DataObject.class);
-        TYPE_MAP.put(EntityType.DOCUMENT, Document.class);
     }
 
     private static final Map<String, Class<? extends AbstractEntity>> SEARCH_TYPE_MAP = TYPE_MAP.keySet().stream()
