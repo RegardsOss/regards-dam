@@ -1,21 +1,3 @@
-/*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
- *
- * This file is part of REGARDS.
- *
- * REGARDS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * REGARDS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
- */
 package fr.cnes.regards.modules.opensearch.service.builder;
 
 import java.util.Set;
@@ -24,14 +6,10 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.nodes.FieldQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
-import org.apache.lucene.queryparser.flexible.standard.nodes.PointQueryNode;
 
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
@@ -39,29 +17,18 @@ import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
 import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 
 /**
- * Builds a {@link StringMatchCriterion} from a {@link FieldQueryNode} object when the value is a String.<br>
- * Builds a {@link IntMatchCriterion} from a {@link PointQueryNode} object when the value is an Integer.<br>
- * Builds a {@link RangeCriterion} from a {@link PointQueryNode} object when the value is a double.<br>
- * @author Marc Sordi
- * @author Xavier-Alexandre Brochard
+ * @author Sylvain VISSIERE-GUERINET
  */
-public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
+public class QuotedFieldQueryNodeBuilder implements ICriterionQueryBuilder {
 
-    /**
-     * Service retrieving the up-to-date list of {@link AttributeModel}s. Autowired by Spring.
-     */
-    private final IAttributeFinder finder;
+    private final IAttributeFinder attributeFinder;
 
-    /**
-     * @param finder Service permitting to retrieve up-to-date list of {@link AttributeModel}s
-     */
-    public FieldQueryNodeBuilder(IAttributeFinder finder) {
-        super();
-        this.finder = finder;
+    public QuotedFieldQueryNodeBuilder(IAttributeFinder attributeFinder) {
+        this.attributeFinder = attributeFinder;
     }
 
     @Override
-    public ICriterion build(final QueryNode queryNode) throws QueryNodeException { // NOSONAR
+    public ICriterion build(QueryNode queryNode) throws QueryNodeException {
         FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
 
         String field = fieldNode.getFieldAsString();
@@ -70,7 +37,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
         // Manage multisearch
         if (QueryParser.MULTISEARCH.equals(field)) {
             try {
-                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
+                Set<AttributeModel> atts = MultiSearchHelper.discoverFields(attributeFinder, value);
                 return IFeatureCriterion.multiMatch(atts, value);
             } catch (OpenSearchUnknownParameter e) {
                 throw new QueryNodeException(
@@ -80,7 +47,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
 
         AttributeModel attributeModel;
         try {
-            attributeModel = finder.findByName(field);
+            attributeModel = attributeFinder.findByName(field);
         } catch (OpenSearchUnknownParameter e) {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()),
                     e);
@@ -123,8 +90,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return IFeatureCriterion.eq(attributeModel, valL);
             case STRING:
             case STRING_ARRAY:
-                // string equality is handled by QuotedFieldQueryNodeBuilder as per lucene spec
-                return IFeatureCriterion.contains(attributeModel, value);
+                return IFeatureCriterion.eq(attributeModel, value);
             case DATE_ISO8601:
                 return IFeatureCriterion.eq(attributeModel, OffsetDateTimeAdapter.parse(value));
             case BOOLEAN:

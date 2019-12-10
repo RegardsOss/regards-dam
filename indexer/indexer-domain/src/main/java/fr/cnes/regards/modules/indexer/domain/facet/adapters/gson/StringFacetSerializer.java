@@ -19,7 +19,6 @@
 package fr.cnes.regards.modules.indexer.domain.facet.adapters.gson;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -84,29 +83,17 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      */
     static class AdaptedFacetValue {
 
-        private static final String[] CHARACTER_TO_ESCAPE = { "\\", "+", "-", "&&", "||", "!", "(", ")", "{", "}", "[",
-                "]", "^", "\"", "~", "*", "?", ":", "/", " " };
-
         private final String word;
 
         private final Long count;
 
         private final String openSearchQuery;
-
-        /**
-         * @param word
-         * @param count
-         */
+        
         public AdaptedFacetValue(String word, Long count, String attributeName) {
             super();
             this.word = word;
             this.count = count;
-            boolean shouldAddQuote = Arrays.stream(CHARACTER_TO_ESCAPE).anyMatch(this.word::contains);
-            if (shouldAddQuote) {
-                openSearchQuery = attributeName + ":" + "\"" + this.word + "\"";
-            } else {
-                openSearchQuery = attributeName + ":" + this.word;
-            }
+            this.openSearchQuery = attributeName + ":" + "\"" + this.word + "\"";
         }
 
         /**

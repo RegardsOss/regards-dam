@@ -103,7 +103,12 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         String attName = criterion.getName();
         switch (criterion.getType()) {
             case EQUALS:
-                return QueryBuilders.matchPhraseQuery(attName, searchValue);
+                // attribute type is declared by hand so there is no correspondant keyword field.
+                if (attName.equals("type")) {
+                    return QueryBuilders.matchPhraseQuery(attName, searchValue);
+                } else {
+                    return QueryBuilders.matchPhraseQuery(attName + KEYWORD, searchValue);
+                }
             case STARTS_WITH:
                 return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue).maxExpansions(10_000);
             case ENDS_WITH:
@@ -121,8 +126,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitStringMultiMatchCriterion(StringMultiMatchCriterion criterion) {
         String searchValue = criterion.getValue();
         Set<String> attNames = criterion.getNames();
-        MultiMatchQueryBuilder builder = QueryBuilders.multiMatchQuery(searchValue,
-                                                                       attNames.toArray(new String[attNames.size()]));
+        MultiMatchQueryBuilder builder = QueryBuilders
+                .multiMatchQuery(searchValue, attNames.toArray(new String[attNames.size()]));
         builder.type(criterion.getType());
         return builder;
     }
@@ -223,8 +228,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     @Override
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE,
-                                                      GeoQueries.computeShapeBuilder(criterion));
+            return QueryBuilders
+                    .geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, GeoQueries.computeShapeBuilder(criterion));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
@@ -241,16 +246,17 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             // Cut BoundaryBoxCriterion into 2 BoundaryBoxCriterion, dateLine west and dateLine east
             return ICriterion
                     .or(ICriterion.intersectsBbox(criterion.getMinX(), criterion.getMaxY(), 180.0, criterion.getMinY()),
-                        ICriterion.intersectsBbox(-180.0, criterion.getMaxY(), criterion.getMaxX(),
-                                                  criterion.getMinY()))
+                        ICriterion
+                                .intersectsBbox(-180.0, criterion.getMaxY(), criterion.getMaxX(), criterion.getMinY()))
                     .accept(this);
         }
         try {
             // upper left, lower right
             // (minX, maxY), (maxX, minY)
-            EnvelopeBuilder envelopeBuilder = new EnvelopeBuilder(
-                    new Coordinate(criterion.getMinX(), criterion.getMaxY()),
-                    new Coordinate(criterion.getMaxX(), criterion.getMinY()));
+            EnvelopeBuilder envelopeBuilder = new EnvelopeBuilder(new Coordinate(criterion.getMinX(),
+                                                                                 criterion.getMaxY()),
+                                                                  new Coordinate(criterion.getMaxX(),
+                                                                                 criterion.getMinY()));
             return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, envelopeBuilder);
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
