@@ -175,6 +175,25 @@ public class QueryParserTest {
     }
 
     @Test
+    @Purpose("Tests queries like title:\"harrypotter\"")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    public void stringMatchExactTest() throws OpenSearchParseException {
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
+        //do not forget that the parser is supposed to parse URI encoded values so \"=>%22
+        final String val = "harrypotter";
+        final String term = key + ":" + "%22"+val+"%22";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof StringMatchCriterion);
+
+        final StringMatchCriterion crit = (StringMatchCriterion) criterion;
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
+        Assert.assertEquals(MatchType.EQUALS, crit.getType());
+        Assert.assertEquals(val, crit.getValue());
+    }
+
+    @Test
     @Purpose("Tests queries like title:harrypotter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringMatchTest() throws OpenSearchParseException {
@@ -188,7 +207,7 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.EQUALS, crit.getType());
+        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
         Assert.assertEquals(val, crit.getValue());
     }
 
@@ -559,7 +578,6 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:2007-12-03T10:15:30.166Z")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    @Ignore
     public void OffsetDateTimeEqTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ATTRIBUTE_MODEL.getJsonPath();
         final OffsetDateTime lowerValue = OffsetDateTime.now();
@@ -674,7 +692,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(field, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.EQUALS, crit.getType());
+        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
 
