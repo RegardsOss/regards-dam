@@ -76,6 +76,7 @@ public class NotificationJobIT extends AbstractNotificationMultitenantServiceTes
         failJob.updateStatus(JobStatus.QUEUED);
         RECIPIENT_FAIL = false;
         this.jobInforepo.save(failJob);
+
         waitDatabaseCreation(this.recipientErrorRepo, 0, 60);
         waitDatabaseCreation(this.notificationRepo, 0, 60);
         assertEquals(JobStatus.SUCCEEDED, this.jobInforepo.findAll().iterator().next().getStatus().getStatus());

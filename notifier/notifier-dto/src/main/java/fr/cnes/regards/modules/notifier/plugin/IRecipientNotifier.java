@@ -24,13 +24,20 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
- * @author kevin
+ * Describe action for {@link Recipient}
+ * @author Kevin Marchois
  *
  */
 @FunctionalInterface
 @PluginInterface(description = "Recipient sender plugin")
 public interface IRecipientNotifier {
 
+    /**
+     *
+     * @param element {@link JsonElement} to send with notification
+     * @param action what cause the notification (creation, update....)
+     * @return true if succed, false otherwise
+     */
     boolean send(JsonElement element, NotificationManagementAction action);
 
 }

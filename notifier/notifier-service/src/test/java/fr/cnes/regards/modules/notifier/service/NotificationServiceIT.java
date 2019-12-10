@@ -95,6 +95,10 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         subscriber.unsubscribeFrom(eventType);
     }
 
+    /**
+     * test process method it should work
+     * @throws InterruptedException
+     */
     @Test
     public void testProcess() throws InterruptedException {
 
@@ -104,7 +108,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         job.updateStatus(JobStatus.ABORTED);
         job = this.jobInforepo.save(job);
 
-        JsonElement modifiedFeature = initElement();
+        JsonElement element = initElement();
 
         initPlugins(false);
 
@@ -112,7 +116,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         int bulk = 0;
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             bulk++;
-            events.add(NotificationAction.build(modifiedFeature, NotificationManagementAction.CREATE,
+            events.add(NotificationAction.build(element, NotificationManagementAction.CREATE,
                                                 NotificationState.DELAYED));
             if (bulk == FEATURE_EVENT_BULK) {
                 bulk = 0;

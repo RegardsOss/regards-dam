@@ -18,12 +18,15 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
+import org.dom4j.rule.Rule;
+
 import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * @author kevin
+ * Describe action to applied to a {@link Rule}
+ * @author Kevin Marchois
  *
  */
 @FunctionalInterface
@@ -33,6 +36,7 @@ public interface IRuleMatcher {
     /**
      * Verify if a {@link JsonElement} match with a rule
      * @param element {@link JsonElement} to verify if it matches
+     * @return true if match, false otherwise
      */
     boolean match(JsonElement element);
 }

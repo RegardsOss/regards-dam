@@ -26,7 +26,10 @@ import fr.cnes.regards.modules.notifier.domain.NotificationAction;
  *
  */
 public enum NotificationState {
+    /** Scheduled by a job*/
     SCHEDULED,
+    /** Waiting for job*/
     DELAYED,
+    /** Failed during a job*/
     ERROR
 }

@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
- * Feature notification service interface
+ * Notification service interface
  * @author Kevin Marchois
  *
  */

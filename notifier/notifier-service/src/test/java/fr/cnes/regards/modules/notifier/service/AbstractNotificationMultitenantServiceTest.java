@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpIOException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.web.Link;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.google.common.io.CharStreams;
@@ -171,6 +172,13 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         }
     }
 
+    /**
+     * Wait data creation on a {@link Link jpaRepository}
+     * @param repo {@link JpaRepository} where we wait data
+     * @param expectedNumber number of data waited
+     * @param timeout to throw exception
+     * @throws InterruptedException
+     */
     public void waitDatabaseCreation(JpaRepository<?, ?> repo, int expectedNumber, int timeout)
             throws InterruptedException {
         long notificationActionNumber = 0;
@@ -234,6 +242,10 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         }
     }
 
+    /**
+     * load {@link JsonElement} from a resource test
+     * @return initialised {@link JsonElement}
+     */
     protected JsonElement initElement() {
         try (InputStream input = this.getClass().getResourceAsStream("element.json");
                 Reader reader = new InputStreamReader(input)) {

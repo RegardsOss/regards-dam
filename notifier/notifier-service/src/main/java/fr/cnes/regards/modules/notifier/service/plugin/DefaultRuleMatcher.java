@@ -27,8 +27,8 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 
 /**
- * @author kevin
- *
+ * Default plugin rule matcher
+ * @author Kevin Marchois
  */
 @Plugin(author = "REGARDS Team", description = "Default rule matcher", id = "DefaultRuleMatcher", version = "1.0.0",
         contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES", url = "https://regardsoss.github.io/")

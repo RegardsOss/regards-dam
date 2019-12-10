@@ -24,7 +24,8 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**
- * @author kevin
+ * Dto for a {@link Recipient}
+ * @author Kevin Marchois
  *
  */
 public class RecipientDto {

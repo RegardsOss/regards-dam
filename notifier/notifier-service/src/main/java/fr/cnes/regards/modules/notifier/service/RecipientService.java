@@ -36,7 +36,8 @@ import fr.cnes.reguards.modules.notifier.dto.RecipientDto;
 import fr.cnes.reguards.modules.notifier.dto.RuleDto;
 
 /**
- * @author kevin
+ * Implementation of recipient service
+ * @author Kevin Marchois
  *
  */
 @Service
@@ -49,16 +50,15 @@ public class RecipientService implements IRecipientService {
     @Override
     public Page<RecipientDto> getRecipients(Pageable page) {
         Page<Recipient> recipients = recipientRepo.findAll(page);
-        return new PageImpl<>(recipients.get()
-                .map(recipient -> RecipientDto.build(recipient.getId(), intiRuleDto(recipient),
-                                                     recipient.getRecipientPlugin()))
+        return new PageImpl<>(recipients
+                .get().map(recipient -> RecipientDto.build(recipient.getId(), intiRuleDto(recipient),
+                                                           recipient.getRecipientPlugin()))
                 .collect(Collectors.toList()));
     }
 
     private RuleDto intiRuleDto(Recipient recipient) {
         Rule rule = recipient.getRule();
-        return rule == null ? null
-                : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(), rule.getType());
+        return rule == null ? null : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(), rule.getType());
     }
 
     @Override

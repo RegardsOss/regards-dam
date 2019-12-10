@@ -29,7 +29,8 @@ import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
 
 /**
- * @author kevin
+ * Default plugin notification sender
+ * @author Kevin Marchois
  *
  */
 @Plugin(author = "REGARDS Team", description = "Default recipient sender", id = "DefaultRecipientSender",

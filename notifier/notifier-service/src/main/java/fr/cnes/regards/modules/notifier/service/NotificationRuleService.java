@@ -68,7 +68,7 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
  * Service for checking {@link Rule} applied to {@link JsonElement} for notification sending
- * @author kevin
+ * @author Kevin Marchois
  *
  */
 @Service

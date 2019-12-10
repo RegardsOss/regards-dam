@@ -28,7 +28,8 @@ import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
- * @author kevin
+ * Repository to manipulate {@link Rule}
+ * @author Kevin Marchois
  *
  */
 @Repository
