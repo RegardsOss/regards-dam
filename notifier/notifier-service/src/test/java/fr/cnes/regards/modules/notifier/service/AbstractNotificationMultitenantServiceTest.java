@@ -22,29 +22,28 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import org.junit.After;
 import org.junit.Before;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpIOException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.ResponseEntity;
+
+import com.google.common.io.CharStreams;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.configuration.AmqpConstants;
 import fr.cnes.regards.framework.amqp.configuration.IAmqpAdmin;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.modules.jobs.dao.IJobInfoRepository;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -52,18 +51,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.StringPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
-import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
-import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
-import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientErrorRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
@@ -82,18 +72,20 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
 import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.flow.NotificationActionEventHandler;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 public abstract class AbstractNotificationMultitenantServiceTest extends AbstractMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNotificationMultitenantServiceTest.class);
-
-    private static final String RESOURCE_PATH = "fr/cnes/regards/modules/notifier/service/";
 
     protected static final int RECIPIENTS_PER_RULE = 10;
 
     protected static final int FEATURE_EVENT_TO_RECEIVE = 1_000;
 
     protected static final int FEATURE_EVENT_BULK = 1_000;
+
+    // used to param if the test Recipient will fail
+    public static boolean RECIPIENT_FAIL = true;
 
     @Autowired
     protected IRuleRepository ruleRepo;
@@ -117,7 +109,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     protected NotificationRuleService notificationService;
 
     @Autowired
-    private IRuntimeTenantResolver runtimeTenantResolver;
+    protected IRuntimeTenantResolver runtimeTenantResolver;
 
     @Autowired(required = false)
     private IAmqpAdmin amqpAdmin;
@@ -141,9 +133,15 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     @Autowired
     protected IPublisher publisher;
 
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ISubscriber subscriber;
+
     @Before
     public void before() throws InterruptedException {
-        mockModelClient(GeodeProperties.getGeodeModel());
+        RECIPIENT_FAIL = true;
         this.notificationService.cleanTenantCache(runtimeTenantResolver.getTenant());
         this.recipientErrorRepo.deleteAll();
         this.recipientRepo.deleteAll();
@@ -171,50 +169,6 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
                 vhostAdmin.unbind();
             }
         }
-    }
-
-    /**
-     * Mock model client importing model specified by its filename
-     * @param filename model filename found using {@link Class#getResourceAsStream(String)}
-     * @return mocked model name
-     */
-    public String mockModelClient(String filename, IComputationPluginService cps,
-            MultitenantFlattenedAttributeAdapterFactory factory, String tenant,
-            IModelAttrAssocClient modelAttrAssocClientMock) {
-
-        try (InputStream input = new ClassPathResource(RESOURCE_PATH + filename).getInputStream()) {
-            // Import model
-            Iterable<ModelAttrAssoc> assocs = XmlImportHelper.importModel(input, cps);
-
-            // Translate to resources and attribute models and extract model name
-            String modelName = null;
-            List<AttributeModel> atts = new ArrayList<>();
-            List<Resource<ModelAttrAssoc>> resources = new ArrayList<>();
-            for (ModelAttrAssoc assoc : assocs) {
-                atts.add(assoc.getAttribute());
-                resources.add(new Resource<ModelAttrAssoc>(assoc));
-                if (modelName == null) {
-                    modelName = assoc.getModel().getName();
-                }
-            }
-
-            // Property factory registration
-            factory.registerAttributes(tenant, atts);
-
-            // Mock client
-            Mockito.when(modelAttrAssocClientMock.getModelAttrAssocs(modelName))
-                    .thenReturn(ResponseEntity.ok(resources));
-
-            return modelName;
-        } catch (IOException | ImportException e) {
-            String errorMessage = "Cannot import model";
-            LOGGER.debug(errorMessage);
-            throw new AssertionError(errorMessage);
-        }
-    }
-
-    public String mockModelClient(String filename) {
-        return mockModelClient(filename, cps, factory, getDefaultTenant(), modelAttrAssocClientMock);
     }
 
     public void waitDatabaseCreation(JpaRepository<?, ?> repo, int expectedNumber, int timeout)
@@ -280,20 +234,16 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         }
     }
 
-    protected Feature initFeature() {
-        String model = mockModelClient(GeodeProperties.getGeodeModel());
+    protected JsonElement initElement() {
+        try (InputStream input = this.getClass().getResourceAsStream("element.json");
+                Reader reader = new InputStreamReader(input)) {
 
-        Feature feature = Feature
-                .build("id",
-                       FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                  getDefaultTenant(), 1),
-                       IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, model);
-
-        // Properties of the feature
-        Set<IProperty<?>> properties = IProperty
-                .set(IProperty.buildObject("file_infos", IProperty.buildString("nature", "TM")));
-        feature.setProperties(properties);
-        return feature;
+            return gson.fromJson(CharStreams.toString(reader), JsonElement.class);
+        } catch (IOException e) {
+            String errorMessage = "Cannot import model";
+            LOGGER.debug(errorMessage);
+            throw new AssertionError(errorMessage);
+        }
     }
 
     @After
@@ -308,5 +258,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         cleanAMQPQueues(RecipientSender8.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender9.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender10.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        subscriber.unsubscribeFrom(NotificationActionEvent.class);
+
     }
 }

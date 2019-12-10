@@ -1,0 +1,1 @@
+{"urn":"URN:FEATURE:DATA:PROJECT:00000000-0000-0000-0000-000169267448:V1","entityType":"DATA","model":"GEODE001","files":[],"id":"id","geometry":{"coordinates":[10.0,20.0],"type":"Point","bbox":null,"crs":null},"normalizedGeometry":null,"properties":{"file_infos":{"nature":"TM"}},"type":"Feature"}

@@ -41,6 +41,7 @@ import org.springframework.validation.Validator;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -50,8 +51,6 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientErrorRepository;
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
@@ -64,10 +63,11 @@ import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 import fr.cnes.regards.modules.notifier.service.cache.AbstractCacheableRule;
 import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.job.NotificationJob;
+import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
- * Service for checking {@link Rule} applied to {@link Feature} for notification sending
+ * Service for checking {@link Rule} applied to {@link JsonElement} for notification sending
  * @author kevin
  *
  */
@@ -116,10 +116,10 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
             try {
                 // check if the  feature match with the rule
                 if (((IRuleMatcher) this.pluginService.getPlugin(rule.getRulePlugin().getBusinessId()))
-                        .match(notification.getFeature())) {
+                        .match(notification.getElement())) {
 
                     for (Recipient recipient : rule.getRecipients()) {
-                        if (notifyRecipient(notification.getFeature(), recipient, notification.getAction())) {
+                        if (notifyRecipient(notification.getElement(), recipient, notification.getAction())) {
                             notificationNumber++;
                         } else {
                             notification.setState(NotificationState.ERROR);
@@ -142,10 +142,10 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
      * Notify a recipient return false if a problem occurs
      * @param toHandle {@link Feature} about to notify
      * @param recipient {@link Recipient} of the notification
-     * @param action {@link FeatureManagementAction} action done on {@link Feature}
+     * @param action {@link NotificationManagementAction} action done on {@link Feature}
      * @return
      */
-    private boolean notifyRecipient(Feature toHandle, Recipient recipient, FeatureManagementAction action) {
+    private boolean notifyRecipient(JsonElement toHandle, Recipient recipient, NotificationManagementAction action) {
         try {
             // check that all send method of recipiens return true
             return ((IRecipientNotifier) this.pluginService.getPlugin(recipient.getRecipientPlugin().getBusinessId()))
@@ -212,7 +212,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         List<RecipientError> succededRecipient = new ArrayList<RecipientError>();
         for (RecipientError error : recipientErrors) {
 
-            if (notifyRecipient(error.getNotification().getFeature(), error.getRecipient(),
+            if (notifyRecipient(error.getNotification().getElement(), error.getRecipient(),
                                 error.getNotification().getAction())) {
                 succededRecipient.add(error);
                 nbSend++;
@@ -242,6 +242,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
                 .collect(Collectors.toSet());
         notificationToRegister.remove(null);
         this.notificationActionRepo.saveAll(notificationToRegister);
+        LOGGER.debug("------------->>> {} notifications registred", notificationToRegister.size());
     }
 
     /**
@@ -254,7 +255,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         this.validator.validate(event, errors);
 
         if (!errors.hasErrors()) {
-            return NotificationAction.build(event.getFeature(), event.getAction(), NotificationState.DELAYED);
+            return NotificationAction.build(event.getElement(), event.getAction(), NotificationState.DELAYED);
         }
         //TODO on fait quoi?
         return null;
@@ -268,15 +269,18 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
                 .findIdToSchedule(PageRequest.of(0, properties.getMaxBulkSize(), Sort.by(Order.asc("actionDate"))));
         long scheduleStart = System.currentTimeMillis();
 
-        jobParameters.add(new JobParameter(NotificationJob.IDS_PARAMETER, requestIds));
+        if (!requestIds.isEmpty()) {
+            jobParameters.add(new JobParameter(NotificationJob.IDS_PARAMETER, requestIds));
 
-        this.notificationActionRepo.updateState(NotificationState.SCHEDULED, requestIds);
-        // the job priority will be set according the priority of the first request to schedule
-        JobInfo jobInfo = new JobInfo(false, 0, jobParameters, authResolver.getUser(), NotificationJob.class.getName());
-        jobInfoService.createAsQueued(jobInfo);
+            this.notificationActionRepo.updateState(NotificationState.SCHEDULED, requestIds);
+            // the job priority will be set according the priority of the first request to schedule
+            JobInfo jobInfo = new JobInfo(false, 0, jobParameters, authResolver.getUser(),
+                    NotificationJob.class.getName());
+            jobInfoService.createAsQueued(jobInfo);
 
-        LOGGER.trace("------------->>> {} notifications scheduled in {} ms", requestIds.size(),
-                     System.currentTimeMillis() - scheduleStart);
+            LOGGER.debug("------------->>> {} notifications scheduled in {} ms", requestIds.size(),
+                         System.currentTimeMillis() - scheduleStart);
+        }
         return requestIds.size();
     }
 

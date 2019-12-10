@@ -16,21 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.notifier.plugin;
-
-import com.google.gson.JsonElement;
-
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
+package fr.cnes.reguards.modules.notifier.dto;
 
 /**
  * @author kevin
  *
  */
-@FunctionalInterface
-@PluginInterface(description = "Recipient sender plugin")
-public interface IRecipientNotifier {
-
-    boolean send(JsonElement element, NotificationManagementAction action);
-
+public enum NotificationManagementAction {
+    CREATE,
+    UPDATE,
+    DELETE
 }

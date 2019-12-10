@@ -32,9 +32,10 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
 
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
+import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * Entity to store notification action
@@ -52,11 +53,11 @@ public class NotificationAction {
 
     @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
     @Type(type = "jsonb")
-    private Feature feature;
+    private JsonElement element;
 
     @Column(name = "action", nullable = false)
     @Enumerated(EnumType.STRING)
-    private FeatureManagementAction action;
+    private NotificationManagementAction action;
 
     @Column(name = "action_date", nullable = false)
     private OffsetDateTime actionDate;
@@ -65,19 +66,19 @@ public class NotificationAction {
     @Enumerated(EnumType.STRING)
     private NotificationState state;
 
-    public Feature getFeature() {
-        return feature;
+    public JsonElement getElement() {
+        return element;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setElement(JsonElement feature) {
+        this.element = feature;
     }
 
-    public FeatureManagementAction getAction() {
+    public NotificationManagementAction getAction() {
         return action;
     }
 
-    public void setAction(FeatureManagementAction action) {
+    public void setAction(NotificationManagementAction action) {
         this.action = action;
     }
 
@@ -101,10 +102,11 @@ public class NotificationAction {
         this.state = state;
     }
 
-    public static NotificationAction build(Feature feature, FeatureManagementAction action, NotificationState state) {
+    public static NotificationAction build(JsonElement element, NotificationManagementAction action,
+            NotificationState state) {
         NotificationAction toCreate = new NotificationAction();
         toCreate.setAction(action);
-        toCreate.setFeature(feature);
+        toCreate.setElement(element);
         toCreate.setActionDate(OffsetDateTime.now());
         toCreate.setState(state);
 

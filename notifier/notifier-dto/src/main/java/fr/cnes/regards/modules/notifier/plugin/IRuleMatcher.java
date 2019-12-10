@@ -18,8 +18,9 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.feature.dto.Feature;
 
 /**
  * @author kevin
@@ -30,8 +31,8 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 public interface IRuleMatcher {
 
     /**
-     * Verify if a {@link Feature} match with a rule
-     * @param feature {@link Feature} to verify if it matches
+     * Verify if a {@link JsonElement} match with a rule
+     * @param element {@link JsonElement} to verify if it matches
      */
-    boolean match(Feature feature);
+    boolean match(JsonElement element);
 }

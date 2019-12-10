@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.notifier.dto;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * @author kevin
@@ -32,30 +33,30 @@ import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
 public class NotificationEvent6 implements ISubscribable {
 
-    private Feature feature;
+    private JsonElement element;
 
-    private FeatureManagementAction action;
+    private NotificationManagementAction action;
 
-    public Feature getFeature() {
-        return feature;
+    public JsonElement getElement() {
+        return element;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setElement(JsonElement element) {
+        this.element = element;
     }
 
-    public FeatureManagementAction getAction() {
+    public NotificationManagementAction getAction() {
         return action;
     }
 
-    public void setAction(FeatureManagementAction action) {
+    public void setAction(NotificationManagementAction action) {
         this.action = action;
     }
 
-    public static NotificationEvent6 build(Feature feature, FeatureManagementAction action) {
+    public static NotificationEvent6 build(JsonElement element, NotificationManagementAction action) {
         NotificationEvent6 toCreate = new NotificationEvent6();
         toCreate.setAction(action);
-        toCreate.setFeature(feature);
+        toCreate.setElement(element);
         return toCreate;
     }
 }

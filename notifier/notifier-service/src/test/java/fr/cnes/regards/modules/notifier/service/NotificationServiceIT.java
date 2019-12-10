@@ -28,17 +28,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobStatus;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
@@ -59,6 +58,7 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
+import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * Test class for service {@link NotificationRuleService}
@@ -69,7 +69,6 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp" })
-@DirtiesContext
 public class NotificationServiceIT extends AbstractNotificationMultitenantServiceTest {
 
     @Autowired
@@ -105,12 +104,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         job.updateStatus(JobStatus.ABORTED);
         job = this.jobInforepo.save(job);
 
-        Thread.sleep(5_000);
-
-        Feature modifiedFeature = initFeature();
-
-        // Properties of the feature
-        GeodeProperties.addGeodeProperties(modifiedFeature);
+        JsonElement modifiedFeature = initElement();
 
         initPlugins(false);
 
@@ -118,7 +112,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         int bulk = 0;
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             bulk++;
-            events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
+            events.add(NotificationAction.build(modifiedFeature, NotificationManagementAction.CREATE,
                                                 NotificationState.DELAYED));
             if (bulk == FEATURE_EVENT_BULK) {
                 bulk = 0;
@@ -145,14 +139,13 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         job.updateStatus(JobStatus.ABORTED);
         job = this.jobInforepo.save(job);
 
-        Feature modifiedFeature = initFeature();
-        GeodeProperties.addGeodeProperties(modifiedFeature);
+        JsonElement modifiedFeature = initElement();
 
         initPlugins(true);
 
         List<NotificationAction> events = new ArrayList<>();
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
-            events.add(NotificationAction.build(modifiedFeature, FeatureManagementAction.CREATE,
+            events.add(NotificationAction.build(modifiedFeature, NotificationManagementAction.CREATE,
                                                 NotificationState.DELAYED));
         }
 
@@ -160,7 +153,6 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1), results.getFirst().intValue());
         assertEquals(FEATURE_EVENT_TO_RECEIVE, results.getSecond().intValue());
         assertEquals(FEATURE_EVENT_TO_RECEIVE, this.recipientErrorRepo.count());
-
     }
 
 }

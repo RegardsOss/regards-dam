@@ -20,12 +20,13 @@ package fr.cnes.reguards.modules.notifier.dto.in;
 
 import javax.validation.constraints.NotNull;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * An event contain a JSON element plus an action
@@ -36,31 +37,31 @@ import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 public class NotificationActionEvent implements ISubscribable {
 
     @NotNull(message = "JSON element is required")
-    private Feature feature;
+    private JsonElement element;
 
     @NotNull(message = "Notification action is required")
-    private FeatureManagementAction action;
+    private NotificationManagementAction action;
 
-    public Feature getFeature() {
-        return feature;
+    public JsonElement getElement() {
+        return element;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setElement(JsonElement element) {
+        this.element = element;
     }
 
-    public FeatureManagementAction getAction() {
+    public NotificationManagementAction getAction() {
         return action;
     }
 
-    public void setAction(FeatureManagementAction action) {
+    public void setAction(NotificationManagementAction action) {
         this.action = action;
     }
 
-    public static NotificationActionEvent build(Feature feature, FeatureManagementAction action) {
+    public static NotificationActionEvent build(JsonElement element, NotificationManagementAction action) {
         NotificationActionEvent toCreate = new NotificationActionEvent();
         toCreate.setAction(action);
-        toCreate.setFeature(feature);
+        toCreate.setElement(element);
         return toCreate;
     }
 }
