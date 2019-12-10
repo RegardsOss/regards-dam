@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.notifier.service.plugin;
 
+import java.util.Map.Entry;
+
 import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -59,8 +61,23 @@ public class DefaultRuleMatcher implements IRuleMatcher {
             return false;
         }
 
-        // FIXME test with all property type
-        return true;
+        return element.getAsJsonObject().entrySet().stream().anyMatch(entry -> containtAttributeToSeek(entry));
+    }
+
+    /**
+     * Check if an entry match with the attributeToSeek and attributeValueToSeek
+     * @param entry to check
+     * @return true if match, false otherwise
+     */
+    private boolean containtAttributeToSeek(Entry<String, JsonElement> entry) {
+        if (entry.getKey().equals(attributeToSeek) && entry.getValue().getAsString().equals(attributeValueToSeek)) {
+            return true;
+        }
+        if (entry.getValue().isJsonObject()) {
+            return entry.getValue().getAsJsonObject().entrySet().stream()
+                    .anyMatch(subEntry -> containtAttributeToSeek(subEntry));
+        }
+        return false;
     }
 
 }

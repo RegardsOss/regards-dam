@@ -200,7 +200,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         rulePlugin.setLabel("test");
         rulePlugin.setPluginId("DefaultRuleMatcher");
 
-        StringPluginParam param = IPluginParam.build("attributeToSeek", "file_infos.nature");
+        StringPluginParam param = IPluginParam.build("attributeToSeek", "nature");
         rulePlugin.getParameters().add(param);
         param = IPluginParam.build("attributeValueToSeek", "TM");
         rulePlugin.getParameters().add(param);
