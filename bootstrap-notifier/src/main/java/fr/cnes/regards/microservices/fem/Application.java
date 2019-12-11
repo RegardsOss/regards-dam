@@ -21,8 +21,6 @@ package fr.cnes.regards.microservices.fem;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
-
 /**
  *
  * Spring boot application : scans all core and contrib modules
@@ -32,7 +30,6 @@ import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
  */
 // CHECKSTYLE:OFF
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
-@MicroserviceInfo(name = "Feature management", version = "1.0-SNAPSHOT")
 public class Application { // NOSONAR
 
     /**

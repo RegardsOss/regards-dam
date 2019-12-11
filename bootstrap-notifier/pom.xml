@@ -22,9 +22,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.microservices.fem</groupId>
-	<artifactId>bootstrap-fem</artifactId>
+	<artifactId>bootstrap-notifier</artifactId>
 
-	<description>Boots the FEM microservice</description>
+	<description>Boots the notifier microservice</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2019</inceptionYear>
 	<licenses>
@@ -65,9 +65,9 @@
 		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.modules.feature</groupId>
-			<artifactId>feature-rest</artifactId>
-		</dependency>
+            <groupId>fr.cnes.regards.modules.notifier</groupId>
+            <artifactId>notifier-rest</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices.administration</groupId>
 			<artifactId>remote-tenant-resolver</artifactId>
