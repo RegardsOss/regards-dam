@@ -55,7 +55,6 @@ public class NotificationAction {
     private JsonElement element;
 
     @Column(name = "action", nullable = false)
-    @Enumerated(EnumType.STRING)
     private String action;
 
     /** creation date of the instance */
