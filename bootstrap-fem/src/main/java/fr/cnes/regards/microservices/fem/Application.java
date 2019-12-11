@@ -32,7 +32,7 @@ import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
  */
 // CHECKSTYLE:OFF
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
-@MicroserviceInfo(name = "Data management", version = "1.0-SNAPSHOT")
+@MicroserviceInfo(name = "Feature management", version = "1.0-SNAPSHOT")
 public class Application { // NOSONAR
 
     /**

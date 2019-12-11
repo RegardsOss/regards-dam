@@ -16,46 +16,51 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.feature.dto.event.out;
+package fr.cnes.reguards.modules.notifier.dto.in;
+
+import javax.validation.constraints.NotNull;
+
+import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.feature.dto.Feature;
 
 /**
+ * An event contain a JSON element plus an action
  * @author Kevin Marchois
  *
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-public class FeatureEvent implements ISubscribable {
+public class NotificationActionEvent implements ISubscribable {
 
-    private Feature feature;
+    @NotNull(message = "JSON element is required")
+    private JsonElement element;
 
-    private FeatureManagementAction action;
+    @NotNull(message = "Notification action is required")
+    private String action;
 
-    public Feature getFeature() {
-        return feature;
+    public JsonElement getElement() {
+        return element;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setElement(JsonElement element) {
+        this.element = element;
     }
 
-    public FeatureManagementAction getAction() {
+    public String getAction() {
         return action;
     }
 
-    public void setAction(FeatureManagementAction action) {
+    public void setAction(String action) {
         this.action = action;
     }
 
-    public static FeatureEvent build(Feature feature, FeatureManagementAction action) {
-        FeatureEvent toCreate = new FeatureEvent();
+    public static NotificationActionEvent build(JsonElement element, String action) {
+        NotificationActionEvent toCreate = new NotificationActionEvent();
         toCreate.setAction(action);
-        toCreate.setFeature(feature);
+        toCreate.setElement(element);
         return toCreate;
     }
 }

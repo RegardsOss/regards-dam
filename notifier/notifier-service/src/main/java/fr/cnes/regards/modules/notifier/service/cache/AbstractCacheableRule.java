@@ -35,7 +35,8 @@ import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
- * @author kevin
+ * Cache for {@link Rule}
+ * @author Kevin Marchois
  *
  */
 public abstract class AbstractCacheableRule {
@@ -77,8 +78,10 @@ public abstract class AbstractCacheableRule {
         return rules;
     }
 
-    // TODO cette methode est en public pour faire passer les TU en attendant que la partie gestion des rules soit implémentées
-    // il faudra ensuite la passer en protected
+    /**
+     * Clean all {@link Rule} in cache for a tenant
+     * @param tenant to clean
+     */
     public void cleanTenantCache(String tenant) {
         LoadingCache<String, Set<Rule>> ruleCache = ruleCacheMap.get(tenant);
         if (ruleCache != null) {

@@ -20,11 +20,14 @@ package fr.cnes.reguards.modules.notifier.dto;
 
 import javax.validation.constraints.NotNull;
 
+import org.dom4j.rule.Rule;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
- * @author kevin
+ * Dto for a {@link Rule}
+ * @author Kevin Marchois
  *
  */
 public class RuleDto {
