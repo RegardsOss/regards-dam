@@ -63,7 +63,6 @@ import fr.cnes.regards.modules.notifier.plugin.IRuleMatcher;
 import fr.cnes.regards.modules.notifier.service.cache.AbstractCacheableRule;
 import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.job.NotificationJob;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
@@ -114,7 +113,7 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         int notificationNumber = 0;
         for (Rule rule : getRules()) {
             try {
-                // check if the  feature match with the rule
+                // check if the  element match with the rule
                 if (((IRuleMatcher) this.pluginService.getPlugin(rule.getRulePlugin().getBusinessId()))
                         .match(notification.getElement())) {
 
@@ -140,12 +139,12 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
 
     /**
      * Notify a recipient return false if a problem occurs
-     * @param toHandle {@link Feature} about to notify
+     * @param toHandle {@link JsonElement} about to notify
      * @param recipient {@link Recipient} of the notification
-     * @param action {@link NotificationManagementAction} action done on {@link Feature}
+     * @param action  done on {@link JsonElement}
      * @return
      */
-    private boolean notifyRecipient(JsonElement toHandle, Recipient recipient, NotificationManagementAction action) {
+    private boolean notifyRecipient(JsonElement toHandle, Recipient recipient, String action) {
         try {
             // check that all send method of recipiens return true
             return ((IRecipientNotifier) this.pluginService.getPlugin(recipient.getRecipientPlugin().getBusinessId()))
@@ -178,13 +177,13 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
                 try {
                     nbSend += handleNotificationRequest(notification, notificationsInErrors);
                 } catch (ExecutionException | ModuleException | NotAvailablePluginConfigurationException e) {
-                    LOGGER.error("Error during feature notification", e);
+                    LOGGER.error("Error during notification", e);
                 }
                 averageNotificationTreatmentTime += System.currentTimeMillis() - startNotificationTreatmentTime;
             }
             this.LOGGER.debug(
                               "------------->>> End of notification process in {} ms, {} notifications sended"
-                                      + " with a average feature treatment time of {} ms",
+                                      + " with a average treatment time of {} ms",
                               System.currentTimeMillis() - startTime, nbSend,
                               averageNotificationTreatmentTime / (nbSend == 0 ? 1 : nbSend));
             // delete all Notification not in the list in errors

@@ -58,7 +58,6 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender6;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender7;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * Test class for service {@link NotificationRuleService}
@@ -116,8 +115,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         int bulk = 0;
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
             bulk++;
-            events.add(NotificationAction.build(element, NotificationManagementAction.CREATE,
-                                                NotificationState.DELAYED));
+            events.add(NotificationAction.build(element, "CREATE", NotificationState.DELAYED));
             if (bulk == FEATURE_EVENT_BULK) {
                 bulk = 0;
                 assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE,
@@ -149,8 +147,7 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         List<NotificationAction> events = new ArrayList<>();
         for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
-            events.add(NotificationAction.build(modifiedFeature, NotificationManagementAction.CREATE,
-                                                NotificationState.DELAYED));
+            events.add(NotificationAction.build(modifiedFeature, "CREATE", NotificationState.DELAYED));
         }
 
         Pair<Integer, Integer> results = this.notificationService.processRequest(events, job.getId());

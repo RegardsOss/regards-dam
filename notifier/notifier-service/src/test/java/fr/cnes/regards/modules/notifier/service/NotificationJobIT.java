@@ -34,7 +34,6 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobStatus;
 import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.RecipientError;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
@@ -63,7 +62,7 @@ public class NotificationJobIT extends AbstractNotificationMultitenantServiceTes
 
         List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
         for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(element, NotificationManagementAction.CREATE));
+            events.add(NotificationActionEvent.build(element, "CREATE"));
         }
         this.publisher.publish(events);
         // we should have  configuration.getMaxBulkSize() NotificationAction in database

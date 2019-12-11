@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent8;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * @author kevin
@@ -33,7 +32,7 @@ import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 public class RecipientSender8 extends AbstractRecipientSender<NotificationEvent8> {
 
     @Override
-    NotificationEvent8 buildEvent(JsonElement element, NotificationManagementAction action) {
+    NotificationEvent8 buildEvent(JsonElement element, String action) {
         return NotificationEvent8.build(element, action);
     }
 }

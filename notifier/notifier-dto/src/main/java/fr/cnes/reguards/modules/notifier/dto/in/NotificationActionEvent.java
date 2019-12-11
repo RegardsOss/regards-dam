@@ -26,7 +26,6 @@ import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * An event contain a JSON element plus an action
@@ -40,7 +39,7 @@ public class NotificationActionEvent implements ISubscribable {
     private JsonElement element;
 
     @NotNull(message = "Notification action is required")
-    private NotificationManagementAction action;
+    private String action;
 
     public JsonElement getElement() {
         return element;
@@ -50,15 +49,15 @@ public class NotificationActionEvent implements ISubscribable {
         this.element = element;
     }
 
-    public NotificationManagementAction getAction() {
+    public String getAction() {
         return action;
     }
 
-    public void setAction(NotificationManagementAction action) {
+    public void setAction(String action) {
         this.action = action;
     }
 
-    public static NotificationActionEvent build(JsonElement element, NotificationManagementAction action) {
+    public static NotificationActionEvent build(JsonElement element, String action) {
         NotificationActionEvent toCreate = new NotificationActionEvent();
         toCreate.setAction(action);
         toCreate.setElement(element);

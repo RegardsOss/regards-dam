@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.notifier.plugin;
 import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * Describe action for {@link Recipient}
@@ -38,6 +37,6 @@ public interface IRecipientNotifier {
      * @param action what cause the notification (creation, update....)
      * @return true if succed, false otherwise
      */
-    boolean send(JsonElement element, NotificationManagementAction action);
+    boolean send(JsonElement element, String action);
 
 }

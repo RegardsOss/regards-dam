@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
@@ -57,7 +56,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
         List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
         for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(feature, NotificationManagementAction.CREATE));
+            events.add(NotificationActionEvent.build(feature, "CREATE"));
         }
         this.publisher.publish(events);
         // we should have  configuration.getMaxBulkSize() NotificationAction in database
@@ -77,7 +76,7 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
 
         List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
         for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(element, NotificationManagementAction.CREATE));
+            events.add(NotificationActionEvent.build(element, "CREATE"));
         }
         this.publisher.publish(events);
         // we should have  configuration.getMaxBulkSize() NotificationAction in database

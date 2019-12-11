@@ -25,7 +25,6 @@ import com.google.gson.JsonElement;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.notifier.plugin.IRecipientNotifier;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 import fr.cnes.reguards.modules.notifier.dto.out.NotificationEvent;
 
 /**
@@ -42,7 +41,7 @@ public class DefaultNotificationSender implements IRecipientNotifier {
     private IPublisher publisher;
 
     @Override
-    public boolean send(JsonElement element, NotificationManagementAction action) {
+    public boolean send(JsonElement element, String action) {
         this.publisher.publish(NotificationEvent.build(element, action));
         return true;
     }

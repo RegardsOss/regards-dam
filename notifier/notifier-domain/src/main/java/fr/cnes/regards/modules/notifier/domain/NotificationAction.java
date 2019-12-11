@@ -35,7 +35,6 @@ import org.hibernate.annotations.Type;
 import com.google.gson.JsonElement;
 
 import fr.cnes.regards.modules.notifier.domain.state.NotificationState;
-import fr.cnes.reguards.modules.notifier.dto.NotificationManagementAction;
 
 /**
  * Entity to store notification action
@@ -57,8 +56,9 @@ public class NotificationAction {
 
     @Column(name = "action", nullable = false)
     @Enumerated(EnumType.STRING)
-    private NotificationManagementAction action;
+    private String action;
 
+    /** creation date of the instance */
     @Column(name = "action_date", nullable = false)
     private OffsetDateTime actionDate;
 
@@ -74,11 +74,11 @@ public class NotificationAction {
         this.element = feature;
     }
 
-    public NotificationManagementAction getAction() {
+    public String getAction() {
         return action;
     }
 
-    public void setAction(NotificationManagementAction action) {
+    public void setAction(String action) {
         this.action = action;
     }
 
@@ -102,8 +102,7 @@ public class NotificationAction {
         this.state = state;
     }
 
-    public static NotificationAction build(JsonElement element, NotificationManagementAction action,
-            NotificationState state) {
+    public static NotificationAction build(JsonElement element, String action, NotificationState state) {
         NotificationAction toCreate = new NotificationAction();
         toCreate.setAction(action);
         toCreate.setElement(element);
