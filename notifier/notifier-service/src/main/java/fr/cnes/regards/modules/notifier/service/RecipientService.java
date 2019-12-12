@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.notifier.dao.IRecipientRepository;
+import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.notifier.dto.RecipientDto;
@@ -47,6 +48,9 @@ public class RecipientService implements IRecipientService {
     @Autowired
     private IRecipientRepository recipientRepo;
 
+    @Autowired
+    private IRuleRepository ruleRepo;
+
     @Override
     public Page<RecipientDto> getRecipients(Pageable page) {
         Page<Recipient> recipients = recipientRepo.findAll(page);
@@ -63,10 +67,8 @@ public class RecipientService implements IRecipientService {
 
     @Override
     public RecipientDto createOrUpdateRecipient(@Valid RecipientDto toCreate) {
-        RuleDto rule = toCreate.getRule();
-        Recipient toSave = rule == null ? Recipient.build(null, toCreate.getPluginConf())
-                : Recipient.build(Rule.build(rule.getId(), rule.getPluginConf(), rule.isEnabled(), rule.getType()),
-                                  toCreate.getPluginConf());
+        Rule rule = this.ruleRepo.getOne(toCreate.getRuleId());
+        Recipient toSave = Recipient.build(rule, toCreate.getPluginConf());
         Recipient created = this.recipientRepo.save(toSave);
         return RecipientDto.build(created.getId(), intiRuleDto(created), created.getRecipientPlugin());
     }
