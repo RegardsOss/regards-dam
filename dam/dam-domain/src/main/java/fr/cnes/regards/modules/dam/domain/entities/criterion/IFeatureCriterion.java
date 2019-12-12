@@ -166,6 +166,7 @@ public interface IFeatureCriterion extends ICriterion {
         return ICriterion.contains(att.getFullJsonPath(), text);
     }
 
+
     /**
      * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
      * element which follows given regular expression
@@ -173,8 +174,8 @@ public interface IFeatureCriterion extends ICriterion {
      * @param text provided regular expression
      * @return criterion
      */
-    static ICriterion likes(AttributeModel att, String text) {
-        return ICriterion.likes(att.getFullJsonPath(), text);
+    static ICriterion regexp(AttributeModel att, String text) {
+        return ICriterion.regexp(att.getFullJsonPath(), text);
     }
 
     /**

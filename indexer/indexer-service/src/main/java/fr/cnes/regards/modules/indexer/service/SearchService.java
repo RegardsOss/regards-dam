@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,7 +156,7 @@ public class SearchService implements ISearchService {
         // has an uri starting with http or https
         ICriterion filterUriCrit = ICriterion.or(Arrays
                 .stream(fileTypes).map(fileType -> ICriterion
-                        .likes(StaticProperties.FEATURE_FILES_PATH + "." + fileType + ".uri", "https?://.*"))
+                        .regexp(StaticProperties.FEATURE_FILES_PATH + "." + fileType + ".uri", "https?://.*"))
                 .collect(Collectors.toList()));
         ICriterion externalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", false), filterUriCrit);
         repository.computeExternalDataFilesSummary(searchKey, externalCrit, discriminantProperty, summary, fileTypes);

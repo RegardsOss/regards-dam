@@ -124,7 +124,9 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
             case STRING:
             case STRING_ARRAY:
                 // string equality is handled by QuotedFieldQueryNodeBuilder as per lucene spec
-                return IFeatureCriterion.contains(attributeModel, value);
+                // only frontend can know if what the user exactly wants so we take frontend value as is
+                // TODO we may need to escape " to avoid hijacking the JSON generated to ES
+                return IFeatureCriterion.regexp(attributeModel, value);
             case DATE_ISO8601:
                 return IFeatureCriterion.eq(attributeModel, OffsetDateTimeAdapter.parse(value));
             case BOOLEAN:

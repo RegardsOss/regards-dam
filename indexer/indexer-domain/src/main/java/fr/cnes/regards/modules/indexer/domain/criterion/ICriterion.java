@@ -230,11 +230,11 @@ public interface ICriterion {
      * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
      * element which follows given regular expression
      * @param attName String or String array attribute
-     * @param text provided regular expression
+     * @param regexp provided regular expression
      * @return criterion
      */
-    static ICriterion likes(String attName, String text) {
-        return new StringMatchCriterion(attName, MatchType.LIKE, text);
+    static ICriterion regexp(String attName, String regexp) {
+        return new StringMatchCriterion(attName, MatchType.REGEXP, regexp);
     }
 
     /**

@@ -194,11 +194,11 @@ public class QueryParserTest {
     }
 
     @Test
-    @Purpose("Tests queries like title:harrypotter")
+    @Purpose("Tests queries like title:.*harrypotter.*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringMatchTest() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
-        final String val = "harrypotter";
+        final String val = ".*harrypotter.*";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
@@ -207,7 +207,7 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
         Assert.assertEquals(val, crit.getValue());
     }
 
@@ -244,8 +244,8 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.ENDS_WITH, crit.getType());
-        Assert.assertEquals("potter", crit.getValue());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
+        Assert.assertEquals("*potter", crit.getValue());
     }
 
     @Test
@@ -262,8 +262,8 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.STARTS_WITH, crit.getType());
-        Assert.assertEquals("harry", crit.getValue());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
+        Assert.assertEquals(val, crit.getValue());
     }
 
     @Test
@@ -296,18 +296,25 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
-        Assert.assertEquals("RRY", crit.getValue());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
+        Assert.assertEquals(val, crit.getValue());
     }
 
-    @Test(expected = OpenSearchParseException.class)
+    @Test
     @Purpose("Tests queries like title:har*ter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardMiddleTest() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
         final String val = "har*ter";
         final String term = key + ":" + val;
-        parser.parse(QUERY_PREFIX + term);
+        ICriterion criterion = parser.parse(QUERY_PREFIX + term);
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof StringMatchCriterion);
+
+        final StringMatchCriterion crit = (StringMatchCriterion) criterion;
+        Assert.assertEquals(key, getShortCriterionName(crit.getName()));
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
+        Assert.assertEquals(val, crit.getValue());
     }
 
     @Test
@@ -680,11 +687,11 @@ public class QueryParserTest {
     }
 
     @Test
-    @Purpose("Tests queries like (title:harrypotter)")
+    @Purpose("Tests queries like (title:.*harrypotter.*)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void parenthesisAroundAllTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
-        final String value = "harrypotter";
+        final String value = ".*harrypotter.*";
         final String term = "(" + field + ":" + value + ")";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
@@ -692,7 +699,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(field, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
 
@@ -709,11 +716,11 @@ public class QueryParserTest {
     }
 
     @Test
-    @Purpose("Tests queries like cast:danielradcliffe")
+    @Purpose("Tests queries like cast:.*danielradcliffe.*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringArrayTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.STRING_ARRAY_ATTRIBUTE_MODEL.getJsonPath();
-        final String value = "danielradcliffe";
+        final String value = ".*danielradcliffe.*";
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
@@ -721,7 +728,7 @@ public class QueryParserTest {
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(field, getShortCriterionName(crit.getName()));
-        Assert.assertEquals(MatchType.CONTAINS, crit.getType());
+        Assert.assertEquals(MatchType.REGEXP, crit.getType());
         Assert.assertEquals(value, crit.getValue());
     }
 
