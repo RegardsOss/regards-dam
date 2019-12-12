@@ -23,7 +23,6 @@ import javax.validation.constraints.NotNull;
 import org.dom4j.rule.Rule;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
  * Dto for a {@link Rule}
@@ -36,9 +35,6 @@ public class RuleDto {
 
     @NotNull
     private PluginConfiguration pluginConf;
-
-    @NotNull
-    private NotificationType type;
 
     @NotNull
     private boolean enabled = true;
@@ -59,14 +55,6 @@ public class RuleDto {
         this.pluginConf = pluginConf;
     }
 
-    public NotificationType getType() {
-        return type;
-    }
-
-    public void setType(NotificationType type) {
-        this.type = type;
-    }
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -75,12 +63,11 @@ public class RuleDto {
         this.enabled = enabled;
     }
 
-    public static RuleDto build(Long id, PluginConfiguration pluginConf, boolean enabled, NotificationType type) {
+    public static RuleDto build(Long id, PluginConfiguration pluginConf, boolean enabled) {
         RuleDto rule = new RuleDto();
         rule.setId(id);
         rule.setPluginConf(pluginConf);
         rule.setEnabled(enabled);
-        rule.setType(type);
 
         return rule;
     }

@@ -62,7 +62,7 @@ public class RecipientService implements IRecipientService {
 
     private RuleDto intiRuleDto(Recipient recipient) {
         Rule rule = recipient.getRule();
-        return rule == null ? null : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(), rule.getType());
+        return rule == null ? null : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable());
     }
 
     @Override

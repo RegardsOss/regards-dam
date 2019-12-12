@@ -32,7 +32,6 @@ import com.google.common.cache.LoadingCache;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.domain.Rule;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
  * Cache for {@link Rule}
@@ -67,7 +66,7 @@ public abstract class AbstractCacheableRule {
 
                 @Override
                 public Set<Rule> load(String key) throws Exception {
-                    return ruleRepo.findByEnableTrueAndType(NotificationType.IMMEDIATE);
+                    return ruleRepo.findByEnableTrue();
                 }
 
             });

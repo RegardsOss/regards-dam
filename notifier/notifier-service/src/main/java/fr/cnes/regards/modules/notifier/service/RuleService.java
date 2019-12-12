@@ -48,16 +48,16 @@ public class RuleService implements IRuleService {
     @Override
     public Page<RuleDto> getRules(Pageable page) {
         Page<Rule> rules = ruleRepo.findAll(page);
-        return new PageImpl<>(rules.get()
-                .map(rule -> RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable(), rule.getType()))
-                .collect(Collectors.toList()));
+        return new PageImpl<>(
+                rules.get().map(rule -> RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable()))
+                        .collect(Collectors.toList()));
     }
 
     @Override
     public RuleDto createOrUpdateRule(@Valid RuleDto toCreate) {
-        Rule toSave = Rule.build(toCreate.getId(), toCreate.getPluginConf(), toCreate.isEnabled(), toCreate.getType());
+        Rule toSave = Rule.build(toCreate.getId(), toCreate.getPluginConf(), toCreate.isEnabled());
         Rule created = this.ruleRepo.save(toSave);
-        return RuleDto.build(created.getId(), created.getRulePlugin(), toCreate.isEnabled(), toCreate.getType());
+        return RuleDto.build(created.getId(), created.getRulePlugin(), toCreate.isEnabled());
     }
 
     @Override

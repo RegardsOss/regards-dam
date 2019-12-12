@@ -72,7 +72,6 @@ import fr.cnes.regards.modules.notifier.plugin.RecipientSender8;
 import fr.cnes.regards.modules.notifier.plugin.RecipientSender9;
 import fr.cnes.regards.modules.notifier.service.conf.NotificationConfigurationProperties;
 import fr.cnes.regards.modules.notifier.service.flow.NotificationActionEventHandler;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 public abstract class AbstractNotificationMultitenantServiceTest extends AbstractMultitenantServiceTest {
@@ -81,9 +80,9 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
 
     protected static final int RECIPIENTS_PER_RULE = 10;
 
-    protected static final int FEATURE_EVENT_TO_RECEIVE = 1_000;
+    protected static final int EVENT_TO_RECEIVE = 1_000;
 
-    protected static final int FEATURE_EVENT_BULK = 1_000;
+    protected static final int EVENT_BULK = 1_000;
 
     // used to param if the test Recipient will fail
     public static boolean RECIPIENT_FAIL = true;
@@ -223,7 +222,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         recipientPlugin.setPluginId(fail ? "fail" : "DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
 
-        Rule rule = Rule.build(null, rulePlugin, true, NotificationType.IMMEDIATE);
+        Rule rule = Rule.build(null, rulePlugin, true);
         rule = this.ruleRepo.save(rule);
 
         Recipient recipient = Recipient.build(rule, recipientPlugin);

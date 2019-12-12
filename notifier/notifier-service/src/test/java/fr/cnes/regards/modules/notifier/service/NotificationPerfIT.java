@@ -50,13 +50,13 @@ public class NotificationPerfIT extends AbstractNotificationMultitenantServiceTe
     public void testRegistrationAndProcessing()
             throws ExecutionException, NotAvailablePluginConfigurationException, ModuleException, InterruptedException {
 
-        JsonElement feature = initElement();
+        JsonElement element = initElement();
 
         initPlugins(false);
 
         List<NotificationActionEvent> events = new ArrayList<NotificationActionEvent>();
         for (int i = 0; i < configuration.getMaxBulkSize(); i++) {
-            events.add(NotificationActionEvent.build(feature, "CREATE"));
+            events.add(NotificationActionEvent.build(element, "CREATE"));
         }
         this.publisher.publish(events);
         // we should have  configuration.getMaxBulkSize() NotificationAction in database

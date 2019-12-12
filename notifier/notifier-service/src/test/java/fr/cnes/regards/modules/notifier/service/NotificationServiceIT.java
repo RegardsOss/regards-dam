@@ -113,12 +113,12 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
 
         List<NotificationAction> events = new ArrayList<>();
         int bulk = 0;
-        for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
+        for (int i = 0; i < EVENT_TO_RECEIVE; i++) {
             bulk++;
             events.add(NotificationAction.build(element, "CREATE", NotificationState.DELAYED));
-            if (bulk == FEATURE_EVENT_BULK) {
+            if (bulk == EVENT_BULK) {
                 bulk = 0;
-                assertEquals(FEATURE_EVENT_BULK * RECIPIENTS_PER_RULE,
+                assertEquals(EVENT_BULK * RECIPIENTS_PER_RULE,
                              this.notificationService.processRequest(events, job.getId()).getFirst().intValue());
                 events.clear();
             }
@@ -141,19 +141,19 @@ public class NotificationServiceIT extends AbstractNotificationMultitenantServic
         job.updateStatus(JobStatus.ABORTED);
         job = this.jobInforepo.save(job);
 
-        JsonElement modifiedFeature = initElement();
+        JsonElement modifiedElement = initElement();
 
         initPlugins(true);
 
         List<NotificationAction> events = new ArrayList<>();
-        for (int i = 0; i < FEATURE_EVENT_TO_RECEIVE; i++) {
-            events.add(NotificationAction.build(modifiedFeature, "CREATE", NotificationState.DELAYED));
+        for (int i = 0; i < EVENT_TO_RECEIVE; i++) {
+            events.add(NotificationAction.build(modifiedElement, "CREATE", NotificationState.DELAYED));
         }
 
         Pair<Integer, Integer> results = this.notificationService.processRequest(events, job.getId());
-        assertEquals(FEATURE_EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1), results.getFirst().intValue());
-        assertEquals(FEATURE_EVENT_TO_RECEIVE, results.getSecond().intValue());
-        assertEquals(FEATURE_EVENT_TO_RECEIVE, this.recipientErrorRepo.count());
+        assertEquals(EVENT_TO_RECEIVE * (RECIPIENTS_PER_RULE - 1), results.getFirst().intValue());
+        assertEquals(EVENT_TO_RECEIVE, results.getSecond().intValue());
+        assertEquals(EVENT_TO_RECEIVE, this.recipientErrorRepo.count());
     }
 
 }

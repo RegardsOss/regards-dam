@@ -50,7 +50,7 @@ public class NotificationAction {
     @GeneratedValue(generator = "notificationSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(columnDefinition = "jsonb", name = "feature", nullable = false)
+    @Column(columnDefinition = "jsonb", name = "element", nullable = false)
     @Type(type = "jsonb")
     private JsonElement element;
 
@@ -69,8 +69,8 @@ public class NotificationAction {
         return element;
     }
 
-    public void setElement(JsonElement feature) {
-        this.element = feature;
+    public void setElement(JsonElement element) {
+        this.element = element;
     }
 
     public String getAction() {

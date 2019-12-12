@@ -30,7 +30,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
  *
  */
 @FunctionalInterface
-@PluginInterface(description = "Feature rule matcher")
+@PluginInterface(description = "Element rule matcher")
 public interface IRuleMatcher {
 
     /**
