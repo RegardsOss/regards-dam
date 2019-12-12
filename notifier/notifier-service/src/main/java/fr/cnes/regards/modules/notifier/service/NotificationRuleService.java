@@ -50,6 +50,9 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.notifier.dao.INotificationActionRepository;
 import fr.cnes.regards.modules.notifier.dao.IRecipientErrorRepository;
@@ -97,6 +100,9 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
     @Autowired
     private IJobInfoService jobInfoService;
 
+    @Autowired
+    private INotificationClient notificationClient;
+
     /**
      * Handle a {@link NotificationAction} and check if it matches with enabled {@link Rule} in that case
      * send a notification to {@link Recipient}
@@ -123,9 +129,6 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
                         } else {
                             notification.setState(NotificationState.ERROR);
                             notificationsInErrors.put(notification, recipient);
-                            // FIXME ce TODO est il vraimment toujours d'actualité?
-                            // TODO notifier feature manager
-
                         }
                     }
                 }
@@ -256,7 +259,8 @@ public class NotificationRuleService extends AbstractCacheableRule implements IN
         if (!errors.hasErrors()) {
             return NotificationAction.build(event.getElement(), event.getAction(), NotificationState.DELAYED);
         }
-        //TODO on fait quoi?
+        this.notificationClient.notify(errors.toString(), "A NotificationActionEvent received is invalid",
+                                       NotificationLevel.ERROR, DefaultRole.ADMIN);
         return null;
     }
 
