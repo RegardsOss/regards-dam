@@ -234,7 +234,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
             toAdd = FeatureCreationRequestEvent
                     .build(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, Lists.emptyList()),
-                           featureToAdd);
+                           featureToAdd, true);
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now().minusDays(1));

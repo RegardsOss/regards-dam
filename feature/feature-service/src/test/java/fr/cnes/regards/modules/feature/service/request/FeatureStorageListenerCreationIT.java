@@ -107,7 +107,7 @@ public class FeatureStorageListenerCreationIT extends AbstractFeatureMultitenant
                                                                       "peps", UUID.randomUUID(), 1),
                                      IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
                        FeatureMetadataEntity.build("owner", "session", Lists.emptyList()),
-                       FeatureRequestStep.LOCAL_SCHEDULED, PriorityLevel.NORMAL);
+                       FeatureRequestStep.LOCAL_SCHEDULED, PriorityLevel.NORMAL, true);
         fcr.setGroupId(info.getGroupId());
 
         FeatureEntity feature = FeatureEntity
@@ -115,7 +115,8 @@ public class FeatureStorageListenerCreationIT extends AbstractFeatureMultitenant
                        Feature.build("id2",
                                      FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                       "peps", UUID.randomUUID(), 1),
-                                     IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"));
+                                     IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
+                       null);
         this.featureRepo.save(feature);
         fcr.setFeatureEntity(feature);
         this.fcrRepo.save(fcr);

@@ -76,7 +76,7 @@ public class FeatureVersionTest extends AbstractFeatureMultitenantServiceTest {
             // Version 1
             feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, feature.getEntityType(),
                                                             runtimeTenantResolver.getTenant(), uuid, i));
-            featureRepo.save(FeatureEntity.build("sessionOwner", "session", feature));
+            featureRepo.save(FeatureEntity.build("sessionOwner", "session", feature, null));
         }
     }
 }

@@ -67,7 +67,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             String id = String.format(format, i);
             Feature feature = Feature.build(id, null, IGeometry.unlocated(), EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
-            events.add(FeatureCreationRequestEvent.build(metadata, feature));
+            events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
 
             if (bulk == properties.getMaxBulkSize()) {
                 saveEvents(events);

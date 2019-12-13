@@ -24,6 +24,9 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.framework.amqp.event.Event;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
@@ -34,7 +37,8 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
  * @author Kevin Marchois
  *
  */
-public class FeatureDeletionRequestEvent extends AbstractRequestEvent {
+@Event(target = Target.ONE_PER_MICROSERVICE_TYPE)
+public class FeatureDeletionRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @NotNull
     @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)

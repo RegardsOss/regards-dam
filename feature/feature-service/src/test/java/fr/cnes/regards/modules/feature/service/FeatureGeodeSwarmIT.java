@@ -90,7 +90,7 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
             Feature feature = Feature.build(String.format(PROVIDER_ID_FORMAT, i), null, IGeometry.unlocated(),
                                             EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
-            events.add(FeatureCreationRequestEvent.build(metadata, feature));
+            events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
 
             if (bulk == PUBLISH_BULK_SIZE) {
                 publish(events, "creation", i, NB_FEATURES);

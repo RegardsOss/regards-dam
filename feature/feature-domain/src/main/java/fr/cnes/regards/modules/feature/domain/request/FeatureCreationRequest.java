@@ -64,7 +64,7 @@ public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
 
     public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
-            PriorityLevel priority) {
+            PriorityLevel priority, boolean overridePreviousVersion) {
         Assert.notNull(feature, "Feature is required");
         FeatureCreationRequest request = new FeatureCreationRequest();
         request.with(requestId, requestDate, state, priority, errors);
@@ -72,6 +72,7 @@ public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
         request.setFeature(feature);
         request.setMetadata(metadata);
         request.setStep(step);
+        request.setOverridePreviousVersion(overridePreviousVersion);
         return request;
     }
 

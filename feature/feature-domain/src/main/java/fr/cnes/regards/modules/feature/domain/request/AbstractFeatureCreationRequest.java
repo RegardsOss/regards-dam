@@ -49,6 +49,17 @@ public abstract class AbstractFeatureCreationRequest extends AbstractRequest {
     @Embedded
     private FeatureMetadataEntity metadata;
 
+    @Column(name = "override_previous_version", nullable = true)
+    private boolean overridePreviousVersion;
+
+    public boolean isOverridePreviousVersion() {
+        return overridePreviousVersion;
+    }
+
+    public void setOverridePreviousVersion(boolean overridePreviousVersion) {
+        this.overridePreviousVersion = overridePreviousVersion;
+    }
+
     public Long getId() {
         return this.id;
     }

@@ -48,18 +48,30 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
     @NotNull(message = "Feature is required")
     private Feature feature;
 
-    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature) {
-        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1));
+    private boolean overridePrviousVersion = false;
+
+    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature,
+            boolean overridePrviousVersion) {
+        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1), overridePrviousVersion);
     }
 
     public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature,
-            OffsetDateTime requestDate) {
+            OffsetDateTime requestDate, boolean overridePrviousVersion) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
         event.setRequestDate(requestDate);
+        event.setOverridePrviousVersion(overridePrviousVersion);
         return event;
+    }
+
+    public boolean isOverridePrviousVersion() {
+        return overridePrviousVersion;
+    }
+
+    public void setOverridePrviousVersion(boolean overridePrviousVersion) {
+        this.overridePrviousVersion = overridePrviousVersion;
     }
 
     public Feature getFeature() {

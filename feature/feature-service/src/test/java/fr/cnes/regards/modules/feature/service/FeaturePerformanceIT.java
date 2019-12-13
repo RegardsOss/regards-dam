@@ -84,7 +84,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
             feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
             feature.addProperty(IProperty.buildObject("file_characterization",
                                                       IProperty.buildBoolean("valid", Boolean.TRUE)));
-            publisher.publish(FeatureCreationRequestEvent.build(metadata, feature));
+            publisher.publish(FeatureCreationRequestEvent.build(metadata, feature, true));
         }
 
         // Wait for feature creation
