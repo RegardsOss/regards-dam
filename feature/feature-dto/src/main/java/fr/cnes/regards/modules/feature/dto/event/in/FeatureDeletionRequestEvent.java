@@ -26,6 +26,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
@@ -37,7 +38,7 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
  * @author Kevin Marchois
  *
  */
-@Event(target = Target.ONE_PER_MICROSERVICE_TYPE)
+@Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
 public class FeatureDeletionRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @NotNull

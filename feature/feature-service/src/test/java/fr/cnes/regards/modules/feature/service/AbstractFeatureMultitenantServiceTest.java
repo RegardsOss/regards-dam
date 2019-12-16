@@ -11,11 +11,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpIOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,8 +26,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.configuration.AmqpConstants;
+import fr.cnes.regards.framework.amqp.configuration.IAmqpAdmin;
+import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
@@ -40,8 +49,12 @@ import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
+import fr.cnes.regards.modules.feature.service.flow.FeatureCreationRequestEventHandler;
+import fr.cnes.regards.modules.feature.service.flow.FeatureDeletionRequestEventHandler;
+import fr.cnes.regards.modules.feature.service.flow.FeatureUpdateRequestEventHandler;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
@@ -80,10 +93,25 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
     protected IFeatureDeletionRequestRepository featureDeletionRepo;
 
     @Autowired
+    protected IRuntimeTenantResolver runtimeTenantResolver;
+
+    @Autowired(required = false)
+    private IAmqpAdmin amqpAdmin;
+
+    @Autowired(required = false)
+    private IRabbitVirtualHostAdmin vhostAdmin;
+
+    @Autowired
     protected FeatureConfigurationProperties properties;
 
     @Autowired
     protected FeatureCreationService featureCreationService;
+
+    @Autowired
+    protected IFeatureDeletionService featureDeletionService;
+
+    @Autowired
+    private ISubscriber sub;
 
     @Before
     public void before() throws InterruptedException {
@@ -133,7 +161,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
      * @param timeout timeout in milliseconds
      */
     protected void waitCreationRequestDeletion(long expected, long timeout) {
-        waitRequestDeletion(featureCreationRequestRepo, expected, timeout);
+        waitRequest(featureCreationRequestRepo, expected, timeout);
     }
 
     /**
@@ -142,10 +170,10 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
      * @param timeout timeout in milliseconds
      */
     protected void waitUpdateRequestDeletion(long expected, long timeout) {
-        waitRequestDeletion(featureUpdateRequestRepo, expected, timeout);
+        waitRequest(featureUpdateRequestRepo, expected, timeout);
     }
 
-    private void waitRequestDeletion(JpaRepository<?, ?> repo, long expected, long timeout) {
+    protected void waitRequest(JpaRepository<?, ?> repo, long expected, long timeout) {
         long end = System.currentTimeMillis() + timeout;
         // Wait
         long entityCount;
@@ -309,6 +337,35 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
         return deletionEvents;
 
+    }
+
+    @After
+    public void after() {
+        sub.unsubscribeFrom(FeatureCreationRequestEvent.class);
+        sub.unsubscribeFrom(FeatureDeletionRequestEvent.class);
+        sub.unsubscribeFrom(FeatureUpdateRequestEvent.class);
+        cleanAMQPQueues(FeatureCreationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(FeatureUpdateRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(FeatureDeletionRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+    }
+
+    /**
+     * Internal method to clean AMQP queues, if actives
+     */
+    public void cleanAMQPQueues(Class<? extends IHandler<?>> handler, Target target) {
+        if (vhostAdmin != null) {
+            // Re-set tenant because above simulation clear it!
+
+            // Purge event queue
+            try {
+                vhostAdmin.bind(AmqpConstants.AMQP_MULTITENANT_MANAGER);
+                amqpAdmin.purgeQueue(amqpAdmin.getSubscriptionQueueName(handler, target), false);
+            } catch (AmqpIOException e) {
+                //todo
+            } finally {
+                vhostAdmin.unbind();
+            }
+        }
     }
 
 }

@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
@@ -57,6 +60,9 @@ public class FeatureRequestService implements IFeatureRequestService {
     @Autowired
     private IPublisher publisher;
 
+    @Autowired
+    private INotificationClient notificationClient;
+
     @Override
     public void handleStorageSuccess(Set<String> groupIds) {
         Set<FeatureCreationRequest> request = this.fcrRepo.findByGroupIdIn(groupIds);
@@ -80,6 +86,10 @@ public class FeatureRequestService implements IFeatureRequestService {
         if ((item.getFeatureEntity().getPreviousVersionUrn() != null) && item.isOverridePreviousVersion()) {
             publisher.publish(FeatureDeletionRequestEvent.build(item.getFeatureEntity().getPreviousVersionUrn(),
                                                                 PriorityLevel.NORMAL));
+            this.notificationClient
+                    .notify(String.format("A FeatureEntity with the URN {} already exists for this feature",
+                                          request.getFeatureEntity().getPreviousVersionUrn()),
+                            "A duplicated feature has been detected", NotificationLevel.ERROR, DefaultRole.ADMIN);
         }
     }
 

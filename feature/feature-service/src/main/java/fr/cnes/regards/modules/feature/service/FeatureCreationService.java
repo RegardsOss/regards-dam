@@ -50,6 +50,9 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
@@ -128,6 +131,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
     @Autowired
     private FeatureMetrics metrics;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     @Override
     public RequestInfo<String> registerRequests(List<FeatureCreationRequestEvent> events) {
@@ -310,6 +316,11 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 // if a previous version exists we will publish a FeatureDeletionRequest to delete it
                 if ((request.getFeatureEntity().getPreviousVersionUrn() != null)
                         && request.isOverridePreviousVersion()) {
+                    this.notificationClient
+                            .notify(String.format("A FeatureEntity with the URN {} already exists for this feature",
+                                                  request.getFeatureEntity().getPreviousVersionUrn()),
+                                    "A duplicated feature has been detected", NotificationLevel.ERROR,
+                                    DefaultRole.ADMIN);
                     publisher.publish(FeatureDeletionRequestEvent
                             .build(request.getFeatureEntity().getPreviousVersionUrn(), PriorityLevel.NORMAL));
                 }
