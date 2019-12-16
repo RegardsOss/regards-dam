@@ -65,9 +65,9 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         super.initFeatureCreationRequestEvent(events, 1);
         events.get(0).getFeature().setId("id");
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
 
         // mock storage response to indicate creation succed
         FeatureEntity featureInDatabase = this.featureRepo.findAll().get(0);
@@ -79,9 +79,9 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         // publish a duplicated feature creation
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 2, 5000);
+        waitRequest(this.featureRepo, 2, 30000);
 
         // mock storage response to indicate creation succed
         fcr = this.featureCreationRequestRepo.findAll().get(0);
@@ -90,7 +90,7 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         this.listener.onStoreSuccess(Sets.newHashSet(info));
 
         // that must publish a FeatureDeletionRequestEvent
-        waitRequest(this.featureDeletionRepo, 1, 5000);
+        waitRequest(this.featureDeletionRepo, 1, 30000);
         this.featureDeletionService.scheduleRequests();
 
         // mock the deletion succed for storage
@@ -100,7 +100,7 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         this.listener.onDeletionSuccess(Sets.newHashSet(info));
 
         // it must remain only 1 FeatureEntity in database
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
         // it mustn't be the created one of the fist feature creation
         assertNotEquals(featureInDatabase.getId(), this.featureRepo.findAll().get(0).getId());
 
@@ -115,24 +115,24 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         events.get(0).getFeature().setId("id");
         events.get(0).getFeature().setFiles(new ArrayList<>());
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
 
         // mock storage response to indicate creation succed
         FeatureEntity featureInDatabase = this.featureRepo.findAll().get(0);
 
         // publish a duplicated feature creation
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 2, 5000);
+        waitRequest(this.featureRepo, 2, 30000);
 
         // that must publish a FeatureDeletionRequestEvent
-        waitRequest(this.featureDeletionRepo, 1, 5000);
+        waitRequest(this.featureDeletionRepo, 1, 30000);
         this.featureDeletionService.scheduleRequests();
 
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
         // it mustn't be the created one of the fist feature creation
         assertNotEquals(featureInDatabase.getId(), this.featureRepo.findAll().get(0).getId());
 
@@ -148,9 +148,9 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         events.get(0).getFeature().setId("id");
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
 
         // mock storage response to indicate creation succed
         FeatureCreationRequest fcr = this.featureCreationRequestRepo.findAll().get(0);
@@ -161,9 +161,9 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         // publish a duplicated feature creation
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 2, 5000);
+        waitRequest(this.featureRepo, 2, 30000);
 
         // mock storage response to indicate creation succed
         fcr = this.featureCreationRequestRepo.findAll().get(0);
@@ -172,7 +172,7 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         this.listener.onStoreSuccess(Sets.newHashSet(info));
 
         // it must remain the 2 FeatureEntity in database
-        waitRequest(this.featureRepo, 2, 5000);
+        waitRequest(this.featureRepo, 2, 30000);
 
     }
 
@@ -186,9 +186,9 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         events.get(0).getFeature().setId("id");
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
-        waitRequest(this.featureRepo, 1, 5000);
+        waitRequest(this.featureRepo, 1, 30000);
 
         // mock storage response to indicate creation succed
         FeatureCreationRequest fcr = this.featureCreationRequestRepo.findAll().get(0);
@@ -199,11 +199,11 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         // publish a duplicated feature creation
         publisher.publish(events);
-        waitRequest(this.featureCreationRequestRepo, 1, 5000);
+        waitRequest(this.featureCreationRequestRepo, 1, 30000);
         this.featureCreationService.scheduleRequests();
 
         // it must remain the 2 FeatureEntity in database
-        waitRequest(this.featureRepo, 2, 5000);
+        waitRequest(this.featureRepo, 2, 30000);
 
     }
 }
