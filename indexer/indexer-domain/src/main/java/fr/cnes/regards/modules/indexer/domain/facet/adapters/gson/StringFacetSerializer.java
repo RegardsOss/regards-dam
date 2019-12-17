@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
@@ -34,11 +33,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
  * @author Xavier-Alexandre Brochard
  */
 public class StringFacetSerializer implements JsonSerializer<StringFacet> {
-
-    @Override
-    public JsonElement serialize(StringFacet src, Type srcType, JsonSerializationContext context) {
-        return context.serialize(new AdaptedFacet(src));
-    }
 
     /**
      * A POJO describing the adapted shape
@@ -94,20 +88,12 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
         private final Long count;
 
         private final String openSearchQuery;
-
-        /**
-         * @param word
-         * @param count
-         */
+        
         public AdaptedFacetValue(String word, Long count, String attributeName) {
             super();
             this.word = word;
             this.count = count;
-            if (word.contains(" ")) {
-                openSearchQuery = attributeName + ":" + "\"" + word + "\"";
-            } else {
-                openSearchQuery = attributeName + ":" + word;
-            }
+            this.openSearchQuery = attributeName + ":" + "\"" + this.word + "\"";
         }
 
         /**
@@ -117,6 +103,11 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
             return openSearchQuery;
         }
 
+    }
+
+    @Override
+    public JsonElement serialize(StringFacet src, Type srcType, JsonSerializationContext context) {
+        return context.serialize(new AdaptedFacet(src));
     }
 
 }

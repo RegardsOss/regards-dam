@@ -438,7 +438,14 @@ public class EsRepository implements IEsRepository {
                     // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
                     // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
 
-                    .endObject().endObject().endObject());
+                    .endObject()
+                    // add feature.session type which should be keyword and not date. Default sessions are UTF-8 date as a string.
+                    .startObject("feature")
+                        .startObject("properties")
+                            .startObject("session").field("type", "keyword").endObject()
+                        .endObject()
+                    .endObject()
+                    .endObject().endObject());
             CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {

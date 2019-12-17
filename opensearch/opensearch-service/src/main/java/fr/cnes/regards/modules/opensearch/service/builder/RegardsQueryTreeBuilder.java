@@ -28,6 +28,7 @@ import org.apache.lucene.queryparser.flexible.core.nodes.GroupQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.ModifierQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.OrQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
+import org.apache.lucene.queryparser.flexible.core.nodes.QuotedFieldQueryNode;
 import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
 
@@ -49,6 +50,7 @@ public class RegardsQueryTreeBuilder extends QueryTreeBuilder implements ICriter
     public RegardsQueryTreeBuilder(IAttributeFinder finder) {
 
         // Register builder
+        setBuilder(QuotedFieldQueryNode.class, new QuotedFieldQueryNodeBuilder(finder));
         setBuilder(FieldQueryNode.class, new FieldQueryNodeBuilder(finder));
         setBuilder(AndQueryNode.class, new AndQueryNodeBuilder());
         setBuilder(OrQueryNode.class, new OrQueryNodeBuilder());

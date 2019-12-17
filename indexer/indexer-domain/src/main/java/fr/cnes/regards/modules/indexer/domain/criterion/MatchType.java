@@ -28,5 +28,5 @@ public enum MatchType {
     ENDS_WITH,
     CONTAINS,
     CONTAINS_ANY,
-    LIKE
+    REGEXP
 }

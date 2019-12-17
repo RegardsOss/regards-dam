@@ -68,13 +68,12 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
 
         String field = wildcardNode.getFieldAsString();
         String value = wildcardNode.getTextAsString();
-        String val = value.replaceAll("[*]", "");
 
         // Manage multisearch
         if (QueryParser.MULTISEARCH.equals(field)) {
             try {
                 Set<AttributeModel> atts = MultiSearchHelper.discoverFields(finder, value);
-                return IFeatureCriterion.multiMatchStartWith(atts, val);
+                return IFeatureCriterion.multiMatchStartWith(atts, value);
             } catch (OpenSearchUnknownParameter e) {
                 throw new QueryNodeException(new MessageImpl(
                         fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages.FIELD_TYPE_UNDETERMINATED,
@@ -91,16 +90,7 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
                     e.getMessage()), e);
         }
 
-        if (value.endsWith(WILDCARD_STRING) && value.startsWith(WILDCARD_STRING)) {
-            return IFeatureCriterion.contains(attributeModel, val);
-        } else if (value.endsWith(WILDCARD_STRING)) {
-            return IFeatureCriterion.startsWith(attributeModel, val);
-        } else if (value.startsWith(WILDCARD_STRING)) {
-            return IFeatureCriterion.endsWith(attributeModel, val);
-        } else {
-            throw new QueryNodeException(new MessageImpl(QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR,
-                    queryNode.toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass().getName()));
-        }
+        return IFeatureCriterion.regexp(attributeModel, value);
     }
 
 }
