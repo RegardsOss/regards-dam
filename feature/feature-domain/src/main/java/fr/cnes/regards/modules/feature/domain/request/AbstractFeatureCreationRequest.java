@@ -34,7 +34,7 @@ import javax.validation.constraints.NotBlank;
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureCreationRequest extends AbstractRequest {
+public abstract class AbstractFeatureCreationRequest extends AbstractFeatureRequest {
 
     @Id
     @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,

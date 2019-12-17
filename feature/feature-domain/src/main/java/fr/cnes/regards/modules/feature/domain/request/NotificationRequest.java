@@ -18,54 +18,53 @@
  */
 package fr.cnes.regards.modules.feature.domain.request;
 
+import java.time.OffsetDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.ForeignKey;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
-import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
- * Base class for feature update requests
- *
- * @author Marc SORDI
+ * @author Kevin Marchois
  *
  */
-@MappedSuperclass
-public abstract class AbstractFeatureUpdateRequest extends AbstractFeatureRequest {
+@Entity
+@Table(name = "t_notification_request",
+        indexes = { @Index(name = "idx_notification_request_urn", columnList = AbstractRequest.URN) },
+        uniqueConstraints = { @UniqueConstraint(name = "uk_notification_request_id",
+                columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
+public class NotificationRequest extends AbstractRequest {
 
     @Id
-    @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_update_request")
+    @SequenceGenerator(name = "featureDeleteRequestSequence", initialValue = 1,
+            sequenceName = "seq_feature_deletion_request")
     @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(name = "provider_id", nullable = false)
-    @NotBlank(message = "Provider id is required")
-    private String providerId;
-
-    /**
-     * Information Package ID for REST request
-     */
     @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
     @Convert(converter = FeatureUrnConverter.class)
     private FeatureUniformResourceName urn;
 
-    @ManyToOne
-    @JoinColumn(name = "feature_id", foreignKey = @ForeignKey(name = "fk_feature_id"))
-    private FeatureEntity featureEntity;
+    public static NotificationRequest build(String requestId, OffsetDateTime requestDate, FeatureRequestStep step,
+            PriorityLevel priority, FeatureUniformResourceName urn) {
+        NotificationRequest request = new NotificationRequest();
+        request.with(requestId, requestDate, priority);
+        request.setStep(step);
+        request.setUrn(urn);
+        request.setPriority(priority);
 
-    public Long getId() {
-        return this.id;
+        return request;
     }
 
     public FeatureUniformResourceName getUrn() {
@@ -76,20 +75,12 @@ public abstract class AbstractFeatureUpdateRequest extends AbstractFeatureReques
         this.urn = urn;
     }
 
-    public String getProviderId() {
-        return providerId;
+    public Long getId() {
+        return id;
     }
 
-    public void setProviderId(String providerId) {
-        this.providerId = providerId;
-    }
-
-    public FeatureEntity getFeatureEntity() {
-        return featureEntity;
-    }
-
-    public void setFeatureEntity(FeatureEntity featureEntity) {
-        this.featureEntity = featureEntity;
+    public void setId(Long id) {
+        this.id = id;
     }
 
 }

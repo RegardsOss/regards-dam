@@ -84,6 +84,11 @@ public class FeatureEntity {
     @NotNull
     private OffsetDateTime lastUpdate;
 
+    @Column(name = "creation_date", nullable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    @NotNull
+    private OffsetDateTime creationDate;
+
     @Column(name = "provider_id", nullable = false)
     @NotBlank(message = "Provider id is required")
     private String providerId;
@@ -103,6 +108,7 @@ public class FeatureEntity {
         featureEntity.setUrn(feature.getUrn());
         featureEntity.setVersion(feature.getUrn().getVersion());
         featureEntity.setPreviousVersionUrn(previousVersionUrn);
+        featureEntity.setCreationDate(featureEntity.getLastUpdate());
         return featureEntity;
     }
 
@@ -177,4 +183,13 @@ public class FeatureEntity {
     public void setPreviousVersionUrn(FeatureUniformResourceName previousVersionUrn) {
         this.previousVersionUrn = previousVersionUrn;
     }
+
+    public OffsetDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(OffsetDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
 }
