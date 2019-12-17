@@ -42,7 +42,7 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     /**
      * This field permits to identify which datasource provides it
      */
-    private String dataSourceId;
+    private Long dataSourceId;
 
     /**
      * Denormalization : allows to retrieve dataobjects related to models (i.e. types) of dataset
@@ -75,11 +75,11 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         super(model, feature);
     }
 
-    public String getDataSourceId() {
+    public Long getDataSourceId() {
         return dataSourceId;
     }
 
-    public void setDataSourceId(String pDataSourceId) {
+    public void setDataSourceId(Long pDataSourceId) {
         this.dataSourceId = pDataSourceId;
     }
 

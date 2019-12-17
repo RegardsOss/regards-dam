@@ -28,7 +28,6 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 
 /**
@@ -127,10 +126,12 @@ public interface IEntityIndexerService {
      * @param datasourceId id of data source from where data objects come
      * @param now          update date (usually now)
      * @param objects      objects to save
+     * @param datasourceIngestionId
      * @return bulk save result
      * @throws ModuleException
      */
-    BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects)
+    BulkSaveResult createDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
+            String datasourceIngestionId)
             throws ModuleException;
 
     /**
@@ -140,10 +141,12 @@ public interface IEntityIndexerService {
      * @param datasourceId id of data source from where data objects come
      * @param now          update date (usually now)
      * @param objects      objects to save
+     * @param datasourceIngestionId
      * @return bulk save result
      * @throws ModuleException
      */
-    BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects)
+    BulkSaveResult mergeDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
+            String datasourceIngestionId)
             throws ModuleException;
 
     /**

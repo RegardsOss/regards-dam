@@ -130,9 +130,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * {@link UUID#nameUUIDFromBytes(byte[])}.
      * @param tenant the tenant name
      * @param providerId the original primary key value
+     * @param datasourceId
      * @return the IpId generated from given parameters
      */
-    private static UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
+    private static UniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
@@ -165,7 +166,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
             BulkSaveLightResult saveResult;
             OffsetDateTime now = OffsetDateTime.now();
-            String datasourceId = pluginConf.getId().toString();
+            Long datasourceId = pluginConf.getId();
             // If index doesn't exist, just create all data objects
             boolean mergeNeeded = entityIndexerService.createIndexIfNeeded(tenant);
             // If index already exist, check if index already contains data objects (if not, no need to merge)
@@ -212,7 +213,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private BulkSaveLightResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, Long datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -274,7 +275,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private BulkSaveLightResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, Long datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -343,19 +344,20 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Get Callable to be used by parallel tasks to create a bulk of data objects
      */
-    private Callable<BulkSaveResult> createDataObjectsCallable(String tenant, OffsetDateTime now, String datasourceId,
-            String dsiId, List<DataObject> list) {
+    private Callable<BulkSaveResult> createDataObjectsCallable(String tenant, OffsetDateTime now, Long datasourceId,
+            String datasourceIngestionId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list,
+                                                                                   datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),
-                            dsiId);
+                            datasourceIngestionId);
             }
             sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
-                        dsiId);
+                        datasourceIngestionId);
             return bulkSaveResult;
         };
     }
@@ -363,19 +365,19 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Get Callable to be used by parallel tasks to merge a bulk of data objects
      */
-    private Callable<BulkSaveResult> mergeDataObjectCallable(String tenant, OffsetDateTime now, String datasourceId,
-            String dsiId, List<DataObject> list) {
+    private Callable<BulkSaveResult> mergeDataObjectCallable(String tenant, OffsetDateTime now, Long datasourceId,
+            String datasourceIngestionId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list, datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),
-                            dsiId);
+                            datasourceIngestionId);
             }
             sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
-                        dsiId);
+                        datasourceIngestionId);
             return bulkSaveResult;
         };
     }
@@ -383,9 +385,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
+     * @param datasourceId
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            String datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
+            Long datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
         // Retrieve target model
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
