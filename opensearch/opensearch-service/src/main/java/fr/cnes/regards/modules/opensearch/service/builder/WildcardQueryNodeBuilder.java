@@ -27,6 +27,7 @@ import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
 import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxImpl;
 
+import com.sun.org.apache.bcel.internal.generic.IFEQ;
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -38,16 +39,11 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 
 /**
  * Builds a {@link StringMatchCriterion} from a {@link WildcardQueryNode} object<br>
- * If the wildcard is leading (*example), use {@link MatchType#ENDS_WITH}<br>
- * If the wildcard is trailng (example*), use {@link MatchType#STARTS_WITH}<br>
- * If the wildcard is leading and trailng (*example*), use {@link MatchType#CONTAINS}<br>
- * A wildcard in the middle of the value (ex*mple) is not allowed
+ * We cannot use Elasticsearch optimization with startsWith in case: harry* because of the following case: har*ry*. <br>
  *
  * @author Xavier-Alexandre Brochard
  */
 public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
-
-    private static final String WILDCARD_STRING = "*";
 
     /**
      * Service retrieving the up-to-date list of {@link AttributeModel}s. Autowired by Spring.
@@ -90,6 +86,7 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
                     e.getMessage()), e);
         }
 
+        value = value.replaceAll("\\*", ".*");
         return IFeatureCriterion.regexp(attributeModel, value);
     }
 
