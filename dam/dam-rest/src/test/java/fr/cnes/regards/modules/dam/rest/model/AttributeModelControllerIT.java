@@ -35,8 +35,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.request.RequestDocumentation;
@@ -193,7 +193,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
                           "Used in search request. Define the JSON path to the related values in entities")
                 .type(JSON_STRING_TYPE).optional());
         // ignore links
-        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        ConstrainedFields ignoreFields = new ConstrainedFields(EntityModel.class);
         descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
         ignoreFields = new ConstrainedFields(Link.class);
         descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());

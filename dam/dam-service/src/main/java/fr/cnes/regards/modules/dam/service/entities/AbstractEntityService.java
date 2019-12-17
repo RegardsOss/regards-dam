@@ -53,6 +53,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -728,7 +729,8 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
+            return (IStorageService) PluginUtils.getPlugin(PluginConfiguration.build(ttt, "", IPluginParam.set()),
+                                                           new HashMap<>());
         } catch (ClassNotFoundException e) {
             LOGGER.error(e.getMessage());
         }

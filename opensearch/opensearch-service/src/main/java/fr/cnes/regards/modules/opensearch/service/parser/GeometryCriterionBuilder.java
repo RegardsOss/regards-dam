@@ -29,7 +29,6 @@ import org.springframework.core.convert.converter.Converter;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 import fr.cnes.regards.modules.opensearch.service.converter.PolygonToArray;
-import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
  * Creates {@link ICriterion} from multiple geometry types.
@@ -45,9 +44,7 @@ public class GeometryCriterionBuilder {
     /**
      * Read WKT format in given String to creates a Geometry criterion.
      * Only Polygons are handled here.
-     * @param wktGeometry
-     * @return
-     * @throws OpenSearchParseException
+     * @param wktGeometry geometry in WKT format
      */
     public static ICriterion build(String wktGeometry) throws InvalidGeometryException {
         try {
@@ -75,12 +72,11 @@ public class GeometryCriterionBuilder {
      * @param latParam
      * @param radiusParam
      * @return {@link ICriterion}
-     * @throws OpenSearchParseException
      */
     public static ICriterion build(String lonParam, String latParam, String radiusParam)
             throws InvalidGeometryException {
         // Check required query parameter
-        if ((latParam == null) && (lonParam == null) && (radiusParam == null)) {
+        if (latParam == null && lonParam == null && radiusParam == null) {
             return null;
         }
 

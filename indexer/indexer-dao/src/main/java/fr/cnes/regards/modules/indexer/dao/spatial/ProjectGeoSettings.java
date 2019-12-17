@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
@@ -55,7 +56,7 @@ public class ProjectGeoSettings {
      * changed.
      * This cache contains Crs and shouldManagePolesOnGeometries values associated to projects
      */
-    private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
+    private final LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
                 @Override
@@ -63,7 +64,7 @@ public class ProjectGeoSettings {
                     try {
                         FeignSecurityManager.asSystem();
 
-                        ResponseEntity<Resource<Project>> response = projectsClient
+                        ResponseEntity<EntityModel<Project>> response = projectsClient
                                 .retrieveProject(tenantResolver.getTenant());
                         if (response.getStatusCode() == HttpStatus.OK) {
                             Project currentProject = response.getBody().getContent();
@@ -73,10 +74,10 @@ public class ProjectGeoSettings {
                             }
                             return Pair.of(currentProject.getPoleToBeManaged(), Crs.valueOf(currentProject.getCrs()));
                         } else { // Must throw something
-                            throw new RsRuntimeException(new Exception(
-                                    String.format("Error while asking project client: Error %d - %s",
-                                                  response.getStatusCode().value(),
-                                                  response.getStatusCode().getReasonPhrase())));
+                            throw new RsRuntimeException(
+                                    new Exception(String.format("Error while asking project client: Error %d - %s",
+                                                                response.getStatusCode().value(),
+                                                                response.getStatusCode().getReasonPhrase())));
                         }
                     } finally {
                         FeignSecurityManager.reset();

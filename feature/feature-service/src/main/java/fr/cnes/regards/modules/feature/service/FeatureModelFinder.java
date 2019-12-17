@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +47,7 @@ public class FeatureModelFinder extends AbstractCacheableModelFinder implements 
     protected List<ModelAttrAssoc> loadAttributesByModel(String modelName) {
         try {
             FeignSecurityManager.asSystem();
-            ResponseEntity<List<Resource<ModelAttrAssoc>>> response = modelAttrAssocClient
+            ResponseEntity<List<EntityModel<ModelAttrAssoc>>> response = modelAttrAssocClient
                     .getModelAttrAssocs(modelName);
             List<ModelAttrAssoc> attModelAssocs = new ArrayList<>();
             if (response != null) {

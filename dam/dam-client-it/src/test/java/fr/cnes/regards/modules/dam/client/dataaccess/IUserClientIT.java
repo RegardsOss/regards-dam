@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -80,7 +80,7 @@ public class IUserClientIT extends AbstractRegardsWebIT {
     @Test
     public void testRetrieveAccessGroupsOfUser() {
         try {
-            final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroupOfUser = client
+            final ResponseEntity<PagedModel<EntityModel<AccessGroup>>> accessGroupOfUser = client
                     .retrieveAccessGroupsOfUser("user1@user1.user1", 0, 10);
             Assert.assertTrue(accessGroupOfUser.getStatusCode().equals(HttpStatus.OK));
         } catch (final Exception e) {

@@ -21,7 +21,7 @@ package fr.cnes.regards.modules.crawler.rest;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,7 +67,7 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
      */
     @ResourceAccess(description = "List all crawler datasources.")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<DatasourceIngestion>>> getAllDatasourceIngestion() {
+    public ResponseEntity<List<EntityModel<DatasourceIngestion>>> getAllDatasourceIngestion() {
         return ResponseEntity.ok(toResources(crawlerService.getDatasourceIngestions()));
     }
 
@@ -96,8 +96,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     }
 
     @Override
-    public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
-        Resource<DatasourceIngestion> resource = resourceService.toResource(element);
+    public EntityModel<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
+        EntityModel<DatasourceIngestion> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
                                 MethodParamFactory.build(String.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion", "SCHEDULE",

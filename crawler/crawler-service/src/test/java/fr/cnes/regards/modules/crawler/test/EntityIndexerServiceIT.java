@@ -48,7 +48,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.service.IEntityIndexerService;
@@ -239,28 +238,27 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     private PluginConfiguration createDataSource() throws ModuleException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(model)));
-        return datasourceService
-                .createDataSource(PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class));
+        return datasourceService.createDataSource(PluginConfiguration.build(TestDataSourcePlugin.class, "", param));
     }
 
     private PluginConfiguration createDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()));
-        return PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class);
+        return PluginConfiguration.build(TestDataAccessRightPlugin.class, "", param);
     }
 
     private PluginConfiguration createNewDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
-        return PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class);
+        return PluginConfiguration.build(NewDataObjectsAccessPlugin.class, "", param);
     }
 
     private PluginConfiguration createOldDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
         return pluginService
-                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
+                .savePluginConfiguration(PluginConfiguration.build(NewDataObjectsAccessPlugin.class, "", param));
     }
 
     private DataObject createObject(String id, String label) {

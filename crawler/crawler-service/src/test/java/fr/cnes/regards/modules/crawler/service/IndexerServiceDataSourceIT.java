@@ -80,7 +80,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -294,7 +293,7 @@ public class IndexerServiceDataSourceIT {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(dataModel)),
                      IPluginParam.build(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()));
-        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class);
+        return PluginConfiguration.build(TestDataSourcePlugin.class, "", param);
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")

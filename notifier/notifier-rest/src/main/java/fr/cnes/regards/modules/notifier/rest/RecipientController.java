@@ -8,8 +8,8 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +54,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
      */
     @ResourceAccess(description = "List all recipient")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<PagedResources<Resource<RecipientDto>>> getRecipients(Pageable page,
+    public ResponseEntity<PagedModel<EntityModel<RecipientDto>>> getRecipients(Pageable page,
             final PagedResourcesAssembler<RecipientDto> assembler) {
         return ResponseEntity.ok(toPagedResources(this.recipientService.getRecipients(page), assembler));
     }
@@ -65,7 +65,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
      */
     @ResourceAccess(description = "Create a recipient")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<RecipientDto>> createRecipient(@Valid @RequestBody RecipientDto toCreate) {
+    public ResponseEntity<EntityModel<RecipientDto>> createRecipient(@Valid @RequestBody RecipientDto toCreate) {
         return ResponseEntity.ok(toResource(this.recipientService.createOrUpdateRecipient(toCreate)));
     }
 
@@ -75,7 +75,7 @@ public class RecipientController implements IResourceController<RecipientDto> {
      */
     @ResourceAccess(description = "Update a recipient")
     @RequestMapping(method = RequestMethod.PUT)
-    public ResponseEntity<Resource<RecipientDto>> updateRecipient(@Valid @RequestBody RecipientDto toUpdate) {
+    public ResponseEntity<EntityModel<RecipientDto>> updateRecipient(@Valid @RequestBody RecipientDto toUpdate) {
         return ResponseEntity.ok(toResource(this.recipientService.createOrUpdateRecipient(toUpdate)));
     }
 
@@ -90,9 +90,9 @@ public class RecipientController implements IResourceController<RecipientDto> {
     }
 
     @Override
-    public Resource<RecipientDto> toResource(RecipientDto element, Object... extras) {
+    public EntityModel<RecipientDto> toResource(RecipientDto element, Object... extras) {
 
-        Resource<RecipientDto> resource = resourceService.toResource(element);
+        EntityModel<RecipientDto> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "getRecipients", LinkRels.SELF,
                                 MethodParamFactory.build(Pageable.class));
         resourceService.addLink(resource, this.getClass(), "createRecipient", LinkRels.CREATE,

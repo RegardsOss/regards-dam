@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.model.client;
 
 import java.util.List;
 
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -47,5 +47,6 @@ public interface IModelClient {
      * @return the models
      */
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<List<Resource<Model>>> getModels(@RequestParam(value = "type", required = false) EntityType pType);
+    ResponseEntity<List<EntityModel<Model>>> getModels(
+            @RequestParam(value = "type", required = false) EntityType pType);
 }

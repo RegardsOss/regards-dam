@@ -28,8 +28,8 @@ import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +87,7 @@ public class AttachmentController {
 
     @RequestMapping(method = RequestMethod.POST, value = ATTACHMENTS_MAPPING)
     @ResourceAccess(description = "Attach files of a same data type to an entity")
-    public ResponseEntity<Resource<AbstractEntity<?>>> attachFiles(@Valid @PathVariable UniformResourceName urn,
+    public ResponseEntity<EntityModel<AbstractEntity<?>>> attachFiles(@Valid @PathVariable UniformResourceName urn,
             @PathVariable DataType dataType,
             @Valid @RequestPart(name = "refs", required = false) List<DataFileReference> refs,
             @RequestPart("file") MultipartFile[] attachments)
@@ -96,7 +96,7 @@ public class AttachmentController {
         LOGGER.debug("Attaching files of type \"{}\" to entity \"{}\"", dataType, urn.toString());
 
         // Build local URI template
-        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder
+        WebMvcLinkBuilder controllerLinkBuilder = WebMvcLinkBuilder
                 .linkTo(this.getClass(),
                         this.getClass().getMethod("getFile", String.class, UniformResourceName.class, String.class,
                                                   HttpServletResponse.class),
@@ -111,7 +111,7 @@ public class AttachmentController {
         // Attach files to the entity
         AbstractEntity<?> entity = getEntityService(urn).attachFiles(urn, dataType, attachments, dataFileRefs,
                                                                      controllerLinkBuilder.toUri().toString());
-        return ResponseEntity.ok(new Resource<>(entity));
+        return ResponseEntity.ok(new EntityModel<>(entity));
     }
 
     @RequestMapping(method = RequestMethod.GET, value = ATTACHMENT_MAPPING)
@@ -156,14 +156,14 @@ public class AttachmentController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = ATTACHMENT_MAPPING)
     @ResourceAccess(description = "delete the document file using its id")
-    public ResponseEntity<Resource<AbstractEntity<?>>> removeFile(@Valid @PathVariable UniformResourceName urn,
+    public ResponseEntity<EntityModel<AbstractEntity<?>>> removeFile(@Valid @PathVariable UniformResourceName urn,
             @PathVariable String checksum) throws ModuleException, IOException {
 
         LOGGER.debug("Removing file with checksum \"{}\" from entity \"{}\"", checksum, urn.toString());
 
         // Attach files to the entity
         AbstractEntity<?> entity = getEntityService(urn).removeFile(urn, checksum);
-        return ResponseEntity.ok(new Resource<>(entity));
+        return ResponseEntity.ok(new EntityModel<>(entity));
     }
 
     @SuppressWarnings("unchecked")

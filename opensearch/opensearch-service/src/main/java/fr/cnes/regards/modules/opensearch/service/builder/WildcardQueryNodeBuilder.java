@@ -21,11 +21,9 @@ package fr.cnes.regards.modules.opensearch.service.builder;
 import java.util.Set;
 
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.queryparser.flexible.core.messages.QueryParserMessages;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
-import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxImpl;
 
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -47,6 +45,7 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
  */
 public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
 
+    @SuppressWarnings("unused")
     private static final String WILDCARD_STRING = "*";
 
     /**

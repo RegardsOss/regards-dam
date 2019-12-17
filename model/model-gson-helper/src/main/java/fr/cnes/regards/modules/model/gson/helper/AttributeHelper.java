@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.model.gson.helper;
 
 import java.util.List;
 
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +61,8 @@ public class AttributeHelper implements IAttributeHelper {
             runtimeTenantResolver.forceTenant(pTenant);
             FeignSecurityManager.asSystem();
 
-            ResponseEntity<List<Resource<AttributeModel>>> resources = attributeModelClient.getAttributes(null, null);
+            ResponseEntity<List<EntityModel<AttributeModel>>> resources = attributeModelClient.getAttributes(null,
+                                                                                                             null);
             if (resources != null) {
                 return HateoasUtils.unwrapList(resources.getBody());
             }

@@ -47,7 +47,6 @@ import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.AbstractAttributeMapping;
 import fr.cnes.regards.modules.dam.domain.datasources.DynamicAttributeMapping;
 import fr.cnes.regards.modules.dam.domain.datasources.StaticAttributeMapping;
@@ -317,7 +316,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginUtils.getPluginConfiguration(parameters, MockDatasourcePlugin.class);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "", parameters);
     }
 
     private PluginConfiguration createDataSourceSingleTable() {
@@ -328,7 +327,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginUtils.getPluginConfiguration(parameters, MockDatasourcePlugin.class);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "", parameters);
     }
 
     @Test
@@ -369,7 +368,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                      IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort),
                      IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, dbName));
 
-        return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class);
+        return PluginConfiguration.build(MockConnectionPlugin.class, "", parameters);
     }
 
 }

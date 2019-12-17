@@ -200,6 +200,7 @@ public class QueryParserTest {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
         final String val = "[1-9](.*)";
         final String term = key + ":" + val;
+        @SuppressWarnings("unused")
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
     }
 
@@ -251,8 +252,8 @@ public class QueryParserTest {
         String urlEncodedVal = "(%5B1-9%5D%20%5C%5C.*)";
         String key2 = SampleDataUtils.STRING_ATTRIBUTE_MODEL_1.getJsonPath();
         String key3 = SampleDataUtils.STRING_ARRAY_ATTRIBUTE_MODEL.getJsonPath();
-        String term = "((" + key1 + ":" + urlEncodedVal + ")%20AND%20(" + key2 + ":" + urlEncodedVal + "))%20OR%20(" + key3
-                + ":" + urlEncodedVal + ")";
+        String term = "((" + key1 + ":" + urlEncodedVal + ")%20AND%20(" + key2 + ":" + urlEncodedVal + "))%20OR%20("
+                + key3 + ":" + urlEncodedVal + ")";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
@@ -652,8 +653,8 @@ public class QueryParserTest {
         DateTimeFormatter ISO_DATE_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
                 .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).optionalStart().appendOffset("+HH:MM", "Z")
                 .toFormatter();
-        final String term =
-                field + ":\"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC)) + "\"";
+        final String term = field + ":\"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC))
+                + "\"";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
@@ -884,8 +885,8 @@ public class QueryParserTest {
 
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
         final String val = "harrypotter";
-        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder
-                .encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
+        final ICriterion criterion = parser.parse(QUERY_PREFIX
+                + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof NotCriterion);
     }

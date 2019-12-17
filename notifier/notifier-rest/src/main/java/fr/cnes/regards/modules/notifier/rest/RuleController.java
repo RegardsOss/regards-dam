@@ -8,8 +8,8 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +55,7 @@ public class RuleController implements IResourceController<RuleDto> {
      */
     @ResourceAccess(description = "List all rules")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<PagedResources<Resource<RuleDto>>> getRules(Pageable page,
+    public ResponseEntity<PagedModel<EntityModel<RuleDto>>> getRules(Pageable page,
             final PagedResourcesAssembler<RuleDto> assembler) {
         return ResponseEntity.ok(toPagedResources(this.ruleService.getRules(page), assembler));
     }
@@ -66,7 +66,7 @@ public class RuleController implements IResourceController<RuleDto> {
      */
     @ResourceAccess(description = "Create a rule")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<RuleDto>> createRule(@Valid @RequestBody RuleDto toCreate) {
+    public ResponseEntity<EntityModel<RuleDto>> createRule(@Valid @RequestBody RuleDto toCreate) {
         return ResponseEntity.ok(toResource(this.ruleService.createOrUpdateRule(toCreate)));
     }
 
@@ -76,7 +76,7 @@ public class RuleController implements IResourceController<RuleDto> {
      */
     @ResourceAccess(description = "Update a recipient")
     @RequestMapping(method = RequestMethod.PUT)
-    public ResponseEntity<Resource<RuleDto>> updateRule(@Valid @RequestBody RuleDto toUpdate) {
+    public ResponseEntity<EntityModel<RuleDto>> updateRule(@Valid @RequestBody RuleDto toUpdate) {
         return ResponseEntity.ok(toResource(this.ruleService.createOrUpdateRule(toUpdate)));
     }
 
@@ -91,9 +91,9 @@ public class RuleController implements IResourceController<RuleDto> {
     }
 
     @Override
-    public Resource<RuleDto> toResource(RuleDto element, Object... extras) {
+    public EntityModel<RuleDto> toResource(RuleDto element, Object... extras) {
 
-        Resource<RuleDto> resource = resourceService.toResource(element);
+        EntityModel<RuleDto> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "getRules", LinkRels.SELF,
                                 MethodParamFactory.build(Pageable.class));
         resourceService.addLink(resource, this.getClass(), "createRule", LinkRels.CREATE,

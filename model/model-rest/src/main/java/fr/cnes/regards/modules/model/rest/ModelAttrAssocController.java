@@ -25,7 +25,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -121,7 +121,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @ResourceAccess(
             description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
     @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<TypeMetadataResourceConfMapping>>> getMappingForComputedAttribute() {
+    public ResponseEntity<List<EntityModel<TypeMetadataResourceConfMapping>>> getMappingForComputedAttribute() {
         return ResponseEntity.ok(HateoasUtils.wrapList(transformToTypeMetadataResourceConfMapping(modelAttrAssocService
                 .retrievePossibleMappingsForComputed())));
     }
@@ -143,7 +143,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "List all model attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName) {
+    public ResponseEntity<List<EntityModel<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName) {
         return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(modelName), modelName));
     }
 
@@ -159,7 +159,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Bind an attribute to a model")
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.POST)
-    public ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable String modelName,
+    public ResponseEntity<EntityModel<ModelAttrAssoc>> bindAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
         return ResponseEntity
                 .ok(toResource(modelAttrAssocService.bindAttributeToModel(modelName, pModelAttribute), modelName));
@@ -175,7 +175,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Get a model attribute")
     @RequestMapping(method = RequestMethod.GET, value = TYPE_MAPPING + "/{attributeId}")
-    public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable String modelName,
+    public ResponseEntity<EntityModel<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long attributeId) throws ModuleException {
         return ResponseEntity
                 .ok(toResource(modelAttrAssocService.getModelAttrAssoc(modelName, attributeId), modelName));
@@ -192,7 +192,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Update a model attribute")
     @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{attributeId}")
-    public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
+    public ResponseEntity<EntityModel<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long attributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
         return ResponseEntity
                 .ok(toResource(modelAttrAssocService.updateModelAttribute(modelName, attributeId, pModelAttribute),
@@ -229,7 +229,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Bind fragment attributes to a model")
     @RequestMapping(method = RequestMethod.POST, value = TYPE_MAPPING + FRAGMENT_BIND_MAPPING)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable String modelName,
+    public ResponseEntity<List<EntityModel<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody Fragment fragment) throws ModuleException {
         return ResponseEntity
                 .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(modelName, fragment), modelName));
@@ -255,8 +255,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     }
 
     @Override
-    public Resource<ModelAttrAssoc> toResource(ModelAttrAssoc pElement, Object... pExtras) {
-        final Resource<ModelAttrAssoc> resource = resourceService.toResource(pElement);
+    public EntityModel<ModelAttrAssoc> toResource(ModelAttrAssoc pElement, Object... pExtras) {
+        final EntityModel<ModelAttrAssoc> resource = resourceService.toResource(pElement);
 
         String modelName = (String) pExtras[0];
 
@@ -289,12 +289,12 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
         /**
          * Wrapped plugin configurations
          */
-        private Collection<Resource<PluginConfiguration>> pluginConfigurations;
+        private Collection<EntityModel<PluginConfiguration>> pluginConfigurations;
 
         /**
          * Wrapped plugin metadata
          */
-        private Collection<Resource<PluginMetaData>> pluginMetaDatas;
+        private Collection<EntityModel<PluginMetaData>> pluginMetaDatas;
 
         /**
          * Constructor initializing the attributes from the parameter
@@ -322,32 +322,32 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
         }
 
         /**
-         * @return the plugin configurations wrapped into {@link Resource}
+         * @return the plugin configurations wrapped into {@link EntityModel}
          */
-        public Collection<Resource<PluginConfiguration>> getPluginConfigurations() {
+        public Collection<EntityModel<PluginConfiguration>> getPluginConfigurations() {
             return pluginConfigurations;
         }
 
         /**
-         * Set the plugin configurations wrapped into {@link Resource}
+         * Set the plugin configurations wrapped into {@link EntityModel}
          * @param pluginConfigurations
          */
-        public void setPluginConfigurations(Collection<Resource<PluginConfiguration>> pluginConfigurations) {
+        public void setPluginConfigurations(Collection<EntityModel<PluginConfiguration>> pluginConfigurations) {
             this.pluginConfigurations = pluginConfigurations;
         }
 
         /**
-         * @return the plugin metadata wrapped into {@link Resource}
+         * @return the plugin metadata wrapped into {@link EntityModel}
          */
-        public Collection<Resource<PluginMetaData>> getPluginMetaDatas() {
+        public Collection<EntityModel<PluginMetaData>> getPluginMetaDatas() {
             return pluginMetaDatas;
         }
 
         /**
-         * Set the plugin metadata wrapped into {@link Resource}
+         * Set the plugin metadata wrapped into {@link EntityModel}
          * @param pluginMetaDatas
          */
-        public void setPluginMetaDatas(Collection<Resource<PluginMetaData>> pluginMetaDatas) {
+        public void setPluginMetaDatas(Collection<EntityModel<PluginMetaData>> pluginMetaDatas) {
             this.pluginMetaDatas = pluginMetaDatas;
         }
     }

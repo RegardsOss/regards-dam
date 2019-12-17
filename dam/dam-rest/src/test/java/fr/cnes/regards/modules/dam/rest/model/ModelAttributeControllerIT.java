@@ -47,7 +47,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.integration.ConstrainedFields;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
@@ -341,7 +340,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
                 .set(IPluginParam.build(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto"),
                      IPluginParam.build(AbstractDataObjectComputePlugin.RESULT_ATTRIBUTE_NAME, "titi"));
 
-        PluginConfiguration conf = PluginUtils.getPluginConfiguration(params, IntSumComputePlugin.class);
+        PluginConfiguration conf = PluginConfiguration.build(IntSumComputePlugin.class, "", params);
         conf = pluginService.savePluginConfiguration(conf);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();
         requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());

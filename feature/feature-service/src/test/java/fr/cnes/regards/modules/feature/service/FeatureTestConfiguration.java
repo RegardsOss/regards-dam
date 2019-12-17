@@ -27,7 +27,7 @@ import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.modules.model.client.IAttributeModelClient;
@@ -78,10 +78,10 @@ public class FeatureTestConfiguration {
             // Translate to resources and attribute models and extract model name
             String modelName = null;
             List<AttributeModel> atts = new ArrayList<>();
-            List<Resource<ModelAttrAssoc>> resources = new ArrayList<>();
+            List<EntityModel<ModelAttrAssoc>> resources = new ArrayList<>();
             for (ModelAttrAssoc assoc : assocs) {
                 atts.add(assoc.getAttribute());
-                resources.add(new Resource<ModelAttrAssoc>(assoc));
+                resources.add(new EntityModel<ModelAttrAssoc>(assoc));
                 if (modelName == null) {
                     modelName = assoc.getModel().getName();
                 }

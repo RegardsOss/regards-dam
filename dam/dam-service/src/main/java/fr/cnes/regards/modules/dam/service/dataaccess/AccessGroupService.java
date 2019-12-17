@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -150,7 +150,7 @@ public class AccessGroupService implements ApplicationListener<ModelGsonReadyEve
 
     @Override
     public Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, final Pageable pPageable) {
-        if ((isPublic != null) && isPublic) {
+        if (isPublic != null && isPublic) {
             return accessGroupDao.findAllByIsPublic(isPublic, pPageable);
         }
         return accessGroupDao.findAll(pPageable);
@@ -222,7 +222,7 @@ public class AccessGroupService implements ApplicationListener<ModelGsonReadyEve
     private User getUser(final String pUserEmail) { // NOSONAR: method is used but by lambda so it is not recognized
         try {
             FeignSecurityManager.asSystem();
-            final ResponseEntity<Resource<ProjectUser>> response = projectUserClient
+            final ResponseEntity<EntityModel<ProjectUser>> response = projectUserClient
                     .retrieveProjectUserByEmail(pUserEmail);
             final HttpStatus responseStatus = response.getStatusCode();
             if (!HttpUtils.isSuccess(responseStatus)) {

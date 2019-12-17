@@ -109,6 +109,7 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
     /**
      * Double range almost equals date range except that as doubles are compared, all values are scaled with {@link EsHelper#PRECISION}.
      */
+    @SuppressWarnings("javadoc")
     @Override
     public AggregationBuilder visitRangeDoubleFacet(Object... args) {
         return visitRangeFacet(args, EsHelper::scaled);

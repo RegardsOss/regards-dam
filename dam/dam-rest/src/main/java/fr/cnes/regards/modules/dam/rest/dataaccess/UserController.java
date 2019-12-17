@@ -28,8 +28,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -87,7 +87,7 @@ public class UserController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list of accessGroups of the specified user")
-    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
+    public ResponseEntity<PagedModel<EntityModel<AccessGroup>>> retrieveAccessGroupsOfUser(
             @Valid @PathVariable("email") String userEmail,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             final PagedResourcesAssembler<AccessGroup> pAssembler) {
@@ -145,8 +145,8 @@ public class UserController implements IResourceController<AccessGroup> {
     }
 
     @Override
-    public Resource<AccessGroup> toResource(AccessGroup pElement, Object... pExtras) {
-        Resource<AccessGroup> resource = resourceService.toResource(pElement);
+    public EntityModel<AccessGroup> toResource(AccessGroup pElement, Object... pExtras) {
+        EntityModel<AccessGroup> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, AccessGroupController.class, "retrieveAccessGroup", LinkRels.SELF,
                                 MethodParamFactory.build(String.class, pElement.getName()));
         resourceService.addLink(resource, AccessGroupController.class, "deleteAccessGroup", LinkRels.DELETE,

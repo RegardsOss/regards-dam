@@ -24,8 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -78,19 +78,19 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
      */
     @RequestMapping(value = GROUP_PATH, method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
-    public ResponseEntity<PagedResources<Resource<DatasetWithAccessRight>>> retrieveDatasets(
+    public ResponseEntity<PagedModel<EntityModel<DatasetWithAccessRight>>> retrieveDatasets(
             @PathVariable(name = "accessGroupName") String accessGroupName,
             @RequestParam(name = "datasetLabel", required = false) String label,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageRequest,
             PagedResourcesAssembler<DatasetWithAccessRight> assembler) throws ModuleException {
         final Page<DatasetWithAccessRight> datasetsWithAR = service.search(label, accessGroupName, pageRequest);
-        final PagedResources<Resource<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, assembler);
+        final PagedModel<EntityModel<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
     @Override
-    public Resource<DatasetWithAccessRight> toResource(DatasetWithAccessRight element, Object... extras) {
-        Resource<DatasetWithAccessRight> resource = resourceService.toResource(element);
+    public EntityModel<DatasetWithAccessRight> toResource(DatasetWithAccessRight element, Object... extras) {
+        EntityModel<DatasetWithAccessRight> resource = resourceService.toResource(element);
         if (element.getAccessRight() != null) {
             resourceService.addLink(resource, AccessRightController.class, "deleteAccessRight", LinkRels.DELETE,
                                     MethodParamFactory.build(Long.class, element.getAccessRight().getId()));
