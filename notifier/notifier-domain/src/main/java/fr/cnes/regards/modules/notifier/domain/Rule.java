@@ -22,8 +22,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -39,7 +37,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
  * @author kevin
@@ -55,11 +52,6 @@ public class Rule {
     @SequenceGenerator(name = "ruleSequence", initialValue = 1, sequenceName = "seq_rule")
     @GeneratedValue(generator = "ruleSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
-
-    @NotNull(message = "Notification type is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", length = 30, nullable = false)
-    private NotificationType type;
 
     @ManyToOne
     @NotNull(message = "Rule plugin is required")
@@ -78,14 +70,6 @@ public class Rule {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public NotificationType getType() {
-        return type;
-    }
-
-    public void setType(NotificationType type) {
-        this.type = type;
     }
 
     public PluginConfiguration getRulePlugin() {
@@ -112,10 +96,9 @@ public class Rule {
         this.recipients = recipients;
     }
 
-    public static Rule build(Long id, PluginConfiguration pluginConf, boolean enabled, NotificationType type) {
+    public static Rule build(Long id, PluginConfiguration pluginConf, boolean enabled) {
         Rule rule = new Rule();
         rule.setRulePlugin(pluginConf);
-        rule.setType(type);
         rule.setEnable(enabled);
         rule.setId(id);
         return rule;

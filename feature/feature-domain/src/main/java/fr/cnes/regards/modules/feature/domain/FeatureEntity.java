@@ -64,6 +64,10 @@ public class FeatureEntity {
     @Convert(converter = FeatureUrnConverter.class)
     private FeatureUniformResourceName urn;
 
+    @Column(name = "previous_version_urn", length = FeatureUniformResourceName.MAX_SIZE)
+    @Convert(converter = FeatureUrnConverter.class)
+    private FeatureUniformResourceName previousVersionUrn;
+
     @Column(length = 128, name = "session_owner", nullable = false)
     private String sessionOwner;
 
@@ -80,6 +84,11 @@ public class FeatureEntity {
     @NotNull
     private OffsetDateTime lastUpdate;
 
+    @Column(name = "creation_date", nullable = false)
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    @NotNull
+    private OffsetDateTime creationDate;
+
     @Column(name = "provider_id", nullable = false)
     @NotBlank(message = "Provider id is required")
     private String providerId;
@@ -88,7 +97,8 @@ public class FeatureEntity {
     @NotNull
     private Integer version;
 
-    public static FeatureEntity build(String sessionOwner, String session, Feature feature) {
+    public static FeatureEntity build(String sessionOwner, String session, Feature feature,
+            FeatureUniformResourceName previousVersionUrn) {
         FeatureEntity featureEntity = new FeatureEntity();
         featureEntity.setSessionOwner(sessionOwner);
         featureEntity.setSession(session);
@@ -97,7 +107,8 @@ public class FeatureEntity {
         featureEntity.setProviderId(feature.getId());
         featureEntity.setUrn(feature.getUrn());
         featureEntity.setVersion(feature.getUrn().getVersion());
-
+        featureEntity.setPreviousVersionUrn(previousVersionUrn);
+        featureEntity.setCreationDate(featureEntity.getLastUpdate());
         return featureEntity;
     }
 
@@ -164,4 +175,21 @@ public class FeatureEntity {
     public void setUrn(FeatureUniformResourceName urn) {
         this.urn = urn;
     }
+
+    public FeatureUniformResourceName getPreviousVersionUrn() {
+        return previousVersionUrn;
+    }
+
+    public void setPreviousVersionUrn(FeatureUniformResourceName previousVersionUrn) {
+        this.previousVersionUrn = previousVersionUrn;
+    }
+
+    public OffsetDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(OffsetDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
 }

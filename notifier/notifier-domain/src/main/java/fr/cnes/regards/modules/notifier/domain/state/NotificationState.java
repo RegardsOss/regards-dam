@@ -16,20 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.notification.domain.plugin;
+package fr.cnes.regards.modules.notifier.domain.state;
 
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
+import fr.cnes.regards.modules.notifier.domain.NotificationAction;
 
 /**
+ * States of a {@link NotificationAction}
  * @author kevin
  *
  */
-@FunctionalInterface
-@PluginInterface(description = "Recipient sender plugin")
-public interface IRecipientSender {
-
-    boolean send(Feature feature, FeatureManagementAction action);
-
+public enum NotificationState {
+    /** Scheduled by a job*/
+    SCHEDULED,
+    /** Waiting for job*/
+    DELAYED,
+    /** Failed during a job*/
+    ERROR
 }

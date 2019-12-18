@@ -22,19 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
-import fr.cnes.regards.modules.notification.domain.plugin.IRecipientSender;
 
 /**
  * @author Marc SORDI
  *
  */
-public abstract class AbstractRecipientSender<E extends ISubscribable> implements IRecipientSender, IHandler<E> {
+public abstract class AbstractRecipientSender<E extends ISubscribable> implements IRecipientNotifier, IHandler<E> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientSender.class);
 
@@ -43,11 +42,11 @@ public abstract class AbstractRecipientSender<E extends ISubscribable> implement
     @Autowired
     IPublisher publisher;
 
-    abstract E buildEvent(Feature feature, FeatureManagementAction action);
+    abstract E buildEvent(JsonElement element, String action);
 
     @Override
-    public boolean send(Feature feature, FeatureManagementAction action) {
-        this.publisher.publish(buildEvent(feature, action));
+    public boolean send(JsonElement element, String action) {
+        this.publisher.publish(buildEvent(element, action));
         return true;
     }
 

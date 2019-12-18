@@ -53,19 +53,19 @@ public class FeatureConcurrentTest extends AbstractFeatureMultitenantServiceTest
         IGeometry firstPosition = IGeometry.point(0, 0);
         Feature feature = Feature.build("SAME ID", null, firstPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate, true));
 
         // Second feature with same id
         IGeometry secondPosition = IGeometry.point(10, 10);
         feature = Feature.build("SAME ID", null, secondPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(1)));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(1), true));
 
         // Third feature with same id
         IGeometry thirdPosition = IGeometry.point(22, 22);
         feature = Feature.build("SAME ID", null, thirdPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(2)));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(2), true));
 
         saveEvents(events);
 

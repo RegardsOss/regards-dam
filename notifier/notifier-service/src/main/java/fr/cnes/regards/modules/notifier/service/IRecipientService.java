@@ -27,7 +27,8 @@ import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.reguards.modules.notifier.dto.RecipientDto;
 
 /**
- * @author kevin
+ * Service for {@link Recipient} manipulation
+ * @author Kevin Marchois
  *
  */
 public interface IRecipientService {

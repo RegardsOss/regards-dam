@@ -190,10 +190,10 @@ public class FeatureDeletetionService implements IFeatureDeletionService {
                 .filter(fdr -> haveFiles(fdr, featureByUrn.get(fdr.getUrn())))
                 .map(fdr -> publishFiles(fdr, featureByUrn.get(fdr.getUrn()))).collect(Collectors.toList());
         this.deletionRepo.saveAll(requestsWithFiles);
-        // delete all FeatureEntityConcerned
+        // delete all FeatureEntity concerned
         this.featureRepo.deleteByIdIn(requests.stream().filter(fdr -> !haveFiles(fdr, featureByUrn.get(fdr.getUrn())))
                 .map(fdr -> featureByUrn.get(fdr.getUrn()).getId()).collect(Collectors.toSet()));
-        // delete all FeatureEntityConcerned
+        // delete all FeatureDeletioRequest concerned
         this.deletionRepo.deleteByIdIn(requests.stream().filter(fdr -> !haveFiles(fdr, featureByUrn.get(fdr.getUrn())))
                 .map(fdr -> fdr.getId()).collect(Collectors.toSet()));
     }

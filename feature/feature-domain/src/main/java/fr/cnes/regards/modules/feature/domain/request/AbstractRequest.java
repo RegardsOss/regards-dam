@@ -19,8 +19,6 @@
 package fr.cnes.regards.modules.feature.domain.request;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -29,14 +27,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
-import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
  * Common request properties
@@ -47,19 +41,17 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 @MappedSuperclass
 public abstract class AbstractRequest {
 
-    protected static final String GROUP_ID = "group_id";
-
     protected static final String COLUMN_REQUEST_ID = "request_id";
 
     protected static final String COLUMN_REQUEST_TIME = "request_date";
 
     protected static final String COLUMN_REGISTRATION_DATE = "registration_date";
 
-    protected static final String COLUMN_STATE = "state";
-
     protected static final String COLUMN_STEP = "step";
 
     protected static final String COLUMN_PRIORITY = "priority";
+
+    protected static final String URN = "urn";
 
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
@@ -78,18 +70,6 @@ public abstract class AbstractRequest {
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime registrationDate;
 
-    @NotNull(message = "Feature request state is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = COLUMN_STATE, length = 50, nullable = false)
-    private RequestState state;
-
-    @Column(columnDefinition = "jsonb", name = "errors")
-    @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
-    private Set<String> errors;
-
-    @Column(name = GROUP_ID)
-    private String groupId;
-
     /**
      * All internal request steps including local and remote ones
      */
@@ -104,38 +84,19 @@ public abstract class AbstractRequest {
     private PriorityLevel priority;
 
     @SuppressWarnings("unchecked")
-    protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, RequestState state,
-            PriorityLevel priority, Set<String> errors) {
+    protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, PriorityLevel priority) {
         Assert.notNull(requestId, "Request id is required");
         Assert.notNull(requestDate, "Request date is required");
-        Assert.notNull(state, "Request state is required");
         Assert.notNull(priority, "Request priority is required");
         this.requestId = requestId;
         this.requestDate = requestDate;
         this.registrationDate = OffsetDateTime.now();
-        this.state = state;
-        this.errors = errors;
         this.priority = priority;
         return (T) this;
     }
 
     public String getRequestId() {
         return requestId;
-    }
-
-    public RequestState getState() {
-        return state;
-    }
-
-    public Set<String> getErrors() {
-        return errors;
-    }
-
-    public void addError(String error) {
-        if (errors == null) {
-            errors = new HashSet<>();
-        }
-        errors.add(error);
     }
 
     public OffsetDateTime getRequestDate() {
@@ -156,22 +117,6 @@ public abstract class AbstractRequest {
 
     public void setRegistrationDate(OffsetDateTime registrationDate) {
         this.registrationDate = registrationDate;
-    }
-
-    public void setState(RequestState state) {
-        this.state = state;
-    }
-
-    public void setErrors(Set<String> errors) {
-        this.errors = errors;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
     }
 
     public FeatureRequestStep getStep() {

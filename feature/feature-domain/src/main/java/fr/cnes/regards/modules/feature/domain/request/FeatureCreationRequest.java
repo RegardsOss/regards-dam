@@ -45,11 +45,11 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 @Entity
 @Table(name = "t_feature_creation_request",
         indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE),
+                @Index(name = "idx_feature_creation_request_state", columnList = AbstractFeatureRequest.COLUMN_STATE),
                 @Index(name = "idx_feature_step_registration_priority",
                         columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
                                 + AbstractRequest.COLUMN_PRIORITY),
-                @Index(name = "idx_feature_creation_group_id", columnList = AbstractRequest.GROUP_ID) },
+                @Index(name = "idx_feature_creation_group_id", columnList = AbstractFeatureRequest.GROUP_ID) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
 public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
@@ -64,7 +64,7 @@ public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
 
     public static FeatureCreationRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
             Set<String> errors, Feature feature, FeatureMetadataEntity metadata, FeatureRequestStep step,
-            PriorityLevel priority) {
+            PriorityLevel priority, boolean overridePreviousVersion) {
         Assert.notNull(feature, "Feature is required");
         FeatureCreationRequest request = new FeatureCreationRequest();
         request.with(requestId, requestDate, state, priority, errors);
@@ -72,6 +72,7 @@ public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
         request.setFeature(feature);
         request.setMetadata(metadata);
         request.setStep(step);
+        request.setOverridePreviousVersion(overridePreviousVersion);
         return request;
     }
 

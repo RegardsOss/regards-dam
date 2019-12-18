@@ -32,8 +32,8 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
 import fr.cnes.regards.framework.amqp.event.notification.NotificationEvent;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.feature.dto.event.out.FeatureEvent;
 import fr.cnes.regards.modules.notifier.service.INotificationRuleService;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
  * Handler to handle {@link NotificationEvent} events
@@ -42,10 +42,11 @@ import fr.cnes.regards.modules.notifier.service.INotificationRuleService;
  */
 @Component
 @Profile("!nohandler")
-public class FeatureEventHandler implements IBatchHandler<FeatureEvent>, ApplicationListener<ApplicationReadyEvent> {
+public class NotificationActionEventHandler
+        implements IBatchHandler<NotificationActionEvent>, ApplicationListener<ApplicationReadyEvent> {
 
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationActionEventHandler.class);
 
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
@@ -58,14 +59,14 @@ public class FeatureEventHandler implements IBatchHandler<FeatureEvent>, Applica
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        subscriber.subscribeTo(FeatureEvent.class, this);
+        subscriber.subscribeTo(NotificationActionEvent.class, this);
     }
 
     @Override
-    public void handleBatch(String tenant, List<FeatureEvent> messages) {
+    public void handleBatch(String tenant, List<NotificationActionEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
-            notificationService.handleFeatures(messages);
+            notificationService.registerNotifications(messages);
         } finally {
             runtimeTenantResolver.clearTenant();
         }

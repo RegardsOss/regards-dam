@@ -44,7 +44,7 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 @Entity
 @Table(name = "t_feature_update_request",
         indexes = { @Index(name = "idx_feature_update_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_update_request_state", columnList = AbstractRequest.COLUMN_STATE),
+                @Index(name = "idx_feature_update_request_state", columnList = AbstractFeatureRequest.COLUMN_STATE),
                 @Index(name = "idx_feature_update_request_urn", columnList = "urn"),
                 @Index(name = "idx_feature_update_step_registration_priority",
                         columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
