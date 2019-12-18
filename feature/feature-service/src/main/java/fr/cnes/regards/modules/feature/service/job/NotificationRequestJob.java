@@ -34,7 +34,7 @@ import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterMissi
 import fr.cnes.regards.modules.feature.dao.INotificationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.request.NotificationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.service.INotificationService;
+import fr.cnes.regards.modules.feature.service.IFeatureNotificationService;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -57,7 +57,7 @@ public class NotificationRequestJob extends AbstractJob<Void> {
     private MeterRegistry registry;
 
     @Autowired
-    private INotificationService notificationService;
+    private IFeatureNotificationService notificationService;
 
     @Override
     public void setParameters(Map<String, JobParameter> parameters)

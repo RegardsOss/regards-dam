@@ -42,6 +42,7 @@ import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
@@ -57,7 +58,7 @@ import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.job.FeatureCreationJob;
-import fr.cnes.regards.modules.feature.service.job.FeatureDeletionJob;
+import fr.cnes.regards.modules.feature.service.job.NotificationRequestJob;
 import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 /**
@@ -66,9 +67,10 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
  *
  */
 @Service
-public class NotificationService implements INotificationService {
+@MultitenantTransactional
+public class FeatureNotificationService implements IFeatureNotificationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NotificationService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeatureNotificationService.class);
 
     @Autowired
     private INotificationRequestRepository notificationRequestRepo;
@@ -91,7 +93,7 @@ public class NotificationService implements INotificationService {
     @Autowired
     private IAuthenticationResolver authResolver;
 
-    @Autowired()
+    @Autowired
     private Gson gson;
 
     @Override
@@ -162,7 +164,7 @@ public class NotificationService implements INotificationService {
 
             // the job priority will be set according the priority of the first request to schedule
             JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
-                    jobParameters, authResolver.getUser(), FeatureDeletionJob.class.getName());
+                    jobParameters, authResolver.getUser(), NotificationRequestJob.class.getName());
             jobInfoService.createAsQueued(jobInfo);
 
             LOGGER.debug("------------->>> {} deletion requests scheduled in {} ms", requestsToSchedule.size(),

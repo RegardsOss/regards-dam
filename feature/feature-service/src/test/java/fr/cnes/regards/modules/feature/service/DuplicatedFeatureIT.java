@@ -44,7 +44,6 @@ import fr.cnes.regards.modules.storage.client.RequestInfo;
  * @author Marc SORDI
  *
  */
-//@Ignore
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_geode",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })

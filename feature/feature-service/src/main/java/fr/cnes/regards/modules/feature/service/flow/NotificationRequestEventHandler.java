@@ -32,7 +32,7 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.batch.IBatchHandler;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.feature.dto.event.in.NotificationRequestEvent;
-import fr.cnes.regards.modules.feature.service.INotificationService;
+import fr.cnes.regards.modules.feature.service.IFeatureNotificationService;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 
 /**
@@ -57,7 +57,7 @@ public class NotificationRequestEventHandler
     private ISubscriber subscriber;
 
     @Autowired
-    private INotificationService notificationService;
+    private IFeatureNotificationService notificationService;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {

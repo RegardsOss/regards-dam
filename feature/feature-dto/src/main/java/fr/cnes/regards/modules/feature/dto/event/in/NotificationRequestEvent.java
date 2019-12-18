@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.feature.dto.event.in;
 
 import java.time.OffsetDateTime;
 
-import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.validation.constraints.NotNull;
 
@@ -31,7 +30,6 @@ import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
-import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
  * Request for notification using event driven mechanism
@@ -39,11 +37,9 @@ import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
  * @author Kevin Marchois
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-@ValidFeatureEvent
 public class NotificationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @NotNull
-    @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
     @Convert(converter = FeatureUrnConverter.class)
     private FeatureUniformResourceName urn;
 
@@ -76,6 +72,7 @@ public class NotificationRequestEvent extends AbstractRequestEvent implements IS
         event.setRequestId(generateRequestId());
         event.setRequestDate(requestDate);
         event.setPriority(priority);
+        event.setUrn(urn);
         return event;
     }
 
