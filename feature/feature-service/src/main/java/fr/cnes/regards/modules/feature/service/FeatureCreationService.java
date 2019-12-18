@@ -151,6 +151,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         featureCreationRequestRepo.saveAll(grantedRequests);
         LOGGER.trace("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
+        LOGGER.error("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa{}", featureCreationRequestLightRepo.count());
+
         return requestInfo;
     }
 

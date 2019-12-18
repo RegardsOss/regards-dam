@@ -118,10 +118,10 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         events.get(0).getFeature().setId("id");
         events.get(0).getFeature().setFiles(new ArrayList<>());
         publisher.publish(events);
+        LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! {}", featureCreationRequestRepo.count());
         waitRequest(this.featureCreationRequestRepo, 1, 30000);
 
         this.featureCreationService.scheduleRequests();
-        LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! {}", featureRepo.count());
 
         waitRequest(this.featureRepo, 1, 30000);
 
