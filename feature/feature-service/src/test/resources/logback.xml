@@ -40,7 +40,7 @@
 	<logger name="fr.cnes.regards.modules" level="INFO" />
 	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR"/>
 	<logger name="fr.cnes.regards.modules.model.dto.properties" level="ERROR" />
-	<logger name="fr.cnes.regards.modules.feature.service" level="INFO"/>
+	<logger name="fr.cnes.regards.modules.feature.service" level="ERROR"/>
 <!-- 	<logger name="fr.cnes.regards.modules.model.gson" level="DEBUG"/> -->
 	
     <!-- <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/> -->
