@@ -96,28 +96,30 @@ public interface IEntityIndexerService {
      * @param tenant
      * @param datasets
      * @param lastUpdateDate         Take into account only more recent lastUpdateDate than provided
-     * @param forceDataObjectsUpdate true to force all associated data objects update
-     * @param dsiId                  datasetIngestion id
-     * @throws ModuleException
+     * @param updateDate
+     *@param forceDataObjectsUpdate true to force all associated data objects update
+     * @param dsiId                  datasetIngestion id   @throws ModuleException
      */
     void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, String dsiId) throws ModuleException;
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate, String dsiId) throws ModuleException;
 
     /**
      * Force update of all {@link Dataset}s
      *
      * @param tenant
+     * @param updateDate
      * @throws ModuleException
      */
-    void updateAllDatasets(String tenant) throws ModuleException;
+    void updateAllDatasets(String tenant, OffsetDateTime updateDate) throws ModuleException;
 
     /**
      * Force update of all {@link fr.cnes.regards.modules.dam.domain.entities.Collection}s
      *
      * @param tenant
+     * @param updateDate
      * @throws ModuleException
      */
-    void updateAllCollections(String tenant) throws ModuleException;
+    void updateAllCollections(String tenant, OffsetDateTime updateDate) throws ModuleException;
 
     /**
      * Create given data objects into Elasticsearch

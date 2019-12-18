@@ -145,13 +145,13 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public Optional<IngestionResult> ingest(String dsId) throws ModuleException, InterruptedException,
+    public Optional<IngestionResult> ingest(String datasourceIngestionId) throws ModuleException, InterruptedException,
             ExecutionException, DataSourceException, NotFinishedException, InactiveDatasourceException {
         String tenant = runtimeTenantResolver.getTenant();
-        Optional<DatasourceIngestion> odsi = dsIngestionRepos.findById(dsId);
+        Optional<DatasourceIngestion> odsi = dsIngestionRepos.findById(datasourceIngestionId);
         if (odsi.isPresent()) {
             DatasourceIngestion dsi = odsi.get();
-            PluginConfiguration pluginConf = pluginService.getPluginConfiguration(dsId);
+            PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceIngestionId);
             OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
             // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
             int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
@@ -197,7 +197,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             if (!datasetsToUpdate.isEmpty()) {
                 sendMessage("Start updating datasets associated to datasource...", dsiId);
                 try {
-                    entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+                    entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, now, true, dsiId);
                 } catch (ModuleException e) {
                     sendMessage(String.format("Error updating datasets associated to datasource. Cause : %s.",
                                               e.getMessage()),

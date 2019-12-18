@@ -710,12 +710,11 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     @MultitenantTransactional
     public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
         for (Dataset dataset : datasets) {
             LOGGER.info("Updating dataset {} ...", dataset.getLabel());
             sendDataSourceMessage(String.format("  Updating dataset %s...", dataset.getLabel()), dsiId);
-            updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
+            updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, updateDate, forceDataObjectsUpdate, dsiId);
             sendDataSourceMessage(String.format("  ...Dataset %s updated.", dataset.getLabel()), dsiId);
             LOGGER.info("Dataset {} updated.", dataset.getLabel());
         }
@@ -732,8 +731,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         deleteIndex(tenant);
         sessionNotifier.notifyIndexDeletion();
         //2. Then re-create all entities
-        updateAllDatasets(tenant);
-        updateAllCollections(tenant);
+        OffsetDateTime updateDate = OffsetDateTime.now();
+        updateAllDatasets(tenant, updateDate);
+        updateAllCollections(tenant, updateDate);
     }
 
     /**
@@ -898,15 +898,14 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
-    public void updateAllDatasets(String tenant) throws ModuleException {
-        self.updateDatasets(tenant, datasetService.findAll(), null, true, null);
+    public void updateAllDatasets(String tenant, OffsetDateTime updateDate) throws ModuleException {
+        self.updateDatasets(tenant, datasetService.findAll(), null, updateDate, true, null);
     }
 
     @Override
-    public void updateAllCollections(String tenant) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
+    public void updateAllCollections(String tenant, OffsetDateTime updateDate) throws ModuleException {
         for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
-            updateEntityIntoEs(tenant, col.getIpId(), null, now, false, null);
+            updateEntityIntoEs(tenant, col.getIpId(), null, updateDate, false, null);
         }
     }
 
