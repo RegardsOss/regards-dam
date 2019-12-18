@@ -41,23 +41,24 @@ import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenE
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.models.AttributeModelSpecifications;
-import fr.cnes.regards.modules.dam.dao.models.IAttributeModelRepository;
-import fr.cnes.regards.modules.dam.dao.models.IAttributePropertyRepository;
-import fr.cnes.regards.modules.dam.dao.models.IFragmentRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
-import fr.cnes.regards.modules.dam.dao.models.IRestrictionRepository;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeProperty;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
-import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.dam.domain.models.attributes.restriction.IRestriction;
-import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelCreated;
-import fr.cnes.regards.modules.dam.domain.models.event.AttributeModelDeleted;
-import fr.cnes.regards.modules.dam.service.models.event.NewFragmentAttributeEvent;
-import fr.cnes.regards.modules.dam.service.models.exception.UnsupportedRestrictionException;
+import fr.cnes.regards.modules.model.dao.AttributeModelSpecifications;
+import fr.cnes.regards.modules.model.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.model.dao.IAttributePropertyRepository;
+import fr.cnes.regards.modules.model.dao.IFragmentRepository;
+import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
+import fr.cnes.regards.modules.model.dao.IRestrictionRepository;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeProperty;
+import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.model.domain.attributes.restriction.IRestriction;
+import fr.cnes.regards.modules.model.domain.event.AttributeModelCreated;
+import fr.cnes.regards.modules.model.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.event.NewFragmentAttributeEvent;
+import fr.cnes.regards.modules.model.service.exception.UnsupportedRestrictionException;
 
 /**
  * Manage global attribute life cycle
@@ -111,8 +112,8 @@ public class AttributeModelService implements IAttributeModelService {
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
             IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
             IAttributePropertyRepository pAttPropertyRepository, IModelAttrAssocRepository modelAttrAssocRepository,
-            IDatasetRepository datasetRepository, ICollectionRepository collectionRepository,
-            IPublisher pPublisher, ApplicationEventPublisher eventPublisher) {
+            IDatasetRepository datasetRepository, ICollectionRepository collectionRepository, IPublisher pPublisher,
+            ApplicationEventPublisher eventPublisher) {
         attModelRepository = pAttModelRepository;
         restrictionRepository = pRestrictionRepository;
         fragmentRepository = pFragmentRepository;
@@ -125,10 +126,10 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds,
+    public List<AttributeModel> getAttributes(PropertyType pType, String pFragmentName, Set<Long> modelIds,
             Set<String> modelNames) {
         return attModelRepository
-                .findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds, modelNames));
+                .findAll(AttributeModelSpecifications.search(pType, pFragmentName, modelIds, modelNames));
     }
 
     @Override
