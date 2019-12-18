@@ -31,9 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpIOException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.google.common.io.CharStreams;
 import com.google.gson.Gson;
@@ -173,7 +171,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
     }
 
     /**
-     * Wait data creation on a {@link Link jpaRepository}
+     * Wait data creation on a {@link JpaRepository}
      * @param repo {@link JpaRepository} where we wait data
      * @param expectedNumber number of data waited
      * @param timeout to throw exception
@@ -187,7 +185,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
             notificationActionNumber = repo.count();
             cpt++;
             Thread.sleep(1000);
-        } while ((notificationActionNumber != expectedNumber) && (cpt != timeout));
+        } while (notificationActionNumber != expectedNumber && cpt != timeout);
 
         if (notificationActionNumber != expectedNumber) {
             fail(String.format("Wrong notifications number in database after timeout expected %s got %s",

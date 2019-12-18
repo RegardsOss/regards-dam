@@ -66,11 +66,6 @@ public class IndexController {
         entityIndexerService.deleteIndexNRecreateEntities(tenant);
 
         // Clear all datasources ingestion
-        //2. Then re-create all entities
-        entityIndexerService.updateAllDatasets(tenant);
-        entityIndexerService.updateAllCollections(tenant);
-
-        //3. Clear all datasources ingestion
         List<DatasourceIngestion> datasources = dataSourceIngesterService.getDatasourceIngestions();
         if ((datasources != null) && !datasources.isEmpty()) {
             datasources.forEach(ds -> dataSourceIngesterService.deleteDatasourceIngestion(ds.getId()));

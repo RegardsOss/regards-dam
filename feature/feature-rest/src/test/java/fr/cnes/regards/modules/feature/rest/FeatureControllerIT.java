@@ -62,7 +62,6 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 @ContextConfiguration(classes = { AbstractMultitenantServiceTest.ScanningConfiguration.class })
 public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureControllerIT.class);
 
     @Autowired
