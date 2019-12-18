@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -49,6 +51,8 @@ import fr.cnes.regards.modules.storage.client.RequestInfo;
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp" })
 public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DuplicatedFeatureIT.class);
 
     @Autowired
     private FeatureStorageListener listener;
@@ -115,7 +119,10 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         events.get(0).getFeature().setFiles(new ArrayList<>());
         publisher.publish(events);
         waitRequest(this.featureCreationRequestRepo, 1, 30000);
+
         this.featureCreationService.scheduleRequests();
+        LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! {}", featureRepo.count());
+
         waitRequest(this.featureRepo, 1, 30000);
 
         // mock storage response to indicate creation succed

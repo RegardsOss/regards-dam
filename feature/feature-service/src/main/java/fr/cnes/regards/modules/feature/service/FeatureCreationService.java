@@ -333,7 +333,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         LOGGER.trace("------------->>> {} creation requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);
-
+        LOGGER.error("<<<<<<<<<<<<<<<<<<<<<<<<<<<< {}", featureRepo.count());
         return entities;
     }
 
