@@ -195,14 +195,14 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    LOGGER.error(String.format("Thread interrupted {} expected in database, {} really ", expected,
+                    LOGGER.error(String.format("Thread interrupted %s expected in database, %s really ", expected,
                                                entityCount));
                     Assert.fail(String.format("Thread interrupted {} expected in database, {} really ", expected,
                                               entityCount));
 
                 }
             } else {
-                LOGGER.error(String.format("Thread interrupted {} expected in database, {} really ", expected,
+                LOGGER.error(String.format("Thread interrupted %s expected in database, %s really ", expected,
                                            entityCount));
                 Assert.fail("Timeout");
             }
