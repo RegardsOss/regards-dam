@@ -228,7 +228,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
     @Override
     public int scheduleRequests() {
-
+        LOGGER.error("chierrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
         long scheduleStart = System.currentTimeMillis();
 
         // Shedule job
@@ -262,8 +262,12 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
             LOGGER.trace("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
+            LOGGER.error("merrrrrrrrrrrrrrrrrrrrddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+
             return requestIds.size();
         }
+        LOGGER.error("prout");
+
         return 0;
     }
 
