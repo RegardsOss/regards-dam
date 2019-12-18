@@ -78,24 +78,30 @@ public class FeatureNotificationServiceIT extends AbstractFeatureMultitenantServ
                                                                                    EntityType.DATA, "tenant", 1));
         list.get(1).getFeature().setUrn(FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE,
                                                                                    EntityType.DATA, "tenant", 1));
-        FeatureEntity created = FeatureEntity.build("moi", "session", list.get(0).getFeature(), null);
-        FeatureEntity updated = FeatureEntity.build("moi", "session", list.get(1).getFeature(), null);
-        updated.setLastUpdate(OffsetDateTime.now().plusSeconds(1));
+        FeatureEntity createdEntity = FeatureEntity.build("moi", "session", list.get(0).getFeature(), null);
+        FeatureEntity updatedEntity = FeatureEntity.build("moi", "session", list.get(1).getFeature(), null);
+        updatedEntity.setLastUpdate(OffsetDateTime.now().plusSeconds(1));
 
-        created.setUrn(list.get(0).getFeature().getUrn());
-        updated.setUrn(list.get(1).getFeature().getUrn());
+        createdEntity.setUrn(list.get(0).getFeature().getUrn());
+        updatedEntity.setUrn(list.get(1).getFeature().getUrn());
 
-        this.featureRepo.save(created);
-        this.featureRepo.save(updated);
+        // to skip creation and update process
+        this.featureRepo.save(createdEntity);
+        this.featureRepo.save(updatedEntity);
 
-        this.publisher.publish(NotificationRequestEvent.build(created.getUrn(), PriorityLevel.LOW));
-        //        this.publisher.publish(NotificationRequestEvent.build(updated.getUrn(), PriorityLevel.LOW));
-        this.waitRequest(notificationRepo, 1, 30000);
-        assertEquals(1, notificationService.scheduleRequests());
+        this.publisher.publish(NotificationRequestEvent.build(createdEntity.getUrn(), PriorityLevel.LOW));
+        this.publisher.publish(NotificationRequestEvent.build(updatedEntity.getUrn(), PriorityLevel.LOW));
+
+        this.waitRequest(notificationRepo, 2, 30000);
+        assertEquals(2, notificationService.scheduleRequests());
         this.waitRequest(notificationRepo, 0, 30000);
         Mockito.verify(publisher).publish(recordsCaptor.capture());
+        // the first publish message to be intercepted must be the creation of createdEntity
         assertEquals("CREATION", recordsCaptor.getValue().get(0).getAction());
-        assertEquals(gson.toJson(created.getFeature()), recordsCaptor.getValue().get(0).getElement().toString());
+        assertEquals(gson.toJson(createdEntity.getFeature()), recordsCaptor.getValue().get(0).getElement().toString());
+        // the second message is the update of updatedEntity
+        assertEquals("UPDATE", recordsCaptor.getValue().get(1).getAction());
+        assertEquals(gson.toJson(updatedEntity.getFeature()), recordsCaptor.getValue().get(1).getElement().toString());
 
     }
 }
