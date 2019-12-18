@@ -244,16 +244,16 @@ public class EntityIndexerService implements IEntityIndexerService {
             // previous version of dataset and current one.
             // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
             // data objects must be updated
-            boolean needAssociatedDataObjectsUpdate = lastUpdateDate != null || forceAssociatedEntitiesUpdate;
+            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
-            if (!needAssociatedDataObjectsUpdate && entity instanceof Dataset) {
+            if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
                 Dataset dataset = (Dataset) entity;
                 needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
                                                                                    esRepos.get(tenant, dataset));
             }
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
-            if (entity instanceof Dataset && needAssociatedDataObjectsUpdate) {
+            if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
                 // Subsetting clause is needed by many things
                 ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate, dsiId);
@@ -432,7 +432,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // handle association between dataobjects and groups for all access rights set by plugin
         for (DataObjectGroup group : dataset.getMetadata().getDataObjectsGroupsMap().values()) {
             // If access to the dataset is allowed and a plugin access filter is set on dataobject metadata, calculate which dataObjects are in the given group
-            if (group.getDatasetAccess() && group.getMetaDataObjectAccessFilterPluginId() != null) {
+            if (group.getDatasetAccess() && (group.getMetaDataObjectAccessFilterPluginId() != null)) {
                 try {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(group.getMetaDataObjectAccessFilterPluginId());
@@ -663,7 +663,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<IProperty<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> attr instanceof ObjectProperty
+                        .filter(attr -> (attr instanceof ObjectProperty)
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
@@ -711,12 +711,11 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     @MultitenantTransactional
     public void updateDatasets(String tenant, Collection<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate, String dsiId) throws ModuleException {
         for (Dataset dataset : datasets) {
             LOGGER.info("Updating dataset {} ...", dataset.getLabel());
             sendDataSourceMessage(String.format("  Updating dataset %s...", dataset.getLabel()), dsiId);
-            updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
+            updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, updateDate, forceDataObjectsUpdate, dsiId);
             sendDataSourceMessage(String.format("  ...Dataset %s updated.", dataset.getLabel()), dsiId);
             LOGGER.info("Dataset {} updated.", dataset.getLabel());
         }
@@ -733,8 +732,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         deleteIndex(tenant);
         sessionNotifier.notifyIndexDeletion();
         //2. Then re-create all entities
-        updateAllDatasets(tenant);
-        updateAllCollections(tenant);
+        OffsetDateTime updateDate = OffsetDateTime.now();
+        updateAllDatasets(tenant, updateDate);
+        updateAllCollections(tenant, updateDate);
     }
 
     /**
@@ -753,7 +753,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             errors = e.getMessages();
         }
         // No exception thrown but still validation errors
-        if (errors == null && errorsObject.hasErrors()) {
+        if ((errors == null) && errorsObject.hasErrors()) {
             errors = toErrors(errorsObject);
         }
         // No error => dataObject is valid
@@ -778,8 +778,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
-    public BulkSaveResult createDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) throws ModuleException {
+    public BulkSaveResult createDataObjects(String tenant, Long datasourceId, OffsetDateTime now,
+            List<DataObject> objects, String datasourceIngestionId) throws ModuleException {
         StringBuilder buf = new StringBuilder();
         BulkSaveResult bulkSaveResult = new BulkSaveResult();
         // For all objects, it is necessary to set datasourceId, creation date AND to validate them
@@ -793,22 +793,22 @@ public class EntityIndexerService implements IEntityIndexerService {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
             // Validate data object
-            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
         try {
             esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
         } catch (ElasticsearchException e) {
             throw new ModuleException(e);
         } finally {
-            publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+            publishEventsAndManageErrors(tenant, datasourceIngestionId, buf, bulkSaveResult);
         }
 
         return bulkSaveResult;
     }
 
     @Override
-    public BulkSaveResult mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now,
-            List<DataObject> objects) throws ModuleException {
+    public BulkSaveResult mergeDataObjects(String tenant, Long datasourceId, OffsetDateTime now,
+            List<DataObject> objects, String datasourceIngestionId) throws ModuleException {
         StringBuilder buf = new StringBuilder();
         BulkSaveResult bulkSaveResult = new BulkSaveResult();
         // Set of data objects to be saved (depends on existence of data objects into ES)
@@ -816,14 +816,14 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         for (DataObject dataObject : objects) {
             mergeDataObject(tenant, datasourceId, now, dataObject);
-            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, Long.parseLong(datasourceId));
+            validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
         try {
             esRepos.saveBulk(tenant, bulkSaveResult, toSaveObjects, buf);
         } catch (ElasticsearchException e) {
             throw new ModuleException(e);
         } finally {
-            publishEventsAndManageErrors(tenant, datasourceId, buf, bulkSaveResult);
+            publishEventsAndManageErrors(tenant, datasourceIngestionId, buf, bulkSaveResult);
         }
         return bulkSaveResult;
     }
@@ -831,7 +831,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     /**
      * Merge data object with current indexed one if it does exist
      */
-    private void mergeDataObject(String tenant, String datasourceId, OffsetDateTime now, DataObject dataObject) {
+    private void mergeDataObject(String tenant, Long datasourceId, OffsetDateTime now, DataObject dataObject) {
         DataObject curObject = esRepos.get(tenant, dataObject);
         // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
         // search objects from storage only using tags so if this tag has been used
@@ -862,7 +862,7 @@ public class EntityIndexerService implements IEntityIndexerService {
      * Publish events concerning data objects indexation status (indexed or in error), notify admin and update detailed
      * save bulk result message in case of errors
      */
-    private void publishEventsAndManageErrors(String tenant, String datasourceId, StringBuilder buf,
+    private void publishEventsAndManageErrors(String tenant, String datasourceIngestionId, StringBuilder buf,
             BulkSaveResult bulkSaveResult) {
         if (bulkSaveResult.getSavedDocsCount() != 0) {
             // Session needs to know when an internal DataObject is indexed (if DataObject is not internal, it doesn't
@@ -883,7 +883,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         // If there are errors, notify Admin
         if (buf.length() > 0) {
             // Also add detailed message to datasource ingestion
-            Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepository.findById(datasourceId);
+            Optional<DatasourceIngestion> oDsIngestion = dsIngestionRepository.findById(datasourceIngestionId);
             if (oDsIngestion.isPresent()) {
                 DatasourceIngestion dsIngestion = oDsIngestion.get();
                 String notifTitle = String.format("'%s' Datasource ingestion error", dsIngestion.getLabel());
@@ -899,15 +899,14 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
-    public void updateAllDatasets(String tenant) throws ModuleException {
-        self.updateDatasets(tenant, datasetService.findAll(), null, true, null);
+    public void updateAllDatasets(String tenant, OffsetDateTime updateDate) throws ModuleException {
+        self.updateDatasets(tenant, datasetService.findAll(), null, updateDate, true, null);
     }
 
     @Override
-    public void updateAllCollections(String tenant) throws ModuleException {
-        OffsetDateTime now = OffsetDateTime.now();
+    public void updateAllCollections(String tenant, OffsetDateTime updateDate) throws ModuleException {
         for (fr.cnes.regards.modules.dam.domain.entities.Collection col : collectionService.findAll()) {
-            updateEntityIntoEs(tenant, col.getIpId(), null, now, false, null);
+            updateEntityIntoEs(tenant, col.getIpId(), null, updateDate, false, null);
         }
     }
 

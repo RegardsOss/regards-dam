@@ -47,9 +47,6 @@ public class FeatureDeletionIT extends AbstractFeatureMultitenantServiceTest {
     @Autowired
     private IFeatureCreationService featureCreationService;
 
-    @Autowired
-    private IFeatureDeletionService featureDeletionService;
-
     /**
      * Nominal test case of deletion create feature then send delete request
      * we will test that the {@link FeatureDeletionRequest}

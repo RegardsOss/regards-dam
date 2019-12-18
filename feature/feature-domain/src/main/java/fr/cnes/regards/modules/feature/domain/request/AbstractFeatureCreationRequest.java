@@ -34,7 +34,7 @@ import javax.validation.constraints.NotBlank;
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureCreationRequest extends AbstractRequest {
+public abstract class AbstractFeatureCreationRequest extends AbstractFeatureRequest {
 
     @Id
     @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,
@@ -48,6 +48,17 @@ public abstract class AbstractFeatureCreationRequest extends AbstractRequest {
 
     @Embedded
     private FeatureMetadataEntity metadata;
+
+    @Column(name = "override_previous_version", nullable = true)
+    private boolean overridePreviousVersion;
+
+    public boolean isOverridePreviousVersion() {
+        return overridePreviousVersion;
+    }
+
+    public void setOverridePreviousVersion(boolean overridePreviousVersion) {
+        this.overridePreviousVersion = overridePreviousVersion;
+    }
 
     public Long getId() {
         return this.id;

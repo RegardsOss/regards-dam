@@ -24,7 +24,8 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**
- * @author kevin
+ * Dto for a {@link Recipient}
+ * @author Kevin Marchois
  *
  */
 public class RecipientDto {
@@ -33,6 +34,8 @@ public class RecipientDto {
 
     @Valid
     private RuleDto rule;
+
+    private long ruleId;
 
     @NotNull
     private PluginConfiguration pluginConf;
@@ -59,6 +62,14 @@ public class RecipientDto {
 
     public void setPluginConf(PluginConfiguration pluginConf) {
         this.pluginConf = pluginConf;
+    }
+
+    public long getRuleId() {
+        return ruleId;
+    }
+
+    public void setRuleId(long ruleId) {
+        this.ruleId = ruleId;
     }
 
     public static RecipientDto build(Long id, RuleDto rule, PluginConfiguration pluginConf) {

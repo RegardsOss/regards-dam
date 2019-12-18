@@ -26,7 +26,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
-import fr.cnes.regards.modules.feature.domain.IVersionByProvider;
+import fr.cnes.regards.modules.feature.domain.IUrnVersionByProvider;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 @Repository
@@ -50,5 +50,5 @@ public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, L
     /**
      * List existing provider identifiers in specified list
      */
-    List<IVersionByProvider> findByProviderIdInOrderByVersionDesc(List<String> providerIds);
+    List<IUrnVersionByProvider> findByProviderIdInOrderByVersionDesc(List<String> providerIds);
 }

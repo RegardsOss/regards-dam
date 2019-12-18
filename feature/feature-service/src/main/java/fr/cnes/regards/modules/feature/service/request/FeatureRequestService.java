@@ -26,11 +26,16 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureDeletionRequest;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
@@ -55,18 +60,37 @@ public class FeatureRequestService implements IFeatureRequestService {
     @Autowired
     private IPublisher publisher;
 
+    @Autowired
+    private INotificationClient notificationClient;
+
     @Override
     public void handleStorageSuccess(Set<String> groupIds) {
         Set<FeatureCreationRequest> request = this.fcrRepo.findByGroupIdIn(groupIds);
 
         // publish success notification for all request id
-        request.stream()
-                .forEach(item -> publisher.publish(FeatureRequestEvent
-                        .build(item.getRequestId(), item.getFeature() != null ? item.getFeature().getId() : null, null,
-                               RequestState.SUCCESS, null)));
+        request.stream().forEach(item -> publishSuccessAndDeleteOlderVersion(item));
 
         // delete useless FeatureCreationRequest
         this.fcrRepo.deleteAll(request);
+    }
+
+    /**
+     * Publish a succed event for a {@link Feature} creation on storage and delete previous version if exists
+     * if the boolean overridePreviousVersion is set to true
+     * @param item
+     */
+    private void publishSuccessAndDeleteOlderVersion(FeatureCreationRequest item) {
+        publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
+                                                    item.getFeature() != null ? item.getFeature().getId() : null, null,
+                                                    RequestState.SUCCESS, null));
+        if ((item.getFeatureEntity().getPreviousVersionUrn() != null) && item.isOverridePreviousVersion()) {
+            publisher.publish(FeatureDeletionRequestEvent.build(item.getFeatureEntity().getPreviousVersionUrn(),
+                                                                PriorityLevel.NORMAL));
+            this.notificationClient
+                    .notify(String.format("A FeatureEntity with the URN {} already exists for this feature",
+                                          item.getFeatureEntity().getPreviousVersionUrn()),
+                            "A duplicated feature has been detected", NotificationLevel.ERROR, DefaultRole.ADMIN);
+        }
     }
 
     @Override

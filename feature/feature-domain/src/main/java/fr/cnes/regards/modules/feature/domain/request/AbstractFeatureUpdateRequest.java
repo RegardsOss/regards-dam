@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureUpdateRequest extends AbstractRequest {
+public abstract class AbstractFeatureUpdateRequest extends AbstractFeatureRequest {
 
     @Id
     @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,

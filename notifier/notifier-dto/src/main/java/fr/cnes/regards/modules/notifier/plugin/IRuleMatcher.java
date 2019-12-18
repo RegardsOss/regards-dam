@@ -16,16 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.reguards.modules.dto.type;
+package fr.cnes.regards.modules.notifier.plugin;
+
+import org.dom4j.rule.Rule;
+
+import com.google.gson.JsonElement;
+
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * @author kevin
+ * Describe action to applied to a {@link Rule}
+ * @author Kevin Marchois
  *
  */
-public enum NotificationType {
+@FunctionalInterface
+@PluginInterface(description = "Element rule matcher")
+public interface IRuleMatcher {
 
-    // for created/updated/deleted features
-    IMMEDIATE,
-    // for all features matching rules
-    PERIODIC
+    /**
+     * Verify if a {@link JsonElement} match with a rule
+     * @param element {@link JsonElement} to verify if it matches
+     * @return true if match, false otherwise
+     */
+    boolean match(JsonElement element);
 }

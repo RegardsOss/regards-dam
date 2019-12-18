@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d"ETUDES SPATIALES
+ * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -17,9 +17,6 @@
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.QueryParserHelper;
@@ -41,7 +38,7 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
- * Custom implementation of Lucene"s {@link QueryParserHelper}.<br>
+ * Custom implementation of Lucene's {@link QueryParserHelper}.<br>
  * For more complex customizability, consider implementing {@link CommonQueryParserConfiguration}.<br>
  *
  * This {@link IParser} implementation only handles the the "q" part of the OpenSearch request.<br>
@@ -55,6 +52,11 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
 public class QueryParser extends QueryParserHelper implements IParser {
 
     /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryParser.class);
+
+    /**
      * The request parameter containing the OpenSearch query
      */
     public static final String QUERY_PARAMETER = "q";
@@ -65,43 +67,15 @@ public class QueryParser extends QueryParserHelper implements IParser {
     public static final String MULTISEARCH = "@multisearch";
 
     /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryParser.class);
-    
-    private static final Map<String, String> TO_ESCAPE_CHARACTER = new HashMap<>();
-
-    static {
-        TO_ESCAPE_CHARACTER.put("\\+", "\\\\+");
-        TO_ESCAPE_CHARACTER.put("\\-", "\\\\-");
-        TO_ESCAPE_CHARACTER.put("&", "\\&");
-        TO_ESCAPE_CHARACTER.put("\\|", "\\\\|");
-        TO_ESCAPE_CHARACTER.put("!", "\\!");
-        TO_ESCAPE_CHARACTER.put("\\[", "\\\\[");
-        TO_ESCAPE_CHARACTER.put("\\]", "\\\\]");
-        TO_ESCAPE_CHARACTER.put("\\{", "\\\\{");
-        TO_ESCAPE_CHARACTER.put("\\}", "\\\\}");
-        TO_ESCAPE_CHARACTER.put("\\^", "\\\\^");
-        TO_ESCAPE_CHARACTER.put("\"", "\\\"");
-        TO_ESCAPE_CHARACTER.put("~", "\\\\~");
-        TO_ESCAPE_CHARACTER.put("\\*", "\\\\*");
-        TO_ESCAPE_CHARACTER.put("\\?", "\\\\?");
-        // these means ' ' not preceded neither followed by keywords 'AND' or 'OR'
-        TO_ESCAPE_CHARACTER.put("(?<!OR|AND) (?!OR|AND)", "\\\\ ");
-    }
-
-    /**
      * Constructor
      * @param finder provides access to {@link AttributeModel}s with caching facilities
      */
     public QueryParser(IAttributeFinder finder) {
-        super(new StandardQueryConfigHandler(),
-              new StandardSyntaxParser(),
-              new StandardQueryNodeProcessorPipeline(null),
-              new RegardsQueryTreeBuilder(finder));
+        super(new StandardQueryConfigHandler(), new StandardSyntaxParser(),
+              new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(finder));
         setEnablePositionIncrements(true);
         setAllowLeadingWildcard(true);
-        //        setLowercaseExpandedTerms(false);
+//        setLowercaseExpandedTerms(false);
     }
 
     @Override
@@ -118,30 +92,12 @@ public class QueryParser extends QueryParserHelper implements IParser {
         if (Strings.isNullOrEmpty(q)) {
             return ICriterion.all();
         }
-
-        // frontend does not send us value lucene protected so before we parse q using lucene,
-        // we have to escape lucene characters
-        q = luceneEscape(q);
         try {
             return (ICriterion) super.parse(q, MULTISEARCH);
         } catch (QueryNodeException e) {
             LOGGER.error("q parsing error", e);
             throw new OpenSearchParseException(e.getMessage(), e);
         }
-    }
-
-    private String luceneEscape(String q) {
-        // first escape '\' received from request that are not followed by special characters already escape by caller
-        // (regexp character from ES)
-        q = q.replaceAll("\\\\(?![-:()+*\\[{\\]}^?])", "\\\\\\\\");
-        // then the rest of characters
-        for (Map.Entry<String, String> toEscapeEntry : TO_ESCAPE_CHARACTER.entrySet()) {
-            q = q.replaceAll(toEscapeEntry.getKey(), toEscapeEntry.getValue());
-            if (toEscapeEntry.getKey().equals(":")) {
-                q = q.replaceFirst(toEscapeEntry.getValue(), toEscapeEntry.getKey());
-            }
-        }
-        return q;
     }
 
     /**
@@ -159,9 +115,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * Enable or disable lowercase regexp transformation
      */
-    //    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
-    //        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
-    //    }
+//    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+//        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
+//    }
 
     /**
      * Set to <code>true</code> to enable position increments in result query.

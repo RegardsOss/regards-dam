@@ -24,7 +24,8 @@ import org.springframework.stereotype.Repository;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 
 /**
- * @author kevin
+ * Repository to manipulate {@link Recipient}
+ * @author Kevin Marchois
  *
  */
 @Repository

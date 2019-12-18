@@ -90,7 +90,7 @@ public class FeatureEntityTest extends AbstractDaoTest {
             feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
             feature.addProperty(IProperty.buildObject("file_characterization",
                                                       IProperty.buildBoolean("valid", Boolean.TRUE)));
-            entities.add(FeatureEntity.build("sessionOwner", "session", feature));
+            entities.add(FeatureEntity.build("sessionOwner", "session", feature, null));
         }
 
         long creationStart = System.currentTimeMillis();
@@ -112,7 +112,7 @@ public class FeatureEntityTest extends AbstractDaoTest {
             String id = String.format(format, i);
             Feature feature = Feature.build(id, getURN(id), IGeometry.unlocated(), EntityType.DATA, "model");
             addGeodeProperties(feature);
-            entities.add(FeatureEntity.build("sessionOwner", "session", feature));
+            entities.add(FeatureEntity.build("sessionOwner", "session", feature, null));
 
             if (bulk == BULK_SIZE) {
                 bulkCreationStart = System.currentTimeMillis();

@@ -90,7 +90,7 @@ public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest
         // Update feature with non alterable properties
         feature.setUrn(FeatureUniformResourceName.pseudoRandomUrn(FeatureIdentifier.FEATURE, EntityType.DATA,
                                                                   getDefaultTenant(), 1));
-        featureRepo.save(FeatureEntity.build("sessionOwner", "session", feature));
+        featureRepo.save(FeatureEntity.build("sessionOwner", "session", feature, null));
 
         errors = validationService.validate(feature, ValidationMode.PATCH);
 

@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
+import fr.cnes.regards.modules.notifier.service.NotificationJobIT;
 
 /**
  * @author kevin
@@ -32,12 +33,12 @@ import fr.cnes.regards.modules.notifier.dto.NotificationEvent10;
 public class RecipientSenderFail extends AbstractRecipientSender<NotificationEvent10> {
 
     @Override
-    public boolean send(Feature feature, FeatureManagementAction action) {
-        return false;
+    public boolean send(JsonElement element, String action) {
+        return !NotificationJobIT.RECIPIENT_FAIL;
     }
 
     @Override
-    NotificationEvent10 buildEvent(Feature feature, FeatureManagementAction action) {
+    NotificationEvent10 buildEvent(JsonElement element, String action) {
         return null;
     }
 }
