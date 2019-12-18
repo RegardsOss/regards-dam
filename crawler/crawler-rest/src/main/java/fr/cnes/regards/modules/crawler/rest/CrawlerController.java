@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -100,8 +101,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
         EntityModel<DatasourceIngestion> resource = resourceService.toResource(element);
         resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion", LinkRels.DELETE,
                                 MethodParamFactory.build(String.class, element.getId()));
-        resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion", "SCHEDULE",
-                                MethodParamFactory.build(String.class, element.getId()));
+        resourceService.addLink(resource, this.getClass(), "scheduleNowDatasourceIngestion",
+                                LinkRelation.of("SCHEDULE"), MethodParamFactory.build(String.class, element.getId()));
         return resource;
     }
 

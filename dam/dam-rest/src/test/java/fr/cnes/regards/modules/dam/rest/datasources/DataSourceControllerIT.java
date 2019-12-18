@@ -316,7 +316,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginConfiguration.build(MockDatasourcePlugin.class, "", parameters);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "dsFromClause", parameters);
     }
 
     private PluginConfiguration createDataSourceSingleTable() {
@@ -327,7 +327,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginConfiguration.build(MockDatasourcePlugin.class, "", parameters);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "dsSingleTable", parameters);
     }
 
     @Test
@@ -368,7 +368,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                      IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort),
                      IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, dbName));
 
-        return PluginConfiguration.build(MockConnectionPlugin.class, "", parameters);
+        return PluginConfiguration.build(MockConnectionPlugin.class, "PgConnection", parameters);
     }
 
 }

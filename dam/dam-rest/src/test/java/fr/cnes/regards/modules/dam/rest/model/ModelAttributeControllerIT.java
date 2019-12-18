@@ -340,7 +340,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
                 .set(IPluginParam.build(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto"),
                      IPluginParam.build(AbstractDataObjectComputePlugin.RESULT_ATTRIBUTE_NAME, "titi"));
 
-        PluginConfiguration conf = PluginConfiguration.build(IntSumComputePlugin.class, "", params);
+        PluginConfiguration conf = PluginConfiguration.build(IntSumComputePlugin.class, "intcount", params);
         conf = pluginService.savePluginConfiguration(conf);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();
         requestBuilderCustomizer.expect(MockMvcResultMatchers.status().isOk());

@@ -293,7 +293,7 @@ public class IndexerServiceDataSourceIT {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(dataModel)),
                      IPluginParam.build(DataSourcePluginConstants.MODEL_NAME_PARAM, dataModel.getName()));
-        return PluginConfiguration.build(TestDataSourcePlugin.class, "", param);
+        return PluginConfiguration.build(TestDataSourcePlugin.class, null, param);
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")

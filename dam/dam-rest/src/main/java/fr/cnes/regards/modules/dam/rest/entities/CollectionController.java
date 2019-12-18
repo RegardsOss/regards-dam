@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -214,10 +215,10 @@ public class CollectionController implements IResourceController<Collection> {
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Collection.class),
                                 MethodParamFactory.build(BindingResult.class));
-        resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
+        resourceService.addLink(resource, this.getClass(), "dissociate", LinkRelation.of("dissociate"),
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Set.class));
-        resourceService.addLink(resource, this.getClass(), "associate", "associate",
+        resourceService.addLink(resource, this.getClass(), "associate", LinkRelation.of("associate"),
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;

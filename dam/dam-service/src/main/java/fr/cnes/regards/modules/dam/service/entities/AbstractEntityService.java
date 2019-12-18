@@ -729,7 +729,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         Class<?> ttt;
         try {
             ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(PluginConfiguration.build(ttt, "", IPluginParam.set()),
+            return (IStorageService) PluginUtils.getPlugin(PluginConfiguration.build(ttt, null, IPluginParam.set()),
                                                            new HashMap<>());
         } catch (ClassNotFoundException e) {
             LOGGER.error(e.getMessage());

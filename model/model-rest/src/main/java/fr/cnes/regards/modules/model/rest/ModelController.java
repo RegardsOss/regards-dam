@@ -28,6 +28,7 @@ import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -246,7 +247,7 @@ public class ModelController implements IResourceController<Model> {
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
         // Export
-        resourceService.addLink(resource, this.getClass(), "exportModel", "export",
+        resourceService.addLink(resource, this.getClass(), "exportModel", LinkRelation.of("export"),
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
                                 MethodParamFactory.build(String.class, pElement.getName()));

@@ -219,6 +219,13 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureFile file;
         String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
                                        modelAttrAssocClientMock);
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            // Skip
+        }
+
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             file = FeatureFile.build(

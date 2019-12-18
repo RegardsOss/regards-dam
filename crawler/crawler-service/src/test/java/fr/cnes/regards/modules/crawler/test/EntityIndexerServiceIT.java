@@ -238,27 +238,27 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     private PluginConfiguration createDataSource() throws ModuleException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(model)));
-        return datasourceService.createDataSource(PluginConfiguration.build(TestDataSourcePlugin.class, "", param));
+        return datasourceService.createDataSource(PluginConfiguration.build(TestDataSourcePlugin.class, null, param));
     }
 
     private PluginConfiguration createDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()));
-        return PluginConfiguration.build(TestDataAccessRightPlugin.class, "", param);
+        return PluginConfiguration.build(TestDataAccessRightPlugin.class, null, param);
     }
 
     private PluginConfiguration createNewDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
-        return PluginConfiguration.build(NewDataObjectsAccessPlugin.class, "", param);
+        return PluginConfiguration.build(NewDataObjectsAccessPlugin.class, null, param);
     }
 
     private PluginConfiguration createOldDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
         return pluginService
-                .savePluginConfiguration(PluginConfiguration.build(NewDataObjectsAccessPlugin.class, "", param));
+                .savePluginConfiguration(PluginConfiguration.build(NewDataObjectsAccessPlugin.class, null, param));
     }
 
     private DataObject createObject(String id, String label) {

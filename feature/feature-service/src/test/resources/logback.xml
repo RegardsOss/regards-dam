@@ -35,18 +35,19 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender> -->
 
-	<logger name="org.springframework" level="ERROR" />
+<!-- 	<logger name="org.springframework" level="ERROR" />
 	<logger name="io.micrometer" level="INFO" />
 	<logger name="fr.cnes.regards.modules" level="INFO" />
 	<logger name="fr.cnes.regards.modules.model.gson" level="ERROR"/>
 	<logger name="fr.cnes.regards.modules.model.dto.properties" level="ERROR" />
-	<logger name="fr.cnes.regards.modules.feature.service" level="INFO"/>
+	<logger name="fr.cnes.regards.modules.feature.service" level="INFO"/> -->
+	<logger name="fr.cnes.regards.framework.gson.adapters" level="DEBUG"/>
 <!-- 	<logger name="fr.cnes.regards.modules.model.gson" level="DEBUG"/> -->
 	
     <!-- <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/> -->
    <!--  <logger name="org.hibernate.SQL" level="DEBUG"/> -->
     <!-- <logger name="fr.cnes.regards.modules.feature.service" level="TRACE" /> -->
-	<root level="INFO">
+	<root level="ERROR">
 		<appender-ref ref="STDOUT" />
 		<!-- <appender-ref ref="STASH" /> -->
 	</root>
