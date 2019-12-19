@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +62,6 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 @ContextConfiguration(classes = { AbstractMultitenantServiceTest.ScanningConfiguration.class })
 public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureControllerIT.class);
 
     @Autowired
@@ -100,10 +99,10 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
             // Translate to resources and attribute models and extract model name
             String modelName = null;
             List<AttributeModel> atts = new ArrayList<>();
-            List<Resource<ModelAttrAssoc>> resources = new ArrayList<>();
+            List<EntityModel<ModelAttrAssoc>> resources = new ArrayList<>();
             for (ModelAttrAssoc assoc : assocs) {
                 atts.add(assoc.getAttribute());
-                resources.add(new Resource<ModelAttrAssoc>(assoc));
+                resources.add(new EntityModel<ModelAttrAssoc>(assoc));
                 if (modelName == null) {
                     modelName = assoc.getModel().getName();
                 }
@@ -139,7 +138,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
-        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
+        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_VALUE);
 
         documentFeatureCollectionRequestBody(requestBuilderCustomizer, false);
 
@@ -168,7 +167,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         // we will mock validation plugin and consider the feature is unvalid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatus(HttpStatus.UNPROCESSABLE_ENTITY);
-        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
+        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_VALUE);
 
         performDefaultPost(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
                            FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());
@@ -190,7 +189,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
         documentFeatureCollectionRequestBody(requestBuilderCustomizer, true);
-        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
+        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_VALUE);
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
 
         performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
@@ -240,7 +239,7 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any())).thenReturn(errors);
 
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatus(HttpStatus.UNPROCESSABLE_ENTITY);
-        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE);
+        requestBuilderCustomizer.addHeader(HttpHeaders.CONTENT_TYPE, GeoJsonMediaType.APPLICATION_GEOJSON_VALUE);
 
         performDefaultPatch(FeatureController.PATH_FEATURES, collection, requestBuilderCustomizer,
                             FEATURE_CREATION_REQUEST_ERROR).andDo(MockMvcResultHandlers.print());

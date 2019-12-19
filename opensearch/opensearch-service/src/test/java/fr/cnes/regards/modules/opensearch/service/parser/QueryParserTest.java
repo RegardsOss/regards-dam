@@ -200,6 +200,7 @@ public class QueryParserTest {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
         final String val = "harrypotter";
         final String term = key + ":" + val;
+        @SuppressWarnings("unused")
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);

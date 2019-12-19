@@ -21,7 +21,7 @@ package fr.cnes.regards.modules.model.client;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,7 +56,7 @@ public interface IModelAttrAssocClient {
     String ASSOCS_MAPPING = "/assocs";
 
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("modelName") String modelName);
+    ResponseEntity<List<EntityModel<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("modelName") String modelName);
 
     @RequestMapping(path = "{datasetUrn}" + ASSOCS_MAPPING, method = RequestMethod.GET)
     ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(

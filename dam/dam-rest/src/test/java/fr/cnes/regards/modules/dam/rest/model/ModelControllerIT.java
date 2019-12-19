@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+	 * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -30,8 +30,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
@@ -114,7 +114,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                                                   .map(type -> type.name()).collect(Collectors.joining(", ")))
                                 .type(JSON_STRING_TYPE));
         // ignore links
-        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        ConstrainedFields ignoreFields = new ConstrainedFields(EntityModel.class);
         descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
         ignoreFields = new ConstrainedFields(Link.class);
         descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
@@ -278,8 +278,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Delete a model")
     public void deleteModelTest_shouldDeleteModel() throws ModuleException {
         // Prepare test
-        final Model model = modelService
-                .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DATA));
+        final Model model = modelService.createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DATA));
 
         // Define expectations
         RequestBuilderCustomizer requestBuilderCustomizer = customizer();

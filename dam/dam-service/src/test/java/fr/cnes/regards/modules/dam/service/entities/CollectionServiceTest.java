@@ -106,6 +106,7 @@ public class CollectionServiceTest {
         Mockito.when(entitiesRepositoryMocked.findById(collection2.getId())).thenReturn(Optional.of(collection2));
         Mockito.when(entitiesRepositoryMocked.findById(collection3.getId())).thenReturn(Optional.of(collection3));
 
+        @SuppressWarnings("unused")
         IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);

@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -209,7 +209,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         FeignSecurityManager.asSystem();
 
         // Retrieve the list of attribute models
-        ResponseEntity<List<Resource<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
+        ResponseEntity<List<EntityModel<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
         List<AttributeModel> attModels = new ArrayList<>();
         if (response != null) {
             attModels = HateoasUtils.unwrapCollection(response.getBody());

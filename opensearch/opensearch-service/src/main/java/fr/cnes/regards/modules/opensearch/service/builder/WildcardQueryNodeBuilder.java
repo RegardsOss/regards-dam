@@ -21,11 +21,9 @@ package fr.cnes.regards.modules.opensearch.service.builder;
 import java.util.Set;
 
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.queryparser.flexible.core.messages.QueryParserMessages;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
-import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxImpl;
 
 import com.sun.org.apache.bcel.internal.generic.IFEQ;
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;

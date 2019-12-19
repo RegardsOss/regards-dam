@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -159,7 +159,7 @@ public abstract class AbstractAccessRightControllerIT extends AbstractRegardsIT 
         projectUser = new ProjectUser();
         projectUser.setEmail(email);
         Mockito.when(projectUserClientMock.retrieveProjectUser(ArgumentMatchers.any()))
-                .thenReturn(new ResponseEntity<>(new Resource<>(projectUser), HttpStatus.OK));
+                .thenReturn(new ResponseEntity<>(new EntityModel<>(projectUser), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         dal = DataAccessLevel.NO_ACCESS;

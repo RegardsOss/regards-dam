@@ -30,8 +30,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.PayloadDocumentation;
@@ -243,7 +243,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "Fragment Version", "Optional")
                 .type(JSON_STRING_TYPE).optional());
         // ignore links
-        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        ConstrainedFields ignoreFields = new ConstrainedFields(EntityModel.class);
         descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
         ignoreFields = new ConstrainedFields(Link.class);
         descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());

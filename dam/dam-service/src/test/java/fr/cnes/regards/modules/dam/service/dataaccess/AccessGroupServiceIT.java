@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -39,8 +39,6 @@ import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dam.service.dataaccess.AccessGroupService;
-import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -96,7 +94,7 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
 
     @Test(expected = EntityNotFoundException.class)
     public void testAssociateUserToGroupWithUnknownUser() throws EntityNotFoundException {
-        final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        final ResponseEntity<EntityModel<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         Mockito.when(projectUserClient.retrieveProjectUserByEmail(USER1_EMAIL)).thenReturn(mockedResponse);
 
         accessGroupService.associateUserToAccessGroup(USER1_EMAIL, AG1_NAME);
@@ -104,7 +102,7 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
 
     @Test(expected = EntityNotFoundException.class)
     public void testDissociateUserFromGroupWithUnknownUser() throws EntityNotFoundException {
-        final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        final ResponseEntity<EntityModel<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         Mockito.when(projectUserClient.retrieveProjectUserByEmail(USER1_EMAIL)).thenReturn(mockedResponse);
 
         accessGroupService.dissociateUserFromAccessGroup(USER1_EMAIL, AG1_NAME);

@@ -20,8 +20,8 @@ package fr.cnes.regards.modules.dam.client.dataaccess;
 
 import javax.validation.Valid;
 
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,8 +39,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
  * @author Sylvain Vissiere-Guerinet
  */
 @RestClient(name = "rs-dam", contextId = "rs-dam.access-right.client")
-@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE)
 public interface IAccessRightClient { // NOSONAR
 
     /**
@@ -68,7 +68,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
+    ResponseEntity<PagedModel<EntityModel<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String groupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
             @RequestParam("page") int page, @RequestParam("size") int size);
@@ -84,7 +84,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight);
+    ResponseEntity<EntityModel<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight);
 
     /**
      * Retrieve an access right by its id
@@ -92,7 +92,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id);
+    ResponseEntity<EntityModel<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id);
 
     /**
      * Update an access right. pToBe id should be the same as pId
@@ -100,7 +100,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
+    ResponseEntity<EntityModel<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
             @Valid AccessRight toBe);
 
     /**

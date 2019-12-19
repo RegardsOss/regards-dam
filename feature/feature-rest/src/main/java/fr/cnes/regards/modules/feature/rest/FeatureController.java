@@ -21,7 +21,7 @@ package fr.cnes.regards.modules.feature.rest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -69,9 +69,9 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
      * @param collection {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    @RequestMapping(method = RequestMethod.POST, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
+    @RequestMapping(method = RequestMethod.POST, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
-    public ResponseEntity<Resource<RequestInfo<?>>> createFeatures(
+    public ResponseEntity<EntityModel<RequestInfo<?>>> createFeatures(
             @Valid @RequestBody FeatureCreationCollection collection) {
 
         RequestInfo<String> info = this.featureCreationService.registerRequests(collection);
@@ -84,9 +84,9 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
      * @param collection {@link FeatureUpdateCollection} it contain all {@link Feature} to handle
      * @return {@link RequestInfo}
      */
-    @RequestMapping(method = RequestMethod.PATCH, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_UTF8_VALUE)
+    @RequestMapping(method = RequestMethod.PATCH, consumes = GeoJsonMediaType.APPLICATION_GEOJSON_VALUE)
     @ResourceAccess(description = "Public a feature and return the request id")
-    public ResponseEntity<Resource<RequestInfo<?>>> updateFeatures(
+    public ResponseEntity<EntityModel<RequestInfo<?>>> updateFeatures(
             @Valid @RequestBody FeatureUpdateCollection collection) {
 
         RequestInfo<FeatureUniformResourceName> info = this.featureUpdateService.registerRequests(collection);
@@ -112,7 +112,7 @@ public class FeatureController implements IResourceController<RequestInfo<?>> {
     }
 
     @Override
-    public Resource<RequestInfo<?>> toResource(RequestInfo<?> element, Object... extras) {
+    public EntityModel<RequestInfo<?>> toResource(RequestInfo<?> element, Object... extras) {
         return resourceService.toResource(element);
     }
 }

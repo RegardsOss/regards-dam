@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -128,7 +128,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "List all attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
+    public ResponseEntity<List<EntityModel<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) PropertyType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
             @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
@@ -145,7 +145,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
         }
 
         noLink = noLink == null ? Boolean.FALSE : noLink;
-        List<Resource<AttributeModel>> resources = toResources(attributes, noLink);
+        List<EntityModel<AttributeModel>> resources = toResources(attributes, noLink);
         return ResponseEntity.ok(resources);
     }
 
@@ -156,7 +156,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ENTITY_TYPE_MAPPING)
-    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(
+    public ResponseEntity<List<EntityModel<AttributeModel>>> getModelsAttributes(
             @PathVariable(name = "modelType") EntityType modelType) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(modelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
@@ -173,7 +173,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Add an attribute")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<AttributeModel>> addAttribute(
+    public ResponseEntity<EntityModel<AttributeModel>> addAttribute(
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.addAttribute(attributeModel, false)));
     }
@@ -186,7 +186,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable(name = "attributeId") final Long id)
+    public ResponseEntity<EntityModel<AttributeModel>> getAttribute(@PathVariable(name = "attributeId") final Long id)
             throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(id);
         return ResponseEntity.ok(toResource(attribute));
@@ -201,8 +201,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     @ResourceAccess(description = "Update an attribute")
     @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable(name = "attributeId") final Long id,
-            @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
+    public ResponseEntity<EntityModel<AttributeModel>> updateAttribute(
+            @PathVariable(name = "attributeId") final Long id, @Valid @RequestBody final AttributeModel attributeModel)
+            throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.updateAttribute(id, attributeModel)));
     }
 
@@ -249,8 +250,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @param extras For now, only one case: a Boolean: noLink. If true, no link should be added.
      */
     @Override
-    public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... extras) {
-        Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
+    public EntityModel<AttributeModel> toResource(final AttributeModel attributeModel, final Object... extras) {
+        EntityModel<AttributeModel> resource = resourceService.toResource(attributeModel);
         boolean addLinks = extras == null || extras.length == 0 || extras[0] instanceof Boolean && !(Boolean) extras[0];
         if (addLinks) {
             resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,

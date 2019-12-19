@@ -27,7 +27,8 @@ import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -114,7 +115,7 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "List all models")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<Model>>> getModels(
+    public ResponseEntity<List<EntityModel<Model>>> getModels(
             @RequestParam(value = "type", required = false) EntityType type) {
         return ResponseEntity.ok(toResources(modelService.getModels(type)));
     }
@@ -127,7 +128,7 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Create a model")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<Model>> createModel(@Valid @RequestBody Model model) throws ModuleException {
+    public ResponseEntity<EntityModel<Model>> createModel(@Valid @RequestBody Model model) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.createModel(model)));
     }
 
@@ -139,7 +140,7 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Get a model", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = MODEL_MAPPING)
-    public ResponseEntity<Resource<Model>> getModel(@PathVariable String modelName) throws ModuleException {
+    public ResponseEntity<EntityModel<Model>> getModel(@PathVariable String modelName) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.getModelByName(modelName)));
     }
 
@@ -152,8 +153,8 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Update a model")
     @RequestMapping(method = RequestMethod.PUT, value = MODEL_MAPPING)
-    public ResponseEntity<Resource<Model>> updateModel(@PathVariable String modelName, @Valid @RequestBody Model model)
-            throws ModuleException {
+    public ResponseEntity<EntityModel<Model>> updateModel(@PathVariable String modelName,
+            @Valid @RequestBody Model model) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.updateModel(modelName, model)));
     }
 
@@ -179,7 +180,7 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Duplicate a model")
     @RequestMapping(method = RequestMethod.POST, value = MODEL_MAPPING + "/duplicate")
-    public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable String modelName,
+    public ResponseEntity<EntityModel<Model>> duplicateModel(@PathVariable String modelName,
             @Valid @RequestBody Model model) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.duplicateModel(modelName, model)));
     }
@@ -221,7 +222,7 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Resource<Model>> importModel(@RequestParam("file") MultipartFile pFile)
+    public ResponseEntity<EntityModel<Model>> importModel(@RequestParam("file") MultipartFile pFile)
             throws ModuleException {
         try {
             Model model = modelService.importModel(pFile.getInputStream());
@@ -234,8 +235,8 @@ public class ModelController implements IResourceController<Model> {
     }
 
     @Override
-    public Resource<Model> toResource(Model pElement, Object... pExtras) {
-        final Resource<Model> resource = resourceService.toResource(pElement);
+    public EntityModel<Model> toResource(Model pElement, Object... pExtras) {
+        final EntityModel<Model> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
                                 MethodParamFactory.build(String.class, pElement.getName()));
         resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
@@ -246,7 +247,7 @@ public class ModelController implements IResourceController<Model> {
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
         // Export
-        resourceService.addLink(resource, this.getClass(), "exportModel", "export",
+        resourceService.addLink(resource, this.getClass(), "exportModel", LinkRelation.of("export"),
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
                                 MethodParamFactory.build(String.class, pElement.getName()));

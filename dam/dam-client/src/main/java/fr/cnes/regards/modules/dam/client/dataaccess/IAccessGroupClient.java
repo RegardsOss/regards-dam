@@ -20,8 +20,8 @@ package fr.cnes.regards.modules.dam.client.dataaccess;
 
 import javax.validation.Valid;
 
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,8 +38,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
  * @author Sylvain Vissiere-Guerinet
  */
 @RestClient(name = "rs-dam", contextId = "rs-dam.access-group.client")
-@RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE)
 public interface IAccessGroupClient { // NOSONAR
 
     /**
@@ -66,13 +66,13 @@ public interface IAccessGroupClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(
+    ResponseEntity<PagedModel<EntityModel<AccessGroup>>> retrieveAccessGroupsList(
             @RequestParam(name = "public", required = false) Boolean isPublic, @RequestParam("page") int page,
             @RequestParam("size") int size);
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup toBeCreated);
+    ResponseEntity<EntityModel<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup toBeCreated);
 
     /**
      * Retrieve an access group by its name
@@ -80,7 +80,7 @@ public interface IAccessGroupClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
-    ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(@Valid @PathVariable("name") String groupName);
+    ResponseEntity<EntityModel<AccessGroup>> retrieveAccessGroup(@Valid @PathVariable("name") String groupName);
 
     /**
      * Delete an access group by its name
@@ -95,7 +95,7 @@ public interface IAccessGroupClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
-    ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(@Valid @PathVariable("name") String groupName,
+    ResponseEntity<EntityModel<AccessGroup>> associateUserToAccessGroup(@Valid @PathVariable("name") String groupName,
             @Valid @PathVariable("email") String userEmail);
 
     /**
@@ -104,6 +104,6 @@ public interface IAccessGroupClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
-    ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(@Valid @PathVariable("name") String groupName,
-            @Valid @PathVariable("email") String userEmail);
+    ResponseEntity<EntityModel<AccessGroup>> dissociateUserFromAccessGroup(
+            @Valid @PathVariable("name") String groupName, @Valid @PathVariable("email") String userEmail);
 }

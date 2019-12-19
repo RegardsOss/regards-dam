@@ -31,8 +31,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -63,7 +63,7 @@ import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
  * @author Léo Mieulet
  */
 @RestController
-@RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_VALUE)
 public class AccessRightController implements IResourceController<AccessRight> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightController.class);
@@ -108,7 +108,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
-    public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
+    public ResponseEntity<PagedModel<EntityModel<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String accessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
@@ -149,7 +149,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create an accessRight according to the argument")
-    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
+    public ResponseEntity<EntityModel<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
             throws ModuleException {
         AccessRight created = accessRightService.createAccessRight(accessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
@@ -163,7 +163,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResourceAccess(description = "send the access right of id requested")
-    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
+    public ResponseEntity<EntityModel<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
         AccessRight requested = accessRightService.retrieveAccessRight(id);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
@@ -178,7 +178,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
-    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
+    public ResponseEntity<EntityModel<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
             @Valid @RequestBody AccessRight toBe) throws ModuleException {
         AccessRight updated = accessRightService.updateAccessRight(id, toBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
@@ -202,8 +202,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @Override
-    public Resource<AccessRight> toResource(AccessRight accessRight, Object... extras) {
-        Resource<AccessRight> resource = new Resource<>(accessRight);
+    public EntityModel<AccessRight> toResource(AccessRight accessRight, Object... extras) {
+        EntityModel<AccessRight> resource = new EntityModel<>(accessRight);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
                                 MethodParamFactory.build(AccessRight.class, accessRight));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,

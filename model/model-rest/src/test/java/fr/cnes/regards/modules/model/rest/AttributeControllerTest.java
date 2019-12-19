@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -98,7 +98,7 @@ public class AttributeControllerTest {
                 .defaultFragment().get());
         // CHECKSTYLE:ON
         Mockito.when(attributeServiceMocked.getAttributes(null, null, null, null)).thenReturn(attributes);
-        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController
+        final ResponseEntity<List<EntityModel<AttributeModel>>> response = attributeController
                 .getAttributes(null, null, null, null, null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }

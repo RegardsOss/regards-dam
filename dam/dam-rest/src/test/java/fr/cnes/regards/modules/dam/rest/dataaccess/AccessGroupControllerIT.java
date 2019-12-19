@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
@@ -87,9 +87,9 @@ public class AccessGroupControllerIT extends AbstractRegardsIT {
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
         Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(ArgumentMatchers.any()))
-                .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
+                .thenReturn(new ResponseEntity<>(new EntityModel<>(new ProjectUser()), HttpStatus.OK));
         Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(ArgumentMatchers.any()))
-                .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
+                .thenReturn(new ResponseEntity<>(new EntityModel<>(new ProjectUser()), HttpStatus.OK));
         ag1 = new AccessGroup(AG1_NAME);
         ag1 = dao.save(ag1);
         AccessGroup ag2 = new AccessGroup(AG2_NAME);

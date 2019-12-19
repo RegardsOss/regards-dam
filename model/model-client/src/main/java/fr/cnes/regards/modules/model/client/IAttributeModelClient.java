@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.model.client;
 
 import java.util.List;
 
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,8 +36,8 @@ import fr.cnes.regards.modules.model.dto.properties.PropertyType;
  * @author Xavier-Alexandre Brochard
  */
 @RestClient(name = "rs-dam", contextId = "rs-dam.attribute-model.client")
-@RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE)
 public interface IAttributeModelClient {
 
     /**
@@ -62,7 +62,7 @@ public interface IAttributeModelClient {
      * @return the list wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
+    ResponseEntity<List<EntityModel<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) PropertyType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName);
 

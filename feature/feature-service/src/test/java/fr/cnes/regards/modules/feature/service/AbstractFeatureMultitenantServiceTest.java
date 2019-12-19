@@ -21,7 +21,7 @@ import org.springframework.amqp.AmqpIOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
@@ -229,10 +229,10 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             // Translate to resources and attribute models and extract model name
             String modelName = null;
             List<AttributeModel> atts = new ArrayList<>();
-            List<Resource<ModelAttrAssoc>> resources = new ArrayList<>();
+            List<EntityModel<ModelAttrAssoc>> resources = new ArrayList<>();
             for (ModelAttrAssoc assoc : assocs) {
                 atts.add(assoc.getAttribute());
-                resources.add(new Resource<ModelAttrAssoc>(assoc));
+                resources.add(new EntityModel<ModelAttrAssoc>(assoc));
                 if (modelName == null) {
                     modelName = assoc.getModel().getName();
                 }
@@ -260,6 +260,13 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         FeatureFile file;
         String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
                                        modelAttrAssocClientMock);
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            // Skip
+        }
+
         // create events to publish
         for (int i = 0; i < featureNumberToCreate; i++) {
             file = FeatureFile.build(
@@ -313,7 +320,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
         this.featureCreationService.scheduleRequests();
         // if they are several page to create
-        for (int i = 0; i < (featureToCreateNumber % properties.getMaxBulkSize()); i++) {
+        for (int i = 0; i < featureToCreateNumber % properties.getMaxBulkSize(); i++) {
             this.featureCreationService.scheduleRequests();
         }
 
@@ -323,7 +330,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while ((cpt < 100) && (featureNumberInDatabase != featureToCreateNumber));
+        } while (cpt < 100 && featureNumberInDatabase != featureToCreateNumber);
 
         assertEquals(featureToCreateNumber.intValue(), this.featureRepo.count());
 

@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
@@ -65,8 +65,8 @@ public class PropertyMapChecker {
     }
 
     private Map<String, AttributeModel> getBuiltMap(List<AttributeModel> atts) {
-        List<Resource<AttributeModel>> resAtts = new ArrayList<>();
-        atts.forEach(att -> resAtts.add(new Resource<AttributeModel>(att)));
+        List<EntityModel<AttributeModel>> resAtts = new ArrayList<>();
+        atts.forEach(att -> resAtts.add(new EntityModel<AttributeModel>(att)));
         Mockito.when(attributeModelClientMock.getAttributes(null, null)).thenReturn(ResponseEntity.ok(resAtts));
         finder.computePropertyMap(TENANT);
         // Return built map

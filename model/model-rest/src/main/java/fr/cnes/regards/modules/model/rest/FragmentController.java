@@ -27,7 +27,8 @@ import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -114,7 +115,7 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "List all fragments")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<Fragment>>> getFragments() {
+    public ResponseEntity<List<EntityModel<Fragment>>> getFragments() {
         return ResponseEntity.ok(toResources(fragmentService.getFragments()));
     }
 
@@ -126,7 +127,7 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Add a fragment")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<Fragment>> addFragment(@Valid @RequestBody Fragment fragment)
+    public ResponseEntity<EntityModel<Fragment>> addFragment(@Valid @RequestBody Fragment fragment)
             throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.addFragment(fragment)));
     }
@@ -139,7 +140,7 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Get a fragment")
     @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}")
-    public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id)
+    public ResponseEntity<EntityModel<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id)
             throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.getFragment(id)));
     }
@@ -153,7 +154,7 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Update a fragment")
     @RequestMapping(method = RequestMethod.PUT, value = "/{fragmentId}")
-    public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable(name = "fragmentId") Long id,
+    public ResponseEntity<EntityModel<Fragment>> updateFragment(@PathVariable(name = "fragmentId") Long id,
             @Valid @RequestBody Fragment fragment) throws ModuleException {
         return ResponseEntity.ok(toResource(fragmentService.updateFragment(id, fragment)));
     }
@@ -209,7 +210,7 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Import a fragment")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile file)
+    public ResponseEntity<EntityModel<Fragment>> importFragment(@RequestParam("file") MultipartFile file)
             throws ModuleException {
         try {
             Fragment frag = fragmentService.importFragment(file.getInputStream());
@@ -222,8 +223,8 @@ public class FragmentController implements IResourceController<Fragment> {
     }
 
     @Override
-    public Resource<Fragment> toResource(Fragment fragment, Object... extras) {
-        final Resource<Fragment> resource = resourceService.toResource(fragment);
+    public EntityModel<Fragment> toResource(Fragment fragment, Object... extras) {
+        final EntityModel<Fragment> resource = resourceService.toResource(fragment);
         resourceService.addLink(resource, this.getClass(), "getFragment", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, fragment.getId()));
         resourceService.addLink(resource, this.getClass(), "updateFragment", LinkRels.UPDATE,
@@ -235,7 +236,7 @@ public class FragmentController implements IResourceController<Fragment> {
         }
         resourceService.addLink(resource, this.getClass(), "getFragments", LinkRels.LIST);
         // Export
-        resourceService.addLink(resource, this.getClass(), "exportFragment", "export",
+        resourceService.addLink(resource, this.getClass(), "exportFragment", LinkRelation.of("export"),
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
                                 MethodParamFactory.build(Long.class, fragment.getId()));
