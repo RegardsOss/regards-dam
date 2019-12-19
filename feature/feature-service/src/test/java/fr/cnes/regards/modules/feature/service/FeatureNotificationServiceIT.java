@@ -53,7 +53,7 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_notif",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp" })
+@ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class FeatureNotificationServiceIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
