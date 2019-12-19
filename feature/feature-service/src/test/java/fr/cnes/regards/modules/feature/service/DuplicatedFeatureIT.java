@@ -52,6 +52,7 @@ import fr.cnes.regards.modules.storage.client.RequestInfo;
 @ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(DuplicatedFeatureIT.class);
 
     @Autowired
@@ -118,7 +119,6 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
         events.get(0).getFeature().setId("id");
         events.get(0).getFeature().setFiles(new ArrayList<>());
         publisher.publish(events);
-        LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! {}", featureCreationRequestRepo.count());
         waitRequest(this.featureCreationRequestRepo, 1, 30000);
 
         this.featureCreationService.scheduleRequests();
