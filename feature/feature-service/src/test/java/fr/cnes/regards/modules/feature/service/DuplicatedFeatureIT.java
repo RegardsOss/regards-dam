@@ -49,7 +49,7 @@ import fr.cnes.regards.modules.storage.client.RequestInfo;
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_duplication",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
-@ActiveProfiles(value = { "testAmqp" })
+@ActiveProfiles(value = { "testAmqp", "noscheduler" })
 public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DuplicatedFeatureIT.class);
