@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -103,6 +104,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     private IEsRepository esRepos;
 
     @Autowired
+    private IDatasourceIngestionRepository dsIngestionRepos;
+
+    @Autowired
     private ProjectGeoSettings projectGeoSettings;
 
     @Autowired
@@ -126,9 +130,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * {@link UUID#nameUUIDFromBytes(byte[])}.
      * @param tenant the tenant name
      * @param providerId the original primary key value
+     * @param datasourceId
      * @return the IpId generated from given parameters
      */
-    private static UniformResourceName buildIpId(String tenant, String providerId, String datasourceId) {
+    private static UniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
@@ -140,62 +145,75 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, DatasourceIngestion dsi)
-            throws ModuleException, InterruptedException, ExecutionException, DataSourceException, NotFinishedException,
-            InactiveDatasourceException {
+    public Optional<IngestionResult> ingest(String datasourceIngestionId) throws ModuleException, InterruptedException,
+            ExecutionException, DataSourceException, NotFinishedException, InactiveDatasourceException {
         String tenant = runtimeTenantResolver.getTenant();
-        OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
-        // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
-        int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
-        String dsiId = dsi.getId();
+        Optional<DatasourceIngestion> odsi = dsIngestionRepos.findById(datasourceIngestionId);
+        if (odsi.isPresent()) {
+            DatasourceIngestion dsi = odsi.get();
+            PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceIngestionId);
+            OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
+            // In case last ingestion has finished with a NOT_FINISHED status, failed page number is given
+            int pageNumber = dsi.getErrorPageNumber() == null ? 0 : dsi.getErrorPageNumber();
+            String dsiId = dsi.getId();
 
-        IDataSourcePlugin dsPlugin;
-        try {
-            dsPlugin = pluginService.getPlugin(pluginConf.getBusinessId());
-        } catch (NotAvailablePluginConfigurationException e) {
-            throw new InactiveDatasourceException();
-        }
+            IDataSourcePlugin dsPlugin;
+            try {
+                dsPlugin = pluginService.getPlugin(pluginConf.getBusinessId());
+            } catch (NotAvailablePluginConfigurationException e) {
+                throw new InactiveDatasourceException();
+            }
 
-        BulkSaveLightResult saveResult;
-        OffsetDateTime now = OffsetDateTime.now();
-        String datasourceId = pluginConf.getId().toString();
-        // If index doesn't exist, just create all data objects
-        boolean mergeNeeded = entityIndexerService.createIndexIfNeeded(tenant);
-        // If index already exist, check if index already contains data objects (if not, no need to merge)
-        if (mergeNeeded) {
-            SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
-            mergeNeeded = esRepos.count(searchKey, ICriterion.all()) != 0;
-        }
-        if (mergeNeeded) {
-            // index exists, data objects may also exist
-            sendMessage("Start reading datasource and merging/creating objects...", dsiId);
-            saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
-                                                           pageNumber);
-        } else {
-            sendMessage("Start reading datasource and creating objects...", dsiId);
-            saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId, dsiId,
-                                                            pageNumber);
-        }
-        sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
-        // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
-        // and its ingestion), we must search for it and do as it has been updated (to update all associated data
-        // objects which have a lastUpdate date >= now)
-        SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(EntityType.DATASET.toString(), Dataset.class);
-        searchKey.setSearchIndex(tenant);
-        searchKey.setCrs(projectGeoSettings.getCrs());
-        Set<Dataset> datasetsToUpdate = new HashSet<>();
-        esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
-        if (!datasetsToUpdate.isEmpty()) {
-            sendMessage("Start updating datasets associated to datasource...", dsiId);
-            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
-            sendMessage("...End updating datasets.", dsiId);
-        }
+            BulkSaveLightResult saveResult;
+            OffsetDateTime now = OffsetDateTime.now();
+            Long datasourceId = pluginConf.getId();
+            // If index doesn't exist, just create all data objects
+            boolean mergeNeeded = entityIndexerService.createIndexIfNeeded(tenant);
+            // If index already exist, check if index already contains data objects (if not, no need to merge)
+            if (mergeNeeded) {
+                SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(),
+                        DataObject.class);
+                mergeNeeded = esRepos.count(searchKey, ICriterion.all()) != 0;
+            }
+            if (mergeNeeded) {
+                // index exists, data objects may also exist
+                sendMessage("Start reading datasource and merging/creating objects...", dsiId);
+                saveResult = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+                                                               dsiId, pageNumber);
+            } else {
+                sendMessage("Start reading datasource and creating objects...", dsiId);
+                saveResult = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+                                                                dsiId, pageNumber);
+            }
+            sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
+            // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
+            // and its ingestion), we must search for it and do as it has been updated (to update all associated data
+            // objects which have a lastUpdate date >= now)
+            SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(EntityType.DATASET.toString(), Dataset.class);
+            searchKey.setSearchIndex(tenant);
+            searchKey.setCrs(projectGeoSettings.getCrs());
+            Set<Dataset> datasetsToUpdate = new HashSet<>();
+            esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
+            if (!datasetsToUpdate.isEmpty()) {
+                sendMessage("Start updating datasets associated to datasource...", dsiId);
+                try {
+                    entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, now, true, dsiId);
+                } catch (ModuleException e) {
+                    sendMessage(String.format("Error updating datasets associated to datasource. Cause : %s.",
+                                              e.getMessage()),
+                                dsiId);
+                }
+                sendMessage("...End updating datasets.", dsiId);
+            }
 
-        return new IngestionResult(now, saveResult.getSavedDocsCount(), saveResult.getInErrorDocsCount());
+            return Optional
+                    .of(new IngestionResult(now, saveResult.getSavedDocsCount(), saveResult.getInErrorDocsCount()));
+        }
+        return Optional.empty();
     }
 
     private BulkSaveLightResult readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, Long datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -209,19 +227,21 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                              PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
-                sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+                sendMessage(String.format("  ...Found at most %d records from datasource", page.getNumberOfElements()),
+                            dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
                 task = executor.submit(mergeDataObjectCallable(tenant, now, datasourceId, dsiId, list));
 
                 while (page.hasNext()) {
-                    sendMessage(String.format("  Finding at most %d records from datasource...",
-                                              IEsRepository.BULK_SIZE),
+                    sendMessage(String.format("  Finding %d records from datasource...",
+                                              page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(mergeDataObjectCallable(tenant, now, datasourceId, dsiId, otherList));
@@ -255,7 +275,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private BulkSaveLightResult readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, String dsiId, int pageNumber)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, Long datasourceId, String dsiId, int pageNumber)
             throws InterruptedException, DataSourceException, ModuleException, NotFinishedException,
             ExecutionException {
         BulkSaveLightResult saveResult = new BulkSaveLightResult();
@@ -275,13 +295,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, list));
 
                 while (page.hasNext()) {
-                    sendMessage(String.format("  Finding at most %d records from datasource...",
-                                              IEsRepository.BULK_SIZE),
+                    sendMessage(String.format("  Finding %d records from datasource...",
+                                              page.getPageable().getPageSize()),
                                 dsiId);
                     page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                    sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()),
-                                dsiId);
                     availableRecordsCount += page.getNumberOfElements();
+                    sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
+                                              page.getNumberOfElements(), availableRecordsCount),
+                                dsiId);
                     saveResult.append(task.get());
                     final List<DataObject> otherList = page.getContent();
                     task = executor.submit(createDataObjectsCallable(tenant, now, datasourceId, dsiId, otherList));
@@ -299,7 +320,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
         } catch (ExecutionException e) { // ES indexation has failed
             // Failed at first indexation => "classical" ERROR
-            int errorPageNumber = page.previousPageable().getPageNumber();
+            int errorPageNumber;
+            if (page.hasPrevious()) {
+                errorPageNumber = page.previousPageable().getPageNumber();
+            } else {
+                errorPageNumber = 0;
+            }
             if (errorPageNumber == pageNumber) {
                 throw e;
             }
@@ -318,19 +344,20 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Get Callable to be used by parallel tasks to create a bulk of data objects
      */
-    private Callable<BulkSaveResult> createDataObjectsCallable(String tenant, OffsetDateTime now, String datasourceId,
-            String dsiId, List<DataObject> list) {
+    private Callable<BulkSaveResult> createDataObjectsCallable(String tenant, OffsetDateTime now, Long datasourceId,
+            String datasourceIngestionId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.createDataObjects(tenant, datasourceId, now, list,
+                                                                                   datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),
-                            dsiId);
+                            datasourceIngestionId);
             }
             sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
-                        dsiId);
+                        datasourceIngestionId);
             return bulkSaveResult;
         };
     }
@@ -338,19 +365,19 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Get Callable to be used by parallel tasks to merge a bulk of data objects
      */
-    private Callable<BulkSaveResult> mergeDataObjectCallable(String tenant, OffsetDateTime now, String datasourceId,
-            String dsiId, List<DataObject> list) {
+    private Callable<BulkSaveResult> mergeDataObjectCallable(String tenant, OffsetDateTime now, Long datasourceId,
+            String datasourceIngestionId, List<DataObject> list) {
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
-            sendMessage(String.format("  Indexing %d objects...", list.size()), dsiId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list, datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),
-                            dsiId);
+                            datasourceIngestionId);
             }
             sendMessage(String.format("  ...%d objects effectively indexed.", bulkSaveResult.getSavedDocsCount()),
-                        dsiId);
+                        datasourceIngestionId);
             return bulkSaveResult;
         };
     }
@@ -358,16 +385,20 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
+     * @param datasourceId
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            String datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
+            Long datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
         // Retrieve target model
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
         // Find all features
         Page<DataObjectFeature> page;
         try {
+            long start = System.currentTimeMillis();
             page = dsPlugin.findAll(tenant, pageable, date);
+            LOGGER.info("Searching entities (page={}, size={}, total={}) from datasource plugin took {}ms",
+                        page.getNumber(), page.getSize(), page.getTotalElements(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             // Catch Exception in order to catch all exceptions from plugins. Plugins can be out of our scope.
             notificationClient.notify(e.getMessage(), "Datasource harvesting failure", NotificationLevel.ERROR,

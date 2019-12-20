@@ -29,6 +29,7 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.domain.models.PluginComputationIdentifierEnum;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.LongProperty;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
@@ -39,7 +40,7 @@ import fr.cnes.regards.modules.model.dto.properties.PropertyType;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "LongSumComputePlugin", version = "1.0.0",
+@Plugin(id = PluginComputationIdentifierEnum.LONG_SUM_COUNT_VALUE, version = "1.0.0",
         description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")

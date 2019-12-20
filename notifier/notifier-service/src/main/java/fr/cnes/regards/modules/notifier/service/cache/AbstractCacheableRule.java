@@ -32,10 +32,10 @@ import com.google.common.cache.LoadingCache;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.domain.Rule;
-import fr.cnes.reguards.modules.dto.type.NotificationType;
 
 /**
- * @author kevin
+ * Cache for {@link Rule}
+ * @author Kevin Marchois
  *
  */
 public abstract class AbstractCacheableRule {
@@ -66,7 +66,7 @@ public abstract class AbstractCacheableRule {
 
                 @Override
                 public Set<Rule> load(String key) throws Exception {
-                    return ruleRepo.findByEnableTrueAndType(NotificationType.IMMEDIATE);
+                    return ruleRepo.findByEnableTrue();
                 }
 
             });
@@ -77,8 +77,10 @@ public abstract class AbstractCacheableRule {
         return rules;
     }
 
-    // TODO cette methode est en public pour faire passer les TU en attendant que la partie gestion des rules soit implémentées
-    // il faudra ensuite la passer en protected
+    /**
+     * Clean all {@link Rule} in cache for a tenant
+     * @param tenant to clean
+     */
     public void cleanTenantCache(String tenant) {
         LoadingCache<String, Set<Rule>> ruleCache = ruleCacheMap.get(tenant);
         if (ruleCache != null) {

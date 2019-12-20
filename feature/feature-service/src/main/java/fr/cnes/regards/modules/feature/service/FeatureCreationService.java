@@ -50,11 +50,14 @@ import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.service.IJobInfoService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
-import fr.cnes.regards.modules.feature.domain.IVersionByProvider;
+import fr.cnes.regards.modules.feature.domain.IUrnVersionByProvider;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
@@ -65,9 +68,11 @@ import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.FeatureRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureIdentifier;
@@ -127,6 +132,9 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     @Autowired
     private FeatureMetrics metrics;
 
+    @Autowired
+    private INotificationClient notificationClient;
+
     @Override
     public RequestInfo<String> registerRequests(List<FeatureCreationRequestEvent> events) {
 
@@ -143,6 +151,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         featureCreationRequestRepo.saveAll(grantedRequests);
         LOGGER.trace("------------->>> {} creation requests registered in {} ms", grantedRequests.size(),
                      System.currentTimeMillis() - registrationStart);
+
         return requestInfo;
     }
 
@@ -151,7 +160,8 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Build events to reuse event registration code
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
         for (Feature feature : collection.getFeatures()) {
-            toTreat.add(FeatureCreationRequestEvent.build(collection.getMetadata(), feature));
+            // FIXE sûr pour le false?
+            toTreat.add(FeatureCreationRequestEvent.build(collection.getMetadata(), feature, false));
         }
         return registerRequests(toTreat);
     }
@@ -202,21 +212,21 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                                      item.getMetadata().getStorages());
         FeatureCreationRequest request = FeatureCreationRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
-                       metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority());
+                       metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority(),
+                       item.isOverridePrviousVersion());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
 
         // Add to granted request collection
-        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_PENDING);
+        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_GRANTED);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }
 
     @Override
     public int scheduleRequests() {
-
         long scheduleStart = System.currentTimeMillis();
 
         // Shedule job
@@ -250,8 +260,11 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
             LOGGER.trace("------------->>> {} creation requests scheduled in {} ms", requestsToSchedule.size(),
                          System.currentTimeMillis() - scheduleStart);
+
             return requestIds.size();
         }
+        LOGGER.error("prout");
+
         return 0;
     }
 
@@ -265,17 +278,20 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         List<String> providerIds = new ArrayList<>();
         requests.forEach(r -> providerIds.add(r.getProviderId()));
         Map<String, Integer> versionByProviders = new HashMap<>();
-        for (IVersionByProvider vbp : featureRepo.findByProviderIdInOrderByVersionDesc(providerIds)) {
+        Map<String, FeatureUniformResourceName> urnByProviders = new HashMap<>();
+        for (IUrnVersionByProvider vbp : featureRepo.findByProviderIdInOrderByVersionDesc(providerIds)) {
             if (!versionByProviders.containsKey(vbp.getProviderId())) {
                 // Register max version
                 versionByProviders.put(vbp.getProviderId(), vbp.getVersion());
+                urnByProviders.put(vbp.getProviderId(), vbp.getUrn());
             }
         }
 
         // Register features
         subProcessStart = System.currentTimeMillis();
         Set<FeatureEntity> entities = requests.stream()
-                .map(request -> initFeatureEntity(request, versionByProviders.get(request.getProviderId())))
+                .map(request -> initFeatureEntity(request, versionByProviders.get(request.getProviderId()),
+                                                  urnByProviders.get(request.getProviderId())))
                 .collect(Collectors.toSet());
         this.featureRepo.saveAll(entities);
         LOGGER.trace("------------->>> {} feature saved in {} ms", entities.size(),
@@ -300,6 +316,17 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                 // Publish successful request
                 publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
                                                             request.getFeature().getUrn(), RequestState.SUCCESS));
+                // if a previous version exists we will publish a FeatureDeletionRequest to delete it
+                if ((request.getFeatureEntity().getPreviousVersionUrn() != null)
+                        && request.isOverridePreviousVersion()) {
+                    this.notificationClient
+                            .notify(String.format("A FeatureEntity with the URN {} already exists for this feature",
+                                                  request.getFeatureEntity().getPreviousVersionUrn()),
+                                    "A duplicated feature has been detected", NotificationLevel.ERROR,
+                                    DefaultRole.ADMIN);
+                    publisher.publish(FeatureDeletionRequestEvent
+                            .build(request.getFeatureEntity().getPreviousVersionUrn(), PriorityLevel.NORMAL));
+                }
             }
         }
         // Successful requests are deleted now!
@@ -309,7 +336,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         LOGGER.trace("------------->>> {} creation requests processed in {} ms", requests.size(),
                      System.currentTimeMillis() - processStart);
-
         return entities;
     }
 
@@ -356,11 +382,13 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
     /**
      * Init a {@link FeatureEntity} from a {@link FeatureCreationRequest} and set it
      * as feature entity
-     *
-     * @param feature
+     * @param previousVersion number of last version in database for a provider id
+     * @param fcr from we will create the {@link FeatureEntity}
+     * @param previousVersion previous urn for the last version
      * @return
      */
-    private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr, @Nullable Integer previousVersion) {
+    private FeatureEntity initFeatureEntity(FeatureCreationRequest fcr, @Nullable Integer previousVersion,
+            FeatureUniformResourceName previousUrn) {
 
         Feature feature = fcr.getFeature();
 
@@ -370,7 +398,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                         computeNextVersion(previousVersion)));
 
         FeatureEntity created = FeatureEntity.build(fcr.getMetadata().getSession(), fcr.getMetadata().getSessionOwner(),
-                                                    feature);
+                                                    feature, previousUrn);
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
 

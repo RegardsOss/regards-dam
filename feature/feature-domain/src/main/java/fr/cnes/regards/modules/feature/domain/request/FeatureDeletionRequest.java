@@ -43,20 +43,20 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
  */
 @Entity
 @Table(name = "t_feature_deletion_request",
-        indexes = { @Index(name = "idx_feature_creation_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_creation_request_state", columnList = AbstractRequest.COLUMN_STATE),
-                @Index(name = "idx_feature_step_registration_priority",
+        indexes = { @Index(name = "idx_feature_deletion_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
+                @Index(name = "idx_feature_deletion_request_state", columnList = AbstractFeatureRequest.COLUMN_STATE),
+                @Index(name = "idx_feature_deletion_step_registration_priority",
                         columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
                                 + AbstractRequest.COLUMN_PRIORITY),
-                @Index(name = "idx_feature_creation_group_id", columnList = AbstractRequest.GROUP_ID) },
-        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_creation_request_id",
+                @Index(name = "idx_feature_deletion_request_urn", columnList = AbstractRequest.URN) },
+        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_deletion_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
-public class FeatureDeletionRequest extends AbstractRequest {
+public class FeatureDeletionRequest extends AbstractFeatureRequest {
 
     @Id
-    @SequenceGenerator(name = "featureUpdateRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_update_request")
-    @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "featureDeleteRequestSequence", initialValue = 1,
+            sequenceName = "seq_feature_deletion_request")
+    @GeneratedValue(generator = "featureDeleteRequestSequence", strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)

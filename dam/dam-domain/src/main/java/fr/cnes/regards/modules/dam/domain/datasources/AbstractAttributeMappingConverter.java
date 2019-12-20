@@ -62,7 +62,6 @@ public class AbstractAttributeMappingConverter extends TypeAdapter<AbstractAttri
 
         switch (type) {
             case DYNAMIC:
-                System.out.println("DYNAMIC ONE !!");
                 return new DynamicAttributeMapping(elements.get("name"), elements.get("namespace"),
                         PropertyType.valueOf(elements.get("type")), elements.get("nameDS"));
             case STATIC:

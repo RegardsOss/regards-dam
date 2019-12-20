@@ -18,22 +18,21 @@
  */
 package fr.cnes.regards.modules.notifier.plugin;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureManagementAction;
 import fr.cnes.regards.modules.notifier.dto.NotificationEvent7;
 
 /**
  * @author kevin
  *
  */
-@Plugin(author = "REGARDS Team", description = "Recipient sender 7 for feature", id = "RecipientSender7",
-        version = "1.0.0", contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES",
-        url = "https://regardsoss.github.io/")
+@Plugin(author = "REGARDS Team", description = "Recipient sender 7", id = "RecipientSender7", version = "1.0.0",
+        contact = "regards@c-s.fr", license = "GPLv3", owner = "CNES", url = "https://regardsoss.github.io/")
 public class RecipientSender7 extends AbstractRecipientSender<NotificationEvent7> {
 
     @Override
-    NotificationEvent7 buildEvent(Feature feature, FeatureManagementAction action) {
-        return NotificationEvent7.build(feature, action);
+    NotificationEvent7 buildEvent(JsonElement element, String action) {
+        return NotificationEvent7.build(element, action);
     }
 }

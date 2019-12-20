@@ -31,20 +31,20 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 @Converter(autoApply = true)
 public class FeatureUrnConverter implements AttributeConverter<FeatureUniformResourceName, String> {
 
-	@Override
-	public String convertToDatabaseColumn(FeatureUniformResourceName urn) {
-		if (urn == null) {
-			return null;
-		}
-		return urn.toString();
-	}
+    @Override
+    public String convertToDatabaseColumn(FeatureUniformResourceName urn) {
+        if (urn == null) {
+            return null;
+        }
+        return urn.toString();
+    }
 
-	@Override
-	public FeatureUniformResourceName convertToEntityAttribute(String data) {
-		if (data == null) {
-			return new FeatureUniformResourceName();
-		}
-		return FeatureUniformResourceName.fromString(data);
-	}
+    @Override
+    public FeatureUniformResourceName convertToEntityAttribute(String data) {
+        if (data == null) {
+            return null;
+        }
+        return FeatureUniformResourceName.fromString(data);
+    }
 
 }

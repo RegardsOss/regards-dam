@@ -43,7 +43,7 @@ public class StringFacetSerializerTest {
         AdaptedFacet adapted = new StringFacetSerializer.AdaptedFacet(facet);
         String openSearchQuery = adapted.getValues().get(0).getOpenSearchQuery();
 
-        Assert.assertEquals("myattributename:toto", openSearchQuery);
+        Assert.assertEquals("myattributename:\"toto\"", openSearchQuery);
     }
 
     @Test

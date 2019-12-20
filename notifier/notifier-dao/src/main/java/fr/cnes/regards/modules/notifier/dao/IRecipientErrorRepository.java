@@ -16,22 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.notification.domain.plugin;
+package fr.cnes.regards.modules.notifier.dao;
 
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.feature.dto.Feature;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import fr.cnes.regards.modules.notifier.domain.RecipientError;
 
 /**
- * @author kevin
+ * Repository to access {@link RecipientError}
+ * @author Kevin Marchois
  *
  */
-@FunctionalInterface
-@PluginInterface(description = "Feature rule matcher")
-public interface IRuleMatcher {
+@Repository
+public interface IRecipientErrorRepository extends JpaRepository<RecipientError, Long> {
 
-    /**
-     * Verify if a {@link Feature} match with a rule
-     * @param feature {@link Feature} to verify if it matches
-     */
-    boolean match(Feature feature);
+    public List<RecipientError> findByJobId(UUID jobId);
 }

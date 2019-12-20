@@ -64,6 +64,8 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
         // Register referenced features
         Map<String, FeatureUniformResourceName> refs = savePreviousVersions(modelName);
 
+        long start = System.currentTimeMillis();
+
         List<FeatureUpdateRequestEvent> events = new ArrayList<>();
         OffsetDateTime requestDate = OffsetDateTime.now();
         int bulk = 0;
@@ -85,12 +87,14 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
             saveEvents(events);
         }
 
+        LOGGER.info(">>>>>>>>>>>>>>>>> {} requests registered in {} ms", NB_FEATURES,
+                    System.currentTimeMillis() - start);
+
         assertEquals(NB_FEATURES.longValue(), this.featureUpdateRequestRepo.count());
 
         // wait ...
         Thread.sleep(properties.getDelayBeforeProcessing() * 1000);
 
-        long start = System.currentTimeMillis();
         boolean schedule;
         do {
             schedule = featureService.scheduleRequests() > 0;
@@ -124,7 +128,7 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
             GeodeProperties.addGeodeProperties(feature);
             // Keep track of urn for further update
             urns.put(feature.getId(), feature.getUrn());
-            refEntities.add(FeatureEntity.build("sessionOwner", "session", feature));
+            refEntities.add(FeatureEntity.build("sessionOwner", "session", feature, null));
 
             if (bulk == properties.getMaxBulkSize()) {
                 featureRepo.saveAll(refEntities);

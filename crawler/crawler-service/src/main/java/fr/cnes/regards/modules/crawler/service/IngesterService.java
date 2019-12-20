@@ -35,14 +35,13 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
-import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
@@ -80,6 +79,9 @@ public class IngesterService implements IHandler<PluginConfEvent> {
 
     @Autowired
     private DatasourceIngestionService dsIngestionService;
+
+    @Autowired
+    private IDatasourceIngesterService datasourceIngester;
 
     /**
      * Boolean indicating whether or not crawler service is in "consume only" mode (to be used by tests only)
@@ -147,14 +149,18 @@ public class IngesterService implements IHandler<PluginConfEvent> {
                             String dsId = dsIngestionOpt.get();
                             atLeastOneIngestionDone = true;
                             try {
-                                dsIngestionService.runDataSourceIngestion(dsId);
+                                Optional<IngestionResult> summary = datasourceIngester.ingest(dsId);
+                                if (summary.isPresent()) {
+                                    dsIngestionService.updateIngesterResult(dsId, summary.get());
+                                }
                             } catch (InactiveDatasourceException ide) {
                                 LOGGER.error(ide.getMessage(), ide);
                                 dsIngestionService.setInactive(dsId, ide.getMessage());
                             } catch (NotFinishedException nfe) {
                                 LOGGER.error(nfe.getMessage(), nfe);
                                 dsIngestionService.setNotFinished(dsId, nfe);
-                            } catch (DataSourceException | ModuleException e) {
+                            } catch (Exception e) {
+                                // Catch all other possible exceptions to set ingestion to error status
                                 LOGGER.error(e.getMessage(), e);
                                 try (StringWriter sw = new StringWriter()) {
                                     e.printStackTrace(new PrintWriter(sw));

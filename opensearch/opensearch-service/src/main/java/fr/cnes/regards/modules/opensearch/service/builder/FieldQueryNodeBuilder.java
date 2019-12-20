@@ -122,8 +122,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 }
                 return IFeatureCriterion.eq(attributeModel, valL);
             case STRING:
-                return IFeatureCriterion.eq(attributeModel, value);
             case STRING_ARRAY:
+                // string equality is handled by QuotedFieldQueryNodeBuilder as per lucene spec
                 return IFeatureCriterion.contains(attributeModel, value);
             case DATE_ISO8601:
                 return IFeatureCriterion.eq(attributeModel, OffsetDateTimeAdapter.parse(value));

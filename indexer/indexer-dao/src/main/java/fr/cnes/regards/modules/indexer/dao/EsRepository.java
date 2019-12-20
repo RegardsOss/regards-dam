@@ -403,6 +403,7 @@ public class EsRepository implements IEsRepository {
         try {
             client.close();
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -437,10 +438,18 @@ public class EsRepository implements IEsRepository {
                     // .field("tree_levels", "20") // precison = 16 m Astro test 7 mn to fill constellations
                     // .field("tree_levels", "21") // precision = 7m Astro test 17mn to fill constellations
 
-                    .endObject().endObject().endObject());
+                    .endObject()
+                    // add feature.session type which should be keyword and not date. Default sessions are UTF-8 date as a string.
+                    .startObject("feature")
+                        .startObject("properties")
+                            .startObject("session").field("type", "keyword").endObject()
+                        .endObject()
+                    .endObject()
+                    .endObject().endObject());
             CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -455,6 +464,7 @@ public class EsRepository implements IEsRepository {
             AcknowledgedResponse response = client.indices().updateAliases(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -469,6 +479,7 @@ public class EsRepository implements IEsRepository {
             AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
 
@@ -484,6 +495,7 @@ public class EsRepository implements IEsRepository {
             AcknowledgedResponse response = client.indices().putSettings(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
 
@@ -496,6 +508,7 @@ public class EsRepository implements IEsRepository {
             request.indices(name.toLowerCase());
             return client.indices().exists(request, RequestOptions.DEFAULT);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -546,8 +559,10 @@ public class EsRepository implements IEsRepository {
             if (e.status() == RestStatus.NOT_FOUND) {
                 throw new IndexNotFoundException(index.toLowerCase());
             }
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -574,6 +589,7 @@ public class EsRepository implements IEsRepository {
                 ((NStringEntity) entity).close();
             }
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -624,6 +640,7 @@ public class EsRepository implements IEsRepository {
             }
 
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
         return newIndices;
@@ -662,6 +679,7 @@ public class EsRepository implements IEsRepository {
             RefreshRequest request = Requests.refreshRequest(index.toLowerCase());
             client.indices().refresh(request, RequestOptions.DEFAULT);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -676,6 +694,7 @@ public class EsRepository implements IEsRepository {
             }
             return gson.fromJson(response.getSourceAsString(), clazz);
         } catch (final JsonSyntaxException | IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -687,6 +706,7 @@ public class EsRepository implements IEsRepository {
             DeleteResponse response = client.delete(request, RequestOptions.DEFAULT);
             return (response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -707,6 +727,7 @@ public class EsRepository implements IEsRepository {
                                                   RequestOptions.DEFAULT);
             return response.getResult() == Result.CREATED; // Else UPDATED
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -780,6 +801,7 @@ public class EsRepository implements IEsRepository {
             this.refresh(index);
             return result;
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -810,6 +832,7 @@ public class EsRepository implements IEsRepository {
             } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
             // loop.
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }
@@ -835,6 +858,7 @@ public class EsRepository implements IEsRepository {
                                            Integer.MAX_VALUE, uniqueValues, facetsMap);
             return new Tuple<>(uniqueValues, facets);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
     }

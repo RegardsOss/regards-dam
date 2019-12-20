@@ -40,11 +40,7 @@ public enum FeatureRequestStep {
     // Delete files
     REMOTE_STORAGE_DELETION_REQUESTED(true, true),
     // Store files
-    REMOTE_STORAGE_REQUESTED(true, true),
-    // REMOTE_STORAGE_GRANTED(true),
-    REMOTE_STORAGE_DENIED(true),
-    REMOTE_STORAGE_ERROR(true),
-    REMOTE_STORAGE_SUCCESS(true);
+    REMOTE_STORAGE_REQUESTED(true, true);
 
     private boolean remote = false;
 

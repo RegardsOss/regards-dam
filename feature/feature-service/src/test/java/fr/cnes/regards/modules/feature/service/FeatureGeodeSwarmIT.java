@@ -56,11 +56,11 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGeodeSwarmIT.class);
 
-    private static final Integer NB_FEATURES = 100_000;
+    private static final Integer NB_FEATURES = 1_000_000;
 
     private static final String PROVIDER_ID_FORMAT = "F%05d";
 
-    private static final Integer PUBLISH_BULK_SIZE = 2000;
+    private static final Integer PUBLISH_BULK_SIZE = 5000;
 
     private String modelName;
 
@@ -79,7 +79,7 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
 
     @Test
     public void requestCreation() {
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
+        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.HIGH,
                                                                        Lists.emptyList());
 
         long creationStart = System.currentTimeMillis();
@@ -90,7 +90,7 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
             Feature feature = Feature.build(String.format(PROVIDER_ID_FORMAT, i), null, IGeometry.unlocated(),
                                             EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
-            events.add(FeatureCreationRequestEvent.build(metadata, feature));
+            events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
 
             if (bulk == PUBLISH_BULK_SIZE) {
                 publish(events, "creation", i, NB_FEATURES);

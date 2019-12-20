@@ -18,12 +18,16 @@
  */
 package fr.cnes.regards.modules.feature.domain;
 
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+
 /**
- * Retrieve version for a provider id
+ * Retrieve urn and version for a provider id
  *
  * @author Marc SORDI
  */
-public interface IVersionByProvider {
+public interface IUrnVersionByProvider {
+
+    FeatureUniformResourceName getUrn();
 
     String getProviderId();
 

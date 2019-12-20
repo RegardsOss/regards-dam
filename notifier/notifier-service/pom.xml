@@ -34,29 +34,29 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.feature</groupId>
-			<artifactId>feature-dto</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>fr.cnes.regards.modules.notifier</groupId>
-            <artifactId>notifier-dao</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>fr.cnes.regards.framework</groupId>
-            <artifactId>geojson-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>fr.cnes.regards.modules.model</groupId>
-            <artifactId>model-validation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>fr.cnes.regards.modules.model</groupId>
-            <artifactId>model-client</artifactId>
-        </dependency>
+			<groupId>fr.cnes.regards.modules.notifier</groupId>
+			<artifactId>notifier-dao</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>geojson-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.jobs</groupId>
+			<artifactId>jobs-service</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.model</groupId>
@@ -69,9 +69,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-            <groupId>fr.cnes.regards.framework</groupId>
-            <artifactId>jpa-multitenant-regards-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

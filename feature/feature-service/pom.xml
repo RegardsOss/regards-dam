@@ -110,6 +110,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>metric-regards-starter</artifactId>
 		</dependency>
+		<dependency>
+            <artifactId>notifier-dto</artifactId>
+            <groupId>fr.cnes.regards.modules.notifier</groupId>
+        </dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
@@ -122,10 +126,14 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- FIXME -->
-		<dependency>
+<!-- 		<dependency>
 			<groupId>net.logstash.logback</groupId>
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>6.2</version>
-		</dependency>
+		</dependency> -->
+<!-- 		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-elastic</artifactId>
+		</dependency> -->
 	</dependencies>
 </project>

@@ -52,7 +52,7 @@ public interface IDBConnectionService {
 
     /**
      * Get the {@link PluginConfiguration}.
-     * @param configurationId a {@link PluginConfiguration} identifier
+     * @param businessId a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
@@ -60,7 +60,7 @@ public interface IDBConnectionService {
 
     /**
      * Update a DB connection {@link PluginConfiguration}
-     * @param dbConnection the {@link PluginConfiguration} to update
+     * @param connConfbusinessId the {@link PluginConfiguration} to update
      * @return the updated {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
@@ -68,14 +68,14 @@ public interface IDBConnectionService {
 
     /**
      * Delete a DB connection {@link PluginConfiguration}
-     * @param businessId a {@link PluginConfiguration} business identifier
+     * @param connConfbusinessId a {@link PluginConfiguration} business identifier
      * @throws ModuleException throw if an error occurs
      */
     void deleteDBConnection(String connConfbusinessId) throws ModuleException;
 
     /**
      * Querying the status of a database connection pools.
-     * @param configurationId a {@link PluginConfiguration} identifier
+     * @param connConfbusinessId a {@link PluginConfiguration} identifier
      * @return true success to the connection to the database.</br>
      *         false unable to connect to the database
      * @throws ModuleException throw if an error occurs
@@ -84,7 +84,7 @@ public interface IDBConnectionService {
 
     /**
      * Retrieve all tables from DB connection plugin
-     * @param dbConnectionId identifier of DB connection plugin
+     * @param connConfbusinessId identifier of DB connection plugin
      * @return a map of { table name, table }
      * @throws ModuleException
      * @throws NotAvailablePluginConfigurationException
@@ -94,7 +94,7 @@ public interface IDBConnectionService {
 
     /**
      * Retrieve all columns from DB connection plugin and given table name
-     * @param dbConnectionId identifier of DB connection plugin
+     * @param connConfbusinessId identifier of DB connection plugin
      * @param tableName table name whom columns belong to
      * @return a map of { column name, column }
      * @throws ModuleException
