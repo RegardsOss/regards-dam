@@ -95,7 +95,6 @@ public class SearchService implements ISearchService {
         searchKey.setCrs(projectGeoSettings.getCrs());
     }
 
-
     @Override
     public <T extends IIndexable> FacetPage<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
             ICriterion criterion, Map<String, FacetType> facetsMap) {
@@ -125,8 +124,9 @@ public class SearchService implements ISearchService {
         }
         int total = objects.size();
         if (!objects.isEmpty()) {
-            objects = objects.subList((int) pageRequest.getOffset(),
-                                      (int) Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
+            objects = objects
+                    .subList((int) pageRequest.getOffset(),
+                             (int) Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
         }
         return new FacetPage<>(objects, objectsNFacets.v2(), pageRequest, total);
     }

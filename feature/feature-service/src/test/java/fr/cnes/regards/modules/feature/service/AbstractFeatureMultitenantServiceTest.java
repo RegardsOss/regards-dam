@@ -66,6 +66,7 @@ import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFa
 import fr.cnes.regards.modules.model.service.exception.ImportException;
 import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
 import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
+import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
 
 public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMultitenantServiceTest {
 
@@ -320,7 +321,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
         this.featureCreationService.scheduleRequests();
         // if they are several page to create
-        for (int i = 0; i < featureToCreateNumber % properties.getMaxBulkSize(); i++) {
+        for (int i = 0; i < (featureToCreateNumber % properties.getMaxBulkSize()); i++) {
             this.featureCreationService.scheduleRequests();
         }
 
@@ -330,7 +331,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             featureNumberInDatabase = this.featureRepo.count();
             Thread.sleep(1000);
             cpt++;
-        } while (cpt < 100 && featureNumberInDatabase != featureToCreateNumber);
+        } while ((cpt < 100) && (featureNumberInDatabase != featureToCreateNumber));
 
         assertEquals(featureToCreateNumber.intValue(), this.featureRepo.count());
 
@@ -365,6 +366,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         sub.unsubscribeFrom(FeatureDeletionRequestEvent.class);
         sub.unsubscribeFrom(FeatureUpdateRequestEvent.class);
         sub.unsubscribeFrom(NotificationRequestEvent.class);
+        sub.unsubscribeFrom(NotificationActionEvent.class);
         cleanAMQPQueues(FeatureCreationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureUpdateRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureDeletionRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);

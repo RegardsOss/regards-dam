@@ -185,7 +185,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
             notificationActionNumber = repo.count();
             cpt++;
             Thread.sleep(1000);
-        } while (notificationActionNumber != expectedNumber && cpt != timeout);
+        } while ((notificationActionNumber != expectedNumber) && (cpt != timeout));
 
         if (notificationActionNumber != expectedNumber) {
             fail(String.format("Wrong notifications number in database after timeout expected %s got %s",
@@ -258,6 +258,7 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
 
     @After
     public void after() {
+        subscriber.unsubscribeFrom(NotificationActionEvent.class);
         cleanAMQPQueues(NotificationActionEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender2.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender3.class, Target.ONE_PER_MICROSERVICE_TYPE);
@@ -268,7 +269,5 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         cleanAMQPQueues(RecipientSender8.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender9.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(RecipientSender10.class, Target.ONE_PER_MICROSERVICE_TYPE);
-        subscriber.unsubscribeFrom(NotificationActionEvent.class);
-
     }
 }

@@ -33,6 +33,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 
+import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
@@ -63,11 +65,16 @@ public class IUserClientIT extends AbstractRegardsWebIT {
     @Autowired
     private FeignSecurityManager feignSecurityManager;
 
+    @Autowired
+    private Gson gson;
+
     @Before
     public void init() {
         jwtService.injectMockToken(getDefaultTenant(), DEFAULT_ROLE);
-        client = FeignClientBuilder.build(new TokenClientProvider<>(IUserClient.class,
-                "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
+        client = FeignClientBuilder.build(
+                                          new TokenClientProvider<>(IUserClient.class,
+                                                  "http://" + serverAddress + ":" + getPort(), feignSecurityManager),
+                                          gson);
         FeignSecurityManager.asSystem();
     }
 

@@ -135,7 +135,7 @@ public class AstroTest {
      * Transform right ascendance in decimal hours to longitude in degrees
      */
     private double toLongitude(double rightAscendance) {
-        double longitude_0_360 = rightAscendance / 24. * 360;
+        double longitude_0_360 = (rightAscendance / 24.) * 360;
         return EsHelper.highScaled(longitude_0_360 >= 180. ? longitude_0_360 - 360.0 : longitude_0_360);
     }
 

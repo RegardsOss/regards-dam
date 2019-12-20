@@ -263,7 +263,6 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
             return requestIds.size();
         }
-        LOGGER.error("prout");
 
         return 0;
     }

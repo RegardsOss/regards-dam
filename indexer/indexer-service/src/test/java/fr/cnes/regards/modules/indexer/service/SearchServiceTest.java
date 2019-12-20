@@ -194,8 +194,9 @@ public class SearchServiceTest {
         System.out.println("---------------------------------");
         System.out
                 .printf("Result count: %d, results in error: %d (%s %%), max distance error : %d (%s %%) (search only duration: %d ms)\n\n",
-                        page.getTotalElements(), errorCount, format.format(100. * errorCount / page.getTotalElements()),
-                        (int) maxErrorDistance, format.format(100. * maxErrorDistance / distance), duration);
+                        page.getTotalElements(), errorCount,
+                        format.format((100. * errorCount) / page.getTotalElements()), (int) maxErrorDistance,
+                        format.format((100. * maxErrorDistance) / distance), duration);
     }
 
     private void computePolygonTest(String label, ICriterion criterion, int expectedCount) {

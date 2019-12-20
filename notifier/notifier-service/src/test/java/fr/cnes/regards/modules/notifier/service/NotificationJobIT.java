@@ -71,11 +71,12 @@ public class NotificationJobIT extends AbstractNotificationMultitenantServiceTes
         // we will wait util configuration.getMaxBulkSize() recipient errors are stored in database
         // cause one of the RECIPIENTS_PER_RULE will fail so we will get 1 error per NotificationAction to send
         waitDatabaseCreation(this.recipientErrorRepo, configuration.getMaxBulkSize(), 60);
+        // waiting for job end
+        Thread.sleep(5000);
         JobInfo failJob = this.jobInforepo.findAll().iterator().next();
         failJob.updateStatus(JobStatus.QUEUED);
         RECIPIENT_FAIL = false;
         this.jobInforepo.save(failJob);
-
         waitDatabaseCreation(this.recipientErrorRepo, 0, 60);
         waitDatabaseCreation(this.notificationRepo, 0, 60);
         assertEquals(JobStatus.SUCCEEDED, this.jobInforepo.findAll().iterator().next().getStatus().getStatus());

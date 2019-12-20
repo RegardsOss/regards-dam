@@ -71,6 +71,9 @@ public class FeatureNotificationServiceIT extends AbstractFeatureMultitenantServ
     @Test
     public void testNotification() {
 
+        // mock the publish method to not broke other tests
+        Mockito.doNothing().when(publisher).publish(Mockito.any(NotificationActionEvent.class));
+
         // use it only to initialize Feature
         List<FeatureCreationRequestEvent> list = new ArrayList<>();
         initFeatureCreationRequestEvent(list, 2);
@@ -95,6 +98,7 @@ public class FeatureNotificationServiceIT extends AbstractFeatureMultitenantServ
         this.waitRequest(notificationRepo, 2, 30000);
         assertEquals(2, notificationService.scheduleRequests());
         this.waitRequest(notificationRepo, 0, 30000);
+
         Mockito.verify(publisher).publish(recordsCaptor.capture());
         // the first publish message to be intercepted must be the creation of createdEntity
         assertEquals("CREATION", recordsCaptor.getValue().get(0).getAction());
