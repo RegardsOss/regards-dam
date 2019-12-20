@@ -18,14 +18,14 @@
  */
 package fr.cnes.regards.modules.feature.dto;
 
-import com.google.common.collect.Sets;
-import fr.cnes.regards.framework.oais.urn.DataType;
 import java.util.Set;
+
 import javax.validation.constraints.NotBlank;
 
-import javax.validation.constraints.NotNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import fr.cnes.regards.framework.oais.urn.DataType;
 
 /**
  * Metadata for storage
@@ -36,8 +36,6 @@ import org.springframework.util.Assert;
 public class StorageMetadata {
 
     private static final String MISSING_STORAGE_ERROR = "Storage identifier is required";
-
-    private static final String MISSING_TARGET_TYPES = "Data type list should be provided";
 
     /**
      * Storage identifier.
@@ -54,7 +52,6 @@ public class StorageMetadata {
     /**
      * List of data object types accepted by this storage location (when storing AIPs)
      */
-    @NotNull(message = MISSING_TARGET_TYPES)
     private Set<DataType> targetTypes;
 
     public String getPluginBusinessId() {
@@ -87,7 +84,8 @@ public class StorageMetadata {
      * @param storePath path to the directory in which files have to be stored
      * @param targetTypes list of data type this storage will handle
      */
-    public static StorageMetadata build(String pluginBusinessId, @Nullable String storePath, Set<DataType> targetTypes) {
+    public static StorageMetadata build(String pluginBusinessId, @Nullable String storePath,
+            Set<DataType> targetTypes) {
         Assert.hasLength(pluginBusinessId, MISSING_STORAGE_ERROR);
         StorageMetadata m = new StorageMetadata();
         m.setPluginBusinessId(pluginBusinessId);
@@ -95,7 +93,6 @@ public class StorageMetadata {
         m.setTargetTypes(targetTypes);
         return m;
     }
-
 
     /**
      * Build storage metadata with empty target types and storage path
@@ -105,8 +102,6 @@ public class StorageMetadata {
         Assert.hasLength(pluginBusinessId, MISSING_STORAGE_ERROR);
         StorageMetadata m = new StorageMetadata();
         m.setPluginBusinessId(pluginBusinessId);
-        m.setStorePath(null);
-        m.setTargetTypes(Sets.newHashSet());
         return m;
     }
 
