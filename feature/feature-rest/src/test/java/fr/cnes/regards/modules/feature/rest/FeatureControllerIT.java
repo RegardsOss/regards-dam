@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.feature.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
+import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureUpdateCollection;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
@@ -62,7 +64,6 @@ import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 @ContextConfiguration(classes = { AbstractMultitenantServiceTest.ScanningConfiguration.class })
 public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureControllerIT.class);
 
     @Autowired
@@ -131,11 +132,11 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(featureToAdd);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
-        metadata.add(StorageMetadata.build("id"));
+        metadata.add(StorageMetadata.build("disk"));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
-        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
 
         RequestBuilderCustomizer requestBuilderCustomizer = customizer().expectStatusCreated();
         runtimeTenantResolver.forceTenant(this.getDefaultTenant());
@@ -160,9 +161,9 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(featureToAdd);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
-        metadata.add(StorageMetadata.build("id"));
+        metadata.add(StorageMetadata.build("disk"));
 
-        collection.setMetadata(FeatureSessionMetadata.build("me", "session", PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
         MapBindingResult errors = new MapBindingResult(new HashMap<>(), Feature.class.getName());
         errors.reject("error code");
         // we will mock validation plugin and consider the feature is unvalid
@@ -176,15 +177,13 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testCreateValidFeatureUpdateRequest() throws Exception {
-        Feature feature = initValidFeature();
+        Feature feature = initValidUpdateFeature();
         FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(feature);
-        feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "tenant",
-                                                        UUID.randomUUID(), 1));
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
-        metadata.add(StorageMetadata.build("id"));
+        //        metadata.add(StorageMetadata.build("disk"));
 
-        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -200,17 +199,28 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
     private Feature initValidFeature() {
         String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
                                        modelAttrAssocClientMock);
-        Feature feature;
-        feature = new Feature();
-        feature.setEntityType(EntityType.DATA);
-        feature.setModel(model);
-        feature.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
-        feature.setUrn(null);
-        feature.setId("id");
+
+        Feature feature = Feature.build("MyId", null, IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA,
+                                        model);
         feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
-        feature.getFiles().add(FeatureFile.build(FeatureFileAttributes
-                .build(DataType.DOCUMENT, MimeType.valueOf("application/xml"), "filename", 100l, "MD5", "checksum"),
-                                                 FeatureFileLocation.build("www.test.com", "storage")));
+        feature.addProperty(IProperty.buildObject("file_characterization", IProperty.buildBoolean("valid", true)));
+        feature.withFiles(FeatureFile.build(FeatureFileAttributes
+                .build(DataType.RAWDATA, MimeType.valueOf("application/xml"), "filename", 100l, "MD5", "checksum"),
+                                            FeatureFileLocation.build("http://www.test.com/filename.xml")));
+
+        return feature;
+    }
+
+    private Feature initValidUpdateFeature() {
+        String model = mockModelClient("feature_model_01.xml", cps, factory, this.getDefaultTenant(),
+                                       modelAttrAssocClientMock);
+
+        Feature feature = Feature.build("MyId",
+                                        FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
+                                                                         "tenant", UUID.randomUUID(), 1),
+                                        null, EntityType.DATA, model);
+        feature.addProperty(IProperty.buildObject("file_characterization", IProperty.buildBoolean("valid", false),
+                                                  IProperty.buildDate("invalidation_date", OffsetDateTime.now())));
         return feature;
     }
 
@@ -222,15 +232,15 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
         feature.setModel("model");
         feature.setGeometry(IGeometry.point(IGeometry.position(10.0, 20.0)));
         feature.setUrn(null);
-        feature.setId("id");
+        feature.setId("MyId");
         feature.setUrn(FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "tenant",
                                                         UUID.randomUUID(), 1));
         FeatureUpdateCollection collection = new FeatureUpdateCollection();
         collection.add(feature);
         List<StorageMetadata> metadata = new ArrayList<StorageMetadata>();
-        metadata.add(StorageMetadata.build("id"));
+        metadata.add(StorageMetadata.build("disk"));
 
-        collection.setMetadata(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, metadata));
+        collection.setMetadata(FeatureMetadata.build(PriorityLevel.NORMAL, metadata));
         // we will mock validation plugin and consider the feature is valid
         Mockito.when(validationMock.validate(Mockito.any(), Mockito.any()))
                 .thenReturn(new MapBindingResult(new HashMap<>(), Feature.class.getName()));
@@ -253,29 +263,37 @@ public class FeatureControllerIT extends AbstractRegardsTransactionalIT {
 
         List<FieldDescriptor> lfd = new ArrayList<FieldDescriptor>();
 
-        lfd.add(fields.withPath("metadata.storages", "Target storages"));
-        lfd.add(fields.withPath("metadata.storages[].pluginBusinessId", "Storage identifier"));
-        lfd.add(fields.withPath("metadata.storages[].targetTypes",
-                                "List of data object types accepted by this storage location (when storing AIPs)"));
+        if (!isUpdate) {
+            lfd.add(fields.withPath("metadata.storages", "Target storages"));
+            lfd.add(fields.withPath("metadata.storages[].pluginBusinessId", "Storage identifier"));
+        }
+        //        lfd.add(fields.withPath("metadata.storages[].targetTypes",
+        //                                "List of data object types accepted by this storage location (when storing AIPs)"));
         lfd.add(fields.withPath("features[].entityType", "Entity Type"));
         if (isUpdate) {
             lfd.add(fields.withPath("features[].urn",
                                     "Unique feature identifer based on provider identifier with versionning"));
         }
-        lfd.add(fields.withPath("metadata.session", "The session name"));
-        lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
+        if (!isUpdate) {
+            lfd.add(fields.withPath("metadata.session", "The session name"));
+            lfd.add(fields.withPath("metadata.sessionOwner", "The session owner"));
+        }
         lfd.add(fields.withPath("features[].model", "Model"));
         lfd.add(fields.withPath("features[].id", "Technical id"));
-        lfd.add(fields.withPath("features[].geometry", "GeoJson Coordinates"));
+        if (!isUpdate) {
+            lfd.add(fields.withPath("features[].geometry", "GeoJson Coordinates"));
+        }
         lfd.add(fields.withPath("features[].properties", "Properties"));
-        lfd.add(fields.withPath("features[].files[].locations[].storage", "Storage"));
-        lfd.add(fields.withPath("features[].files[].locations[].url", "Url location"));
-        lfd.add(fields.withPath("features[].files[].attributes.dataType", "Data type"));
-        lfd.add(fields.withPath("features[].files[].attributes.mimeType", "Media type"));
-        lfd.add(fields.withPath("features[].files[].attributes.filename", "File name"));
-        lfd.add(fields.withPath("features[].files[].attributes.filesize", "File size"));
-        lfd.add(fields.withPath("features[].files[].attributes.algorithm", "Algorith for checksum computation"));
-        lfd.add(fields.withPath("features[].files[].attributes.checksum", "Checksum"));
+        if (!isUpdate) {
+            lfd.add(fields.withPath("features[].files[].locations[].storage", "Storage"));
+            lfd.add(fields.withPath("features[].files[].locations[].url", "Url location"));
+            lfd.add(fields.withPath("features[].files[].attributes.dataType", "Data type"));
+            lfd.add(fields.withPath("features[].files[].attributes.mimeType", "Media type"));
+            lfd.add(fields.withPath("features[].files[].attributes.filename", "File name"));
+            lfd.add(fields.withPath("features[].files[].attributes.filesize", "File size"));
+            lfd.add(fields.withPath("features[].files[].attributes.algorithm", "Algorith for checksum computation"));
+            lfd.add(fields.withPath("features[].files[].attributes.checksum", "Checksum"));
+        }
 
         requestBuilderCustomizer.document(PayloadDocumentation
                 .relaxedRequestFields(Attributes.attributes(Attributes.key(RequestBuilderCustomizer.PARAM_TITLE)
