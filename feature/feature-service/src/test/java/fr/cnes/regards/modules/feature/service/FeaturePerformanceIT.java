@@ -35,8 +35,8 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
@@ -70,8 +70,8 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
         String format = "F%05d";
 
         // Register creation requests
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
-                                                                       Lists.emptyList());
+        FeatureCreationSessionMetadata metadata = FeatureCreationSessionMetadata
+                .build("sessionOwner", "session", PriorityLevel.NORMAL, Lists.emptyList(), true);
         String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
                                            this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
@@ -84,7 +84,7 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
             feature.addProperty(IProperty.buildString("data_type", "TYPE01"));
             feature.addProperty(IProperty.buildObject("file_characterization",
                                                       IProperty.buildBoolean("valid", Boolean.TRUE)));
-            publisher.publish(FeatureCreationRequestEvent.build(metadata, feature, true));
+            publisher.publish(FeatureCreationRequestEvent.build(metadata, feature));
         }
 
         // Wait for feature creation

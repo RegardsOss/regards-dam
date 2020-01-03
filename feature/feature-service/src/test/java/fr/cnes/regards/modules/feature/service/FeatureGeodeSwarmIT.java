@@ -36,7 +36,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 
@@ -79,8 +79,8 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
 
     @Test
     public void requestCreation() {
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.HIGH,
-                                                                       Lists.emptyList());
+        FeatureCreationSessionMetadata metadata = FeatureCreationSessionMetadata
+                .build("sessionOwner", "session", PriorityLevel.HIGH, Lists.emptyList(), true);
 
         long creationStart = System.currentTimeMillis();
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
@@ -90,7 +90,7 @@ public class FeatureGeodeSwarmIT extends AbstractFeatureMultitenantServiceTest {
             Feature feature = Feature.build(String.format(PROVIDER_ID_FORMAT, i), null, IGeometry.unlocated(),
                                             EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
-            events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
+            events.add(FeatureCreationRequestEvent.build(metadata, feature));
 
             if (bulk == PUBLISH_BULK_SIZE) {
                 publish(events, "creation", i, NB_FEATURES);

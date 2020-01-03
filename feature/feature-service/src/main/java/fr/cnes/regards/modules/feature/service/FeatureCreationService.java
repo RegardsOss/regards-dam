@@ -160,8 +160,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         // Build events to reuse event registration code
         List<FeatureCreationRequestEvent> toTreat = new ArrayList<FeatureCreationRequestEvent>();
         for (Feature feature : collection.getFeatures()) {
-            // FIXE sûr pour le false?
-            toTreat.add(FeatureCreationRequestEvent.build(collection.getMetadata(), feature, false));
+            toTreat.add(FeatureCreationRequestEvent.build(collection.getMetadata(), feature));
         }
         return registerRequests(toTreat);
     }
@@ -213,7 +212,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         FeatureCreationRequest request = FeatureCreationRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
                        metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority(),
-                       item.isOverridePrviousVersion());
+                       item.getMetadata().isOverride());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,

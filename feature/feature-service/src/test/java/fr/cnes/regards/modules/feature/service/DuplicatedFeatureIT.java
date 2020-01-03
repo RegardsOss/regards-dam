@@ -150,7 +150,7 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         // publish a feature in creation
         super.initFeatureCreationRequestEvent(events, 1);
-        events.get(0).setOverridePrviousVersion(false);
+        events.get(0).getMetadata().setOverride(false);
 
         events.get(0).getFeature().setId("id");
         publisher.publish(events);
@@ -188,7 +188,7 @@ public class DuplicatedFeatureIT extends AbstractFeatureMultitenantServiceTest {
 
         // publish a feature in creation
         super.initFeatureCreationRequestEvent(events, 1);
-        events.get(0).setOverridePrviousVersion(false);
+        events.get(0).getMetadata().setOverride(false);
 
         events.get(0).getFeature().setId("id");
         publisher.publish(events);

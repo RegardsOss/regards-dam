@@ -28,7 +28,7 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
@@ -42,36 +42,24 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
 
     @Valid
     @NotNull(message = "Feature metadata is required")
-    private FeatureSessionMetadata metadata;
+    private FeatureCreationSessionMetadata metadata;
 
     @Valid
     @NotNull(message = "Feature is required")
     private Feature feature;
 
-    private boolean overridePrviousVersion = false;
-
-    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature,
-            boolean overridePrviousVersion) {
-        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1), overridePrviousVersion);
+    public static FeatureCreationRequestEvent build(FeatureCreationSessionMetadata metadata, Feature feature) {
+        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1));
     }
 
-    public static FeatureCreationRequestEvent build(FeatureSessionMetadata metadata, Feature feature,
-            OffsetDateTime requestDate, boolean overridePrviousVersion) {
+    public static FeatureCreationRequestEvent build(FeatureCreationSessionMetadata metadata, Feature feature,
+            OffsetDateTime requestDate) {
         FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
         event.setFeature(feature);
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
         event.setRequestDate(requestDate);
-        event.setOverridePrviousVersion(overridePrviousVersion);
         return event;
-    }
-
-    public boolean isOverridePrviousVersion() {
-        return overridePrviousVersion;
-    }
-
-    public void setOverridePrviousVersion(boolean overridePrviousVersion) {
-        this.overridePrviousVersion = overridePrviousVersion;
     }
 
     public Feature getFeature() {
@@ -82,11 +70,11 @@ public class FeatureCreationRequestEvent extends AbstractRequestEvent implements
         this.feature = feature;
     }
 
-    public FeatureSessionMetadata getMetadata() {
+    public FeatureCreationSessionMetadata getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(FeatureSessionMetadata metadata) {
+    public void setMetadata(FeatureCreationSessionMetadata metadata) {
         this.metadata = metadata;
     }
 }

@@ -43,10 +43,10 @@ import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.dao.INotificationRequestRepository;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
 import fr.cnes.regards.modules.feature.dto.FeatureFileAttributes;
 import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
@@ -281,9 +281,8 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
             featureToAdd.addProperty(IProperty.buildObject("file_characterization",
                                                            IProperty.buildBoolean("valid", Boolean.TRUE)));
 
-            toAdd = FeatureCreationRequestEvent
-                    .build(FeatureSessionMetadata.build("owner", "session", PriorityLevel.NORMAL, Lists.emptyList()),
-                           featureToAdd, true);
+            toAdd = FeatureCreationRequestEvent.build(FeatureCreationSessionMetadata
+                    .build("owner", "session", PriorityLevel.NORMAL, Lists.emptyList(), true), featureToAdd);
             toAdd.setRequestId(String.valueOf(i));
             toAdd.setFeature(featureToAdd);
             toAdd.setRequestDate(OffsetDateTime.now().minusDays(1));

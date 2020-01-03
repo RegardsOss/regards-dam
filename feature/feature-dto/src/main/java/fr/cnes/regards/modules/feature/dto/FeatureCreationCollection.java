@@ -33,26 +33,27 @@ import fr.cnes.regards.framework.geojson.AbstractFeatureCollection;
 public class FeatureCreationCollection extends AbstractFeatureCollection<Feature> {
 
     @Valid
-    private FeatureSessionMetadata metadata;
+    private FeatureCreationSessionMetadata metadata;
 
     /**
      * Create a new {@link FeatureCreationCollection} <br/>
-     * @param metadata {@link FeatureSessionMetadata}
+     * @param metadata {@link FeatureCreationSessionMetadata}
      * @param features collection of {@link Feature}
      * @return a {@link FeatureCreationCollection}
      */
-    public static FeatureCreationCollection build(FeatureSessionMetadata metadata, Collection<Feature> features) {
+    public static FeatureCreationCollection build(FeatureCreationSessionMetadata metadata,
+            Collection<Feature> features) {
         FeatureCreationCollection collection = new FeatureCreationCollection();
         collection.setMetadata(metadata);
         collection.addAll(features);
         return collection;
     }
 
-    public FeatureSessionMetadata getMetadata() {
+    public FeatureCreationSessionMetadata getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(FeatureSessionMetadata metadata) {
+    public void setMetadata(FeatureCreationSessionMetadata metadata) {
         this.metadata = metadata;
     }
 }

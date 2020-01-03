@@ -34,8 +34,8 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureMetadata;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
@@ -69,8 +69,8 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
     @Test
     public void createAndUpdateTest() {
 
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
-                                                                       Lists.emptyList());
+        FeatureCreationSessionMetadata metadata = FeatureCreationSessionMetadata
+                .build("sessionOwner", "session", PriorityLevel.NORMAL, Lists.emptyList(), true);
         String modelName = mockModelClient("feature_mutation_model.xml", this.getCps(), this.getFactory(),
                                            this.getDefaultTenant(), this.getModelAttrAssocClientMock());
 
@@ -84,7 +84,7 @@ public class FeatureMutationIT extends AbstractFeatureMultitenantServiceTest {
 
         // Register creation requests
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature));
         featureCreationService.registerRequests(events);
 
         // Schedule creation job

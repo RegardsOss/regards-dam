@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationCollection;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
@@ -140,8 +140,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         }
 
         StorageMetadata.build("id ");
-        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
-                .build("owner", "session", PriorityLevel.NORMAL, StorageMetadata.build("id ")), features);
+        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureCreationSessionMetadata
+                .build("owner", "session", PriorityLevel.NORMAL, false, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureCreationService.registerRequests(collection);
 
         assertEquals(properties.getMaxBulkSize().intValue(), this.featureCreationRequestRepo.count());
@@ -157,8 +157,8 @@ public class FeatureCreationIT extends AbstractFeatureMultitenantServiceTest {
         }
 
         StorageMetadata.build("id ");
-        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureSessionMetadata
-                .build("owner", "session", PriorityLevel.NORMAL, StorageMetadata.build("id ")), features);
+        FeatureCreationCollection collection = FeatureCreationCollection.build(FeatureCreationSessionMetadata
+                .build("owner", "session", PriorityLevel.NORMAL, false, StorageMetadata.build("id ")), features);
         RequestInfo<String> infos = this.featureCreationService.registerRequests(collection);
 
         assertEquals(0, infos.getGranted().size());

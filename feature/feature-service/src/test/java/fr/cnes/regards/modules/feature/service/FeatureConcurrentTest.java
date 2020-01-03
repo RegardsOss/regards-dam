@@ -19,7 +19,7 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
@@ -39,8 +39,8 @@ public class FeatureConcurrentTest extends AbstractFeatureMultitenantServiceTest
     public void createConcurrentFeatures() throws InterruptedException {
 
         // Register creation requests
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
-                                                                       Lists.emptyList());
+        FeatureCreationSessionMetadata metadata = FeatureCreationSessionMetadata
+                .build("sessionOwner", "session", PriorityLevel.NORMAL, Lists.emptyList(), true);
         String modelName = mockModelClient(GeodeProperties.getGeodeModel());
 
         Thread.sleep(5_000);
@@ -53,19 +53,19 @@ public class FeatureConcurrentTest extends AbstractFeatureMultitenantServiceTest
         IGeometry firstPosition = IGeometry.point(0, 0);
         Feature feature = Feature.build("SAME ID", null, firstPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate, true));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate));
 
         // Second feature with same id
         IGeometry secondPosition = IGeometry.point(10, 10);
         feature = Feature.build("SAME ID", null, secondPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(1), true));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(1)));
 
         // Third feature with same id
         IGeometry thirdPosition = IGeometry.point(22, 22);
         feature = Feature.build("SAME ID", null, thirdPosition, EntityType.DATA, modelName);
         GeodeProperties.addGeodeProperties(feature);
-        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(2), true));
+        events.add(FeatureCreationRequestEvent.build(metadata, feature, requestDate.minusSeconds(2)));
 
         saveEvents(events);
 

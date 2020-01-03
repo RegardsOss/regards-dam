@@ -18,7 +18,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
-import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
+import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
@@ -52,8 +52,8 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
         String format = "F%05d";
 
         // Register creation requests
-        FeatureSessionMetadata metadata = FeatureSessionMetadata.build("sessionOwner", "session", PriorityLevel.NORMAL,
-                                                                       Lists.emptyList());
+        FeatureCreationSessionMetadata metadata = FeatureCreationSessionMetadata
+                .build("sessionOwner", "session", PriorityLevel.NORMAL, Lists.emptyList(), true);
         String modelName = mockModelClient(GeodeProperties.getGeodeModel());
 
         Thread.sleep(5_000);
@@ -67,7 +67,7 @@ public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTes
             String id = String.format(format, i);
             Feature feature = Feature.build(id, null, IGeometry.unlocated(), EntityType.DATA, modelName);
             GeodeProperties.addGeodeProperties(feature);
-            events.add(FeatureCreationRequestEvent.build(metadata, feature, true));
+            events.add(FeatureCreationRequestEvent.build(metadata, feature));
 
             if (bulk == properties.getMaxBulkSize()) {
                 saveEvents(events);
