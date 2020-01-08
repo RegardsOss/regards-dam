@@ -34,13 +34,13 @@ services:
       - regards_IT_network
 
   rs-build:
-    image: 172.26.46.158/rs-maven
+    image: 172.26.46.158/rs-maven:debug
     environment:
       - BRANCH_NAME
       - WORKSPACE
       - CI_DIR
       - MODE
-      - "MAVEN_OPTS=-Xms2500m -Xmx2500m"
+      - MAVEN_OPTS=-Xms2500m -Xmx2500m
     volumes:
       - /DATA/maven-multibranch-repository:/localRepository
       - /usr/bin/docker:/bin/docker # link docker - only useful for deploy MODE
