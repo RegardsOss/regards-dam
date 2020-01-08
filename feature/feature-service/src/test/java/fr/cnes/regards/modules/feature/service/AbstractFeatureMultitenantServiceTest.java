@@ -250,7 +250,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
             // Mock client
             Mockito.when(modelAttrAssocClientMock.getModelAttrAssocs(modelName))
-                    .thenReturn(ResponseEntity.ok(resources));
+                    .thenAnswer(invocation -> ResponseEntity.ok(resources));
 
             return modelName;
         } catch (IOException | ImportException e) {
