@@ -29,10 +29,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.assertj.core.util.Lists;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -61,7 +61,7 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
-@Ignore
+@DirtiesContext
 public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
