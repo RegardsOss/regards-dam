@@ -27,11 +27,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -60,9 +58,6 @@ public class FeaturePerformanceIT extends AbstractFeatureMultitenantServiceTest 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceIT.class);
 
     private static final Integer NB_FEATURES = 10;
-
-    @Autowired
-    private IPublisher publisher;
 
     @Test
     public void createAndUpdateTest() throws InterruptedException {

@@ -83,7 +83,7 @@ public class FeatureRequestService implements IFeatureRequestService {
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.SUCCESS, null));
-        if ((item.getFeatureEntity().getPreviousVersionUrn() != null) && item.isOverridePreviousVersion()) {
+        if ((item.getFeatureEntity().getPreviousVersionUrn() != null) && item.getMetadata().isOverride()) {
             publisher.publish(FeatureDeletionRequestEvent.build(item.getFeatureEntity().getPreviousVersionUrn(),
                                                                 PriorityLevel.NORMAL));
             this.notificationClient

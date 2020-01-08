@@ -30,6 +30,8 @@ import fr.cnes.regards.framework.modules.locks.service.ILockService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
+import fr.cnes.regards.modules.feature.service.IFeatureDeletionService;
+import fr.cnes.regards.modules.feature.service.IFeatureReferenceService;
 import fr.cnes.regards.modules.feature.service.IFeatureUpdateService;
 
 /**
@@ -64,6 +66,12 @@ public class FeatureTaskScheduler {
     @Autowired
     private IFeatureUpdateService featureUpdateService;
 
+    @Autowired
+    private IFeatureDeletionService featureDeletionService;
+
+    @Autowired
+    private IFeatureReferenceService featureReferenceService;
+
     @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
             fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
     public void scheduleUpdateRequests() {
@@ -77,9 +85,10 @@ public class FeatureTaskScheduler {
                         long start = System.currentTimeMillis();
                         int nb = this.featureUpdateService.scheduleRequests();
                         if (nb != 0) {
-                            LOGGER.info("{} update request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                            LOGGER.info("{} update request(s) scheduled in {} ms", nb,
+                                        System.currentTimeMillis() - start);
                         }
-                    } finally{
+                    } finally {
                         LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
                         lockService.releaseLock(LOCK_REQUEST_UPDATE, this);
                         LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE UPDATE REQUESTS", tenant);
@@ -104,12 +113,64 @@ public class FeatureTaskScheduler {
                         long start = System.currentTimeMillis();
                         int nb = this.featureService.scheduleRequests();
                         if (nb != 0) {
-                            LOGGER.info("{} creation request(s) scheduled in {} ms", nb, System.currentTimeMillis() - start);
+                            LOGGER.info("{} creation request(s) scheduled in {} ms", nb,
+                                        System.currentTimeMillis() - start);
                         }
                     } finally {
                         LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
                         lockService.releaseLock(LOCK_REQUEST_INSERT, this);
                         LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE INSERT REQUESTS", tenant);
+                    }
+                }
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
+        }
+    }
+
+    @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
+            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+    public void scheduleDeleteRequests() {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
+            try {
+                runtimeTenantResolver.forceTenant(tenant);
+                LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
+                    LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
+                    try {
+                        this.featureDeletionService.scheduleRequests();
+                    } finally {
+                        LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
+                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
+                        LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
+                    }
+                }
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
+        }
+    }
+
+    @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
+            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+    public void scheduleReferenceRequests() {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
+            try {
+                runtimeTenantResolver.forceTenant(tenant);
+                LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
+                    LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureReferenceService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} reference request(s) scheduled in {} ms", nb,
+                                        System.currentTimeMillis() - start);
+                        }
+                    } finally {
+                        LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
+                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
+                        LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
                     }
                 }
             } finally {

@@ -23,10 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -43,16 +40,9 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureRequest extends AbstractRequest {
+public abstract class AbstractFeatureRequest extends AbstractFeatureRequestState {
 
     protected static final String GROUP_ID = "group_id";
-
-    protected static final String COLUMN_STATE = "state";
-
-    @NotNull(message = "Feature request state is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = COLUMN_STATE, length = 50, nullable = false)
-    private RequestState state;
 
     @Column(columnDefinition = "jsonb", name = "errors")
     @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "java.lang.String") })
@@ -69,14 +59,9 @@ public abstract class AbstractFeatureRequest extends AbstractRequest {
         Assert.notNull(state, "Request state is required");
         Assert.notNull(priority, "Request priority is required");
         Assert.notNull(state, "Request state is required");
-        super.with(requestId, requestDate, priority);
-        this.state = state;
+        super.with(requestId, requestDate, priority, state);
         this.errors = errors;
         return (T) this;
-    }
-
-    public RequestState getState() {
-        return state;
     }
 
     public Set<String> getErrors() {
@@ -88,10 +73,6 @@ public abstract class AbstractFeatureRequest extends AbstractRequest {
             errors = new HashSet<>();
         }
         errors.add(error);
-    }
-
-    public void setState(RequestState state) {
-        this.state = state;
     }
 
     public void setErrors(Set<String> errors) {

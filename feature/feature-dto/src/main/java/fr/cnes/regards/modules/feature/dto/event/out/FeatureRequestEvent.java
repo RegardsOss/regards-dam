@@ -69,6 +69,7 @@ public class FeatureRequestEvent implements ISubscribable {
         event.setUrn(urn);
         event.setState(state);
         event.setErrors(errors);
+
         return event;
     }
 

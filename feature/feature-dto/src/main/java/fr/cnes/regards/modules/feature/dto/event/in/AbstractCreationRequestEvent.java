@@ -27,43 +27,38 @@ import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.JsonMessageConverter;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
-import fr.cnes.regards.modules.feature.dto.validation.ValidFeatureEvent;
 
 /**
- * Request for new feature creation using event driven mechanism
+ * Abstract class for creation events
  *
- * @author Marc SORDI
+ * @author Kevin Marchois
  */
 @Event(target = Target.ONE_PER_MICROSERVICE_TYPE, converter = JsonMessageConverter.GSON)
-@ValidFeatureEvent
-public class FeatureCreationRequestEvent extends AbstractCreationRequestEvent implements ISubscribable {
+public class AbstractCreationRequestEvent extends AbstractRequestEvent implements ISubscribable {
 
     @Valid
-    @NotNull(message = "Feature is required")
-    private Feature feature;
+    @NotNull(message = "Feature metadata is required")
+    private FeatureCreationSessionMetadata metadata;
 
-    public static FeatureCreationRequestEvent build(FeatureCreationSessionMetadata metadata, Feature feature) {
-        return build(metadata, feature, OffsetDateTime.now().minusSeconds(1));
+    public static AbstractCreationRequestEvent build(FeatureCreationSessionMetadata metadata) {
+        return build(metadata, OffsetDateTime.now().minusSeconds(1));
     }
 
-    public static FeatureCreationRequestEvent build(FeatureCreationSessionMetadata metadata, Feature feature,
+    public static AbstractCreationRequestEvent build(FeatureCreationSessionMetadata metadata,
             OffsetDateTime requestDate) {
-        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
-        event.setFeature(feature);
+        AbstractCreationRequestEvent event = new AbstractCreationRequestEvent();
         event.setRequestId(generateRequestId());
         event.setMetadata(metadata);
         event.setRequestDate(requestDate);
         return event;
     }
 
-    public Feature getFeature() {
-        return feature;
+    public FeatureCreationSessionMetadata getMetadata() {
+        return metadata;
     }
 
-    public void setFeature(Feature feature) {
-        this.feature = feature;
+    public void setMetadata(FeatureCreationSessionMetadata metadata) {
+        this.metadata = metadata;
     }
-
 }

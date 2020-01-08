@@ -47,28 +47,17 @@ public abstract class AbstractFeatureCreationRequest extends AbstractFeatureRequ
     private String providerId;
 
     @Embedded
-    private FeatureMetadataEntity metadata;
-
-    @Column(name = "override_previous_version", nullable = true)
-    private boolean overridePreviousVersion;
-
-    public boolean isOverridePreviousVersion() {
-        return overridePreviousVersion;
-    }
-
-    public void setOverridePreviousVersion(boolean overridePreviousVersion) {
-        this.overridePreviousVersion = overridePreviousVersion;
-    }
+    private FeatureCreationMetadataEntity metadata;
 
     public Long getId() {
         return this.id;
     }
 
-    public FeatureMetadataEntity getMetadata() {
+    public FeatureCreationMetadataEntity getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(FeatureMetadataEntity metadata) {
+    public void setMetadata(FeatureCreationMetadataEntity metadata) {
         this.metadata = metadata;
     }
 

@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.MappedSuperclass;
 import javax.validation.Valid;
 
 import org.hibernate.annotations.Parameter;
@@ -39,6 +40,7 @@ import fr.cnes.regards.modules.feature.dto.StorageMetadata;
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Embeddable
+@MappedSuperclass
 public class FeatureMetadataEntity {
 
     @Column(length = 128, name = "session_owner", nullable = false)

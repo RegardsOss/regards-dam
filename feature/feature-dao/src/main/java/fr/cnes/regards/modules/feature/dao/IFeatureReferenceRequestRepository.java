@@ -18,9 +18,9 @@
  */
 package fr.cnes.regards.modules.feature.dao;
 
+import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -28,7 +28,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.modules.feature.domain.request.FeatureDeletionRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureReferenceRequest;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 
 /**
@@ -36,22 +37,20 @@ import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
  *
  */
 @Repository
-public interface IFeatureDeletionRequestRepository extends JpaRepository<FeatureDeletionRequest, Long> {
-
-    public Set<FeatureDeletionRequest> findByGroupIdIn(Set<String> groupId);
-
-    public Set<FeatureDeletionRequest> findByStep(FeatureRequestStep step);
-
-    public Page<FeatureDeletionRequest> findByStep(FeatureRequestStep step, Pageable page);
-
-    public void deleteByIdIn(Set<Long> ids);
+public interface IFeatureReferenceRequestRepository extends JpaRepository<FeatureReferenceRequest, Long> {
 
     /**
-     * Update {@link FeatureDeletionRequest} step
-     * @param step new {@link FeatureDeletionRequest}
-     * @param ids id of {@link FeatureDeletionRequest} to update
+     * Get a page of {@link FeatureReferenceRequest} with specified step.
+     * @return a list of {@link FeatureCreationRequest}
+     */
+    List<FeatureReferenceRequest> findByStep(FeatureRequestStep localDelayed, Pageable page);
+
+    /**
+     * Update {@link FeatureRequestStep} step
+     * @param step new {@link FeatureRequestStep}
+     * @param ids id of {@link FeatureReferenceRequest} to update
      */
     @Modifying
-    @Query("update FeatureDeletionRequest fcr set fcr.step = :newStep where fcr.id in :ids ")
+    @Query("update FeatureReferenceRequest frr set frr.step = :newStep where frr.id in :ids ")
     public void updateStep(@Param("newStep") FeatureRequestStep step, @Param("ids") Set<Long> ids);
 }

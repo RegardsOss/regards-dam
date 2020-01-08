@@ -28,11 +28,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -69,9 +67,6 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
     private static final Integer PUBLISH_BULK_SIZE = 2000;
 
     private String modelName;
-
-    @Autowired
-    private IPublisher publisher;
 
     @Before
     public void prepareContext() throws InterruptedException {

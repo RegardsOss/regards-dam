@@ -58,8 +58,8 @@ import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.ILightFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
 import fr.cnes.regards.modules.feature.domain.IUrnVersionByProvider;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.domain.request.LightFeatureCreationRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
@@ -207,12 +207,12 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         }
         FeatureSessionMetadata md = item.getMetadata();
         // Manage granted request
-        FeatureMetadataEntity metadata = FeatureMetadataEntity.build(md.getSession(), md.getSessionOwner(),
-                                                                     item.getMetadata().getStorages());
+        FeatureCreationMetadataEntity metadata = FeatureCreationMetadataEntity
+                .build(md.getSession(), md.getSessionOwner(), item.getMetadata().getStorages(),
+                       item.getMetadata().isOverride());
         FeatureCreationRequest request = FeatureCreationRequest
                 .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
-                       metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority(),
-                       item.getMetadata().isOverride());
+                       metadata, FeatureRequestStep.LOCAL_DELAYED, item.getMetadata().getPriority());
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
@@ -316,7 +316,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                             request.getFeature().getUrn(), RequestState.SUCCESS));
                 // if a previous version exists we will publish a FeatureDeletionRequest to delete it
                 if ((request.getFeatureEntity().getPreviousVersionUrn() != null)
-                        && request.isOverridePreviousVersion()) {
+                        && request.getMetadata().isOverride()) {
                     this.notificationClient
                             .notify(String.format("A FeatureEntity with the URN {} already exists for this feature",
                                                   request.getFeatureEntity().getPreviousVersionUrn()),

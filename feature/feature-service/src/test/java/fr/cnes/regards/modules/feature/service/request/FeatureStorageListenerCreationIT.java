@@ -37,8 +37,8 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.domain.request.FeatureCreationMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureCreationRequest;
-import fr.cnes.regards.modules.feature.domain.request.FeatureMetadataEntity;
 import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
@@ -103,11 +103,11 @@ public class FeatureStorageListenerCreationIT extends AbstractFeatureMultitenant
         FeatureCreationRequest fcr = FeatureCreationRequest
                 .build("id1", OffsetDateTime.now(), RequestState.GRANTED, new HashSet<String>(),
                        Feature.build("id1",
-                                     FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA,
-                                                                      "peps", UUID.randomUUID(), 1),
+                                     FeatureUniformResourceName.build(FeatureIdentifier.FEATURE, EntityType.DATA, "lol",
+                                                                      UUID.randomUUID(), 1),
                                      IGeometry.point(IGeometry.position(10.0, 20.0)), EntityType.DATA, "model"),
-                       FeatureMetadataEntity.build("owner", "session", Lists.emptyList()),
-                       FeatureRequestStep.LOCAL_SCHEDULED, PriorityLevel.NORMAL, true);
+                       FeatureCreationMetadataEntity.build("owner", "session", Lists.emptyList(), true),
+                       FeatureRequestStep.LOCAL_SCHEDULED, PriorityLevel.NORMAL);
         fcr.setGroupId(info.getGroupId());
 
         FeatureEntity feature = FeatureEntity

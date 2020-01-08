@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.configuration.AmqpConstants;
 import fr.cnes.regards.framework.amqp.configuration.IAmqpAdmin;
@@ -50,12 +51,14 @@ import fr.cnes.regards.modules.feature.dto.FeatureFileLocation;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureCreationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.in.FeatureReferenceRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.NotificationRequestEvent;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.flow.FeatureCreationRequestEventHandler;
 import fr.cnes.regards.modules.feature.service.flow.FeatureDeletionRequestEventHandler;
+import fr.cnes.regards.modules.feature.service.flow.FeatureReferenceRequestEventHandler;
 import fr.cnes.regards.modules.feature.service.flow.FeatureUpdateRequestEventHandler;
 import fr.cnes.regards.modules.feature.service.flow.NotificationRequestEventHandler;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
@@ -119,6 +122,9 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
     @Autowired
     private ISubscriber sub;
+
+    @Autowired
+    protected IPublisher publisher;
 
     @Before
     public void before() throws InterruptedException {
@@ -366,10 +372,12 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         sub.unsubscribeFrom(FeatureUpdateRequestEvent.class);
         sub.unsubscribeFrom(NotificationRequestEvent.class);
         sub.unsubscribeFrom(NotificationActionEvent.class);
+        sub.unsubscribeFrom(FeatureReferenceRequestEvent.class);
         cleanAMQPQueues(FeatureCreationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureUpdateRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureDeletionRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(NotificationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
+        cleanAMQPQueues(FeatureReferenceRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
 
     }
 
