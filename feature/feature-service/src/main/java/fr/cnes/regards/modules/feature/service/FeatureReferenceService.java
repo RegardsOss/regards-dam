@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,6 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.validation.ErrorTranslator;
 import fr.cnes.regards.framework.modules.jobs.domain.JobInfo;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
@@ -189,7 +189,7 @@ public class FeatureReferenceService extends AbstractFeatureService implements I
     }
 
     @Override
-    public void processRequests(List<FeatureReferenceRequest> requests) throws ModuleException {
+    public void processRequests(List<FeatureReferenceRequest> requests) {
 
         long processStart = System.currentTimeMillis();
 
@@ -199,12 +199,16 @@ public class FeatureReferenceService extends AbstractFeatureService implements I
 
         for (FeatureReferenceRequest request : requests) {
             try {
-                creationRequestsToSave.add(initFeatureCreationRequest(request));
-                successCreationRequestGeneration.add(request);
-            } catch (ModuleException e) {
-                request.setState(RequestState.ERROR);
-                LOGGER.error("Creation of FeatureCreationRequestEvent fail from plugin generator", e);
-                throw e;
+                FeatureCreationRequestEvent fcre = initFeatureCreationRequest(request);
+                if (fcre != null) {
+                    creationRequestsToSave.add(fcre);
+                    successCreationRequestGeneration.add(request);
+                } else {
+                    request.setState(RequestState.ERROR);
+                    publisher.publish(FeatureRequestEvent
+                            .build(request.getRequestId(), null, null, RequestState.ERROR,
+                                   Sets.newHashSet("No plugin founded for this request reference")));
+                }
             } catch (NotAvailablePluginConfigurationException e) {
                 request.setState(RequestState.ERROR);
                 LOGGER.error("Creation of FeatureCreationRequestEvent fail from plugin generator", e);
@@ -220,23 +224,19 @@ public class FeatureReferenceService extends AbstractFeatureService implements I
                      System.currentTimeMillis() - processStart);
     }
 
-    private FeatureCreationRequestEvent initFeatureCreationRequest(FeatureReferenceRequest request)
-            throws ModuleException, NotAvailablePluginConfigurationException {
-
-        Feature feature = ((IFeatureCreationRequestEventGenerator) this.pluginService
-                .getPlugin(request.getPluginBusinessId())).createFeatureRequestEvent(request);
+    private <T> FeatureCreationRequestEvent initFeatureCreationRequest(FeatureReferenceRequest request)
+            throws NotAvailablePluginConfigurationException {
+        Optional<T> plugin = this.pluginService.getOptionalPlugin(request.getPluginBusinessId());
+        if (!plugin.isPresent()) {
+            return null;
+        }
+        Feature feature = ((IFeatureCreationRequestEventGenerator) plugin.get()).createFeatureRequestEvent(request);
         FeatureMetadataEntity metadata = request.getMetadata();
         StorageMetadata[] array = new StorageMetadata[metadata.getStorages().size()];
         array = metadata.getStorages().toArray(array);
-        return FeatureCreationRequestEvent.build(FeatureCreationSessionMetadata
+        return FeatureCreationRequestEvent.build(request.getRequestId(), FeatureCreationSessionMetadata
                 .build(metadata.getSessionOwner(), metadata.getSession(), request.getPriority(), false, array),
                                                  feature);
-    }
-
-    @Override
-    public void setErrorStatus(List<FeatureReferenceRequest> featureReferenceRequests) {
-        featureReferenceRequests.stream().forEach(request -> request.setState(RequestState.ERROR));
-        this.featureReferenceRequestRepo.saveAll(featureReferenceRequests);
     }
 
 }

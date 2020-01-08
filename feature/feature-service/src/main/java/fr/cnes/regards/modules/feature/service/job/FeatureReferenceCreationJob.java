@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.gson.reflect.TypeToken;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.jobs.domain.AbstractJob;
 import fr.cnes.regards.framework.modules.jobs.domain.JobParameter;
 import fr.cnes.regards.framework.modules.jobs.domain.exception.JobParameterInvalidException;
@@ -75,13 +74,9 @@ public class FeatureReferenceCreationJob extends AbstractJob<Void> {
         LOGGER.info("[{}] Feature reference creation job starts", jobInfoId);
         long start = System.currentTimeMillis();
         Timer.Sample sample = Timer.start(registry);
-        // if a module exception is throwed it will destroy the transaction during processRequests so we call an other method
-        // to set the request's status to error
-        try {
-            featureService.processRequests(featureReferenceRequests);
-        } catch (ModuleException e) {
-            featureService.setErrorStatus(featureReferenceRequests);
-        }
+
+        featureService.processRequests(featureReferenceRequests);
+
         sample.stop(Timer.builder(this.getClass().getName()).tag("job", "run").register(registry));
         LOGGER.info("[{}]{} reference creation request(s) processed in {} ms", jobInfoId, INFO_TAB,
                     System.currentTimeMillis() - start);

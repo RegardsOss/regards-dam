@@ -58,6 +58,16 @@ public class FeatureCreationRequestEvent extends AbstractCreationRequestEvent im
         return event;
     }
 
+    public static FeatureCreationRequestEvent build(String requestId, FeatureCreationSessionMetadata metadata,
+            Feature feature) {
+        FeatureCreationRequestEvent event = new FeatureCreationRequestEvent();
+        event.setFeature(feature);
+        event.setRequestId(requestId);
+        event.setMetadata(metadata);
+        event.setRequestDate(OffsetDateTime.now().minusSeconds(1));
+        return event;
+    }
+
     public Feature getFeature() {
         return feature;
     }

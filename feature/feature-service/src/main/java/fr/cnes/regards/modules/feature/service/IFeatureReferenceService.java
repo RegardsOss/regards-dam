@@ -20,12 +20,10 @@ package fr.cnes.regards.modules.feature.service;
 
 import java.util.List;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.feature.domain.request.FeatureReferenceRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.RequestInfo;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureReferenceRequestEvent;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
  * Service for deleting Features
@@ -48,13 +46,6 @@ public interface IFeatureReferenceService {
     /**
      * Process batch of {@link FeatureReferenceRequest} during job
      * We will call referenced plugin to obtain a {@link Feature} and publish it to create it
-     * @throws ModuleException
      */
-    void processRequests(List<FeatureReferenceRequest> requests) throws ModuleException;
-
-    /**
-     * Set {@link RequestState} ERROR to {@link FeatureReferenceRequest}
-     * @param featureReferenceRequests list to set in error
-     */
-    void setErrorStatus(List<FeatureReferenceRequest> featureReferenceRequests);
+    void processRequests(List<FeatureReferenceRequest> requests);
 }
