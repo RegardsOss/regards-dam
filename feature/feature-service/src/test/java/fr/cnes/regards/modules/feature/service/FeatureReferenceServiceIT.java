@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -55,7 +54,6 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties",
                 "classpath:metrics.properties" })
 @ActiveProfiles(value = { "testAmqp" })
-@DirtiesContext
 public class FeatureReferenceServiceIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired

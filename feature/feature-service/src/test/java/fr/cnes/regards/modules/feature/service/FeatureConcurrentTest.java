@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -29,7 +28,6 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
         properties = { "spring.jpa.properties.hibernate.default_schema=feature_cct", "regards.amqp.enabled=true" },
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
-@DirtiesContext
 public class FeatureConcurrentTest extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureConcurrentTest.class);

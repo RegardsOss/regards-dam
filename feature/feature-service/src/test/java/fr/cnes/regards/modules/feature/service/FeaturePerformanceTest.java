@@ -10,7 +10,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -30,7 +29,6 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
         locations = { "classpath:regards_perf.properties", "classpath:batch.properties",
                 "classpath:metrics.properties" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
-@DirtiesContext
 public class FeaturePerformanceTest extends AbstractFeatureMultitenantServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FeaturePerformanceTest.class);

@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -43,7 +42,6 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
-@DirtiesContext
 public class FeatureDeletionIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired

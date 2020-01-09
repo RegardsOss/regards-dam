@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -37,7 +36,6 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_version" })
 @ActiveProfiles(value = { "noscheduler", "nohandler" })
-@DirtiesContext
 public class FeatureVersionTest extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired
