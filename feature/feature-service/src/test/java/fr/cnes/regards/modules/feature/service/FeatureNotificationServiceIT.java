@@ -30,6 +30,7 @@ import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -54,6 +55,7 @@ import fr.cnes.reguards.modules.notifier.dto.in.NotificationActionEvent;
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler" })
+@DirtiesContext
 public class FeatureNotificationServiceIT extends AbstractFeatureMultitenantServiceTest {
 
     @Autowired

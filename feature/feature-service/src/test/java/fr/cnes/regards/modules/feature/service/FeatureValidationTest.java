@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Errors;
@@ -47,6 +48,7 @@ import fr.cnes.regards.modules.model.service.validation.ValidationMode;
  */
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_validation" })
 @ActiveProfiles({ "noscheduler", "nohandler" })
+@DirtiesContext
 public class FeatureValidationTest extends AbstractFeatureMultitenantServiceTest {
 
     @SuppressWarnings("unused")
