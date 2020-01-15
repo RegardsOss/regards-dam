@@ -353,7 +353,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         xmlAtt.setName(name);
         xmlAtt.setLabel(label);
         xmlAtt.setDescription(description);
-        xmlAtt.setDefaultValue(defaultValue);
         xmlAtt.setAlterable(alterable);
         xmlAtt.setOptional(optional);
         if (restriction != null) {
@@ -387,7 +386,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         setName(pXmlElement.getName());
         setLabel(pXmlElement.getLabel());
         setDescription(pXmlElement.getDescription());
-        setDefaultValue(pXmlElement.getDefaultValue());
         setAlterable(pXmlElement.isAlterable());
         setOptional(pXmlElement.isOptional());
         if (pXmlElement.getRestriction() != null) {

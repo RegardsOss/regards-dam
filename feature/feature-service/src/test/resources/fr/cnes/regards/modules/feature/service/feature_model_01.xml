@@ -31,7 +31,6 @@
             <label>Validity flag</label>
             <name>valid</name>
             <type>BOOLEAN</type>
-            <defaultValue>true</defaultValue>
         </attribute>
         <attribute optional="true">
             <label>Invalidation date</label>
