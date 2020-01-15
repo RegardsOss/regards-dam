@@ -559,7 +559,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsIT {
         final Fragment frag = Fragment.buildFragment(name, null);
         fragmentRepository.save(frag);
 
-        final AttributeModel att = AttributeModelBuilder.build("att" + name, PropertyType.STRING, "ForTests")
+        final AttributeModel att = AttributeModelBuilder
+                .build("att" + name, PropertyType.STRING, "For Tests Label looooooooooooooooooooooooooooong")
                 .fragment(frag).get();
         final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, PropertyType.STRING, "ForTests")
                 .fragment(frag).get();

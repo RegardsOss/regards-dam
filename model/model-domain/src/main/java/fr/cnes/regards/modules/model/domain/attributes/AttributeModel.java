@@ -154,9 +154,9 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute label
      */
-    @Column(length = 20)
+    @Column(length = 255)
     @NotBlank(message = "Label cannot be empty")
-    @Size(max = 20, message = "Label must be between 1 and 20 characters.")
+    @Size(max = 255, message = "Label must be between 1 and 255 characters.")
     private String label;
 
     /**
@@ -231,7 +231,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     }
 
     public boolean hasFragment() {
-        return fragment != null && !fragment.isDefaultFragment();
+        return (fragment != null) && !fragment.isDefaultFragment();
     }
 
     public Fragment getFragment() {
@@ -260,7 +260,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     }
 
     public Boolean hasRestriction() {
-        return restriction != null && !restriction.getType().equals(RestrictionType.NO_RESTRICTION);
+        return (restriction != null) && !restriction.getType().equals(RestrictionType.NO_RESTRICTION);
     }
 
     /**
