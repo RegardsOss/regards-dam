@@ -67,11 +67,10 @@ public class FeatureCreationRequest extends AbstractFeatureCreationRequest {
             PriorityLevel priority) {
         Assert.notNull(feature, "Feature is required");
         FeatureCreationRequest request = new FeatureCreationRequest();
-        request.with(requestId, requestDate, state, priority, errors);
+        request.with(requestId, requestDate, state, step, priority, errors);
         request.setProviderId(feature.getId());
         request.setFeature(feature);
         request.setMetadata(metadata);
-        request.setStep(step);
         return request;
     }
 

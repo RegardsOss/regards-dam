@@ -54,10 +54,11 @@ create sequence seq_feature_deletion_request start 1 increment 50;
 -- Notification request
 create table t_notification_request (id int8 not null, registration_date timestamp not null, 
 request_date timestamp not null, request_id varchar(36) not null, step varchar(50) not null, 
-urn varchar(132) not null, priority numeric not null, primary key (id));
+urn varchar(132) not null, priority numeric not null, state varchar(50) not null, primary key (id));
 
 create index idx_notification_request_urn on t_notification_request (urn);
 alter table t_notification_request add constraint uk_notification_request_id unique (urn);
+create sequence seq_notification_request start 1 increment 50;
 
 -- Reference request
 create table t_feature_reference_request (id int8 not null, session_owner varchar(128) not null, 
@@ -66,5 +67,12 @@ registration_date timestamp not null, request_date timestamp not null, step varc
 priority numeric not null, location varchar(128) not null, plugin_business_id varchar(128) not null, primary key (id));
 alter table t_feature_reference_request add constraint uk_feature_reference_request_id unique (request_id);
 create sequence seq_feature_reference_request start 1 increment 50;
+create index idx_reference_request_step on t_feature_reference_request (step);
 
+-- Copy request
+create table t_feature_copy_request (id int8 not null, registration_date timestamp not null, 
+request_date timestamp not null, request_id varchar(36) not null, step varchar(50) not null, 
+urn varchar(132) not null, priority numeric not null, storage varchar(132) not null, 
+checksum varchar(132) not null, state varchar(132) not null, primary key (id));
+create sequence seq_feature_copy_request start 1 increment 50;
 

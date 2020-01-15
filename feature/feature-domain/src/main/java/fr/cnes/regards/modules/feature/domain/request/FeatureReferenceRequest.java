@@ -26,6 +26,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -41,10 +42,10 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
  */
 @Entity
 @Table(name = "t_feature_reference_request",
-
+        indexes = { @Index(name = "idx_feature_reference_request_step", columnList = AbstractRequest.COLUMN_STEP) },
         uniqueConstraints = { @UniqueConstraint(name = "uk_feature_reference_request_id",
                 columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
-public class FeatureReferenceRequest extends AbstractFeatureRequestState {
+public class FeatureReferenceRequest extends AbstractRequest {
 
     @Id
     @SequenceGenerator(name = "featureCreationRequestSequence", initialValue = 1,

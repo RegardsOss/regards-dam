@@ -58,7 +58,7 @@ import fr.cnes.regards.modules.model.dto.properties.IProperty;
  * @author kevin
  *
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_update",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
@@ -113,21 +113,21 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
 
         // prepare and save update request
         FeatureUpdateRequest fur1 = FeatureUpdateRequest.build("1", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               toUpdate.getFeature(), PriorityLevel.NORMAL);
-        fur1.setStep(FeatureRequestStep.LOCAL_DELAYED);
+                                                               toUpdate.getFeature(), PriorityLevel.NORMAL,
+                                                               FeatureRequestStep.LOCAL_DELAYED);
 
         FeatureUpdateRequest fur2 = FeatureUpdateRequest.build("2", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL);
-        fur2.setStep(FeatureRequestStep.LOCAL_SCHEDULED);
+                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL,
+                                                               FeatureRequestStep.LOCAL_SCHEDULED);
 
         //this update cannot be scheduled because fur2 is already scheduled and on the same feature
         FeatureUpdateRequest fur3 = FeatureUpdateRequest.build("3", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL);
-        fur3.setStep(FeatureRequestStep.LOCAL_DELAYED);
+                                                               updatingByScheduler.getFeature(), PriorityLevel.NORMAL,
+                                                               FeatureRequestStep.LOCAL_DELAYED);
 
         FeatureUpdateRequest fur4 = FeatureUpdateRequest.build("4", OffsetDateTime.now(), RequestState.GRANTED, null,
-                                                               toDelete.getFeature(), PriorityLevel.NORMAL);
-        fur4.setStep(FeatureRequestStep.LOCAL_DELAYED);
+                                                               toDelete.getFeature(), PriorityLevel.NORMAL,
+                                                               FeatureRequestStep.LOCAL_DELAYED);
 
         // create a deletion request
         fur1 = super.featureUpdateRequestRepo.save(fur1);
@@ -164,7 +164,6 @@ public class FeatureUpdateIT extends AbstractFeatureMultitenantServiceTest {
     public void testFeaturePriority() throws InterruptedException {
 
         List<FeatureCreationRequestEvent> events = new ArrayList<>();
-
         super.initFeatureCreationRequestEvent(events, properties.getMaxBulkSize() + (properties.getMaxBulkSize() / 2));
 
         this.featureService.registerRequests(events);

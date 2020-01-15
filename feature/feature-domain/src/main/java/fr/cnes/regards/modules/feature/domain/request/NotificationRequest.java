@@ -32,6 +32,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
+import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
@@ -47,9 +48,8 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 public class NotificationRequest extends AbstractRequest {
 
     @Id
-    @SequenceGenerator(name = "featureDeleteRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_deletion_request")
-    @GeneratedValue(generator = "featureUpdateRequestSequence", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "notificationRequest", initialValue = 1, sequenceName = "seq_notification_request")
+    @GeneratedValue(generator = "notificationRequest", strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
@@ -57,9 +57,9 @@ public class NotificationRequest extends AbstractRequest {
     private FeatureUniformResourceName urn;
 
     public static NotificationRequest build(String requestId, OffsetDateTime requestDate, FeatureRequestStep step,
-            PriorityLevel priority, FeatureUniformResourceName urn) {
+            PriorityLevel priority, FeatureUniformResourceName urn, RequestState state) {
         NotificationRequest request = new NotificationRequest();
-        request.with(requestId, requestDate, priority);
+        request.with(requestId, requestDate, priority, state, step);
         request.setStep(step);
         request.setUrn(urn);
         request.setPriority(priority);

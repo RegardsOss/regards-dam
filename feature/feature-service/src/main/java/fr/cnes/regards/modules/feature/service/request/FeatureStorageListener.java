@@ -18,14 +18,25 @@
  */
 package fr.cnes.regards.modules.feature.service.request;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import fr.cnes.regards.modules.feature.domain.request.FeatureCopyRequest;
+import fr.cnes.regards.modules.feature.domain.request.FeatureRequestStep;
+import fr.cnes.regards.modules.feature.dto.PriorityLevel;
+import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
+import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
+import fr.cnes.regards.modules.feature.service.IFeatureCopyService;
 import fr.cnes.regards.modules.storage.client.IStorageRequestListener;
 import fr.cnes.regards.modules.storage.client.RequestInfo;
+import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 
 /**
  *
@@ -40,6 +51,9 @@ public class FeatureStorageListener implements IStorageRequestListener {
     @Autowired
     private IFeatureRequestService featureRequestService;
 
+    @Autowired
+    private IFeatureCopyService featureCopyService;
+
     @Override
     public void onRequestGranted(Set<RequestInfo> requests) {
         // FIXME
@@ -52,7 +66,19 @@ public class FeatureStorageListener implements IStorageRequestListener {
 
     @Override
     public void onCopySuccess(Set<RequestInfo> requests) {
-        throw new UnsupportedOperationException("onCopySuccess");
+        List<FeatureCopyRequest> copies = new ArrayList<>();
+        for (RequestInfo info : requests) {
+            for (RequestResultInfoDTO result : info.getSuccessRequests()) {
+                copies.addAll(result.getRequestOwners().stream()
+                        .map(owner -> FeatureCopyRequest.build(UUID.randomUUID().toString(), OffsetDateTime.now(),
+                                                               FeatureRequestStep.LOCAL_DELAYED, PriorityLevel.NORMAL,
+                                                               FeatureUniformResourceName.fromString(owner),
+                                                               result.getRequestStorePath(), RequestState.GRANTED,
+                                                               result.getRequestChecksum()))
+                        .collect(Collectors.toSet()));
+            }
+        }
+        this.featureCopyService.registerRequests(copies);
     }
 
     @Override

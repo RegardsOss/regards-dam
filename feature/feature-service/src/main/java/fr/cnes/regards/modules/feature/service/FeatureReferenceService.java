@@ -193,15 +193,14 @@ public class FeatureReferenceService extends AbstractFeatureService implements I
 
         long processStart = System.currentTimeMillis();
 
-        // store FeatureReferenceRequest where generation of FeatureCreationRequestEvent and the result of the generation
         Set<FeatureReferenceRequest> successCreationRequestGeneration = new HashSet<>();
-        List<FeatureCreationRequestEvent> creationRequestsToSave = new ArrayList<>();
+        List<FeatureCreationRequestEvent> creationRequestsToRegister = new ArrayList<>();
 
         for (FeatureReferenceRequest request : requests) {
             try {
                 FeatureCreationRequestEvent fcre = initFeatureCreationRequest(request);
                 if (fcre != null) {
-                    creationRequestsToSave.add(fcre);
+                    creationRequestsToRegister.add(fcre);
                     successCreationRequestGeneration.add(request);
                 } else {
                     request.setState(RequestState.ERROR);
@@ -216,7 +215,7 @@ public class FeatureReferenceService extends AbstractFeatureService implements I
         }
 
         this.featureReferenceRequestRepo.saveAll(requests);
-        this.featureCreationService.registerRequests(creationRequestsToSave);
+        this.featureCreationService.registerRequests(creationRequestsToRegister);
         // Successful requests are deleted now!
         this.featureReferenceRequestRepo.deleteInBatch(successCreationRequestGeneration);
 

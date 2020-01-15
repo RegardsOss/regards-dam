@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.modules.locks.service.ILockService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.modules.feature.service.IFeatureCopyService;
 import fr.cnes.regards.modules.feature.service.IFeatureCreationService;
 import fr.cnes.regards.modules.feature.service.IFeatureDeletionService;
 import fr.cnes.regards.modules.feature.service.IFeatureReferenceService;
@@ -51,6 +52,12 @@ public class FeatureTaskScheduler {
 
     private static final String LOCK_REQUEST_INSERT = "Insert_Request";
 
+    private static final String LOCK_REQUEST_DELETE = "Delete_Request";
+
+    private static final String LOCK_REQUEST_COPY = "Copy_Request";
+
+    private static final String LOCK_REQUEST_REFERENCE = "Reference_Request";
+
     @Autowired
     private ITenantResolver tenantResolver;
 
@@ -71,6 +78,9 @@ public class FeatureTaskScheduler {
 
     @Autowired
     private IFeatureReferenceService featureReferenceService;
+
+    @Autowired
+    private IFeatureCopyService featureCopyService;
 
     @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
             fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
@@ -101,7 +111,7 @@ public class FeatureTaskScheduler {
     }
 
     @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
-            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+            fixedDelayString = "${regards.feature.request.insert.scheduling.delay:1000}")
     public void scheduleInsertRequests() {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
@@ -129,19 +139,19 @@ public class FeatureTaskScheduler {
     }
 
     @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
-            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+            fixedDelayString = "${regards.feature.request.delete.scheduling.delay:1000}")
     public void scheduleDeleteRequests() {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
-                if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_DELETE, this, 60)) {
                     LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
                     try {
                         this.featureDeletionService.scheduleRequests();
                     } finally {
                         LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
-                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
+                        lockService.releaseLock(LOCK_REQUEST_DELETE, this);
                         LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE DELETE REQUESTS", tenant);
                     }
                 }
@@ -152,13 +162,13 @@ public class FeatureTaskScheduler {
     }
 
     @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
-            fixedDelayString = "${regards.feature.request.update.scheduling.delay:1000}")
+            fixedDelayString = "${regards.feature.request.reference.scheduling.delay:1000}")
     public void scheduleReferenceRequests() {
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             try {
                 runtimeTenantResolver.forceTenant(tenant);
                 LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
-                if (lockService.obtainLockOrSkip(LOCK_REQUEST_INSERT, this, 60)) {
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_REFERENCE, this, 60)) {
                     LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
                     try {
                         long start = System.currentTimeMillis();
@@ -169,8 +179,36 @@ public class FeatureTaskScheduler {
                         }
                     } finally {
                         LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
-                        lockService.releaseLock(LOCK_REQUEST_INSERT, this);
+                        lockService.releaseLock(LOCK_REQUEST_REFERENCE, this);
                         LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE REFERENCE REQUESTS", tenant);
+                    }
+                }
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
+        }
+    }
+
+    @Scheduled(initialDelayString = "${regards.feature.request.scheduling.initial.delay:30000}",
+            fixedDelayString = "${regards.feature.request.copy.scheduling.delay:1000}")
+    public void scheduleCopyRequests() {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
+            try {
+                runtimeTenantResolver.forceTenant(tenant);
+                LOGGER.trace("LOCKING FOR TENANT {} IN SCHEDULE COPY REQUESTS", tenant);
+                if (lockService.obtainLockOrSkip(LOCK_REQUEST_COPY, this, 60)) {
+                    LOGGER.trace("LOCK OBTAINED FOR TENANT {} IN SCHEDULE COPY REQUESTS", tenant);
+                    try {
+                        long start = System.currentTimeMillis();
+                        int nb = this.featureCopyService.scheduleRequests();
+                        if (nb != 0) {
+                            LOGGER.info("{} copy request(s) scheduled in {} ms", nb,
+                                        System.currentTimeMillis() - start);
+                        }
+                    } finally {
+                        LOGGER.trace("RELEASING OBTAINED LOCK FOR TENANT {} IN SCHEDULE COPY REQUESTS", tenant);
+                        lockService.releaseLock(LOCK_REQUEST_COPY, this);
+                        LOGGER.trace("LOCK RELEASED FOR TENANT {} IN SCHEDULE COPY REQUESTS", tenant);
                     }
                 }
             } finally {

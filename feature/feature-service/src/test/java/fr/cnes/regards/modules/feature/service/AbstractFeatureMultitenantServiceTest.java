@@ -43,6 +43,7 @@ import fr.cnes.regards.modules.feature.dao.IFeatureDeletionRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureUpdateRequestRepository;
 import fr.cnes.regards.modules.feature.dao.INotificationRequestRepository;
+import fr.cnes.regards.modules.feature.domain.request.AbstractRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.FeatureCreationSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.FeatureFile;
@@ -54,6 +55,7 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureReferenceRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureUpdateRequestEvent;
 import fr.cnes.regards.modules.feature.dto.event.in.NotificationRequestEvent;
+import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import fr.cnes.regards.modules.feature.service.flow.FeatureCreationRequestEventHandler;
@@ -378,7 +380,6 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         cleanAMQPQueues(FeatureDeletionRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(NotificationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureReferenceRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
-
     }
 
     /**
@@ -400,4 +401,18 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
         }
     }
 
+    protected void waitForErrorState(JpaRepository<? extends AbstractRequest, ?> repo)
+
+            throws InterruptedException {
+        int cpt = 0;
+
+        // we will expect that all feature reference remain in database with the error state
+        do {
+            Thread.sleep(1000);
+            if (cpt == 60) {
+                fail("Timeout");
+            }
+            cpt++;
+        } while (!repo.findAll().stream().allMatch(request -> RequestState.ERROR.equals(request.getState())));
+    }
 }

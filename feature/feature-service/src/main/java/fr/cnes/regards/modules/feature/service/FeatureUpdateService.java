@@ -180,10 +180,9 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         }
 
         // Manage granted request
-        FeatureUpdateRequest request = FeatureUpdateRequest.build(item.getRequestId(), item.getRequestDate(),
-                                                                  RequestState.GRANTED, null, item.getFeature(),
-                                                                  item.getMetadata().getPriority());
-        request.setStep(FeatureRequestStep.LOCAL_DELAYED);
+        FeatureUpdateRequest request = FeatureUpdateRequest
+                .build(item.getRequestId(), item.getRequestDate(), RequestState.GRANTED, null, item.getFeature(),
+                       item.getMetadata().getPriority(), FeatureRequestStep.LOCAL_DELAYED);
 
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
@@ -206,29 +205,31 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
         if (!requestsToSchedule.isEmpty()) {
 
             filterUrnInDeletion(requestsToSchedule);
+            if (!requestsToSchedule.isEmpty()) {
 
-            // Compute request ids
-            Set<Long> requestIds = new HashSet<>();
-            requestsToSchedule.forEach(r -> {
-                requestIds.add(r.getId());
-                metrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
-            });
+                // Compute request ids
+                Set<Long> requestIds = new HashSet<>();
+                requestsToSchedule.forEach(r -> {
+                    requestIds.add(r.getId());
+                    metrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
+                });
 
-            // Switch to next step
-            lightFeatureUpdateRequestRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
+                // Switch to next step
+                lightFeatureUpdateRequestRepo.updateStep(FeatureRequestStep.LOCAL_SCHEDULED, requestIds);
 
-            // Schedule job
-            Set<JobParameter> jobParameters = Sets.newHashSet();
-            jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER, requestIds));
+                // Schedule job
+                Set<JobParameter> jobParameters = Sets.newHashSet();
+                jobParameters.add(new JobParameter(FeatureUpdateJob.IDS_PARAMETER, requestIds));
 
-            // the job priority will be set according the priority of the first request to schedule
-            JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
-                    jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
-            jobInfoService.createAsQueued(jobInfo);
+                // the job priority will be set according the priority of the first request to schedule
+                JobInfo jobInfo = new JobInfo(false, requestsToSchedule.get(0).getPriority().getPriorityLevel(),
+                        jobParameters, authResolver.getUser(), FeatureUpdateJob.class.getName());
+                jobInfoService.createAsQueued(jobInfo);
 
-            LOGGER.trace("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
-                         System.currentTimeMillis() - scheduleStart);
-            return requestIds.size();
+                LOGGER.trace("------------->>> {} update requests scheduled in {} ms", requestsToSchedule.size(),
+                             System.currentTimeMillis() - scheduleStart);
+                return requestIds.size();
+            }
         }
         return 0;
     }

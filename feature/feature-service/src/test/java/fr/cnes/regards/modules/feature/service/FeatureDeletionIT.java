@@ -25,7 +25,6 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -38,14 +37,11 @@ import fr.cnes.regards.modules.feature.dto.event.in.FeatureDeletionRequestEvent;
  * @author Kevin Marchois
  *
  */
-@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature",
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=feature_deletion",
         "regards.amqp.enabled=true", "spring.jpa.properties.hibernate.jdbc.batch_size=1024",
         "spring.jpa.properties.hibernate.order_inserts=true" })
 @ActiveProfiles(value = { "testAmqp", "noscheduler", "nohandler" })
 public class FeatureDeletionIT extends AbstractFeatureMultitenantServiceTest {
-
-    @Autowired
-    private IFeatureCreationService featureCreationService;
 
     /**
      * Nominal test case of deletion create feature then send delete request
@@ -133,7 +129,6 @@ public class FeatureDeletionIT extends AbstractFeatureMultitenantServiceTest {
         this.featureDeletionService.registerRequests(events);
 
         this.featureDeletionService.scheduleRequests();
-        this.featureCreationService.scheduleRequests();
 
         do {
             featureNumberInDatabase = this.featureDeletionRepo.count();

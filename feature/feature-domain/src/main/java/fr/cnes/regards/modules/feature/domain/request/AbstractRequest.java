@@ -31,6 +31,7 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
+import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
  * Common request properties
@@ -53,8 +54,15 @@ public abstract class AbstractRequest {
 
     protected static final String URN = "urn";
 
+    protected static final String COLUMN_STATE = "state";
+
     @Column(name = COLUMN_REQUEST_ID, length = 36, nullable = false, updatable = false)
     private String requestId;
+
+    @NotNull(message = "Feature request state is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = COLUMN_STATE, length = 50, nullable = false)
+    private RequestState state;
 
     /**
      * External request registration date
@@ -84,14 +92,20 @@ public abstract class AbstractRequest {
     private PriorityLevel priority;
 
     @SuppressWarnings("unchecked")
-    protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, PriorityLevel priority) {
+    protected <T extends AbstractRequest> T with(String requestId, OffsetDateTime requestDate, PriorityLevel priority,
+            RequestState state, FeatureRequestStep step) {
         Assert.notNull(requestId, "Request id is required");
         Assert.notNull(requestDate, "Request date is required");
         Assert.notNull(priority, "Request priority is required");
+        Assert.notNull(state, "Request state is required");
+        Assert.notNull(step, "Request step is required");
+
         this.requestId = requestId;
         this.requestDate = requestDate;
         this.registrationDate = OffsetDateTime.now();
         this.priority = priority;
+        this.step = step;
+        this.state = state;
         return (T) this;
     }
 
@@ -133,6 +147,14 @@ public abstract class AbstractRequest {
 
     public void setPriority(PriorityLevel priority) {
         this.priority = priority;
+    }
+
+    public RequestState getState() {
+        return state;
+    }
+
+    public void setState(RequestState state) {
+        this.state = state;
     }
 
 }

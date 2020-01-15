@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
@@ -42,7 +41,6 @@ import fr.cnes.regards.modules.feature.dto.FeatureSessionMetadata;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.StorageMetadata;
 import fr.cnes.regards.modules.feature.dto.event.in.FeatureReferenceRequestEvent;
-import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 
 /**
  * @author kevin
@@ -115,18 +113,10 @@ public class FeatureReferenceServiceIT extends AbstractFeatureMultitenantService
 
         Mockito.doThrow(new ModuleException("")).when(pluginService).getPlugin(Mockito.anyString());
         this.waitRequest(this.referenceRequestRepo, this.properties.getMaxBulkSize(), 60000);
-        int cpt = 0;
-        // we will expect that all feature reference remain in database with the error state
-        do {
-            Thread.sleep(1000);
-            if (cpt == 60) {
-                fail("Timeout");
-            }
-            cpt++;
-        } while (!this.referenceRequestRepo.findAll().stream()
-                .allMatch(request -> RequestState.ERROR.equals(request.getState())));
+        super.waitForErrorState(this.referenceRequestRepo);
         // no feature creation should be in database
         assertEquals(0, this.featureCreationRequestRepo.count());
 
     }
+
 }

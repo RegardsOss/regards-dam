@@ -19,7 +19,6 @@
 package fr.cnes.regards.modules.feature.domain.request;
 
 import java.time.OffsetDateTime;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -27,48 +26,50 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
+import fr.cnes.regards.modules.feature.domain.FeatureEntity;
+import fr.cnes.regards.modules.feature.dto.Feature;
 import fr.cnes.regards.modules.feature.dto.PriorityLevel;
 import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
+ * Contain a storage path to add to a {@link Feature} of a {@link FeatureEntity}
  * @author Kevin Marchois
  *
  */
 @Entity
-@Table(name = "t_feature_deletion_request",
-        indexes = { @Index(name = "idx_feature_deletion_request_id", columnList = AbstractRequest.COLUMN_REQUEST_ID),
-                @Index(name = "idx_feature_deletion_request_state", columnList = AbstractFeatureRequest.COLUMN_STATE),
-                @Index(name = "idx_feature_deletion_step_registration_priority",
-                        columnList = AbstractRequest.COLUMN_STEP + "," + AbstractRequest.COLUMN_REGISTRATION_DATE + ","
-                                + AbstractRequest.COLUMN_PRIORITY),
-                @Index(name = "idx_feature_deletion_request_urn", columnList = AbstractRequest.URN) },
-        uniqueConstraints = { @UniqueConstraint(name = "uk_feature_deletion_request_id",
-                columnNames = { AbstractRequest.COLUMN_REQUEST_ID }) })
-public class FeatureDeletionRequest extends AbstractFeatureRequest {
+@Table(name = "t_feature_copy_request")
+public class FeatureCopyRequest extends AbstractRequest {
 
     @Id
-    @SequenceGenerator(name = "featureDeleteRequestSequence", initialValue = 1,
-            sequenceName = "seq_feature_deletion_request")
-    @GeneratedValue(generator = "featureDeleteRequestSequence", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "featureCopyRequest", initialValue = 1, sequenceName = "seq_feature_copy_request")
+    @GeneratedValue(generator = "featureCopyRequest", strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @Column(nullable = false, length = FeatureUniformResourceName.MAX_SIZE)
     @Convert(converter = FeatureUrnConverter.class)
     private FeatureUniformResourceName urn;
 
-    public static FeatureDeletionRequest build(String requestId, OffsetDateTime requestDate, RequestState state,
-            Set<String> errors, FeatureRequestStep step, PriorityLevel priority, FeatureUniformResourceName urn) {
-        FeatureDeletionRequest request = new FeatureDeletionRequest();
-        request.with(requestId, requestDate, state, step, priority, errors);
+    @Column(name = "storage", nullable = false)
+    private String storage;
+
+    @Column(name = "checksum", nullable = false)
+    private String checksum;
+
+    public static FeatureCopyRequest build(String requestId, OffsetDateTime requestDate, FeatureRequestStep step,
+            PriorityLevel priority, FeatureUniformResourceName urn, String storage, RequestState state,
+            String checksum) {
+        FeatureCopyRequest request = new FeatureCopyRequest();
+        request.with(requestId, requestDate, priority, state, step);
+        request.setStep(step);
         request.setUrn(urn);
         request.setPriority(priority);
+        request.setStorage(storage);
+        request.setChecksum(checksum);
 
         return request;
     }
@@ -89,4 +90,19 @@ public class FeatureDeletionRequest extends AbstractFeatureRequest {
         this.id = id;
     }
 
+    public String getStorage() {
+        return storage;
+    }
+
+    public void setStorage(String storage) {
+        this.storage = storage;
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
 }

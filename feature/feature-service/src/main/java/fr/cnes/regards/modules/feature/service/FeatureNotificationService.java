@@ -133,7 +133,7 @@ public class FeatureNotificationService implements IFeatureNotificationService {
 
         NotificationRequest request = NotificationRequest.build(item.getRequestId(), item.getRequestDate(),
                                                                 FeatureRequestStep.LOCAL_DELAYED, item.getPriority(),
-                                                                item.getUrn());
+                                                                item.getUrn(), RequestState.GRANTED);
         // Publish GRANTED request
         publisher.publish(FeatureRequestEvent.build(item.getRequestId(), null, item.getUrn(), RequestState.GRANTED,
                                                     null));

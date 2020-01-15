@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.feature.dto.event.out.RequestState;
  *
  */
 @MappedSuperclass
-public abstract class AbstractFeatureRequest extends AbstractFeatureRequestState {
+public abstract class AbstractFeatureRequest extends AbstractRequest {
 
     protected static final String GROUP_ID = "group_id";
 
@@ -53,13 +53,13 @@ public abstract class AbstractFeatureRequest extends AbstractFeatureRequestState
 
     @SuppressWarnings("unchecked")
     protected <T extends AbstractFeatureRequest> T with(String requestId, OffsetDateTime requestDate,
-            RequestState state, PriorityLevel priority, Set<String> errors) {
+            RequestState state, FeatureRequestStep step, PriorityLevel priority, Set<String> errors) {
         Assert.notNull(requestId, "Request id is required");
         Assert.notNull(requestDate, "Request date is required");
         Assert.notNull(state, "Request state is required");
+        Assert.notNull(step, "Request step is required");
         Assert.notNull(priority, "Request priority is required");
-        Assert.notNull(state, "Request state is required");
-        super.with(requestId, requestDate, priority, state);
+        super.with(requestId, requestDate, priority, state, step);
         this.errors = errors;
         return (T) this;
     }
