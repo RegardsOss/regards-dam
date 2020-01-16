@@ -100,12 +100,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private String description;
 
     /**
-     * Default value
-     */
-    @Column(name = "default_value", length = 255)
-    private String defaultValue;
-
-    /**
      * Attribute type
      */
     @NotNull(message = "Type cannot be null")
@@ -429,18 +423,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         buildPublicJsonPath();
     }
 
-    public boolean hasDefaultValue() {
-        return defaultValue != null;
-    }
-
-    public String getDefaultValue() {
-        return defaultValue;
-    }
-
-    public void setDefaultValue(String pDefaultValue) {
-        defaultValue = pDefaultValue;
-    }
-
     public List<AttributeProperty> getProperties() {
         return properties;
     }
@@ -572,8 +554,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     @Override
     public String toString() {
-        return "AttributeModel{" + "id=" + id + ", name='" + name + '\'' + ", defaultValue='" + defaultValue + '\''
-                + ", type=" + type + ", fragment=" + fragment + ", jsonPath='" + jsonPath + '\'' + '}';
+        return "AttributeModel{" + "id=" + id + ", name='" + name + '\'' + ", type=" + type + ", fragment=" + fragment
+                + ", jsonPath='" + jsonPath + '\'' + '}';
     }
 
 }
