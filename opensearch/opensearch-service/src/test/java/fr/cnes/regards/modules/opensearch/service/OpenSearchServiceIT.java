@@ -109,13 +109,13 @@ public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
         List<FieldExistsCriterion> fieldsToLookFor = orCrit.getCriterions().stream().map(c -> (FieldExistsCriterion) c)
                 .collect(Collectors.toList());
         Assert.assertTrue(fieldsToLookFor.get(0).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + DataType.THUMBNAIL));
+                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.THUMBNAIL));
         Assert.assertTrue(fieldsToLookFor.get(1).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + DataType.QUICKLOOK_HD));
+                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_HD));
         Assert.assertTrue(fieldsToLookFor.get(2).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + DataType.QUICKLOOK_MD));
+                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_MD));
         Assert.assertTrue(fieldsToLookFor.get(3).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + DataType.QUICKLOOK_SD));
+                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_SD));
     }
 
 }
