@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -65,20 +66,22 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.EntitySpecifications;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntityRequest;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.DeletedEntity;
-import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.DatasetEvent;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
+import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
@@ -91,6 +94,8 @@ import fr.cnes.regards.modules.dam.service.entities.validator.restriction.Restri
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.storage.client.RequestInfo;
+import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 
 /**
  * Abstract parameterized entity service
@@ -153,14 +158,17 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     /**
      * The plugin's class name of type {@link IStorageService} used to store AIP entities
      */
-    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.AipStoragePlugin}")
+    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.StoragePlugin}")
     private String postAipEntitiesToStoragePlugin;
+
+    private final IAbstractEntityRequestRepository abstractEntityRequestRepo;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
             IDatasetRepository datasetRepository, IAbstractEntityRepository<U> repository, EntityManager em,
-            IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver) {
+            IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IAbstractEntityRequestRepository abstractEntityRequestRepo) {
         super(modelAttrAssocService);
         this.entityRepository = entityRepository;
         this.modelService = modelService;
@@ -171,6 +179,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         this.em = em;
         this.publisher = publisher;
         this.runtimeTenantResolver = runtimeTenantResolver;
+        this.abstractEntityRequestRepo = abstractEntityRequestRepo;
     }
 
     @Override
@@ -346,10 +355,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         this.manageGroups(entity, updatedIpIds);
 
-        entity.setStateAip(EntityAipState.AIP_TO_CREATE);
-
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
+
+        // call storage
+        try {
+            IStorageService storageService = getStorageService();
+
+            if (storageService != null) {
+                storageService.store(entity);
+            } else {
+                LOGGER.warn("Enabled to access storage plugin");
+            }
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.warn("nabled to access storage plugin", e);
+        }
 
         // AMQP event publishing
         publishEvents(EventType.CREATE, updatedIpIds);
@@ -372,12 +392,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         this.updateWithoutCheck(entity, entityInDb);
     }
 
-    /**
-     * Publish events to AMQP, one event by IpId
-     * @param eventType event type (CREATE, DELETE, ...)
-     * @param ipIds ipId URNs of entities that need an Event publication onto AMQP
-     */
-    private void publishEvents(EventType eventType, Set<UniformResourceName> ipIds) {
+    @Override
+    public void publishEvents(EventType eventType, Set<UniformResourceName> ipIds) {
         UniformResourceName[] datasetsIpIds = ipIds.stream().filter(ipId -> ipId.getEntityType() == EntityType.DATASET)
                 .toArray(UniformResourceName[]::new);
         if (datasetsIpIds.length > 0) {
@@ -495,12 +511,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
 
-        if (entityInDb.getStateAip() == null) {
-            entity.setStateAip(EntityAipState.AIP_TO_CREATE);
-        } else if (!entityInDb.getStateAip().equals(EntityAipState.AIP_TO_CREATE)) {
-            entity.setStateAip(EntityAipState.AIP_TO_UPDATE);
-        }
-
         U updated = repository.save(entity);
 
         updatedIpIds.add(updated.getIpId());
@@ -527,6 +537,18 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             }
             // Don't forget to manage groups for current entity too
             this.manageGroups(updated, updatedIpIds);
+        }
+
+        // call storage
+        try {
+            IStorageService storageService = getStorageService();
+            if (storageService != null) {
+                storageService.update(updated, entityInDb);
+            } else {
+                LOGGER.warn("Enabled to access storage plugin");
+            }
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.warn("Enabled to access storage plugin", e);
         }
 
         // AMQP event publishing
@@ -750,7 +772,48 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         }
         IStorageService storageService = getStorageService();
         if (storageService != null) {
-            storageService.deleteAIP(entity);
+            storageService.delete(entity);
         }
+    }
+
+    @Override
+    public void storeSucces(Set<RequestInfo> requests) {
+        Set<AbstractEntityRequest> succesRequests = this.abstractEntityRequestRepo
+                .findByGroupIdIn(requests.stream().map(RequestInfo::getGroupId).collect(Collectors.toSet()));
+        Map<UniformResourceName, AbstractEntity<? extends EntityFeature>> entityByUrn = this.entityRepository
+                .findByIpIdIn(succesRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()))
+                .stream().collect(Collectors.toMap(AbstractEntity::getIpId, Function.identity()));
+        boolean updated = false;
+        Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
+        // for all request succedded
+        for (RequestInfo info : requests) {
+            // get the AbstractEntityRequest with a matching groupId
+            AbstractEntityRequest current = succesRequests.stream()
+                    .filter(matchingRequest -> matchingRequest.getGroupId().equals(info.getGroupId())).findAny().get();
+            for (RequestResultInfoDTO request : info.getSuccessRequests()) {
+                // if we found a AbstractEntity matching with the urn stored in the  AbstractEntityRequest
+                if (entityByUrn.get(current.getUrn()) != null) {
+                    // seek the file inside the AbstractEntity with the checksum matching with it inside the RequestResultInfoDTO
+                    for (DataFile file : entityByUrn.get(current.getUrn()).getFiles().values()) {
+                        // if the file is found we update it uri
+                        if (file.getChecksum().equals(request.getResultFile().getMetaInfo().getChecksum())) {
+                            updated = true;
+                            file.setUri(request.getResultFile().getLocation().getUrl());
+                            treatedRequests.add(current);
+                        }
+                    }
+                } else {
+                    logger.error("No feature found with urn {}", current.getUrn());
+                }
+            }
+            if (!updated) {
+                logger.error("Request with group id {} has not been updated", current.getGroupId());
+            }
+        }
+        this.publishEvents(EventType.UPDATE,
+                           treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
+        // delete treated requests
+        this.abstractEntityRequestRepo.deleteAll(treatedRequests);
+
     }
 }

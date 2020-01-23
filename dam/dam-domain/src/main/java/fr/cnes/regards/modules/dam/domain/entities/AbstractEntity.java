@@ -30,8 +30,6 @@ import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -59,7 +57,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -132,14 +129,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
     protected Model model;
-
-    /**
-     * State determined through different storage steps for the AIP
-     */
-    @GsonIgnore
-    @Column(name = "aip_state", length = 32)
-    @Enumerated(EnumType.STRING)
-    private EntityAipState stateAip;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -255,14 +244,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      */
     public ImmutableSet<String> getTags() {
         return ImmutableSet.copyOf(tags);
-    }
-
-    public EntityAipState getStateAip() {
-        return stateAip;
-    }
-
-    public void setStateAip(EntityAipState stateAip) {
-        this.stateAip = stateAip;
     }
 
     public void setTags(Set<String> tags) {

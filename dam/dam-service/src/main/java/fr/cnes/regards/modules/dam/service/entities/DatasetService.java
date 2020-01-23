@@ -52,6 +52,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
@@ -102,9 +103,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
             ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
             IRuntimeTenantResolver runtimeTenantResolver, IOpenSearchService openSearchService,
-            IPluginService pluginService) {
+            IPluginService pluginService, IAbstractEntityRequestRepository abstractEntityRequestRepo) {
         super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
-              repository, repository, em, publisher, runtimeTenantResolver);
+              repository, repository, em, publisher, runtimeTenantResolver, abstractEntityRequestRepo);
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }

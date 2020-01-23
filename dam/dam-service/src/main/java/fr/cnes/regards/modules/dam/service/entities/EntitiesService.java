@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.dam.service.entities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,20 +33,17 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.EntityAipState;
 import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
@@ -166,65 +162,4 @@ public class EntitiesService implements IEntitiesService {
         }
         return computationPlugins;
     }
-
-    @Override
-    public void storeAips() {
-
-        // Search entities with state EntityAipState#AIP_TO_STORE
-        entityRepository.findAllByStateAip(EntityAipState.AIP_TO_CREATE).stream().forEach(e -> {
-            storeAipStorage(e);
-        });
-
-        // Search entities with state EntityAipState#AIP_TO_UPDATE
-        entityRepository.findAllByStateAip(EntityAipState.AIP_TO_UPDATE).stream().forEach(e -> {
-            updateAipStorage(e);
-        });
-    }
-
-    /**
-     * @return a {@link Plugin} implementation of {@link IStorageService}
-     * @throws NotAvailablePluginConfigurationException
-     */
-    private IStorageService getStorageService() {
-        if (postAipEntitiesToStorage == null) {
-            return null;
-        }
-
-        Class<?> ttt;
-        try {
-            ttt = Class.forName(postAipEntitiesToStoragePlugin);
-            return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
-        } catch (ClassNotFoundException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new IllegalArgumentException(e.getMessage());
-        } catch (NotAvailablePluginConfigurationException e) {
-            LOGGER.warn(e.getMessage(), e);
-            return null;
-        }
-    }
-
-    private AbstractEntity<?> storeAipStorage(AbstractEntity<?> entity) {
-        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
-            return entity;
-        }
-        IStorageService storageService = getStorageService();
-        if (storageService == null) {
-            return entity;
-        }
-        LOGGER.info("Store AIP for entity <{}> ", entity.getIpId());
-        return storageService.storeAIP(entity);
-    }
-
-    private AbstractEntity<?> updateAipStorage(AbstractEntity<?> entity) {
-        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
-            return entity;
-        }
-        IStorageService storageService = getStorageService();
-        if (storageService == null) {
-            return entity;
-        }
-        LOGGER.info("Update AIP for entity <{}> ", entity.getIpId());
-        return storageService.updateAIP(entity);
-    }
-
 }

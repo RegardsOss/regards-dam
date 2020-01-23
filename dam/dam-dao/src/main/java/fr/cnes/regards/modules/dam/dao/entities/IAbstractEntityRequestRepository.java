@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,37 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.domain.entities;
+package fr.cnes.regards.modules.dam.dao.entities;
+
+import java.util.Set;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntityRequest;
 
 /**
- * Represents the AIP storage state of an AbstractEntity.
- * 
- * @author Christophe Mertz
+ * Repository to manipulate {@link AbstractEntityRequest}
+ * @author Kevin Marchois
  *
  */
-public enum EntityAipState {
-    /**
-     * AIP must be created
-     */
-    AIP_TO_CREATE,
-    /**
-     * AIP must be updated
-     */
-    AIP_TO_UPDATE,
-    /**
-     * AIP has been stored
-     */
-    AIP_STORE_OK,
-    /**
-     * Data storage has scheduled the AIP storage
-     */
-    AIP_STORE_PENDING,
-    /**
-     * The AIP is in error
-     */
-    AIP_STORE_ERROR;
+public interface IAbstractEntityRequestRepository extends JpaRepository<AbstractEntityRequest, Long> {
 
-    public String getName() {
-        return this.name();
-    }
+    public Set<AbstractEntityRequest> findByGroupIdIn(Set<String> groupIds);
+
 }
