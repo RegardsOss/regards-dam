@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dam.service.entities;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -28,9 +29,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.MimeType;
 
@@ -53,6 +57,8 @@ import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.project.domain.Project;
 import fr.cnes.regards.modules.storage.client.RequestInfo;
 import fr.cnes.regards.modules.storage.domain.dto.FileLocationDTO;
 import fr.cnes.regards.modules.storage.domain.dto.FileReferenceDTO;
@@ -105,6 +111,9 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
 
     @Autowired
     private IModelRepository modelRepository;
+
+    @Autowired
+    private IProjectsClient projectClient;
 
     @Before
     public void setUp() throws Exception {
@@ -512,26 +521,32 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
     //    }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testStorageSuccess() throws ModuleException {
         buildData1();
+        ResponseEntity<?> response = Mockito.mock(ResponseEntity.class);
+        Resource<Project> resource = Mockito.mock(Resource.class);
+        Project project = Mockito.mock(Project.class);
+        Mockito.doReturn(response).when(this.projectClient).retrieveProject(Mockito.anyString());
+        Mockito.doReturn(resource).when(response).getBody();
+        Mockito.doReturn(project).when(resource).getContent();
+        Mockito.doReturn("host").when(project).getHost();
 
         dataset1 = dataSetService.create(dataset1);
-
         // init a storage response for test
         DataFile[] files = new DataFile[1];
         dataset1.getFeature().getFiles().values().toArray(files);
         RequestInfo creationResponse = RequestInfo.build(this.entityRequestRepos.findAll().get(0).getGroupId(),
                                                          new HashSet<>(), new HashSet<>());
-        String expectedStorageLocation = "ici";
 
         FileReferenceDTO dto = FileReferenceDTO
                 .build(null,
                        FileReferenceMetaInfoDTO.build(files[0].getChecksum(), files[0].getDigestAlgorithm(),
                                                       files[0].getFilename(), 0l, 0, 0, null, null),
-                       FileLocationDTO.build("local", expectedStorageLocation), new HashSet<>());
+                       FileLocationDTO.build("local", files[0].getUri()), new HashSet<>());
         RequestResultInfoDTO info = RequestResultInfoDTO.build(creationResponse.getGroupId(), files[0].getChecksum(),
-                                                               "Local", expectedStorageLocation, new HashSet<>(), dto,
-                                                               "");
+                                                               "Local", files[0].getUri(), new HashSet<>(), dto, "");
+        String locationBeforeStore = files[0].getUri();
         creationResponse.getSuccessRequests().add(info);
         // a reference request must be in database waiting for storage response
         assertEquals(1, this.entityRequestRepos.count());
@@ -541,7 +556,10 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         DataFile[] filesAfterCreation = new DataFile[1];
         // check that the location of the file has been updated
         this.entityRepos.findById(dataset1.getId()).get().getFeature().getFiles().values().toArray(filesAfterCreation);
-        assertEquals(expectedStorageLocation, filesAfterCreation[0].getUri());
+
+        // the uri must be different
+        assertNotEquals(locationBeforeStore, filesAfterCreation[0].getUri());
+
         dataset1.getFeature().getFiles().clear();
 
         DataFile file = new DataFile();
@@ -552,30 +570,30 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         file.setUri("/dir");
         dataset1.getFeature().getFiles().put(DataType.OTHER, file);
         dataset1 = dataSetService.update(dataset1);
-        expectedStorageLocation = "la";
         dto = FileReferenceDTO.build(null,
                                      FileReferenceMetaInfoDTO.build(file.getChecksum(), file.getDigestAlgorithm(),
                                                                     file.getFilename(), 0l, 0, 0, null, null),
-                                     FileLocationDTO.build("local", expectedStorageLocation), new HashSet<>());
-        info = RequestResultInfoDTO.build(creationResponse.getGroupId(), file.getChecksum(), "Local",
-                                          expectedStorageLocation, new HashSet<>(), dto, "");
+                                     FileLocationDTO.build("local", file.getUri()), new HashSet<>());
+        info = RequestResultInfoDTO.build(creationResponse.getGroupId(), file.getChecksum(), "Local", file.getUri(),
+                                          new HashSet<>(), dto, "");
 
         RequestInfo updateResponse = RequestInfo.build(this.entityRequestRepos.findAll().get(0).getGroupId(),
                                                        new HashSet<>(), new HashSet<>());
         updateResponse.getSuccessRequests().add(info);
-
+        locationBeforeStore = file.getUri();
         dataSetService.storeSucces(Sets.newHashSet(updateResponse));
 
         DataFile[] filesAfterUpdate = new DataFile[0];
         // check that the location of the file has been updated
         filesAfterUpdate = this.entityRepos.findById(dataset1.getId()).get().getFeature().getFiles().values()
                 .toArray(filesAfterUpdate);
+
         // the first file must be deleted and replace with the file with the checksum "checksum2"
         assertEquals(1, filesAfterUpdate.length);
         assertEquals(file.getChecksum(), filesAfterUpdate[0].getChecksum());
-
         assertEquals(0, this.entityRequestRepos.count());
-        assertEquals(expectedStorageLocation, filesAfterUpdate[0].getUri());
+        // the uri must be different
+        assertNotEquals(locationBeforeStore, filesAfterUpdate[0].getUri());
 
     }
 

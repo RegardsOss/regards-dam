@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.dam.service.entities;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -46,11 +48,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -94,6 +98,8 @@ import fr.cnes.regards.modules.dam.service.entities.validator.restriction.Restri
 import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.project.domain.Project;
 import fr.cnes.regards.modules.storage.client.RequestInfo;
 import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 
@@ -107,6 +113,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
+    private static final String CATALOG_DOWNLOAD_PATH = "/downloads/{aip_id}/files/{checksum}";
+
+    /**
+     * Map of {@link Project}s by tenant
+     */
+    private final Map<String, Project> projects = new HashMap<>();
+
     /**
      * {@link IModelService} instance
      */
@@ -114,6 +127,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Autowired
     private ILocalStorageService localStorageService;
+
+    @Autowired
+    private IProjectsClient projectClient;
 
     /**
      * Parameterized entity repository
@@ -160,6 +176,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      */
     @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.StoragePlugin}")
     private String postAipEntitiesToStoragePlugin;
+
+    @Value("${zuul.prefix}")
+    private String urlPrefix;
 
     private final IAbstractEntityRequestRepository abstractEntityRequestRepo;
 
@@ -798,7 +817,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                         // if the file is found we update it uri
                         if (file.getChecksum().equals(request.getResultFile().getMetaInfo().getChecksum())) {
                             updated = true;
-                            file.setUri(request.getResultFile().getLocation().getUrl());
+                            file.setUri(getDownloadUrl(current.getUrn(), file.getChecksum(),
+                                                       runtimeTenantResolver.getTenant()));
                             treatedRequests.add(current);
                         }
                     }
@@ -815,5 +835,27 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         // delete treated requests
         this.abstractEntityRequestRepo.deleteAll(treatedRequests);
 
+    }
+
+    /**
+     * Generate URL to access file from REGARDS system thanks to is checksum
+     *
+     * @param checksum
+     * @return
+     */
+    private String getDownloadUrl(UniformResourceName uniformResourceName, String checksum, String tenant) {
+        Project project = projects.get(tenant);
+        if (project == null) {
+            FeignSecurityManager.asSystem();
+            project = projectClient.retrieveProject(tenant).getBody().getContent();
+            projects.put(tenant, project);
+            FeignSecurityManager.reset();
+        }
+        return project.getHost() + urlPrefix + "/" + encode4Uri("rs-catalog") + CATALOG_DOWNLOAD_PATH
+                .replace("{aip_id}", uniformResourceName.toString()).replace("{checksum}", checksum);
+    }
+
+    private static String encode4Uri(String str) {
+        return new String(UriUtils.encode(str, Charset.defaultCharset().name()).getBytes(), StandardCharsets.US_ASCII);
     }
 }
