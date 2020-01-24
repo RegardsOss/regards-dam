@@ -57,10 +57,10 @@ public class StoragePlugin implements IStorageService {
 
     private final String URI_TEMPLATE = "%s?scope=%s";
 
-    @Value("${plugin.storage.name}")
+    @Value("${plugin.storage.name@null}")
     private String storage;
 
-    @Value("${plugin.storage.directory.name}")
+    @Value("${plugin.storage.directory.name:@null}")
     private String storageSubDirectory;
 
     @Autowired
@@ -74,37 +74,44 @@ public class StoragePlugin implements IStorageService {
 
     @Override
     public <T extends AbstractEntity<?>> T store(T toPersist) {
-        Collection<FileStorageRequestDTO> files = toPersist.getFiles().values().stream()
-                .map(entry -> initStorageRequest(entry, toPersist.getIpId().toString())).collect(Collectors.toSet());
-        if (!files.isEmpty()) {
-            Set<AbstractEntityRequest> infos = this.storageClient.store(files).stream()
-                    .map(request -> new AbstractEntityRequest(request.getGroupId(), toPersist.getIpId()))
+        if (storage != null) {
+            Collection<FileStorageRequestDTO> files = toPersist.getFiles().values().stream()
+                    .map(entry -> initStorageRequest(entry, toPersist.getIpId().toString()))
                     .collect(Collectors.toSet());
-            this.entityRequestRepo.saveAll(infos);
+            if (!files.isEmpty()) {
+                Set<AbstractEntityRequest> infos = this.storageClient.store(files).stream()
+                        .map(request -> new AbstractEntityRequest(request.getGroupId(), toPersist.getIpId()))
+                        .collect(Collectors.toSet());
+                this.entityRequestRepo.saveAll(infos);
+            }
         }
         return toPersist;
     }
 
     @Override
     public <T extends AbstractEntity<?>> T update(T toUpdate, T oldEntity) {
-        // manage added files in toUpdate and not in oldEntity
-        Collection<FileStorageRequestDTO> filesToAdd = toUpdate.getFiles().values().stream()
-                .filter(file -> !oldEntity.getFiles().values().stream()
-                        .anyMatch(f -> f.getChecksum().equals(file.getChecksum())))
-                .map(entry -> initStorageRequest(entry, toUpdate.getIpId().toString())).collect(Collectors.toSet());
-        if (!filesToAdd.isEmpty()) {
-            Set<AbstractEntityRequest> infos = this.storageClient.store(filesToAdd).stream()
-                    .map(request -> new AbstractEntityRequest(request.getGroupId(), toUpdate.getIpId()))
+        if (storage != null) {
+
+            // manage added files in toUpdate and not in oldEntity
+            Collection<FileStorageRequestDTO> filesToAdd = toUpdate.getFiles().values().stream()
+                    .filter(file -> !oldEntity.getFiles().values().stream()
+                            .anyMatch(f -> f.getChecksum().equals(file.getChecksum())))
+                    .map(entry -> initStorageRequest(entry, toUpdate.getIpId().toString())).collect(Collectors.toSet());
+            if (!filesToAdd.isEmpty()) {
+                Set<AbstractEntityRequest> infos = this.storageClient.store(filesToAdd).stream()
+                        .map(request -> new AbstractEntityRequest(request.getGroupId(), toUpdate.getIpId()))
+                        .collect(Collectors.toSet());
+                this.entityRequestRepo.saveAll(infos);
+            }
+            // manage deleted file in toUpdate and present in oldEntity
+            Collection<FileDeletionRequestDTO> filesToDelete = oldEntity.getFiles().values().stream()
+                    .filter(file -> !toUpdate.getFiles().values().stream()
+                            .anyMatch(f -> f.getChecksum().equals(file.getChecksum())))
+                    .map(entry -> initDeletionRequest(entry, toUpdate.getIpId().toString()))
                     .collect(Collectors.toSet());
-            this.entityRequestRepo.saveAll(infos);
-        }
-        // manage deleted file in toUpdate and present in oldEntity
-        Collection<FileDeletionRequestDTO> filesToDelete = oldEntity.getFiles().values().stream()
-                .filter(file -> !toUpdate.getFiles().values().stream()
-                        .anyMatch(f -> f.getChecksum().equals(file.getChecksum())))
-                .map(entry -> initDeletionRequest(entry, toUpdate.getIpId().toString())).collect(Collectors.toSet());
-        if (!filesToDelete.isEmpty()) {
-            this.storageClient.delete(filesToDelete);
+            if (!filesToDelete.isEmpty()) {
+                this.storageClient.delete(filesToDelete);
+            }
         }
 
         return toUpdate;
@@ -112,9 +119,13 @@ public class StoragePlugin implements IStorageService {
 
     @Override
     public void delete(AbstractEntity<?> toDelete) {
-        Collection<FileDeletionRequestDTO> files = toDelete.getFiles().values().stream()
-                .map(entry -> initDeletionRequest(entry, toDelete.getIpId().toString())).collect(Collectors.toList());
-        this.storageClient.delete(files);
+        if (storage != null) {
+
+            Collection<FileDeletionRequestDTO> files = toDelete.getFiles().values().stream()
+                    .map(entry -> initDeletionRequest(entry, toDelete.getIpId().toString()))
+                    .collect(Collectors.toList());
+            this.storageClient.delete(files);
+        }
     }
 
     private FileStorageRequestDTO initStorageRequest(DataFile file, String urn) {
