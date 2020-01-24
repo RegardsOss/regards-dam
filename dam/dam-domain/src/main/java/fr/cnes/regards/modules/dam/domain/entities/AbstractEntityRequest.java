@@ -52,6 +52,10 @@ public class AbstractEntityRequest {
     @Convert(converter = UrnConverter.class)
     private UniformResourceName urn;
 
+    public AbstractEntityRequest() {
+
+    }
+
     public AbstractEntityRequest(String groupId, UniformResourceName urn) {
         this.groupId = groupId;
         this.urn = urn;
