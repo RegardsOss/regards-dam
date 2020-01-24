@@ -25,8 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
-import fr.cnes.regards.modules.dam.service.entities.IEntityService;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.storage.client.IStorageRequestListener;
 import fr.cnes.regards.modules.storage.client.RequestInfo;
 
@@ -41,7 +40,7 @@ public class StorageListener implements IStorageRequestListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageListener.class);
 
     @Autowired
-    private IEntityService<AbstractEntity<?>> entityService;
+    private ICollectionService entityService;
 
     @Override
     public void onRequestGranted(Set<RequestInfo> requests) {
