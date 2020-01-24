@@ -834,7 +834,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                            treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
         // delete treated requests
         this.abstractEntityRequestRepo.deleteAll(treatedRequests);
-
+        this.entityRepository.saveAll(entityByUrn.values());
     }
 
     /**
