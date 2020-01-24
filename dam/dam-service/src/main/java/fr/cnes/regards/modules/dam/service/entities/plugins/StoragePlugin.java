@@ -125,7 +125,7 @@ public class StoragePlugin implements IStorageService {
                                            file.getMimeType().toString(), urn.toString(),
                                            String.format(URI_TEMPLATE, file.getUri(),
                                                          this.tenantResolver.getTenant().toString()),
-                                           this.storage, Optional.of(this.storageSubDirectory));
+                                           this.storage, Optional.ofNullable(this.storageSubDirectory));
     }
 
     private FileDeletionRequestDTO initDeletionRequest(DataFile file, String urn) {
