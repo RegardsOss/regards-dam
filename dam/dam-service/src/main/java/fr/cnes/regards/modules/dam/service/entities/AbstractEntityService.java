@@ -830,11 +830,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                 logger.error("Request with group id {} has not been updated", current.getGroupId());
             }
         }
-        this.publishEvents(EventType.UPDATE,
-                           treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
+
         // delete treated requests
         this.abstractEntityRequestRepo.deleteAll(treatedRequests);
         this.entityRepository.saveAll(entityByUrn.values());
+        this.publishEvents(EventType.UPDATE,
+                           treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
     }
 
     /**
