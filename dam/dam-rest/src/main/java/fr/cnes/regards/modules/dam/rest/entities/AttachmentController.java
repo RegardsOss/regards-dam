@@ -50,7 +50,6 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DataFileReference;
-import fr.cnes.regards.modules.dam.service.entities.AbstractEntityService;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
 import fr.cnes.regards.modules.dam.service.entities.IEntityService;
@@ -63,7 +62,7 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
  *
  */
 @RestController
-@RequestMapping(path = AbstractEntityService.DATA_TYPE_CONTROLLER_ROOT_PATH) // the root path must be in the service
+@RequestMapping(path = AttachmentController.TYPE_MAPPING)
 public class AttachmentController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentController.class);

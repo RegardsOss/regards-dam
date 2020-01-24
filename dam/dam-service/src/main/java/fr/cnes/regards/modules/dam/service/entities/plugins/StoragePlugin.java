@@ -18,29 +18,20 @@
  */
 package fr.cnes.regards.modules.dam.service.entities.plugins;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntityRequest;
-import fr.cnes.regards.modules.dam.service.entities.AbstractEntityService;
 import fr.cnes.regards.modules.dam.service.entities.IStorageService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.storage.client.IStorageClient;
@@ -56,22 +47,13 @@ import fr.cnes.regards.modules.storage.domain.dto.request.FileStorageRequestDTO;
         url = "https://github.com/RegardsOss")
 public class StoragePlugin implements IStorageService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePlugin.class);
-
     private final String URI_TEMPLATE = "%s?scope=%s";
-
-    public static final String ID_PATH_PARAM = "urn";
-
-    public static final String DOWNLOAD_PATH = "/{" + ID_PATH_PARAM + "}/download";
 
     @Value("${plugin.storage.name:#{null}}")
     private String storage;
 
     @Value("${plugin.storage.directory.name:#{null}}")
     private String storageSubDirectory;
-
-    @Value("${spring.application.name}")
-    private String applicationName;
 
     @Autowired
     private IStorageClient storageClient;
@@ -81,9 +63,6 @@ public class StoragePlugin implements IStorageService {
 
     @Autowired
     private IAbstractEntityRequestRepository entityRequestRepo;
-
-    @Autowired
-    private DiscoveryClient discoveryClient;
 
     @Override
     public <T extends AbstractEntity<?>> T store(T toPersist) {
@@ -142,47 +121,14 @@ public class StoragePlugin implements IStorageService {
 
     private FileStorageRequestDTO initStorageRequest(DataFile file, UniformResourceName urn) {
 
-        try {
-            return FileStorageRequestDTO.build(file.getFilename(), file.getChecksum(), file.getDigestAlgorithm(),
-                                               file.getMimeType().toString(), urn.toString(),
-                                               String.format(URI_TEMPLATE, generateDownloadUrl(urn).toString(),
-                                                             this.tenantResolver.getTenant().toString()),
-                                               this.storage, Optional.of(this.storageSubDirectory));
-        } catch (ModuleException e) {
-            LOGGER.error("Error while generating URI", e);
-        }
-        return null;
+        return FileStorageRequestDTO.build(file.getFilename(), file.getChecksum(), file.getDigestAlgorithm(),
+                                           file.getMimeType().toString(), urn.toString(),
+                                           String.format(URI_TEMPLATE, file.getUri(),
+                                                         this.tenantResolver.getTenant().toString()),
+                                           this.storage, Optional.of(this.storageSubDirectory));
     }
 
     private FileDeletionRequestDTO initDeletionRequest(DataFile file, String urn) {
-        return FileDeletionRequestDTO.build(file.getFilename(), storage, urn, false);
-    }
-
-    /**
-     * Generate a public download URL for the file associated to the given Checksum
-     * @param urn
-     * @return a public URL to retrieve the AIP manifest
-     * @throws ModuleException if the Eureka server is not reachable
-     */
-    public URL generateDownloadUrl(UniformResourceName urn) throws ModuleException {
-        Optional<ServiceInstance> instance = discoveryClient.getInstances(this.applicationName).stream().findFirst();
-        if (!instance.isPresent()) {
-            throw new ModuleException("Unable to retrieve an accessible instance for dam microservice");
-        }
-
-        String host = instance.get().getHost();
-        String path = Paths.get(AbstractEntityService.DATA_TYPE_CONTROLLER_ROOT_PATH, DOWNLOAD_PATH).toString();
-        String p = path.toString().replace("{" + ID_PATH_PARAM + "}", urn.toString());
-        p = (p.charAt(0) == '/') ? p.replaceFirst("/", "") : p;
-        String urlStr = String.format("%s/%s?scope=%s", host, p, tenantResolver.getTenant());
-        try {
-            return new URL(urlStr);
-        } catch (MalformedURLException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new ModuleException(
-                    String.format("Error generating AIP download url. Invalid calculated url %s. Cause : %s", urlStr,
-                                  e.getMessage()),
-                    e);
-        }
+        return FileDeletionRequestDTO.build(file.getChecksum(), storage, urn, false);
     }
 }
