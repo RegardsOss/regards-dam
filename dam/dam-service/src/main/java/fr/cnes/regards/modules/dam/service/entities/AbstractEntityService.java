@@ -115,6 +115,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     private static final String CATALOG_DOWNLOAD_PATH = "/downloads/{aip_id}/files/{checksum}";
 
+    public static final String DATA_TYPE_CONTROLLER_ROOT_PATH = "/entities/{urn}/files";
+
     /**
      * Map of {@link Project}s by tenant
      */
