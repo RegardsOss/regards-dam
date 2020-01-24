@@ -23,6 +23,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.service.entities.IEntityService;
@@ -34,6 +35,7 @@ import fr.cnes.regards.modules.storage.client.RequestInfo;
  * @author Kevin Marchois
  *
  */
+@Component
 public class StorageListener implements IStorageRequestListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageListener.class);
