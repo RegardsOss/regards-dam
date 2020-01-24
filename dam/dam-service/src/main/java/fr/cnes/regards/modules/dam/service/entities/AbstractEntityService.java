@@ -377,6 +377,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
 
+        // call storage
+        try {
+            IStorageService storageService = getStorageService();
+
+            if (storageService != null) {
+                storageService.store(entity);
+            } else {
+                LOGGER.warn("Enabled to access storage plugin");
+            }
+        } catch (NotAvailablePluginConfigurationException e) {
+            LOGGER.warn("nabled to access storage plugin", e);
+        }
+
         // AMQP event publishing
         publishEvents(EventType.CREATE, updatedIpIds);
         return entity;
