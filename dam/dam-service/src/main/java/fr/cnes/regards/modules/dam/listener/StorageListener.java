@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 import fr.cnes.regards.modules.storage.client.IStorageRequestListener;
 import fr.cnes.regards.modules.storage.client.RequestInfo;
@@ -41,6 +44,9 @@ public class StorageListener implements IStorageRequestListener {
 
     @Autowired
     private ICollectionService entityService;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     @Override
     public void onRequestGranted(Set<RequestInfo> requests) {
@@ -109,9 +115,12 @@ public class StorageListener implements IStorageRequestListener {
 
     @Override
     public void onStoreError(Set<RequestInfo> requests) {
-        requests.stream()
-                .forEach(request -> LOGGER.error("Storage request with groupId {} failed", request.getGroupId()));
+        requests.stream().forEach(request -> {
+            this.notificationClient.notify("Storage request with groupId {} failed", "Storage request failed",
+                                           NotificationLevel.ERROR, DefaultRole.PROJECT_ADMIN);
 
+            LOGGER.error("Storage request with groupId {} failed", request.getGroupId());
+        });
     }
 
 }
