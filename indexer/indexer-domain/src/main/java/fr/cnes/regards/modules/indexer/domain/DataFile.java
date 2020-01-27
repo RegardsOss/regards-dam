@@ -19,11 +19,14 @@
 package fr.cnes.regards.modules.indexer.domain;
 
 import java.net.URI;
+import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.util.MimeType;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.oais.urn.DataType;
 
@@ -97,6 +100,11 @@ public class DataFile {
      */
     @NotBlank(message = "Filename is required")
     private String filename;
+
+    /**
+     * Custom data file types
+     */
+    private Set<String> types = Sets.newHashSet();
 
     public DataType getDataType() {
         return dataType;
@@ -200,6 +208,14 @@ public class DataFile {
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public Set<String> getTypes() {
+        return types;
+    }
+
+    public void setTypes(Set<String> types) {
+        this.types = types;
     }
 
     @Override
