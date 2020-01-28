@@ -219,22 +219,69 @@ public class DataFile {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if ((o == null) || (getClass() != o.getClass())) {
-            return false;
-        }
-
-        DataFile dataFile = (DataFile) o;
-
-        return uri.equals(dataFile.uri);
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((checksum == null) ? 0 : checksum.hashCode());
+        result = (prime * result) + ((dataType == null) ? 0 : dataType.hashCode());
+        result = (prime * result) + ((digestAlgorithm == null) ? 0 : digestAlgorithm.hashCode());
+        result = (prime * result) + ((filename == null) ? 0 : filename.hashCode());
+        result = (prime * result) + ((mimeType == null) ? 0 : mimeType.hashCode());
+        result = (prime * result) + ((uri == null) ? 0 : uri.hashCode());
+        return result;
     }
 
     @Override
-    public int hashCode() {
-        return uri.hashCode();
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DataFile other = (DataFile) obj;
+        if (checksum == null) {
+            if (other.checksum != null) {
+                return false;
+            }
+        } else if (!checksum.equals(other.checksum)) {
+            return false;
+        }
+        if (dataType != other.dataType) {
+            return false;
+        }
+        if (digestAlgorithm == null) {
+            if (other.digestAlgorithm != null) {
+                return false;
+            }
+        } else if (!digestAlgorithm.equals(other.digestAlgorithm)) {
+            return false;
+        }
+        if (filename == null) {
+            if (other.filename != null) {
+                return false;
+            }
+        } else if (!filename.equals(other.filename)) {
+            return false;
+        }
+        if (mimeType == null) {
+            if (other.mimeType != null) {
+                return false;
+            }
+        } else if (!mimeType.equals(other.mimeType)) {
+            return false;
+        }
+        if (uri == null) {
+            if (other.uri != null) {
+                return false;
+            }
+        } else if (!uri.equals(other.uri)) {
+            return false;
+        }
+        return true;
     }
 
     /**
