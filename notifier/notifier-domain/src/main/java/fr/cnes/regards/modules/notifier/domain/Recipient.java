@@ -45,10 +45,6 @@ public class Recipient {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "rule_id", foreignKey = @ForeignKey(name = "fk_rule_id"))
-    private Rule rule;
-
-    @ManyToOne
     @NotNull(message = "Plugin id is required")
     @JoinColumn(name = "recipient_plugin_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_recipient_plugin_id"))
@@ -62,14 +58,6 @@ public class Recipient {
         this.id = id;
     }
 
-    public Rule getRule() {
-        return rule;
-    }
-
-    public void setRule(Rule rule) {
-        this.rule = rule;
-    }
-
     public PluginConfiguration getRecipientPlugin() {
         return recipientPlugin;
     }
@@ -78,9 +66,8 @@ public class Recipient {
         this.recipientPlugin = recipientPlugin;
     }
 
-    public static Recipient build(Rule rule, PluginConfiguration plugin) {
+    public static Recipient build(PluginConfiguration plugin) {
         Recipient recipient = new Recipient();
-        recipient.setRule(rule);
         recipient.setRecipientPlugin(plugin);
 
         return recipient;

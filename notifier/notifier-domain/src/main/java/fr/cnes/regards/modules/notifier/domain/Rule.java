@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.notifier.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -61,8 +62,9 @@ public class Rule {
     @Column(name = "enable", nullable = false)
     private boolean enable = true;
 
-    @OneToMany(mappedBy = "rule")
-    private Set<Recipient> recipients;
+    @OneToMany()
+    @JoinColumn(name = "rule_id", foreignKey = @ForeignKey(name = "fk_rule_id"))
+    private Set<Recipient> recipients = new HashSet<Recipient>();
 
     public Long getId() {
         return id;

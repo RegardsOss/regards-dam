@@ -18,7 +18,6 @@
  */
 package fr.cnes.reguards.modules.notifier.dto;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -32,9 +31,6 @@ public class RecipientDto {
 
     private Long id;
 
-    @Valid
-    private RuleDto rule;
-
     private long ruleId;
 
     @NotNull
@@ -46,14 +42,6 @@ public class RecipientDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public RuleDto getRule() {
-        return rule;
-    }
-
-    public void setRule(RuleDto rule) {
-        this.rule = rule;
     }
 
     public PluginConfiguration getPluginConf() {
@@ -72,11 +60,10 @@ public class RecipientDto {
         this.ruleId = ruleId;
     }
 
-    public static RecipientDto build(Long id, RuleDto rule, PluginConfiguration pluginConf) {
+    public static RecipientDto build(Long id, PluginConfiguration pluginConf) {
         RecipientDto recipient = new RecipientDto();
         recipient.setId(id);
         recipient.setPluginConf(pluginConf);
-        recipient.setRule(rule);
 
         return recipient;
     }
