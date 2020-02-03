@@ -18,11 +18,12 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +112,7 @@ public class ModelController implements IResourceController<Model> {
      * @param type filter
      * @return a list of {@link Model}
      */
-    @ResourceAccess(description = "List all models")
+    @ResourceAccess(description = "List all models", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<Model>>> getModels(
             @RequestParam(value = "type", required = false) EntityType type) {
@@ -124,7 +125,7 @@ public class ModelController implements IResourceController<Model> {
      * @return the created {@link Model}
      * @throws ModuleException if problem occurs during model creation
      */
-    @ResourceAccess(description = "Create a model")
+    @ResourceAccess(description = "Create a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<Model>> createModel(@Valid @RequestBody Model model) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.createModel(model)));
@@ -149,7 +150,7 @@ public class ModelController implements IResourceController<Model> {
      * @return updated {@link Model}
      * @throws ModuleException if model cannot be updated
      */
-    @ResourceAccess(description = "Update a model")
+    @ResourceAccess(description = "Update a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.PUT, value = MODEL_MAPPING)
     public ResponseEntity<Resource<Model>> updateModel(@PathVariable String modelName, @Valid @RequestBody Model model)
             throws ModuleException {
@@ -162,7 +163,7 @@ public class ModelController implements IResourceController<Model> {
      * @return nothing
      * @throws ModuleException if model cannot be deleted
      */
-    @ResourceAccess(description = "Delete a model")
+    @ResourceAccess(description = "Delete a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.DELETE, value = MODEL_MAPPING)
     public ResponseEntity<Void> deleteModel(@PathVariable String modelName) throws ModuleException {
         modelService.deleteModel(modelName);
@@ -176,7 +177,7 @@ public class ModelController implements IResourceController<Model> {
      * @return a new model based on actual one
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Duplicate a model")
+    @ResourceAccess(description = "Duplicate a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST, value = MODEL_MAPPING + "/duplicate")
     public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable String modelName,
             @Valid @RequestBody Model model) throws ModuleException {
@@ -190,7 +191,7 @@ public class ModelController implements IResourceController<Model> {
      * @param modelName model to export
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Export a model")
+    @ResourceAccess(description = "Export a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = MODEL_MAPPING + "/export")
     public void exportModel(HttpServletRequest request, HttpServletResponse response, @PathVariable String modelName)
             throws ModuleException {
@@ -218,7 +219,7 @@ public class ModelController implements IResourceController<Model> {
      * @return nothing
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Import a model")
+    @ResourceAccess(description = "Import a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST, value = "/import")
     public ResponseEntity<Resource<Model>> importModel(@RequestParam("file") MultipartFile pFile)
             throws ModuleException {

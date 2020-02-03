@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.dam.rest.models;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -172,7 +173,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return the {@link ModelAttrAssoc} representing the link between the {@link Model} and the {@link AttributeModel}
      * @throws ModuleException if assignation cannot be done
      */
-    @ResourceAccess(description = "Bind an attribute to a model")
+    @ResourceAccess(description = "Bind an attribute to a model", role = DefaultRole.ADMIN)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.POST)
     public ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
@@ -188,7 +189,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return linked model attribute
      * @throws ModuleException if attribute cannot be retrieved
      */
-    @ResourceAccess(description = "Get a model attribute")
+    @ResourceAccess(description = "Get a model attribute", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long attributeId) throws ModuleException {
@@ -205,7 +206,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return update model attribute
      * @throws ModuleException if attribute cannot be updated
      */
-    @ResourceAccess(description = "Update a model attribute")
+    @ResourceAccess(description = "Update a model attribute", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long attributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
@@ -224,7 +225,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return nothing
      * @throws ModuleException if attribute cannot be removed
      */
-    @ResourceAccess(description = "Unbind an attribute from a model")
+    @ResourceAccess(description = "Unbind an attribute from a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/{attributeId}")
     public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable String modelName, @PathVariable Long attributeId)
             throws ModuleException {
@@ -242,7 +243,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
      */
-    @ResourceAccess(description = "Bind fragment attributes to a model")
+    @ResourceAccess(description = "Bind fragment attributes to a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST, value = TYPE_MAPPING + FRAGMENT_BIND_MAPPING)
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody Fragment fragment) throws ModuleException {
@@ -261,7 +262,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
      */
-    @ResourceAccess(description = "Unbind fragment attributes from a model")
+    @ResourceAccess(description = "Unbind fragment attributes from a model", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + FRAGMENT_UNBIND_MAPPING)
     public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable String modelName,
             @PathVariable Long fragmentId) throws ModuleException {

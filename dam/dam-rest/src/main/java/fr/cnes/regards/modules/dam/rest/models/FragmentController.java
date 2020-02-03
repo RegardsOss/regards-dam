@@ -46,6 +46,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
 import fr.cnes.regards.modules.dam.service.models.FragmentService;
@@ -124,7 +125,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @return the created {@link Fragment}
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Add a fragment")
+    @ResourceAccess(description = "Add a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<Fragment>> addFragment(@Valid @RequestBody Fragment fragment)
             throws ModuleException {
@@ -137,7 +138,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @return the retrieved {@link Fragment}
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Get a fragment")
+    @ResourceAccess(description = "Get a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}")
     public ResponseEntity<Resource<Fragment>> getFragment(@PathVariable(name = "fragmentId") Long id)
             throws ModuleException {
@@ -151,7 +152,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @return the updated {@link Fragment}
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Update a fragment")
+    @ResourceAccess(description = "Update a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.PUT, value = "/{fragmentId}")
     public ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable(name = "fragmentId") Long id,
             @Valid @RequestBody Fragment fragment) throws ModuleException {
@@ -164,7 +165,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @return nothing
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Delete a fragment")
+    @ResourceAccess(description = "Delete a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.DELETE, value = "/{fragmentId}")
     public ResponseEntity<Void> deleteFragment(@PathVariable(name = "fragmentId") Long id) throws ModuleException {
         fragmentService.deleteFragment(id);
@@ -178,7 +179,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @param fragmentId fragment to export
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Export a fragment")
+    @ResourceAccess(description = "Export a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = "/{fragmentId}/export")
     public void exportFragment(HttpServletRequest request, HttpServletResponse response,
             @PathVariable(name = "fragmentId") Long fragmentId) throws ModuleException {
@@ -207,7 +208,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * @return nothing
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Import a fragment")
+    @ResourceAccess(description = "Import a fragment", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.POST, value = "/import")
     public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile file)
             throws ModuleException {

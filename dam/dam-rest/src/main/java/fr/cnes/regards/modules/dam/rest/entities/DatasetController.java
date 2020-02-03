@@ -51,6 +51,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.Validity;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
@@ -136,7 +137,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws IOException
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResourceAccess(description = "create and send the dataset")
+    @ResourceAccess(description = "create and send the dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestBody Dataset dataset, BindingResult result)
             throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
@@ -155,7 +156,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @return the page of dataset wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
+    @ResourceAccess(description = "endpoint to retrieve the list of all datasets", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(
             @RequestParam(name = "label", required = false) String label,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
@@ -173,7 +174,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
-    @ResourceAccess(description = "Retrieves a dataset")
+    @ResourceAccess(description = "Retrieves a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") final Long datasetId)
             throws ModuleException {
         Dataset dataset = service.load(datasetId);
@@ -188,7 +189,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IP_ID_PATH)
-    @ResourceAccess(description = "Retrieves a dataset")
+    @ResourceAccess(description = "Retrieves a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Dataset> retrieveDataset(@PathVariable("dataset_ipId") final String datasetIpId)
             throws ModuleException {
         Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
@@ -202,7 +203,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
-    @ResourceAccess(description = "Deletes a dataset")
+    @ResourceAccess(description = "Deletes a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") final Long datasetId) throws ModuleException {
         try {
             service.delete(datasetId);
@@ -230,7 +231,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws IOException
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
-    @ResourceAccess(description = "Update a dataset")
+    @ResourceAccess(description = "Update a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
             @Valid @RequestBody Dataset dataset, BindingResult result) throws ModuleException, IOException {
         service.checkAndOrSetModel(dataset);
@@ -250,7 +251,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
-    @ResourceAccess(description = "Dissociate a list of entities from a dataset")
+    @ResourceAccess(description = "Dissociate a list of entities from a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Void> dissociate(@PathVariable("dataset_id") final Long datasetId,
             @Valid @RequestBody final Set<String> toBeDissociated) throws ModuleException {
         service.dissociate(datasetId, toBeDissociated);
@@ -265,7 +266,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
-    @ResourceAccess(description = "associate the list of entities to the dataset")
+    @ResourceAccess(description = "associate the list of entities to the dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Void> associate(@PathVariable("dataset_id") final Long datasetId,
             @Valid @RequestBody final Set<String> toBeAssociatedWith) throws ModuleException {
         service.associate(datasetId, toBeAssociatedWith);
@@ -281,7 +282,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST, value = DATASET_DATA_ATTRIBUTES_PATH)
-    @ResourceAccess(description = "Retrieves data attributes of given datasets")
+    @ResourceAccess(description = "Retrieves data attributes of given datasets", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveDataAttributes(
             @RequestBody DatasetDataAttributesRequestBody requestBody, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
@@ -300,7 +301,7 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST, value = DATASET_ATTRIBUTES_PATH)
-    @ResourceAccess(description = "Retrieves data attributes of given datasets")
+    @ResourceAccess(description = "Retrieves data attributes of given datasets", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveAttributes(
             @RequestBody DatasetDataAttributesRequestBody body, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
@@ -316,7 +317,8 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
-    @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
+    @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model",
+            role = DefaultRole.ADMIN)
     public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelName") String dataModelName,
             @RequestBody Query query) throws ModuleException {
         // we have to add "q=" to be able to parse the query

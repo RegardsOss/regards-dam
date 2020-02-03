@@ -48,6 +48,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
 
@@ -87,7 +88,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @return all {@link Collection}s
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
+    @ResourceAccess(description = "endpoint to retrieve the list fo all collections", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<Collection>>> retrieveCollections(
             @RequestParam(name = "label", required = false) String label,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
@@ -104,7 +105,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_MAPPING)
-    @ResourceAccess(description = "Retrieve a collection")
+    @ResourceAccess(description = "Retrieve a collection", role = DefaultRole.ADMIN)
     public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long id)
             throws ModuleException {
         final Collection collection = collectionService.load(id);
@@ -122,7 +123,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws IOException
      */
     @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_MAPPING)
-    @ResourceAccess(description = "Update a collection")
+    @ResourceAccess(description = "Update a collection", role = DefaultRole.ADMIN)
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long id,
             @Valid @RequestBody Collection inCollection, BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
@@ -141,7 +142,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_MAPPING)
-    @ResourceAccess(description = "delete the collection of collection_id")
+    @ResourceAccess(description = "delete the collection of collection_id", role = DefaultRole.ADMIN)
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") final Long id) throws ModuleException {
         collectionService.delete(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -156,7 +157,8 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws IOException
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResourceAccess(description = "create a new collection according to what is passed as parameter")
+    @ResourceAccess(description = "create a new collection according to what is passed as parameter",
+            role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection inCollection,
             BindingResult result) throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
@@ -176,7 +178,7 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_DISSOCIATE_MAPPING)
-    @ResourceAccess(description = "Dissociate a collection from  a list of entities")
+    @ResourceAccess(description = "Dissociate a collection from  a list of entities", role = DefaultRole.ADMIN)
     public HttpEntity<Void> dissociate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<String> toBeDissociated) throws ModuleException {
         collectionService.dissociate(id, toBeDissociated);
@@ -191,7 +193,8 @@ public class CollectionController implements IResourceController<Collection> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = COLLECTION_ASSOCIATE_MAPPING)
-    @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter")
+    @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter",
+            role = DefaultRole.ADMIN)
     public HttpEntity<Void> associate(@PathVariable("collection_id") final Long id,
             @Valid @RequestBody final Set<String> toBeAssociatedWith) throws ModuleException {
         collectionService.associate(id, toBeAssociatedWith);

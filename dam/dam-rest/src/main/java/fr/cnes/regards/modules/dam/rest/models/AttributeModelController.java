@@ -172,7 +172,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Add an attribute")
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<AttributeModel>> addAttribute(
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.addAttribute(attributeModel, false)));
@@ -199,7 +199,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @return the updated {@link AttributeModel}
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Update an attribute")
+    @ResourceAccess(description = "Update an attribute", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.PUT, value = ATTRIBUTE_MAPPING)
     public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable(name = "attributeId") final Long id,
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
@@ -212,7 +212,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @return nothing
      * @throws ModuleException
      */
-    @ResourceAccess(description = "Delete an attribute")
+    @ResourceAccess(description = "Delete an attribute", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.DELETE, value = ATTRIBUTE_MAPPING)
     public ResponseEntity<Void> deleteAttribute(@PathVariable(name = "attributeId") final Long id)
             throws ModuleException {
@@ -225,7 +225,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @param type filter on attribute type
      * @return list of restriction name
      */
-    @ResourceAccess(description = "List available restriction by attribute model type")
+    @ResourceAccess(description = "List available restriction by attribute model type", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = "/restrictions")
     public ResponseEntity<List<String>> getRestrictions(@RequestParam(value = "type") final AttributeType type) {
         return ResponseEntity.ok(restrictionService.getRestrictions(type));
@@ -235,7 +235,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * Get all attribute types
      * @return list of type names
      */
-    @ResourceAccess(description = "List all attribute model types")
+    @ResourceAccess(description = "List all attribute model types", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET, value = "/types")
     public ResponseEntity<List<String>> getAttributeTypes() {
         List<String> types = new ArrayList<>();
