@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.dto.DatasetWithAccessRight;
 import fr.cnes.regards.modules.dam.service.dataaccess.IDatasetWithAccessRightService;
 
@@ -77,7 +78,7 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
      * @throws ModuleException
      */
     @RequestMapping(value = GROUP_PATH, method = RequestMethod.GET)
-    @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
+    @ResourceAccess(description = "endpoint to retrieve the list of all datasets", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<DatasetWithAccessRight>>> retrieveDatasets(
             @PathVariable(name = "accessGroupName") String accessGroupName,
             @RequestParam(name = "datasetLabel", required = false) String label,

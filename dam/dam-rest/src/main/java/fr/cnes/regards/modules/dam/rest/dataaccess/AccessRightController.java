@@ -107,7 +107,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResourceAccess(description = "send the list, or subset asked, of accessRight")
+    @ResourceAccess(description = "send the list, or subset asked, of accessRight", role = DefaultRole.ADMIN)
     public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String accessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
@@ -148,7 +148,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResourceAccess(description = "create an accessRight according to the argument")
+    @ResourceAccess(description = "create an accessRight according to the argument", role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
             throws ModuleException {
         AccessRight created = accessRightService.createAccessRight(accessRight);
@@ -162,7 +162,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "send the access right of id requested")
+    @ResourceAccess(description = "send the access right of id requested", role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
         AccessRight requested = accessRightService.retrieveAccessRight(id);
@@ -177,7 +177,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "modify the access right of id requested according to the argument")
+    @ResourceAccess(description = "modify the access right of id requested according to the argument",
+            role = DefaultRole.ADMIN)
     public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
             @Valid @RequestBody AccessRight toBe) throws ModuleException {
         AccessRight updated = accessRightService.updateAccessRight(id, toBe);
@@ -185,7 +186,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "delete the access right of id requested")
+    @ResourceAccess(description = "delete the access right of id requested", role = DefaultRole.ADMIN)
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
         accessRightService.deleteAccessRight(id);
@@ -193,7 +194,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
-    @ResourceAccess(description = "check if an user has access to a dataset")
+    @ResourceAccess(description = "check if an user has access to a dataset", role = DefaultRole.ADMIN)
     public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
             @RequestParam(name = "dataset") UniformResourceName datasetIpId,
             @RequestParam(name = "user") String userEMail) throws ModuleException {

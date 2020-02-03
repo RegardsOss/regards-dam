@@ -44,6 +44,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 
@@ -86,7 +87,7 @@ public class UserController implements IResourceController<AccessGroup> {
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    @ResourceAccess(description = "send the list of accessGroups of the specified user")
+    @ResourceAccess(description = "send the list of accessGroups of the specified user", role = DefaultRole.EXPLOIT)
     public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
             @Valid @PathVariable("email") String userEmail,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
@@ -104,7 +105,8 @@ public class UserController implements IResourceController<AccessGroup> {
      */
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
-    @ResourceAccess(description = "replace actual access groups of the user by the ones in parameter")
+    @ResourceAccess(description = "replace actual access groups of the user by the ones in parameter",
+            role = DefaultRole.EXPLOIT)
     public ResponseEntity<Void> setAccessGroupsOfUser(@Valid @PathVariable("email") String userEmail,
             List<AccessGroup> newAccessGroups) throws EntityNotFoundException {
         accessGroupService.setAccessGroupsOfUser(userEmail, newAccessGroups);
@@ -121,7 +123,7 @@ public class UserController implements IResourceController<AccessGroup> {
 
     @RequestMapping(method = RequestMethod.PUT, value = GROUP_NAME_PATH)
     @ResponseBody
-    @ResourceAccess(description = "add the access group in parameter to the specified user")
+    @ResourceAccess(description = "add the access group in parameter to the specified user", role = DefaultRole.EXPLOIT)
     public ResponseEntity<Void> associateAccessGroupToUser(@Valid @PathVariable("email") String userEmail,
             @Valid @PathVariable("name") String accessGroupNameToBeAdded) throws EntityNotFoundException {
         accessGroupService.associateUserToAccessGroup(userEmail, accessGroupNameToBeAdded);
@@ -137,7 +139,8 @@ public class UserController implements IResourceController<AccessGroup> {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = GROUP_NAME_PATH)
     @ResponseBody
-    @ResourceAccess(description = "remove the access group in parameter to the specified user")
+    @ResourceAccess(description = "remove the access group in parameter to the specified user",
+            role = DefaultRole.EXPLOIT)
     public ResponseEntity<Void> dissociateAccessGroupFromUser(@Valid @PathVariable("email") String userEmail,
             @Valid @PathVariable("name") String accessGroupNameToBeAdded) throws EntityNotFoundException {
         accessGroupService.dissociateUserFromAccessGroup(userEmail, accessGroupNameToBeAdded);
