@@ -171,8 +171,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @return the created {@link AttributeModel}
      * @throws ModuleException if error occurs!
      */
-    @ResourceAccess(description = "Add an attribute")
-    @RequestMapping(method = RequestMethod.POST, role = DefaultRole.ADMIN)
+    @ResourceAccess(description = "Add an attribute", role = DefaultRole.ADMIN)
+    @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<AttributeModel>> addAttribute(
             @Valid @RequestBody final AttributeModel attributeModel) throws ModuleException {
         return ResponseEntity.ok(toResource(attributeService.addAttribute(attributeModel, false)));
