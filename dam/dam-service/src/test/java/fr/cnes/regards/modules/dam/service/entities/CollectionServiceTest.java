@@ -34,6 +34,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
@@ -118,7 +119,7 @@ public class CollectionServiceTest {
 
         collectionServiceMocked = new CollectionService(Mockito.mock(IModelFinder.class), entitiesRepositoryMocked,
                 pModelService, deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
-                runtimeTenantResolver);
+                runtimeTenantResolver, Mockito.mock(IAbstractEntityRequestRepository.class));
     }
 
     @Test

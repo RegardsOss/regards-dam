@@ -31,8 +31,10 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.service.entities.validation.IEntityValidationService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.storage.client.RequestInfo;
 
 /**
  * Parameterized entity service interface
@@ -214,4 +216,17 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IEntityVali
      * @throws ModuleException
      */
     AbstractEntity<?> removeFile(UniformResourceName urn, String checksum) throws ModuleException;
+
+    /**
+     * Publish events to AMQP, one event by IpId
+     * @param eventType event type (CREATE, DELETE, ...)
+     * @param ipIds ipId URNs of entities that need an Event publication onto AMQP
+     */
+    void publishEvents(EventType eventType, Set<UniformResourceName> ipIds);
+
+    /**
+     * Update stored file path for all matching {@link AbstractEntity} concerned by the succes of the store request
+     * @param requests
+     */
+    void storeSucces(Set<RequestInfo> requests);
 }

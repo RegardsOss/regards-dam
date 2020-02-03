@@ -52,6 +52,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
@@ -107,9 +108,10 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
             EntityManager em, IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IOpenSearchService openSearchService, IPluginService pluginService) {
+            IOpenSearchService openSearchService, IPluginService pluginService,
+            IAbstractEntityRequestRepository abstractEntityRequestRepo) {
         super(modelFinder, entityRepository, modelService, deletedEntityRepository, collectionRepository, repository,
-              repository, em, publisher, runtimeTenantResolver);
+              repository, em, publisher, runtimeTenantResolver, abstractEntityRequestRepo);
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }
@@ -205,11 +207,11 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
     @Override
     public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds,
             Pageable pageable) throws ModuleException {
-        if ((modelIds == null || modelIds.isEmpty()) && (urns == null || urns.isEmpty())) {
+        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             List<Dataset> datasets = datasetRepository.findAll();
             return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
-            if (modelIds == null || modelIds.isEmpty()) {
+            if ((modelIds == null) || modelIds.isEmpty()) {
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
@@ -223,13 +225,13 @@ public class DatasetService extends AbstractEntityService<DatasetFeature, Datase
     public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
             throws ModuleException {
         Page<AttributeModel> attModelPage;
-        if ((modelIds == null || modelIds.isEmpty()) && (urns == null || urns.isEmpty())) {
+        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             // Retrieve all dataset models attributes
             List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
             Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
             attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
         } else {
-            if (modelIds == null || modelIds.isEmpty()) {
+            if ((modelIds == null) || modelIds.isEmpty()) {
                 // Retrieve all attributes associated to the given datasets
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());

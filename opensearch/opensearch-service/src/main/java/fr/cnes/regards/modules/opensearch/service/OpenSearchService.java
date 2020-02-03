@@ -50,6 +50,7 @@ import fr.cnes.regards.modules.opensearch.service.parser.CircleParser;
 import fr.cnes.regards.modules.opensearch.service.parser.FieldExistsParser;
 import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
 import fr.cnes.regards.modules.opensearch.service.parser.IParser;
+import fr.cnes.regards.modules.opensearch.service.parser.ImageOnlyParser;
 import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 import fr.cnes.regards.modules.search.schema.OpenSearchDescription;
 import fr.cnes.regards.modules.search.schema.UrlType;
@@ -78,7 +79,7 @@ public class OpenSearchService implements IOpenSearchService {
     public OpenSearchService(IAttributeFinder finder) {
         OpenSearchService.parsersHolder = ThreadLocal
                 .withInitial(() -> Lists.newArrayList(new QueryParser(finder), new GeometryParser(), new CircleParser(),
-                                                      new FieldExistsParser()));
+                                                      new FieldExistsParser(), new ImageOnlyParser()));
     }
 
     @Override
