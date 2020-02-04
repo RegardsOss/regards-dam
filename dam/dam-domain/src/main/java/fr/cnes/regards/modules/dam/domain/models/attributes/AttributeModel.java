@@ -556,6 +556,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         }
     }
 
+    public boolean isBooleanAttribute() {
+        return this.type == AttributeType.BOOLEAN;
+    }
+
     @Override
     public String toString() {
         return "AttributeModel{" + "id=" + id + ", name='" + name + '\'' + ", defaultValue='" + defaultValue + '\''

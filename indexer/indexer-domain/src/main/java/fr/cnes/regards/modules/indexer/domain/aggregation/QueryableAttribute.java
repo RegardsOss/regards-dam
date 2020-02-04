@@ -47,15 +47,22 @@ public class QueryableAttribute {
     private boolean textAttribute = false;
 
     /**
+     * Does the attribute is a boolean attribute ?
+     */
+    private boolean booleanAttribute = false;
+
+    /**
      * Number of terms to calculate in {@link Aggregation} if the attribute is a text attribute.
      */
     private int termsLimit = 0;
 
-    public QueryableAttribute(String attributeName, Aggregation aggregation, boolean textAttribute, int termsLimit) {
+    public QueryableAttribute(String attributeName, Aggregation aggregation, boolean textAttribute, int termsLimit,
+            boolean booleanAttribute) {
         super();
         this.attributeName = attributeName;
         this.aggregation = aggregation;
         this.textAttribute = textAttribute;
+        this.booleanAttribute = booleanAttribute;
         this.termsLimit = termsLimit;
     }
 
@@ -91,6 +98,13 @@ public class QueryableAttribute {
         this.termsLimit = termsLimit;
     }
 
+    public boolean isBooleanAttribute() {
+        return booleanAttribute;
+    }
+
+    public void setBooleanAttribute(boolean booleanAttribute) {
+        this.booleanAttribute = booleanAttribute;
+    }
     @Override
     public int hashCode() {
         final int prime = 31;
