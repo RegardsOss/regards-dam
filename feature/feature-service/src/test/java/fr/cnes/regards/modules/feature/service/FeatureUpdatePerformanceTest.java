@@ -128,7 +128,7 @@ public class FeatureUpdatePerformanceTest extends AbstractFeatureMultitenantServ
             GeodeProperties.addGeodeProperties(feature);
             // Keep track of urn for further update
             urns.put(feature.getId(), feature.getUrn());
-            refEntities.add(FeatureEntity.build("sessionOwner", "session", feature, null));
+            refEntities.add(FeatureEntity.build("sessionOwner", "session", feature, null, "model"));
 
             if (bulk == properties.getMaxBulkSize()) {
                 featureRepo.saveAll(refEntities);

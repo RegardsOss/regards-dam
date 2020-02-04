@@ -396,7 +396,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                         computeNextVersion(previousVersion)));
 
         FeatureEntity created = FeatureEntity.build(fcr.getMetadata().getSession(), fcr.getMetadata().getSessionOwner(),
-                                                    feature, previousUrn);
+                                                    feature, previousUrn, fcr.getFeature().getModel());
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
 

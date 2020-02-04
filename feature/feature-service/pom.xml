@@ -75,6 +75,10 @@
 			<artifactId>feature-dao</artifactId>
 		</dependency>
 		<dependency>
+            <groupId>fr.cnes.regards.modules.dam</groupId>
+            <artifactId>dam-domain</artifactId>
+        </dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.locks</groupId>
 			<artifactId>locks-service</artifactId>
 		</dependency>
