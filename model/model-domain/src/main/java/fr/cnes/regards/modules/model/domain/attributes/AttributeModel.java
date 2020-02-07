@@ -553,7 +553,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     }
 
     public boolean isBooleanAttribute() {
-        return this.type == AttributeType.BOOLEAN;
+        return this.type == PropertyType.BOOLEAN;
     }
 
     @Override

@@ -63,6 +63,11 @@ public class NotificationActionEventHandler
     }
 
     @Override
+    public boolean validate(String tenant, NotificationActionEvent message) {
+        return true;
+    }
+
+    @Override
     public void handleBatch(String tenant, List<NotificationActionEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
