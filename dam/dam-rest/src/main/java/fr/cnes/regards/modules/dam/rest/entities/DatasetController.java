@@ -287,7 +287,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestBody DatasetDataAttributesRequestBody requestBody, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
         Page<AttributeModel> result = service.getDataAttributeModels(requestBody.getDatasetIds(),
-                                                                     requestBody.getModelIds(), pageable);
+                                                                     requestBody.getModelNames(), pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 
@@ -305,7 +305,7 @@ public class DatasetController implements IResourceController<Dataset> {
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveAttributes(
             @RequestBody DatasetDataAttributesRequestBody body, final Pageable pageable,
             final PagedResourcesAssembler<AttributeModel> assembler) throws ModuleException {
-        Page<AttributeModel> result = service.getAttributeModels(body.getDatasetIds(), body.getModelIds(), pageable);
+        Page<AttributeModel> result = service.getAttributeModels(body.getDatasetIds(), body.getModelNames(), pageable);
         return new ResponseEntity<>(assembler.toResource(result), HttpStatus.OK);
     }
 

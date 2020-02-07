@@ -95,7 +95,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, customizer,
                                  "Should be able to import a fragment");
 
-        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null, null);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         attributeAdapterFactory.refresh(getDefaultTenant(), atts);
     }
 

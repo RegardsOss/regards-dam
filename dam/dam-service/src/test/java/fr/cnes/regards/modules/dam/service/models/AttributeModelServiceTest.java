@@ -126,7 +126,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
@@ -141,7 +141,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null, null);
+        List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
         Assert.assertEquals(1, attModels.size());
     }
 

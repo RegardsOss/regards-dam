@@ -520,7 +520,7 @@ public class IndexerServiceDataSourceIT {
                     .newInputStream(Paths.get("src", "test", "resources", "validation", "models", pFilename));
             modelService.importModel(input);
 
-            List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null, null);
+            List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null);
             gsonAttributeFactory.refresh(tenant, attributes);
         } catch (final IOException e) {
             String errorMessage = "Cannot import " + pFilename;
