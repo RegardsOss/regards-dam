@@ -168,14 +168,14 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
     /**
      * If true the AIP entities are send to Storage module to be stored
      */
-    @Value("${regards.dam.post.aip.entities.to.storage:true}")
-    private Boolean postAipEntitiesToStorage;
+    @Value("${regards.dam.store.files:true}")
+    private Boolean storeEntityFiles;
 
     /**
      * The plugin's class name of type {@link IStorageService} used to store AIP entities
      */
-    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.dam.service.entities.plugins.StoragePlugin}")
-    private String postAipEntitiesToStoragePlugin;
+    @Value("${regards.dam.store.files.plugin:fr.cnes.regards.modules.dam.service.entities.plugins.StoragePlugin}")
+    private String storeEntityFilesPlugin;
 
     @Value("${zuul.prefix}")
     private String urlPrefix;
@@ -762,13 +762,13 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
      * @throws NotAvailablePluginConfigurationException
      */
     private IStorageService getStorageService() throws NotAvailablePluginConfigurationException {
-        if (postAipEntitiesToStorage == null) {
+        if (storeEntityFiles == null) {
             return null;
         }
 
         Class<?> ttt;
         try {
-            ttt = Class.forName(postAipEntitiesToStoragePlugin);
+            ttt = Class.forName(storeEntityFilesPlugin);
             return (IStorageService) PluginUtils.getPlugin(PluginConfiguration.build(ttt, null, IPluginParam.set()),
                                                            new HashMap<>());
         } catch (ClassNotFoundException e) {
@@ -779,7 +779,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
     }
 
     private void deleteAipStorage(U entity) throws NotAvailablePluginConfigurationException {
-        if ((postAipEntitiesToStorage == null) || !postAipEntitiesToStorage) {
+        if ((storeEntityFiles == null) || !storeEntityFiles) {
             return;
         }
         IStorageService storageService = getStorageService();

@@ -1344,7 +1344,9 @@ public class EsRepository implements IEsRepository {
                 if (qa.isTextAttribute() && (qa.getTermsLimit() > 0)) {
                     builder.aggregation(AggregationBuilders.terms(qa.getAttributeName())
                             .field(qa.getAttributeName() + KEYWORD_SUFFIX).size(qa.getTermsLimit()));
-                } else if (!qa.isTextAttribute()) {
+                } else if (qa.isBooleanAttribute()) {
+                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName()).field(qa.getAttributeName())).size(2);
+                } else if(!qa.isTextAttribute()){
                     builder.aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName()));
                 }
             }
