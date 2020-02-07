@@ -32,19 +32,19 @@ import fr.cnes.regards.modules.dam.service.entities.IStorageService;
 public class NohupStoragePlugin implements IStorageService {
 
     @Override
-    public <T extends AbstractEntity<?>> T storeAIP(T pToPersist) {
+    public <T extends AbstractEntity<?>> T store(T pToPersist) {
         // nothing to do because we don't create AIP without storage and description is inside the database not on file
         // system
         return pToPersist;
     }
 
     @Override
-    public void deleteAIP(AbstractEntity<?> pToDelete) {
+    public void delete(AbstractEntity<?> pToDelete) {
         // Nothing to do
     }
 
     @Override
-    public <T extends AbstractEntity<?>> T updateAIP(T pToUpdate) {
+    public <T extends AbstractEntity<?>> T update(T pToUpdate, T pToOld) {
         // Nothing to do
         return pToUpdate;
     }

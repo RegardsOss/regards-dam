@@ -221,11 +221,11 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
         recipientPlugin.setPluginId(fail ? "fail" : "DefaultRecipientSender");
         recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
 
-        Rule rule = Rule.build(null, rulePlugin, true);
-        rule = this.ruleRepo.save(rule);
+        Recipient recipient = Recipient.build(recipientPlugin);
+        recipient = this.recipientRepo.save(recipient);
 
-        Recipient recipient = Recipient.build(rule, recipientPlugin);
-        this.recipientRepo.save(recipient);
+        Rule rule = Rule.build(null, rulePlugin, true);
+        rule.getRecipients().add(recipient);
 
         // configuration of the fake recipient sender (for test)
         for (int i = 1; i < RECIPIENTS_PER_RULE; i++) {
@@ -235,9 +235,12 @@ public abstract class AbstractNotificationMultitenantServiceTest extends Abstrac
             recipientPlugin.setLabel("test recipient");
             recipientPlugin.setPluginId("RecipientSender" + (i + 1));
             recipientPlugin = this.pluginConfRepo.save(recipientPlugin);
-            recipient = Recipient.build(rule, recipientPlugin);
+            recipient = Recipient.build(recipientPlugin);
             this.recipientRepo.save(recipient);
+            rule.getRecipients().add(recipient);
         }
+        rule = this.ruleRepo.save(rule);
+
     }
 
     /**

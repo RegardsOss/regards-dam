@@ -60,10 +60,4 @@ public interface IEntitiesService {
      * @return instanciated plugins so computation can be executed
      */
     <T extends IComputedAttribute<Dataset, ?>> Set<T> getComputationPlugins(Dataset pEntity);
-
-    /**
-     * Search the entities for which the AIP must be stored by rs-storage
-     */
-    void storeAips();
-
 }

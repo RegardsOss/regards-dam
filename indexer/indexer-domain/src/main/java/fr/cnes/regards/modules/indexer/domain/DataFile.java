@@ -19,11 +19,14 @@
 package fr.cnes.regards.modules.indexer.domain;
 
 import java.net.URI;
+import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.util.MimeType;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.oais.urn.DataType;
 
@@ -97,6 +100,11 @@ public class DataFile {
      */
     @NotBlank(message = "Filename is required")
     private String filename;
+
+    /**
+     * Custom data file types
+     */
+    private Set<String> types = Sets.newHashSet();
 
     public DataType getDataType() {
         return dataType;
@@ -202,23 +210,78 @@ public class DataFile {
         this.filename = filename;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if ((o == null) || (getClass() != o.getClass())) {
-            return false;
-        }
+    public Set<String> getTypes() {
+        return types;
+    }
 
-        DataFile dataFile = (DataFile) o;
-
-        return uri.equals(dataFile.uri);
+    public void setTypes(Set<String> types) {
+        this.types = types;
     }
 
     @Override
     public int hashCode() {
-        return uri.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((checksum == null) ? 0 : checksum.hashCode());
+        result = (prime * result) + ((dataType == null) ? 0 : dataType.hashCode());
+        result = (prime * result) + ((digestAlgorithm == null) ? 0 : digestAlgorithm.hashCode());
+        result = (prime * result) + ((filename == null) ? 0 : filename.hashCode());
+        result = (prime * result) + ((mimeType == null) ? 0 : mimeType.hashCode());
+        result = (prime * result) + ((uri == null) ? 0 : uri.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DataFile other = (DataFile) obj;
+        if (checksum == null) {
+            if (other.checksum != null) {
+                return false;
+            }
+        } else if (!checksum.equals(other.checksum)) {
+            return false;
+        }
+        if (dataType != other.dataType) {
+            return false;
+        }
+        if (digestAlgorithm == null) {
+            if (other.digestAlgorithm != null) {
+                return false;
+            }
+        } else if (!digestAlgorithm.equals(other.digestAlgorithm)) {
+            return false;
+        }
+        if (filename == null) {
+            if (other.filename != null) {
+                return false;
+            }
+        } else if (!filename.equals(other.filename)) {
+            return false;
+        }
+        if (mimeType == null) {
+            if (other.mimeType != null) {
+                return false;
+            }
+        } else if (!mimeType.equals(other.mimeType)) {
+            return false;
+        }
+        if (uri == null) {
+            if (other.uri != null) {
+                return false;
+            }
+        } else if (!uri.equals(other.uri)) {
+            return false;
+        }
+        return true;
     }
 
     /**

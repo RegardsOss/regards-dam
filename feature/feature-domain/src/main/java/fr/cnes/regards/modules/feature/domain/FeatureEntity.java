@@ -97,8 +97,12 @@ public class FeatureEntity {
     @NotNull
     private Integer version;
 
+    @Column(name = "model", nullable = false)
+    @NotNull
+    private String model;
+
     public static FeatureEntity build(String sessionOwner, String session, Feature feature,
-            FeatureUniformResourceName previousVersionUrn) {
+            FeatureUniformResourceName previousVersionUrn, String model) {
         FeatureEntity featureEntity = new FeatureEntity();
         featureEntity.setSessionOwner(sessionOwner);
         featureEntity.setSession(session);
@@ -109,6 +113,7 @@ public class FeatureEntity {
         featureEntity.setVersion(feature.getUrn().getVersion());
         featureEntity.setPreviousVersionUrn(previousVersionUrn);
         featureEntity.setCreationDate(featureEntity.getLastUpdate());
+        featureEntity.setModel(model);
         return featureEntity;
     }
 
@@ -190,6 +195,14 @@ public class FeatureEntity {
 
     public void setCreationDate(OffsetDateTime creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 
 }

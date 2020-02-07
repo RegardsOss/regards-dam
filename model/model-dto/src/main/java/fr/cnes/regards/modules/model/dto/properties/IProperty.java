@@ -37,14 +37,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.modules.model.dto.properties.logger.PropertyPatchLogger;
 
 /**
  * @param <T> type of Attribute
@@ -52,8 +51,6 @@ import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
  * @author Marc Sordi
  */
 public interface IProperty<T> extends Comparable<IProperty<T>> {
-
-    public static final Logger LOGGER = LoggerFactory.getLogger(IProperty.class);
 
     /**
      * Get attribute name
@@ -825,8 +822,8 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                 }
             } else {
                 if (refMap.containsKey(entry.getKey())) {
-                    LOGGER.info("Update - \"{}\" - \"{}\" - \"{}\" -> \"{}\"", urn, entry.getKey(),
-                                refMap.get(entry.getKey()).getValue(), property.getValue());
+                    PropertyPatchLogger.LOGGER.trace("Update - \"{}\" - \"{}\" - \"{}\" -> \"{}\"", urn, entry.getKey(),
+                                                     refMap.get(entry.getKey()).getValue(), property.getValue());
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
                 } else {

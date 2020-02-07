@@ -34,7 +34,6 @@ import fr.cnes.regards.modules.notifier.dao.IRuleRepository;
 import fr.cnes.regards.modules.notifier.domain.Recipient;
 import fr.cnes.regards.modules.notifier.domain.Rule;
 import fr.cnes.reguards.modules.notifier.dto.RecipientDto;
-import fr.cnes.reguards.modules.notifier.dto.RuleDto;
 
 /**
  * Implementation of recipient service
@@ -54,23 +53,18 @@ public class RecipientService implements IRecipientService {
     @Override
     public Page<RecipientDto> getRecipients(Pageable page) {
         Page<Recipient> recipients = recipientRepo.findAll(page);
-        return new PageImpl<>(recipients
-                .get().map(recipient -> RecipientDto.build(recipient.getId(), intiRuleDto(recipient),
-                                                           recipient.getRecipientPlugin()))
-                .collect(Collectors.toList()));
-    }
-
-    private RuleDto intiRuleDto(Recipient recipient) {
-        Rule rule = recipient.getRule();
-        return rule == null ? null : RuleDto.build(rule.getId(), rule.getRulePlugin(), rule.isEnable());
+        return new PageImpl<>(
+                recipients.get().map(recipient -> RecipientDto.build(recipient.getId(), recipient.getRecipientPlugin()))
+                        .collect(Collectors.toList()));
     }
 
     @Override
     public RecipientDto createOrUpdateRecipient(@Valid RecipientDto toCreate) {
         Rule rule = this.ruleRepo.getOne(toCreate.getRuleId());
-        Recipient toSave = Recipient.build(rule, toCreate.getPluginConf());
+        Recipient toSave = Recipient.build(toCreate.getPluginConf());
         Recipient created = this.recipientRepo.save(toSave);
-        return RecipientDto.build(created.getId(), intiRuleDto(created), created.getRecipientPlugin());
+        rule.getRecipients().add(toSave);
+        return RecipientDto.build(created.getId(), created.getRecipientPlugin());
     }
 
     @Override

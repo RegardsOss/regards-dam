@@ -102,8 +102,8 @@ public class DBConnectionServiceIT extends AbstractMultitenantServiceTest {
 
     private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
         final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData.setPluginClassName(
-                "fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin");
+        pluginMetaData
+                .setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin");
         pluginMetaData.setPluginId(pluginId);
         pluginMetaData.setAuthor("CS-SI");
         pluginMetaData.setVersion("1.1");
@@ -121,15 +121,11 @@ public class DBConnectionServiceIT extends AbstractMultitenantServiceTest {
     }
 
     private List<PluginParamDescriptor> initializePluginParameterType() {
-        return Arrays.asList(PluginParamDescriptor
-                                     .create("model", "model", null, PluginParamType.STRING, false, false, false),
-                             PluginParamDescriptor.create("connection",
-                                                          "connection",
-                                                          null,
-                                                          PluginParamType.PLUGIN,
-                                                          false,
-                                                          false,
-                                                          false));
+        return Arrays.asList(
+                             PluginParamDescriptor.create("model", "model", null, PluginParamType.STRING, false, false,
+                                                          false, null),
+                             PluginParamDescriptor.create("connection", "connection", null, PluginParamType.PLUGIN,
+                                                          false, false, false, null));
     }
 
 }

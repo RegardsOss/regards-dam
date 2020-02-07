@@ -39,6 +39,7 @@ import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.storage.client.IStorageClient;
 
 @Profile("!indexer-service")
 @Configuration
@@ -89,6 +90,11 @@ public class CrawlerConfiguration {
     @Bean
     public IAttributeFinder attributeFinder() {
         return Mockito.mock(IAttributeFinder.class);
+    }
+
+    @Bean
+    public IStorageClient storageClient() {
+        return Mockito.mock(IStorageClient.class);
     }
 
     @Primary

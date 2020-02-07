@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,37 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dam.domain.entities;
+package fr.cnes.regards.modules.dam.domain.datasources.plugins;
+
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * Represents the AIP storage state of an AbstractEntity.
- * 
- * @author Christophe Mertz
- *
+ * Extract data from feature manager
+ * @author Kevin Marchois
  */
-public enum EntityAipState {
-    /**
-     * AIP must be created
-     */
-    AIP_TO_CREATE,
-    /**
-     * AIP must be updated
-     */
-    AIP_TO_UPDATE,
-    /**
-     * AIP has been stored
-     */
-    AIP_STORE_OK,
-    /**
-     * Data storage has scheduled the AIP storage
-     */
-    AIP_STORE_PENDING,
-    /**
-     * The AIP is in error
-     */
-    AIP_STORE_ERROR;
+@PluginInterface(description = "Plugin to get data from feature manager")
+public interface IGeodeDataSourcePlugin extends IDataSourcePlugin {
 
-    public String getName() {
-        return this.name();
-    }
 }

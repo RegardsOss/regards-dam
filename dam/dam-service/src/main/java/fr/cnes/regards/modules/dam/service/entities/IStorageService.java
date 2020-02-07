@@ -39,20 +39,20 @@ public interface IStorageService {
      *            {@link AbstractEntity} to be persisted
      * @return persisted {@link AbstractEntity}
      */
-    <T extends AbstractEntity<?>> T storeAIP(T toPersist);
+    <T extends AbstractEntity<?>> T store(T toPersist);
 
     /**
      * Delete the aip associated to the given entity
      * @param toDelete
      */
-    void deleteAIP(AbstractEntity<?> toDelete);
+    void delete(AbstractEntity<?> toDelete);
 
     /**
      * Update the aip associated to the given entity
      * @param toUpdate
-     * @param <T>
+     * @param oldEntity old version of the entity to update
      * @return updated aip
      */
-    <T extends AbstractEntity<?>> T updateAIP(T toUpdate);
+    <T extends AbstractEntity<?>> T update(T toUpdate, T oldEntity);
 
 }

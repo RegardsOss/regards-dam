@@ -26,6 +26,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
@@ -48,9 +49,11 @@ public class CollectionService extends AbstractEntityService<CollectionFeature, 
     public CollectionService(IModelFinder modelFinder, IAbstractEntityRepository<AbstractEntity<?>> pEntityRepository,
             IModelService pModelService, IDeletedEntityRepository pDeletedEntityRepository,
             ICollectionRepository pCollectionRepository, IDatasetRepository pDatasetRepository, EntityManager pEm,
-            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
+            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IAbstractEntityRequestRepository abstractEntityRequestRepo) {
         super(modelFinder, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver);
+              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver,
+              abstractEntityRequestRepo);
     }
 
 }

@@ -22,6 +22,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -33,8 +35,6 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, Long> {
 
     public FeatureEntity findTop1VersionByProviderIdOrderByVersionAsc(String providerId);
-
-    boolean existsByUrn(FeatureUniformResourceName urn);
 
     public FeatureEntity findByUrn(FeatureUniformResourceName urn);
 
@@ -51,4 +51,6 @@ public interface IFeatureEntityRepository extends JpaRepository<FeatureEntity, L
      * List existing provider identifiers in specified list
      */
     List<IUrnVersionByProvider> findByProviderIdInOrderByVersionDesc(List<String> providerIds);
+
+    Page<FeatureEntity> findByModelAndLastUpdateAfter(String model, OffsetDateTime date, Pageable page);
 }

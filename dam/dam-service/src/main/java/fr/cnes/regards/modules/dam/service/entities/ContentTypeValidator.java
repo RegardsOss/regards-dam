@@ -57,7 +57,7 @@ public final class ContentTypeValidator {
             case DESCRIPTION:
                 checkFileSupported(contentType,
                                    Arrays.asList(MediaType.APPLICATION_PDF_VALUE, MediaType.TEXT_MARKDOWN_VALUE,
-                                                 TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE));
+                                                 TEXT_MARKDOWN_ALTERNATIVE_MEDIATYPE, MediaType.TEXT_HTML_VALUE));
                 break;
             default:
                 // No restriction

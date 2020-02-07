@@ -18,34 +18,52 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.MimeType;
 
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractMultitenantServiceTest;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRequestRepository;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.model.dao.IModelRepository;
 import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.project.domain.Project;
+import fr.cnes.regards.modules.storage.client.RequestInfo;
+import fr.cnes.regards.modules.storage.domain.dto.FileLocationDTO;
+import fr.cnes.regards.modules.storage.domain.dto.FileReferenceDTO;
+import fr.cnes.regards.modules.storage.domain.dto.FileReferenceMetaInfoDTO;
+import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 
 @TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=cdgroups",
         "regards.dam.post.aip.entities.to.storage=false" }, locations = "classpath:es.properties")
@@ -89,10 +107,17 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
     private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
+    private IAbstractEntityRequestRepository entityRequestRepos;
+
+    @Autowired
     private IModelRepository modelRepository;
+
+    @Autowired
+    private IProjectsClient projectClient;
 
     @Before
     public void setUp() throws Exception {
+        entityRequestRepos.deleteAll();
         collRepository.deleteAll();
         datasetRepository.deleteAll();
         entityRepos.deleteAll();
@@ -134,6 +159,13 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         dataset1.setLicence("licence");
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
+        DataFile file = new DataFile();
+        file.setChecksum("checksum");
+        file.setFilename("naame");
+        file.setMimeType(MimeType.valueOf("application/json"));
+        file.setDigestAlgorithm("MD5");
+        file.setUri("/dtc");
+        dataset1.getFeature().getFiles().put(DataType.OTHER, file);
         dataset2 = new Dataset(modelDataset, "PROJECT", "ProviderId2", "labelDs2");
         dataset2.setLicence("licence");
         // DS2 -> (G2)
@@ -383,6 +415,10 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         coll2 = collService.create(coll2); // C2 tags DS3 and C1 => (G1, G2, G3)
         coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
 
+        // check that we have 1 Request for storage in databse
+        assertEquals(1, this.entityRequestRepos.count());
+        assertEquals(dataset1.getIpId(), this.entityRequestRepos.findAll().get(0).getUrn());
+
         // Dissociate "by hand"
         coll1.clearTags();
         coll2.clearTags();
@@ -399,7 +435,17 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
         coll3 = collService.update(coll3.getIpId(), coll3);
         Assert.assertTrue(coll3.getTags().isEmpty());
 
+        DataFile newFile = new DataFile();
+        newFile.setChecksum("checksum2");
+        newFile.setFilename("name2");
+        newFile.setMimeType(MimeType.valueOf("application/json"));
+        newFile.setDigestAlgorithm("MD5");
+        newFile.setUri("/pdtc");
+        dataset1.getFeature().getFiles().put(DataType.OTHER, newFile);
+
         dataset1 = dataSetService.update(dataset1);
+        // check that we have 2 Request (creation + update) for storage in databse
+        assertEquals(2, this.entityRequestRepos.count());
         Assert.assertTrue(dataset1.getTags().isEmpty());
         dataset2 = dataSetService.update(dataset2);
         Assert.assertTrue(dataset2.getTags().isEmpty());
@@ -473,5 +519,82 @@ public class CollectionDatasetGroupsIT extends AbstractMultitenantServiceTest {
     //
     //        dataSetService.update(dataset1.getId(), dataset2);
     //    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testStorageSuccess() throws ModuleException {
+        buildData1();
+        ResponseEntity<?> response = Mockito.mock(ResponseEntity.class);
+        EntityModel<Project> resource = Mockito.mock(EntityModel.class);
+        Project project = Mockito.mock(Project.class);
+        Mockito.doReturn(response).when(this.projectClient).retrieveProject(Mockito.anyString());
+        Mockito.doReturn(resource).when(response).getBody();
+        Mockito.doReturn(project).when(resource).getContent();
+        Mockito.doReturn("host").when(project).getHost();
+
+        dataset1 = dataSetService.create(dataset1);
+        // init a storage response for test
+        DataFile[] files = new DataFile[1];
+        dataset1.getFeature().getFiles().values().toArray(files);
+        RequestInfo creationResponse = RequestInfo.build(this.entityRequestRepos.findAll().get(0).getGroupId(),
+                                                         new HashSet<>(), new HashSet<>());
+
+        FileReferenceDTO dto = FileReferenceDTO
+                .build(null,
+                       FileReferenceMetaInfoDTO.build(files[0].getChecksum(), files[0].getDigestAlgorithm(),
+                                                      files[0].getFilename(), 0l, 0, 0, null, null),
+                       FileLocationDTO.build("local", files[0].getUri()), new HashSet<>());
+        RequestResultInfoDTO info = RequestResultInfoDTO.build(creationResponse.getGroupId(), files[0].getChecksum(),
+                                                               "Local", files[0].getUri(), new HashSet<>(), dto, "");
+        String locationBeforeStore = files[0].getUri();
+        creationResponse.getSuccessRequests().add(info);
+        // a reference request must be in database waiting for storage response
+        assertEquals(1, this.entityRequestRepos.count());
+        dataSetService.storeSucces(Sets.newHashSet(creationResponse));
+        // the response has been treated
+        assertEquals(0, this.entityRequestRepos.count());
+        DataFile[] filesAfterCreation = new DataFile[1];
+        // check that the location of the file has been updated
+        this.entityRepos.findById(dataset1.getId()).get().getFeature().getFiles().values().toArray(filesAfterCreation);
+
+        // the uri must be different
+        assertNotEquals(locationBeforeStore, filesAfterCreation[0].getUri());
+
+        dataset1.getFeature().getFiles().clear();
+
+        DataFile file = new DataFile();
+        file.setChecksum("checksum2");
+        file.setFilename("file 2");
+        file.setMimeType(MimeType.valueOf("application/json"));
+        file.setDigestAlgorithm("MD5");
+        file.setUri("/dir");
+        dataset1.getFeature().getFiles().put(DataType.OTHER, file);
+        dataset1 = dataSetService.update(dataset1);
+        dto = FileReferenceDTO.build(null,
+                                     FileReferenceMetaInfoDTO.build(file.getChecksum(), file.getDigestAlgorithm(),
+                                                                    file.getFilename(), 0l, 0, 0, null, null),
+                                     FileLocationDTO.build("local", file.getUri()), new HashSet<>());
+        info = RequestResultInfoDTO.build(creationResponse.getGroupId(), file.getChecksum(), "Local", file.getUri(),
+                                          new HashSet<>(), dto, "");
+
+        RequestInfo updateResponse = RequestInfo.build(this.entityRequestRepos.findAll().get(0).getGroupId(),
+                                                       new HashSet<>(), new HashSet<>());
+        updateResponse.getSuccessRequests().add(info);
+        locationBeforeStore = file.getUri();
+        dataSetService.storeSucces(Sets.newHashSet(updateResponse));
+
+        DataFile[] filesAfterUpdate = new DataFile[0];
+        // check that the location of the file has been updated
+        filesAfterUpdate = this.entityRepos.findById(dataset1.getId()).get().getFeature().getFiles().values()
+                .toArray(filesAfterUpdate);
+
+        // the first file must be deleted and replace with the file with the checksum "checksum2"
+        assertEquals(1, filesAfterUpdate.length);
+        assertEquals(file.getChecksum(), filesAfterUpdate[0].getChecksum());
+        assertEquals(0, this.entityRequestRepos.count());
+        // the uri must be different
+        assertNotEquals(locationBeforeStore, filesAfterUpdate[0].getUri());
+
+    }
 
 }
