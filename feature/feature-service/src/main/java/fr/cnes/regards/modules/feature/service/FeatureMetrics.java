@@ -71,11 +71,11 @@ public class FeatureMetrics {
     }
 
     public static enum FeatureCreationState {
-        CREATION_REQUEST_GRANTED("granted.creation.requests", MetricType.GAUGE),
-        CREATION_REQUEST_DENIED("denied.creation.requests", MetricType.GAUGE),
-        CREATION_REQUEST_ERROR("error.creation.requests", MetricType.GAUGE),
-        CREATION_REQUEST_SUCCESS("successful.creation.requests", MetricType.GAUGE),
-        CREATION_REQUEST_SCHEDULED("scheduled.creation.requests", MetricType.GAUGE),
+        CREATION_REQUEST_GRANTED("granted.creation.requests", MetricType.COUNTER),
+        CREATION_REQUEST_DENIED("denied.creation.requests", MetricType.COUNTER),
+        CREATION_REQUEST_ERROR("error.creation.requests", MetricType.COUNTER),
+        CREATION_REQUEST_SUCCESS("successful.creation.requests", MetricType.COUNTER),
+        CREATION_REQUEST_SCHEDULED("scheduled.creation.requests", MetricType.COUNTER),
         FEATURE_INITIALIZED("initialized.features", MetricType.COUNTER),
         FEATURE_CREATED("created.features", MetricType.COUNTER);
 
@@ -157,42 +157,42 @@ public class FeatureMetrics {
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported metric type %s", type));
         }
-
     }
 
     // FIXME add urn to log?
     public void state(String providerId, FeatureUniformResourceName urn, FeatureCreationState state) {
         if (properties.isMetricsEnabled()) {
             LOGGER.debug(METRICS_MARKER, METRICS_FORMAT, providerId, state);
-
-            switch (state) {
-                case CREATION_REQUEST_DENIED:
-                case CREATION_REQUEST_GRANTED:
-                    gauges.get(state.getName()).incrementAndGet();
-                    break;
-
-                case CREATION_REQUEST_ERROR:
-                    // TODO
-                    break;
-
-                case CREATION_REQUEST_SCHEDULED:
-                    gauges.get(state.getName()).incrementAndGet();
-                    gauges.get(FeatureCreationState.CREATION_REQUEST_GRANTED.getName()).decrementAndGet();
-                    break;
-
-                case FEATURE_INITIALIZED:
-                    counters.get(state.getName()).increment();
-                    gauges.get(FeatureCreationState.CREATION_REQUEST_SCHEDULED.getName()).decrementAndGet();
-                    break;
-
-                case FEATURE_CREATED:
-                    counters.get(state.getName()).increment();
-                    break;
-
-                case CREATION_REQUEST_SUCCESS:
-                    // TODO
-                    break;
-            }
+            counters.get(state.getName()).increment();
+            
+//            switch (state) {
+//                case CREATION_REQUEST_DENIED:
+//                case CREATION_REQUEST_GRANTED:
+//                    gauges.get(state.getName()).incrementAndGet();
+//                    break;
+//
+//                case CREATION_REQUEST_ERROR:
+//                    // TODO
+//                    break;
+//
+//                case CREATION_REQUEST_SCHEDULED:
+//                    gauges.get(state.getName()).incrementAndGet();
+//                    gauges.get(FeatureCreationState.CREATION_REQUEST_GRANTED.getName()).decrementAndGet();
+//                    break;
+//
+//                case FEATURE_INITIALIZED:
+//                    counters.get(state.getName()).increment();
+//                    gauges.get(FeatureCreationState.CREATION_REQUEST_SCHEDULED.getName()).decrementAndGet();
+//                    break;
+//
+//                case FEATURE_CREATED:
+//                    counters.get(state.getName()).increment();
+//                    break;
+//
+//                case CREATION_REQUEST_SUCCESS:
+//                    // TODO
+//                    break;
+//            }
         }
     }
 

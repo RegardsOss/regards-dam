@@ -131,7 +131,7 @@
 			<artifactId>logstash-logback-encoder</artifactId>
 			<version>6.2</version>
 		</dependency> -->
-<!-- 		<dependency>
+<!--  		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-elastic</artifactId>
 		</dependency> -->

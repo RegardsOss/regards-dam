@@ -65,6 +65,12 @@ public class NotificationRequestEventHandler
     }
 
     @Override
+    public boolean validate(String tenant, NotificationRequestEvent message) {
+        // FIXME
+        return true;
+    }
+
+    @Override
     public void handleBatch(String tenant, List<NotificationRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);

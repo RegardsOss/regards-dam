@@ -68,6 +68,12 @@ public class FeatureDeletionRequestEventHandler
     }
 
     @Override
+    public boolean validate(String tenant, FeatureDeletionRequestEvent message) {
+        // FIXME
+        return true;
+    }
+
+    @Override
     public void handleBatch(String tenant, List<FeatureDeletionRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);

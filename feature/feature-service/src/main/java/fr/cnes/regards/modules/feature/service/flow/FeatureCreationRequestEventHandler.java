@@ -67,6 +67,12 @@ public class FeatureCreationRequestEventHandler
     }
 
     @Override
+    public boolean validate(String tenant, FeatureCreationRequestEvent message) {
+        // FIXME
+        return true;
+    }
+
+    @Override
     public void handleBatch(String tenant, List<FeatureCreationRequestEvent> messages) {
         try {
             runtimeTenantResolver.forceTenant(tenant);
