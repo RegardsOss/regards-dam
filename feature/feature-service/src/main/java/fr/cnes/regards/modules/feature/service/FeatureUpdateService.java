@@ -159,7 +159,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
-            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null,
+            metrics.count(item.getFeature() != null ? item.getFeature().getId() : null,
                           item.getFeature() != null ? item.getFeature().getUrn() : null,
                           FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
@@ -174,7 +174,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                         item.getFeature() != null ? item.getFeature().getUrn() : null,
                                                         RequestState.DENIED, ErrorTranslator.getErrors(errors)));
             requestInfo.addDeniedRequest(item.getFeature().getUrn(), ErrorTranslator.getErrors(errors));
-            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+            metrics.count(item.getFeature() != null ? item.getFeature().getId() : null, null,
                           FeatureUpdateState.UPDATE_REQUEST_DENIED);
             return;
         }
@@ -189,7 +189,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                                                     item.getFeature() != null ? item.getFeature().getId() : null, null,
                                                     RequestState.GRANTED, null));
         // Add to granted request collection
-        metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_GRANTED);
+        metrics.count(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_GRANTED);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getUrn(), request.getRequestId());
     }
@@ -211,7 +211,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 Set<Long> requestIds = new HashSet<>();
                 requestsToSchedule.forEach(r -> {
                     requestIds.add(r.getId());
-                    metrics.state(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
+                    metrics.count(r.getProviderId(), r.getUrn(), FeatureUpdateState.UPDATE_REQUEST_SCHEDULED);
                 });
 
                 // Switch to next step
@@ -285,7 +285,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 publisher.publish(FeatureRequestEvent.build(request.getRequestId(), request.getProviderId(),
                                                             request.getUrn(), request.getState(), request.getErrors()));
 
-                metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_ERROR);
+                metrics.count(request.getProviderId(), request.getUrn(), FeatureUpdateState.UPDATE_REQUEST_ERROR);
             } else {
 
                 entity.setLastUpdate(OffsetDateTime.now());
@@ -308,7 +308,7 @@ public class FeatureUpdateService extends AbstractFeatureService implements IFea
                 // FIXME notify entire feature for notification manager
 
                 // Register
-                metrics.state(request.getProviderId(), request.getUrn(), FeatureUpdateState.FEATURE_MERGED);
+                metrics.count(request.getProviderId(), request.getUrn(), FeatureUpdateState.FEATURE_MERGED);
                 entities.add(entity);
                 successfulRequests.add(request);
             }

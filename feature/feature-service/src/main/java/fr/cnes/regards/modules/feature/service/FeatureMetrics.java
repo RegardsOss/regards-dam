@@ -18,9 +18,10 @@
  */
 package fr.cnes.regards.modules.feature.service;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 
@@ -35,6 +36,7 @@ import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.feature.service.conf.FeatureConfigurationProperties;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 /**
  * Dedicated class for feature metrics
@@ -55,37 +57,34 @@ public class FeatureMetrics {
 
     //private static final String METRICS_FORMAT = "Feature ID [{}] - URN [{}] - State [{}]";
 
+    private static final String METRIC_TYPE_TAG = "metric_type";
+
+    private static final String METRIC_TYPE = "feature";
+
+    private static final String METRIC_SUBTYPE_TAG = "metric_subtype";
+
     @Autowired
     private MeterRegistry registry;
 
     @Autowired
     private FeatureConfigurationProperties properties;
 
-    private final Map<String, AtomicLong> gauges = new HashMap<>();
-
     private final Map<String, Counter> counters = new HashMap<>();
 
-    public static enum MetricType {
-        GAUGE,
-        COUNTER;
-    }
-
     public static enum FeatureCreationState {
-        CREATION_REQUEST_GRANTED("granted.creation.requests", MetricType.COUNTER),
-        CREATION_REQUEST_DENIED("denied.creation.requests", MetricType.COUNTER),
-        CREATION_REQUEST_ERROR("error.creation.requests", MetricType.COUNTER),
-        CREATION_REQUEST_SUCCESS("successful.creation.requests", MetricType.COUNTER),
-        CREATION_REQUEST_SCHEDULED("scheduled.creation.requests", MetricType.COUNTER),
-        FEATURE_INITIALIZED("initialized.features", MetricType.COUNTER),
-        FEATURE_CREATED("created.features", MetricType.COUNTER);
+
+        CREATION_REQUEST_GRANTED("granted.creation.requests"),
+        CREATION_REQUEST_DENIED("denied.creation.requests"),
+        CREATION_REQUEST_ERROR("error.creation.requests"),
+        CREATION_REQUEST_SUCCESS("successful.creation.requests"),
+        CREATION_REQUEST_SCHEDULED("scheduled.creation.requests"),
+        FEATURE_INITIALIZED("initialized.features"),
+        FEATURE_CREATED("created.features");
 
         private final String name;
 
-        private final MetricType type;
-
-        private FeatureCreationState(String name, MetricType type) {
+        private FeatureCreationState(String name) {
             this.name = METRICS_PREFIX + name;
-            this.type = type;
         }
 
         /**
@@ -93,32 +92,23 @@ public class FeatureMetrics {
          */
         public String getName() {
             return name;
-        }
-
-        /**
-         * @return the metric type
-         */
-        public MetricType getType() {
-            return type;
         }
     }
 
     public static enum FeatureUpdateState {
-        UPDATE_REQUEST_GRANTED("granted.update.requests", MetricType.GAUGE),
-        UPDATE_REQUEST_DENIED("denied.update.requests", MetricType.GAUGE),
-        UPDATE_REQUEST_ERROR("error.update.requests", MetricType.GAUGE),
-        UPDATE_REQUEST_SUCCESS("successful.update.requests", MetricType.GAUGE),
-        UPDATE_REQUEST_SCHEDULED("scheduled.update.requests", MetricType.GAUGE),
-        FEATURE_MERGED("merged.features", MetricType.GAUGE),
-        FEATURE_UPDATED("updated.features", MetricType.COUNTER);
+
+        UPDATE_REQUEST_GRANTED("granted.update.requests"),
+        UPDATE_REQUEST_DENIED("denied.update.requests"),
+        UPDATE_REQUEST_ERROR("error.update.requests"),
+        UPDATE_REQUEST_SUCCESS("successful.update.requests"),
+        UPDATE_REQUEST_SCHEDULED("scheduled.update.requests"),
+        FEATURE_MERGED("merged.features"),
+        FEATURE_UPDATED("updated.features");
 
         private final String name;
 
-        private final MetricType type;
-
-        private FeatureUpdateState(String name, MetricType type) {
+        private FeatureUpdateState(String name) {
             this.name = METRICS_PREFIX + name;
-            this.type = type;
         }
 
         /**
@@ -126,78 +116,37 @@ public class FeatureMetrics {
          */
         public String getName() {
             return name;
-        }
-
-        /**
-         * @return the metric type
-         */
-        public MetricType getType() {
-            return type;
         }
     }
 
     @PostConstruct
     public void initialize() {
-        for (FeatureCreationState state : FeatureCreationState.values()) {
-            initMetric(state.getName(), state.getType());
-        }
-        for (FeatureUpdateState state : FeatureUpdateState.values()) {
-            initMetric(state.getName(), state.getType());
+        if (properties.isMetricsEnabled()) {
+
+            List<Tag> tags = Arrays.asList(Tag.of(METRIC_TYPE_TAG, METRIC_TYPE),
+                                           Tag.of(METRIC_SUBTYPE_TAG, "creation"));
+            for (FeatureCreationState state : FeatureCreationState.values()) {
+                initMetric(state.getName(), tags);
+            }
+            tags = Arrays.asList(Tag.of(METRIC_TYPE_TAG, METRIC_TYPE), Tag.of(METRIC_SUBTYPE_TAG, "update"));
+            for (FeatureUpdateState state : FeatureUpdateState.values()) {
+                initMetric(state.getName(), tags);
+            }
         }
     }
 
-    private void initMetric(String name, MetricType type) {
-        switch (type) {
-            case COUNTER:
-                counters.put(name, registry.counter(name));
-                break;
-            case GAUGE:
-                gauges.put(name, registry.gauge(name, new AtomicLong(0)));
-                break;
-            default:
-                throw new UnsupportedOperationException(String.format("Unsupported metric type %s", type));
-        }
+    private void initMetric(String name, Iterable<Tag> tags) {
+        counters.put(name, Counter.builder(name).tags(tags).register(registry));
     }
 
-    // FIXME add urn to log?
-    public void state(String providerId, FeatureUniformResourceName urn, FeatureCreationState state) {
+    public void count(String providerId, FeatureUniformResourceName urn, FeatureCreationState state) {
         if (properties.isMetricsEnabled()) {
             LOGGER.debug(METRICS_MARKER, METRICS_FORMAT, providerId, state);
             counters.get(state.getName()).increment();
-            
-//            switch (state) {
-//                case CREATION_REQUEST_DENIED:
-//                case CREATION_REQUEST_GRANTED:
-//                    gauges.get(state.getName()).incrementAndGet();
-//                    break;
-//
-//                case CREATION_REQUEST_ERROR:
-//                    // TODO
-//                    break;
-//
-//                case CREATION_REQUEST_SCHEDULED:
-//                    gauges.get(state.getName()).incrementAndGet();
-//                    gauges.get(FeatureCreationState.CREATION_REQUEST_GRANTED.getName()).decrementAndGet();
-//                    break;
-//
-//                case FEATURE_INITIALIZED:
-//                    counters.get(state.getName()).increment();
-//                    gauges.get(FeatureCreationState.CREATION_REQUEST_SCHEDULED.getName()).decrementAndGet();
-//                    break;
-//
-//                case FEATURE_CREATED:
-//                    counters.get(state.getName()).increment();
-//                    break;
-//
-//                case CREATION_REQUEST_SUCCESS:
-//                    // TODO
-//                    break;
-//            }
         }
     }
 
-    // FIXME add urn to log?
-    public void state(String providerId, FeatureUniformResourceName urn, FeatureUpdateState state) {
+    public void count(String providerId, FeatureUniformResourceName urn, FeatureUpdateState state) {
         if (properties.isMetricsEnabled()) {
             LOGGER.debug(METRICS_MARKER, METRICS_FORMAT, providerId, state);
         }

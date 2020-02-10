@@ -123,7 +123,7 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
     protected IFeatureDeletionService featureDeletionService;
 
     @Autowired
-    private ISubscriber sub;
+    protected ISubscriber subscriber;
 
     @Autowired
     protected IPublisher publisher;
@@ -369,12 +369,12 @@ public abstract class AbstractFeatureMultitenantServiceTest extends AbstractMult
 
     @After
     public void after() {
-        sub.unsubscribeFrom(FeatureCreationRequestEvent.class);
-        sub.unsubscribeFrom(FeatureDeletionRequestEvent.class);
-        sub.unsubscribeFrom(FeatureUpdateRequestEvent.class);
-        sub.unsubscribeFrom(NotificationRequestEvent.class);
-        sub.unsubscribeFrom(NotificationActionEvent.class);
-        sub.unsubscribeFrom(FeatureReferenceRequestEvent.class);
+        subscriber.unsubscribeFrom(FeatureCreationRequestEvent.class);
+        subscriber.unsubscribeFrom(FeatureDeletionRequestEvent.class);
+        subscriber.unsubscribeFrom(FeatureUpdateRequestEvent.class);
+        subscriber.unsubscribeFrom(NotificationRequestEvent.class);
+        subscriber.unsubscribeFrom(NotificationActionEvent.class);
+        subscriber.unsubscribeFrom(FeatureReferenceRequestEvent.class);
         cleanAMQPQueues(FeatureCreationRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureUpdateRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);
         cleanAMQPQueues(FeatureDeletionRequestEventHandler.class, Target.ONE_PER_MICROSERVICE_TYPE);

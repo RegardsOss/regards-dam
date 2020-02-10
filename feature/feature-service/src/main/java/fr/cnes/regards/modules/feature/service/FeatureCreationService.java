@@ -181,13 +181,13 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
 
         validator.validate(item, errors);
         if (errors.hasErrors()) {
-            LOGGER.debug("Error during founded FeatureCreationRequestEvent validation {}", errors.toString());
+            LOGGER.error("Error during creation event {} validation : {}", item.getRequestId(), errors.toString());
             requestInfo.addDeniedRequest(item.getRequestId(), ErrorTranslator.getErrors(errors));
             // Publish DENIED request (do not persist it in DB)
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+            metrics.count(item.getFeature() != null ? item.getFeature().getId() : null, null,
                           FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
@@ -196,12 +196,12 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         errors = validationService.validate(item.getFeature(), ValidationMode.CREATION);
 
         if (errors.hasErrors()) {
-            LOGGER.debug("Error during Feature validation {}", errors.toString());
+            LOGGER.error("Error during feature {} validation {}", item.getFeature().getId(), errors.toString());
             requestInfo.addDeniedRequest(item.getRequestId(), ErrorTranslator.getErrors(errors));
             publisher.publish(FeatureRequestEvent.build(item.getRequestId(),
                                                         item.getFeature() != null ? item.getFeature().getId() : null,
                                                         null, RequestState.DENIED, ErrorTranslator.getErrors(errors)));
-            metrics.state(item.getFeature() != null ? item.getFeature().getId() : null, null,
+            metrics.count(item.getFeature() != null ? item.getFeature().getId() : null, null,
                           FeatureCreationState.CREATION_REQUEST_DENIED);
             return;
         }
@@ -219,7 +219,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
                                                     RequestState.GRANTED, null));
 
         // Add to granted request collection
-        metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_GRANTED);
+        metrics.count(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_GRANTED);
         grantedRequests.add(request);
         requestInfo.addGrantedRequest(request.getProviderId(), request.getRequestId());
     }
@@ -242,7 +242,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
             for (LightFeatureCreationRequest request : dbRequests) {
                 // we will schedule only one feature request for a feature id
                 if (!featureIdsScheduled.contains(request.getProviderId())) {
-                    metrics.state(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_SCHEDULED);
+                    metrics.count(request.getProviderId(), null, FeatureCreationState.CREATION_REQUEST_SCHEDULED);
                     requestsToSchedule.add(request);
                     requestIds.add(request.getId());
                     featureIdsScheduled.add(request.getProviderId());
@@ -400,7 +400,7 @@ public class FeatureCreationService extends AbstractFeatureService implements IF
         created.setVersion(feature.getUrn().getVersion());
         fcr.setFeatureEntity(created);
 
-        metrics.state(fcr.getProviderId(), created.getUrn(), FeatureCreationState.FEATURE_INITIALIZED);
+        metrics.count(fcr.getProviderId(), created.getUrn(), FeatureCreationState.FEATURE_INITIALIZED);
 
         return created;
     }

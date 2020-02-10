@@ -79,7 +79,7 @@ public class FeatureUpdateJob extends AbstractJob<Void> {
         Timer.Sample sample = Timer.start(registry);
         Set<FeatureEntity> updated = featureUpdateService.processRequests(featureUpdateRequests);
         sample.stop(Timer.builder(this.getClass().getName()).tag("job", "run").register(registry));
-        updated.forEach(e -> metrics.state(e.getProviderId(), e.getFeature().getUrn(),
+        updated.forEach(e -> metrics.count(e.getProviderId(), e.getFeature().getUrn(),
                                            FeatureUpdateState.FEATURE_UPDATED));
         LOGGER.info("[{}]{}{} update request(s) processed in {} ms", jobInfoId, INFO_TAB, featureUpdateRequests.size(),
                     System.currentTimeMillis() - start);

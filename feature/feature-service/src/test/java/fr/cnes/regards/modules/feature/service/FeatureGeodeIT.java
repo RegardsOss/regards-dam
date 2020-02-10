@@ -28,6 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -64,9 +66,12 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 
     private static final String PROVIDER_ID_FORMAT = "F%05d";
 
-    private static final Integer PUBLISH_BULK_SIZE = 2000;
+    private static final Integer PUBLISH_BULK_SIZE = 2_000;
 
     private String modelName;
+
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
 
     @Before
     public void prepareContext() throws InterruptedException {
@@ -76,6 +81,21 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
         modelName = mockModelClient(GeodeProperties.getGeodeModel(), this.getCps(), this.getFactory(),
                                     this.getDefaultTenant(), this.getModelAttrAssocClientMock());
         Thread.sleep(5_000);
+
+        // Add new consumers
+        // Just for testing purpose / Cannot be simulated with operational AMQP starter as it prevents multiple subscription.
+        //        int extraConsumers = 5;
+        //        for (int i = 0; i < extraConsumers; i++) {
+        //
+        //            FeatureCreationRequestEventHandler creationHandler = new FeatureCreationRequestEventHandler();
+        //            beanFactory.autowireBean(creationHandler);
+        //            subscriber.subscribeTo(FeatureCreationRequestEvent.class, creationHandler);
+        //
+        //            FeatureUpdateRequestEventHandler updateHandler = new FeatureUpdateRequestEventHandler();
+        //            beanFactory.autowireBean(updateHandler);
+        //            subscriber.subscribeTo(FeatureUpdateRequestEvent.class, updateHandler);
+        //        }
+
     }
 
     @Test
