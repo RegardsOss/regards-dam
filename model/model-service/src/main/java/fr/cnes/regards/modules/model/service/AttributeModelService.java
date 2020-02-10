@@ -121,10 +121,8 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(PropertyType type, String fragmentName, Set<Long> modelIds,
-            Set<String> modelNames) {
-        return attModelRepository
-                .findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds, modelNames));
+    public List<AttributeModel> getAttributes(PropertyType type, String fragmentName, Set<String> modelNames) {
+        return attModelRepository.findAll(AttributeModelSpecifications.search(type, fragmentName, modelNames));
     }
 
     @Override
@@ -329,7 +327,7 @@ public class AttributeModelService implements IAttributeModelService {
     @Override
     public void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
         IRestriction restriction = pAttributeModel.getRestriction();
-        if (restriction != null && !restriction.supports(pAttributeModel.getType())) {
+        if ((restriction != null) && !restriction.supports(pAttributeModel.getType())) {
             String message = String.format("Attribute of type %s does not support %s restriction",
                                            pAttributeModel.getType(), restriction.getType());
             LOGGER.error(message);

@@ -70,6 +70,7 @@ public class FeatureGeodeIT extends AbstractFeatureMultitenantServiceTest {
 
     private String modelName;
 
+    @SuppressWarnings("unused")
     @Autowired
     private AutowireCapableBeanFactory beanFactory;
 

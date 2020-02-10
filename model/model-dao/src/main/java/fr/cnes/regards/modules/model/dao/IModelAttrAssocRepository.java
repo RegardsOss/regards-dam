@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.model.dao;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,12 +56,10 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     /**
      * Find page attribute which are associated to at least one of the models
-     * @param pModelIds
-     * @param pPageable
      * @return a page of attribute which are associated to at least one of the models
      */
     @EntityGraph(attributePaths = { "attribute.properties" })
-    Page<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelIds, Pageable pPageable);
+    Page<ModelAttrAssoc> findAllByModelNameIn(Collection<String> modelNames, Pageable pageable);
 
     /**
      * Find all the model attribute association which model is one of the given, represented by their ids

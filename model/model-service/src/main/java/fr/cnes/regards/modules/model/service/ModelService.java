@@ -221,31 +221,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable) {
-        Page<ModelAttrAssoc> assocs = modelAttributeRepository.findAllByModelIdIn(modelIds, pageable);
-        List<AttributeModel> atts = assocs.getContent().stream().map(assoc -> assoc.getAttribute())
-                .collect(Collectors.toList());
-        return new PageImpl<AttributeModel>(atts, pageable, assocs.getTotalElements());
-    }
-
-    @Override
-    public Page<AttributeModel> getAttributeModelsByName(Collection<String> modelNames, Pageable pageable) {
+    public Page<AttributeModel> getAttributeModels(Set<String> modelNames, Pageable pageable) {
         if (modelNames.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
-        List<Long> modelIds = modelNames.stream().map(modelName -> {
-            Model m = modelRepository.findByName(modelName);
-            if (m != null) {
-                return m.getId();
-            }
-            LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
-                         modelName);
-            return null;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
-        Page<ModelAttrAssoc> assocs = modelAttributeRepository.findAllByModelIdIn(modelIds, pageable);
+        Page<ModelAttrAssoc> assocs = modelAttributeRepository.findAllByModelNameIn(modelNames, pageable);
         List<AttributeModel> atts = assocs.getContent().stream().map(assoc -> assoc.getAttribute())
                 .collect(Collectors.toList());
-        return new PageImpl<AttributeModel>(atts, pageable, assocs.getTotalElements());
+        return new PageImpl<>(atts, pageable, assocs.getTotalElements());
     }
 
     @Override
