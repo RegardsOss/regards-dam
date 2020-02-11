@@ -56,15 +56,11 @@
 
 	<modules>
 		<module>bootstrap-dam</module>
-		<module>bootstrap-fem</module>
-		<module>bootstrap-notifier</module>
 		<module>dam</module>
 		<module>crawler</module>
 		<module>indexer</module>
 		<module>opensearch</module>
-		<module>feature</module>
 		<module>model</module>
-		<module>notifier</module>
 	</modules>
 
 </project>
