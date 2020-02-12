@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.dao.entities;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +32,8 @@ import fr.cnes.regards.modules.dam.domain.entities.AbstractEntityRequest;
  */
 public interface IAbstractEntityRequestRepository extends JpaRepository<AbstractEntityRequest, Long> {
 
-    public Set<AbstractEntityRequest> findByGroupIdIn(Set<String> groupIds);
+    Set<AbstractEntityRequest> findByGroupIdIn(Set<String> groupIds);
+
+    Optional<AbstractEntityRequest> findByGroupId(String groupId);
 
 }
