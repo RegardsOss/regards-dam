@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -90,7 +91,8 @@ public class FragmentService implements IFragmentService {
     @Override
     public List<Fragment> getFragments() {
         Iterable<Fragment> fragments = fragmentRepository.findAll();
-        return (fragments != null) ? ImmutableList.copyOf(fragments) : Collections.emptyList();
+        return ((fragments != null) && fragments.iterator().hasNext()) ? ImmutableList.copyOf(fragments)
+                : Collections.emptyList();
     }
 
     @Override
@@ -101,9 +103,9 @@ public class FragmentService implements IFragmentService {
                     String.format("Fragment with name \"%s\" already exists!", pFragment.getName()));
         }
         if (!attributeModelService.isFragmentCreatable(pFragment.getName())) {
-            throw new EntityAlreadyExistsException(String.format(
-                    "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                    pFragment.getName()));
+            throw new EntityAlreadyExistsException(String
+                    .format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                            pFragment.getName()));
         }
         return fragmentRepository.save(pFragment);
     }
