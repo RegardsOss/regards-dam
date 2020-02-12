@@ -45,8 +45,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
@@ -196,14 +196,12 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         objects.add(createObject("DO2", "DataObject 2"));
         objects.add(createObject("DO3", "DataObject 3"));
         dataAccessPlugin = createDataAccessPlugin();
-        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(1),
-                                         objects, "");
+        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(1), objects, "");
         List<DataObject> otherObj = Lists.newArrayList();
         otherObj.add(createObject("DO4", "DataObject 4"));
         otherObj.add(createObject("DO5", "DataObject 5"));
         otherObj.add(createObject("DO6", "DataObject 6"));
-        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(10),
-                                         otherObj, "");
+        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(10), otherObj, "");
         objects.addAll(otherObj);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
     }

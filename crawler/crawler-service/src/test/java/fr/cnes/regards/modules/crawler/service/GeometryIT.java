@@ -29,7 +29,7 @@ import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.geojson.geometry.Unlocated;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;

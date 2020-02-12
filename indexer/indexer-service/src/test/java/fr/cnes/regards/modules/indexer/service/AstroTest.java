@@ -58,9 +58,9 @@ import fr.cnes.regards.framework.geojson.coordinates.Positions;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -269,7 +269,7 @@ public class AstroTest {
     private DataObject createDataObject(IGeometry shape, IGeometry shapeWgs84, String label) {
         System.out.println("Saving " + label);
         DataObject object = new DataObject(model, TENANT, label, label);
-        object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
+        object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
         object.setNormalizedGeometry(GeoHelper.normalize(shape));
         object.getFeature().setCrs(Crs.ASTRO.toString());
         object.setWgs84(GeoHelper.normalize(shapeWgs84));

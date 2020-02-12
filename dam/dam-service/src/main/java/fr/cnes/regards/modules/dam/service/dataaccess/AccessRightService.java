@@ -34,6 +34,7 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -45,8 +46,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.framwork.logbackappender.LogConstants;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
@@ -148,13 +149,10 @@ public class AccessRightService implements IAccessRightService {
                     }
 
                     boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
-                    boolean dataAccess =
-                            datasetAccess && (accessRight.getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
-                    metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(),
-                                                datasetAccess,
-                                                dataAccess,
-                                                metadataPluginId,
-                                                pluginId);
+                    boolean dataAccess = datasetAccess
+                            && (accessRight.getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
+                    metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
+                                                metadataPluginId, pluginId);
                 });
         return metadata;
 
@@ -215,44 +213,34 @@ public class AccessRightService implements IAccessRightService {
         switch (accessRight.getAccessLevel()) {
             case FULL_ACCESS:
                 LOGGER.info("{}Dataset {} access right has been modified."
-                                    + " Users from group {} has access to this dataset metadata and its data metadata."
-                                    + " Access to physical data is: {}",
-                            LogConstants.SECURITY_MARKER,
-                            accessRight.getConstrained().getLabel(),
-                            accessRight.getAccessGroup().getName(),
-                            accessRight.getAccessLevel(),
-                            accessRight.getDataAccessLevel());
+                        + " Users from group {} has access to this dataset metadata and its data metadata."
+                        + " Access to physical data is: {}", LogConstants.SECURITY_MARKER,
+                            accessRight.getConstrained().getLabel(), accessRight.getAccessGroup().getName(),
+                            accessRight.getAccessLevel(), accessRight.getDataAccessLevel());
                 break;
             case RESTRICTED_ACCESS:
                 LOGGER.info("{}Dataset {} access right has been modified."
-                                    + " Users from group {} has access to this dataset."
-                                    + " This means they can only see its metadata and no information about its data.",
-                            LogConstants.SECURITY_MARKER,
-                            accessRight.getConstrained().getLabel(),
-                            accessRight.getAccessGroup().getName(),
-                            accessRight.getAccessLevel());
+                        + " Users from group {} has access to this dataset."
+                        + " This means they can only see its metadata and no information about its data.",
+                            LogConstants.SECURITY_MARKER, accessRight.getConstrained().getLabel(),
+                            accessRight.getAccessGroup().getName(), accessRight.getAccessLevel());
                 break;
             case CUSTOM_ACCESS:
                 LOGGER.info("{}Dataset {} access right has been modified."
-                                    + " Users from group {} has access to this dataset metadata"
-                                    + " and its data access is decided by the plugin {}.",
-                            LogConstants.SECURITY_MARKER,
-                            accessRight.getConstrained().getLabel(),
-                            accessRight.getAccessGroup().getName(),
-                            accessRight.getAccessLevel(),
-                            accessRight.getDataAccessPlugin().getLabel());
+                        + " Users from group {} has access to this dataset metadata"
+                        + " and its data access is decided by the plugin {}.", LogConstants.SECURITY_MARKER,
+                            accessRight.getConstrained().getLabel(), accessRight.getAccessGroup().getName(),
+                            accessRight.getAccessLevel(), accessRight.getDataAccessPlugin().getLabel());
                 break;
             case NO_ACCESS:
                 LOGGER.info("{}Dataset {} access right has been modified."
-                                    + " Users from group {} has no access to this dataset metadata and its data.",
-                            LogConstants.SECURITY_MARKER,
-                            accessRight.getConstrained().getLabel(),
+                        + " Users from group {} has no access to this dataset metadata and its data.",
+                            LogConstants.SECURITY_MARKER, accessRight.getConstrained().getLabel(),
                             accessRight.getAccessGroup().getName());
                 break;
             default:
                 LOGGER.error("{}Dataset {} access right has been modified with an undocumented access level {}.",
-                             LogConstants.SECURITY_MARKER,
-                             accessRight.getConstrained().getLabel(),
+                             LogConstants.SECURITY_MARKER, accessRight.getConstrained().getLabel(),
                              accessRight.getAccessLevel());
                 break;
         }
@@ -281,9 +269,7 @@ public class AccessRightService implements IAccessRightService {
         }
         AccessRight accessRightFromDb = accessRightFromDbOpt.get();
         Optional<PluginConfiguration> toRemove = updatePluginConfiguration(Optional.ofNullable(accessRight
-                                                                                                       .getDataAccessPlugin()),
-                                                                           Optional.ofNullable(accessRightFromDb
-                                                                                                       .getDataAccessPlugin()));
+                .getDataAccessPlugin()), Optional.ofNullable(accessRightFromDb.getDataAccessPlugin()));
 
         repository.save(accessRight);
         // Load access right with dependencies
@@ -314,10 +300,8 @@ public class AccessRightService implements IAccessRightService {
 
         PluginConfiguration confToDelete = accessRight.getDataAccessPlugin();
         repository.deleteById(id);
-        LOGGER.info("{}Dataset {} has no more configured access for users from group {}",
-                    LogConstants.SECURITY_MARKER,
-                    accessRight.getConstrained().getLabel(),
-                    accessRight.getAccessGroup().getName());
+        LOGGER.info("{}Dataset {} has no more configured access for users from group {}", LogConstants.SECURITY_MARKER,
+                    accessRight.getConstrained().getLabel(), accessRight.getAccessGroup().getName());
         if ((confToDelete != null) && (confToDelete.getId() != null)) {
             pluginService.deletePluginConfiguration(confToDelete.getBusinessId());
         }
@@ -344,8 +328,8 @@ public class AccessRightService implements IAccessRightService {
                 Optional<AccessRight> accessRightOptional = repository
                         .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
                 // Check if the accessRight allows to access to that dataset
-                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS
-                        .equals(accessRightOptional.get().getAccessLevel())) {
+                if (accessRightOptional.isPresent()
+                        && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
                     isAutorised = true;
                     // Stop loop iteration
                     break;
@@ -368,19 +352,18 @@ public class AccessRightService implements IAccessRightService {
                     IDataObjectAccessFilterPlugin plugin = pluginService
                             .getPlugin(ar.getDataAccessPlugin().getBusinessId());
                     if (plugin.isDynamic()) {
-                        LOGGER.info("Updating dynamic accessRights for dataset {} - {}",
-                                    ar.getDataset().getLabel(),
+                        LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
                                     ar.getDataset().getIpId());
                         datasetsToUpdate.add(ar.getDataset().getIpId());
                     }
                 }
             } catch (ModuleException | NotAvailablePluginConfigurationException e) {
-                LOGGER.error(String.format("updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
+                LOGGER.error(String.format(
+                                           "updateDynamicAccessRights - Error getting plugin %d for accessRight %d of "
                                                    + "dataset %s and group %s. Does plugin exist anymore ?",
-                                           ar.getDataAccessPlugin().getId(),
-                                           ar.getId(),
-                                           ar.getDataset().getLabel(),
-                                           ar.getAccessGroup().getName()), e);
+                                           ar.getDataAccessPlugin().getId(), ar.getId(), ar.getDataset().getLabel(),
+                                           ar.getAccessGroup().getName()),
+                             e);
             }
         });
 
@@ -388,11 +371,8 @@ public class AccessRightService implements IAccessRightService {
             String message = String.format("Update of accessRights scheduled for %d datasets", datasetsToUpdate.size());
             try {
                 FeignSecurityManager.asSystem();
-                notificationClient.notify(message,
-                                          "Dynamic access right update",
-                                          NotificationLevel.INFO,
-                                          DefaultRole.PROJECT_ADMIN,
-                                          DefaultRole.ADMIN);
+                notificationClient.notify(message, "Dynamic access right update", NotificationLevel.INFO,
+                                          DefaultRole.PROJECT_ADMIN, DefaultRole.ADMIN);
                 FeignSecurityManager.reset();
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 LOGGER.error(String.format("Error sending notification : %s", message), e);
@@ -408,9 +388,9 @@ public class AccessRightService implements IAccessRightService {
         // Check no identifier. For each new chain, we force plugin configuration creation. A configuration cannot be
         // reused.
         if (pluginConfiguration.getId() != null) {
-            throw new EntityInvalidException(String.format(
-                    "Plugin configuration %s must not already have an identifier.",
-                    pluginConfiguration.getLabel()));
+            throw new EntityInvalidException(
+                    String.format("Plugin configuration %s must not already have an identifier.",
+                                  pluginConfiguration.getLabel()));
         }
         return pluginService.savePluginConfiguration(pluginConfiguration);
     }

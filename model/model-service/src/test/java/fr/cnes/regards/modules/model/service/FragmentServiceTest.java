@@ -56,9 +56,6 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
-import fr.cnes.regards.modules.model.service.FragmentService;
-import fr.cnes.regards.modules.model.service.IAttributeModelService;
-import fr.cnes.regards.modules.model.service.IFragmentService;
 
 /**
  * Test fragment service

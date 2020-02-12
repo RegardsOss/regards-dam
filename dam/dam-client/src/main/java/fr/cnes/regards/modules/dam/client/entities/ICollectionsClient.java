@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 
 /**
@@ -98,7 +98,7 @@ public interface ICollectionsClient {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
     HttpEntity<EntityModel<Collection>> dissociateCollection(@PathVariable("collection_id") Long collectionId,
-            @RequestBody Set<UniformResourceName> toBeDissociated);
+            @RequestBody Set<OaisUniformResourceName> toBeDissociated);
 
     /**
      * Entry point to handle association of {@link Collection} specified by its id to other entities
@@ -109,5 +109,5 @@ public interface ICollectionsClient {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
     @ResponseBody
     HttpEntity<EntityModel<Collection>> associateCollections(@PathVariable("collection_id") Long collectionId,
-            @RequestBody Set<UniformResourceName> toBeAssociatedWith);
+            @RequestBody Set<OaisUniformResourceName> toBeAssociatedWith);
 }

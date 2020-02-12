@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
@@ -95,7 +95,7 @@ public interface IDatasetClient {
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     ResponseEntity<EntityModel<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long datasetId,
-            @RequestBody Set<UniformResourceName> toBeDissociated);
+            @RequestBody Set<OaisUniformResourceName> toBeDissociated);
 
     /**
      * Entry point to handle association of {@link Dataset} specified by its id to other entities
@@ -105,5 +105,5 @@ public interface IDatasetClient {
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     ResponseEntity<EntityModel<Dataset>> associateDataset(@PathVariable("dataset_id") Long datasetId,
-            @RequestBody Set<UniformResourceName> toBeAssociatedWith);
+            @RequestBody Set<OaisUniformResourceName> toBeAssociatedWith);
 }

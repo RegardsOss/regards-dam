@@ -36,8 +36,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
@@ -110,8 +111,8 @@ public class SearchService implements ISearchService {
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchTypeMap(), String[].class);
         addProjectInfos(tagSearchKey);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
-                .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
+        Predicate<String> askedTypePredicate = tag -> OaisUniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
+                .get(OaisUniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
         Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),

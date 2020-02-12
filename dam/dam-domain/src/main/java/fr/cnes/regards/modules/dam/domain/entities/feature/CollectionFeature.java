@@ -20,9 +20,9 @@ package fr.cnes.regards.modules.dam.domain.entities.feature;
 
 import java.util.UUID;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 
 /**
  * Specific feature properties for collections
@@ -39,7 +39,7 @@ public class CollectionFeature extends EntityFeature {
     }
 
     public CollectionFeature(String tenant, String providerId, String label) {
-        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, tenant, UUID.randomUUID(), 1),
+        super(new OaisUniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, tenant, UUID.randomUUID(), 1),
               providerId, EntityType.COLLECTION, label);
     }
 }

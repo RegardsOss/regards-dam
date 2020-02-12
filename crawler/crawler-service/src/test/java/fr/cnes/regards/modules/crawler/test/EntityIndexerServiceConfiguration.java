@@ -32,7 +32,7 @@ import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.dataaccess.IAccessGroupClient;
 import fr.cnes.regards.modules.dam.client.dataaccess.IAccessRightClient;
@@ -63,7 +63,7 @@ public class EntityIndexerServiceConfiguration {
         Dataset mockDataset = new Dataset(mockedModel, "tenant", "DSMOCK",
                 "Mocked dataset response from mock dataset dam client");
         mockDataset.setId(1L);
-        mockDataset.setIpId(UniformResourceName
+        mockDataset.setIpId(OaisUniformResourceName
                 .fromString("URN:AIP:DATASET:tenant:27de606c-a6cd-411f-a5ba-bd1b2f29c965:V1"));
         Mockito.when(client.retrieveDataset(Mockito.anyString()))
                 .thenReturn(new ResponseEntity<EntityModel<Dataset>>(HateoasUtils.wrap(mockDataset), HttpStatus.OK));

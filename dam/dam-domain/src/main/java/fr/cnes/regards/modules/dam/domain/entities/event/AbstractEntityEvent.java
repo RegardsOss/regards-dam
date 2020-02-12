@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.dam.domain.entities.event;
 
 import fr.cnes.regards.framework.amqp.event.IPollable;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * Microservice specific abstract entity event (@see CrawlerService) sent to AMQP indicating that the concerned entity has been

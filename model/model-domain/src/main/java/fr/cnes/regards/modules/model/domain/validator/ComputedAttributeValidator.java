@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.model.domain.ComputationMode;
@@ -78,7 +78,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
                 return false;
             }
             // If computed attribute, check that computation plugin mechanism is correct
-            if (modelAttrAssoc.getMode() == ComputationMode.COMPUTED && computationConf != null
+            if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null)
                     && computationConf.getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
                 try {

@@ -23,6 +23,9 @@ import java.util.Set;
 
 import org.springframework.util.Assert;
 
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.model.domain.Model;
@@ -68,7 +71,10 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     }
 
     public DataObject(Model model, String tenant, String providerId, String label) {
-        super(model, new DataObjectFeature(tenant, providerId, label));
+        super(model,
+              new DataObjectFeature(
+                      OaisUniformResourceName.pseudoRandomUrn(OAISIdentifier.AIP, EntityType.DATA, tenant, 1),
+                      providerId, label));
     }
 
     private DataObject(Model model, DataObjectFeature feature) {
@@ -132,7 +138,7 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
         DataObject dataObject = new DataObject(model, feature);
         dataObject.setInternal(internal);
         dataObject.setIpId(feature.getId());
-        if (feature.getTags() != null && !feature.getTags().isEmpty()) {
+        if ((feature.getTags() != null) && !feature.getTags().isEmpty()) {
             dataObject.setTags(feature.getTags());
         }
         // FIXME manage last update?

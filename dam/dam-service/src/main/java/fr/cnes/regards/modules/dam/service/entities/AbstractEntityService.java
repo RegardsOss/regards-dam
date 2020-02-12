@@ -61,10 +61,11 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
@@ -357,7 +358,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
 
         // Set IpId
         if (entity.getIpId() == null) {
-            entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
+            entity.setIpId(new OaisUniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
                     runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
 
@@ -653,12 +654,12 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
     }
 
     private static Set<UniformResourceName> extractUrns(Set<String> tags) {
-        return tags.stream().filter(UniformResourceName::isValidUrn).map(UniformResourceName::fromString)
+        return tags.stream().filter(OaisUniformResourceName::isValidUrn).map(OaisUniformResourceName::fromString)
                 .collect(Collectors.toSet());
     }
 
     private static Set<UniformResourceName> extractUrnsOfType(Set<String> tags, EntityType entityType) {
-        return tags.stream().filter(UniformResourceName::isValidUrn).map(UniformResourceName::fromString)
+        return tags.stream().filter(OaisUniformResourceName::isValidUrn).map(OaisUniformResourceName::fromString)
                 .filter(urn -> urn.getEntityType() == entityType).collect(Collectors.toSet());
     }
 

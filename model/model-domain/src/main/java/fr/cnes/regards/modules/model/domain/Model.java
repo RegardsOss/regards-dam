@@ -37,7 +37,7 @@ import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.module.manager.ConfigIgnore;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 
 /**
  *
@@ -177,7 +177,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (name == null ? 0 : name.hashCode());
+        result = (prime * result) + (name == null ? 0 : name.hashCode());
         return result;
     }
 

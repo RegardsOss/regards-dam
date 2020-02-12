@@ -49,9 +49,9 @@ import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
@@ -143,7 +143,7 @@ public class PostgisVsElasticSearchTest {
                     IGeometry geometry = gson.fromJson(rset.getString(3), IGeometry.class);
                     DataObject object = new DataObject(model, TENANT, rset.getString(2), rset.getString(2));
                     object.setId((long) rset.getInt(1));
-                    object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
+                    object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
                             UUID.randomUUID(), 1));
                     geometry.setCrs(Crs.MARS_49900.toString());
                     object.setNormalizedGeometry(geometry);
@@ -177,8 +177,8 @@ public class PostgisVsElasticSearchTest {
                         i = (i + 1) % BULK_SIZES.length;
                         bulkSize = BULK_SIZES[i];
                         count += dos.size();
-                        System.out
-                                .println("Saved " + count + "(" + (System.currentTimeMillis() - start) / 1000 + ") s");
+                        System.out.println("Saved " + count + "(" + ((System.currentTimeMillis() - start) / 1000)
+                                + ") s");
                         dos.clear();
                     }
                 }
@@ -191,7 +191,7 @@ public class PostgisVsElasticSearchTest {
                         repos.saveBulk(TENANT, dos);
                     }
                     count += dos.size();
-                    System.out.println("Saved " + count + "(" + (System.currentTimeMillis() - start) / 1000 + " s");
+                    System.out.println("Saved " + count + "(" + ((System.currentTimeMillis() - start) / 1000) + " s");
                     dos.clear();
                 }
             }

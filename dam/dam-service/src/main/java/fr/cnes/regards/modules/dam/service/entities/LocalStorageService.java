@@ -45,7 +45,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.modules.dam.dao.entities.ILocalFileRepository;
@@ -146,7 +146,7 @@ public class LocalStorageService implements ILocalStorageService {
                                                                                            dataFile.getChecksum());
         if (!localFileOpt.isPresent()) {
             throw new EntityNotFoundException(String.format("Failed to remove the file %s for the document %s",
-                                                            dataFile.getFilename(), entity.getIpId().toString()),
+                                                            dataFile.getFilename(), entity.getIpId()),
                     LocalFile.class);
         }
 

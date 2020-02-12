@@ -38,8 +38,8 @@ import org.springframework.util.MimeType;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.feature.dao.IFeatureCopyRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureCreationRequestRepository;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;

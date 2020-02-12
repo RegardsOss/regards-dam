@@ -92,7 +92,7 @@ public final class XmlExportHelper {
         // Manage attributes from both default fragment (i.e. default namespace) and from particular fragment
         final Map<String, Fragment> xmlFragmentMap = new HashMap<>();
 
-        if (attributes != null && !Iterables.isEmpty(attributes)) {
+        if ((attributes != null) && !Iterables.isEmpty(attributes)) {
             for (ModelAttrAssoc modelAtt : attributes) {
                 dispatchAttribute(xmlFragmentMap, modelAtt);
             }
@@ -148,7 +148,7 @@ public final class XmlExportHelper {
         final Fragment xmlFragment = fragment.toXml();
 
         // Manage attributes
-        if (attributes != null && !Iterables.isEmpty(attributes)) {
+        if ((attributes != null) && !Iterables.isEmpty(attributes)) {
             for (AttributeModel att : attributes) {
                 xmlFragment.getAttribute().add(att.toXml());
             }

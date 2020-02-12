@@ -25,7 +25,7 @@ import javax.validation.constraints.NotBlank;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 
 /**
  * Metadata for storage

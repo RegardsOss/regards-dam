@@ -20,9 +20,9 @@ package fr.cnes.regards.modules.dam.domain.entities.feature;
 
 import java.util.UUID;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 
 /**
  * Specific feature properties for datasets
@@ -44,8 +44,8 @@ public class DatasetFeature extends EntityFeature {
     }
 
     public DatasetFeature(String tenant, String providerId, String label) {
-        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, tenant, UUID.randomUUID(), 1), providerId,
-              EntityType.DATASET, label);
+        super(new OaisUniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, tenant, UUID.randomUUID(), 1),
+              providerId, EntityType.DATASET, label);
     }
 
     public String getLicence() {

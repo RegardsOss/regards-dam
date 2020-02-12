@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
 import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;

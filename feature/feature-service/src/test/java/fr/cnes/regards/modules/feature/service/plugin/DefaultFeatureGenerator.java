@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.feature.domain.request.FeatureReferenceRequest;
 import fr.cnes.regards.modules.feature.dto.Feature;
 

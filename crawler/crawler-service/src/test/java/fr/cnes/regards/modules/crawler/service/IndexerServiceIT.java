@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
@@ -256,8 +256,8 @@ public class IndexerServiceIT {
         final Collection collection = new Collection(collModel, SEARCH, "COL" + i, "coll" + i);
         final HashSet<IProperty<?>> attributes = new HashSet<>();
         attributes.add(IProperty.buildInteger("altitude", (int) (Math.random() * 8848)));
-        attributes.add(IProperty.buildDouble("longitude", Math.random() * 360. - 180.));
-        attributes.add(IProperty.buildDouble("latitude", Math.random() * 180. - 90.));
+        attributes.add(IProperty.buildDouble("longitude", (Math.random() * 360.) - 180.));
+        attributes.add(IProperty.buildDouble("latitude", (Math.random() * 180.) - 90.));
         collection.setProperties(attributes);
         return collection;
     }

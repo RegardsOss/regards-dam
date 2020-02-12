@@ -41,9 +41,9 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
@@ -135,9 +135,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(name = "modelNames", required = false) Set<String> modelNames,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
         List<AttributeModel> attributes = null;
-        if (modelIds != null && !modelIds.isEmpty()) {
+        if ((modelIds != null) && !modelIds.isEmpty()) {
             attributes = modelAttrAssocService.getAttributeModels(modelIds, PageRequest.of(0, 1000)).getContent();
-        } else if (modelNames != null && !modelNames.isEmpty()) {
+        } else if ((modelNames != null) && !modelNames.isEmpty()) {
             attributes = modelAttrAssocService.getAttributeModelsByName(modelNames, PageRequest.of(0, 1000))
                     .getContent();
         } else {
@@ -252,7 +252,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
     @Override
     public EntityModel<AttributeModel> toResource(final AttributeModel attributeModel, final Object... extras) {
         EntityModel<AttributeModel> resource = resourceService.toResource(attributeModel);
-        boolean addLinks = extras == null || extras.length == 0 || extras[0] instanceof Boolean && !(Boolean) extras[0];
+        boolean addLinks = (extras == null) || (extras.length == 0)
+                || ((extras[0] instanceof Boolean) && !(Boolean) extras[0]);
         if (addLinks) {
             resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));

@@ -52,10 +52,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
@@ -133,8 +133,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * @param datasourceId
      * @return the IpId generated from given parameters
      */
-    private static UniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+    private static OaisUniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
+        return new OaisUniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
 
@@ -370,7 +370,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list, datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list,
+                                                                                  datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),

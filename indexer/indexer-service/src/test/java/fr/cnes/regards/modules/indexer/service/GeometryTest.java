@@ -37,9 +37,9 @@ import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
@@ -88,7 +88,7 @@ public class GeometryTest {
 
     private DataObject createDataObject(String label, IGeometry shape) {
         DataObject object = new DataObject(model, TENANT, label, label);
-        object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
+        object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
         object.setNormalizedGeometry(GeoHelper.normalize(shape));
         object.setWgs84(GeoHelper.normalize(shape));
         return object;

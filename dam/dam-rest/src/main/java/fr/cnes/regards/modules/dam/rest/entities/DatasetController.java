@@ -51,7 +51,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.Validity;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.rest.entities.dto.DatasetDataAttributesRequestBody;
@@ -146,7 +146,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieve all attributes related to given entity")
     @RequestMapping(path = ENTITY_ASSOCS_MAPPING, method = RequestMethod.GET)
     public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsForDataInDataset(
-            @RequestParam(name = "datasetUrn") UniformResourceName datasetUrn) throws ModuleException {
+            @RequestParam(name = "datasetUrn") OaisUniformResourceName datasetUrn) throws ModuleException {
         Dataset dataset = service.load(datasetUrn);
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocs(dataset.getDataModel());
         return ResponseEntity.ok(assocs);
@@ -216,7 +216,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Dataset> retrieveDataset(@PathVariable("dataset_ipId") final String datasetIpId)
             throws ModuleException {
-        Dataset dataset = service.load(UniformResourceName.fromString(datasetIpId));
+        Dataset dataset = service.load(OaisUniformResourceName.fromString(datasetIpId));
         return new ResponseEntity<>(dataset, HttpStatus.OK);
     }
 

@@ -51,9 +51,10 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 
@@ -195,7 +196,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
     @ResourceAccess(description = "check if an user has access to a dataset")
     public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
-            @RequestParam(name = "dataset") UniformResourceName datasetIpId,
+            @RequestParam(name = "dataset") OaisUniformResourceName datasetIpId,
             @RequestParam(name = "user") String userEMail) throws ModuleException {
         boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
         return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
@@ -217,12 +218,12 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     /**
-     * Data binder to recognize {@link UniformResourceName}
+     * Data binder to recognize {@link OaisUniformResourceName}
      * @param dataBinder
      */
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
-        dataBinder.registerCustomEditor(UniformResourceName.class, new PropertyEditorSupport() {
+        dataBinder.registerCustomEditor(OaisUniformResourceName.class, new PropertyEditorSupport() {
 
             /**
              * The value
@@ -236,7 +237,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
             @Override
             public void setAsText(String text) {
-                value = UniformResourceName.fromString(text);
+                value = OaisUniformResourceName.fromString(text);
             }
         });
     }

@@ -30,6 +30,9 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.feature.dao.IFeatureEntityRepository;
 import fr.cnes.regards.modules.feature.domain.FeatureEntity;
@@ -58,7 +61,10 @@ public class DataObjectFeatureFactory implements IDataObjectFeatureFactory {
     }
 
     private DataObjectFeature initDataObjectFeature(FeatureEntity entity) {
-        DataObjectFeature dof = new DataObjectFeature(tenantResolver.getTenant(), entity.getProviderId(), "NO LABEL");
+        entity.getUrn();
+        DataObjectFeature dof = new DataObjectFeature(OaisUniformResourceName
+                .pseudoRandomUrn(OAISIdentifier.AIP, EntityType.DATA, tenantResolver.getTenant(), 1),
+                entity.getProviderId(), "NO LABEL");
         dof.setProperties(entity.getFeature().getProperties());
         dof.setGeometry(entity.getFeature().getGeometry());
         dof.setSession(entity.getSession());

@@ -48,9 +48,9 @@ import com.jillesvangurp.geo.GeoGeometry;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -149,7 +149,7 @@ public class PepsTest {
                 totalResults = properties.get("totalResults").getAsInt();
                 int startIndex = properties.get("startIndex").getAsInt();
                 int itemsPerPage = properties.get("itemsPerPage").getAsInt();
-                if (startIndex + itemsPerPage >= totalResults + 1) {
+                if ((startIndex + itemsPerPage) >= (totalResults + 1)) {
                     ended = true;
                 }
                 // Create data objects
@@ -160,7 +160,7 @@ public class PepsTest {
                     DataObject object = new DataObject(model, TENANT,
                             feature.get("properties").getAsJsonObject().get("title").getAsString(),
                             feature.get("properties").getAsJsonObject().get("title").getAsString());
-                    object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
+                    object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
                             UUID.randomUUID(), 1));
                     object.setNormalizedGeometry(geometry);
                     object.setWgs84(geometry);
@@ -309,16 +309,16 @@ public class PepsTest {
             List<DataObject> objectsFromPeps) {
         // most polygons from Peps have an area betwwen 1e10 and 1e11
         // A polygon with an area > 1e12 means there is a problem (polygon crossing dateline)
-        checkResults(o -> GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12)
                 || !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bboxPolygon), objectsFromEs,
                      objectsFromPeps);
     }
 
     private void checkResults(double[][] bbox1Polygon, double[][] bbox2Polygon, List<DataObject> objectsFromEs,
             List<DataObject> objectsFromPeps) {
-        checkResults(o -> GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12
-                || !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox1Polygon)
-                        && !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox2Polygon),
+        checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12)
+                || (!GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox1Polygon)
+                        && !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bbox2Polygon)),
                      objectsFromEs, objectsFromPeps);
     }
 

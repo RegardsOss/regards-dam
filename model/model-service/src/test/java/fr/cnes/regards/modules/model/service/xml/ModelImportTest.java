@@ -34,7 +34,7 @@ import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.model.domain.ComputationMode;
 import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
@@ -42,8 +42,6 @@ import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.model.service.exception.ImportException;
-import fr.cnes.regards.modules.model.service.xml.IComputationPluginService;
-import fr.cnes.regards.modules.model.service.xml.XmlImportHelper;
 
 /**
  * @author Marc Sordi
@@ -55,7 +53,7 @@ public class ModelImportTest {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelImportTest.class);
 
-    private IComputationPluginService cps = Mockito.mock(IComputationPluginService.class);
+    private final IComputationPluginService cps = Mockito.mock(IComputationPluginService.class);
 
     @Before
     public void setup() throws ImportException {

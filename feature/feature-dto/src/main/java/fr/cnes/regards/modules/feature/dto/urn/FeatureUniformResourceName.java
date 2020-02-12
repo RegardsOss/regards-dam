@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 
 import javax.persistence.Convert;
 
-import fr.cnes.regards.framework.oais.urn.AbstractUniformResourceName;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.validator.RegardsOaisUrn;
+import fr.cnes.regards.framework.oais.validator.RegardsOaisUrn;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
 
 /**
@@ -43,14 +43,14 @@ import fr.cnes.regards.modules.feature.dto.urn.converter.FeatureUrnConverter;
  */
 @RegardsOaisUrn
 @Convert(converter = FeatureUrnConverter.class)
-public class FeatureUniformResourceName extends AbstractUniformResourceName<FeatureIdentifier> {
+public class FeatureUniformResourceName extends UniformResourceName {
 
     public static final int MAX_SIZE = 132;
 
     public static FeatureUniformResourceName build(FeatureIdentifier identifier, EntityType entityType, String tenant,
             UUID entityId, int version) {
         FeatureUniformResourceName urn = new FeatureUniformResourceName();
-        urn.build(identifier, entityType, tenant, entityId, version, null, null);
+        urn.build(identifier.name(), entityType, tenant, entityId, version, null, null);
         return urn;
     }
 
@@ -125,8 +125,9 @@ public class FeatureUniformResourceName extends AbstractUniformResourceName<Feat
     }
 
     public static FeatureUniformResourceName clone(FeatureUniformResourceName template, Long order) {
-        return FeatureUniformResourceName.build(template.getIdentifier(), template.getEntityType(),
-                                                template.getTenant(), template.getEntityId(), template.getVersion())
+        return FeatureUniformResourceName
+                .build(FeatureIdentifier.valueOf(template.getIdentifier()), template.getEntityType(),
+                       template.getTenant(), template.getEntityId(), template.getVersion())
                 .withOrder(order);
     }
 }

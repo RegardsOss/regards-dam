@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.geojson.AbstractFeature;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.feature.dto.urn.FeatureUniformResourceName;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 
@@ -94,17 +94,17 @@ public class Feature extends AbstractFeature<Set<IProperty<?>>, String> {
     }
 
     public boolean hasFiles() {
-        return this.files != null && !this.files.isEmpty();
+        return (this.files != null) && !this.files.isEmpty();
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + (entityType == null ? 0 : entityType.hashCode());
-        result = prime * result + (files == null ? 0 : files.hashCode());
-        result = prime * result + (model == null ? 0 : model.hashCode());
-        result = prime * result + (urn == null ? 0 : urn.hashCode());
+        result = (prime * result) + (entityType == null ? 0 : entityType.hashCode());
+        result = (prime * result) + (files == null ? 0 : files.hashCode());
+        result = (prime * result) + (model == null ? 0 : model.hashCode());
+        result = (prime * result) + (urn == null ? 0 : urn.hashCode());
         return result;
     }
 

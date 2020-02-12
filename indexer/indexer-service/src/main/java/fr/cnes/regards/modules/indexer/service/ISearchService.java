@@ -28,8 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -48,6 +48,7 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
  * @author oroussel
  */
 public interface ISearchService {
+
     /**
      * Maximum page size (Elasticsearch constraint)
      * (only used by CatalogSearchService)

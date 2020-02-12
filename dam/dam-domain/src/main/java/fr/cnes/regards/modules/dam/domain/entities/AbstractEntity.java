@@ -60,9 +60,9 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.dam.domain.entities.feature.EntityFeature;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -399,7 +399,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         final int prime = 31;
         int result = 1;
         // CHECKSTYLE:OFF
-        result = prime * result + (getIpId() == null ? 0 : getIpId().hashCode());
+        result = (prime * result) + (getIpId() == null ? 0 : getIpId().hashCode());
         // CHECKSTYLE:ON
         return result;
     }

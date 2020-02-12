@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 
 /**
@@ -70,13 +70,13 @@ public interface IAccessRightClient { // NOSONAR
     @ResponseBody
     ResponseEntity<PagedModel<EntityModel<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String groupName,
-            @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
+            @RequestParam(name = "dataset", required = false) OaisUniformResourceName datasetIpId,
             @RequestParam("page") int page, @RequestParam("size") int size);
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHT)
     @ResponseBody
     ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
-            @RequestParam(name = "dataset") UniformResourceName datasetIpId);
+            @RequestParam(name = "dataset") OaisUniformResourceName datasetIpId);
 
     /**
      * Create an access right
@@ -113,6 +113,6 @@ public interface IAccessRightClient { // NOSONAR
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
     @ResponseBody
     ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
-            @RequestParam(name = "dataset") UniformResourceName datasetIpId,
+            @RequestParam(name = "dataset") OaisUniformResourceName datasetIpId,
             @RequestParam(name = "user") String userEMail);
 }

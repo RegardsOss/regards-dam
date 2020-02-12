@@ -35,8 +35,8 @@ import org.springframework.util.MultiValueMap;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
@@ -100,22 +100,20 @@ public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
         // so AndCrit(EmptyCrit, OrCrit(FieldExistsCrits))
         crit = ((AndCriterion) crit).getCriterions().get(1);
         Assert.assertTrue("When parsing a query with " + ImageOnlyParser.IMAGE_ONLY_PARAM
-                                  + " GET parameter, we should have a criterion that is an OR",
-                          crit instanceof OrCriterion);
+                + " GET parameter, we should have a criterion that is an OR", crit instanceof OrCriterion);
         OrCriterion orCrit = (OrCriterion) crit;
-        Assert.assertEquals("There should be 4 elements to this or criterion(one for each image type",
-                            4L,
+        Assert.assertEquals("There should be 4 elements to this or criterion(one for each image type", 4L,
                             orCrit.getCriterions().size());
         List<FieldExistsCriterion> fieldsToLookFor = orCrit.getCriterions().stream().map(c -> (FieldExistsCriterion) c)
                 .collect(Collectors.toList());
         Assert.assertTrue(fieldsToLookFor.get(0).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.THUMBNAIL));
+                .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.THUMBNAIL));
         Assert.assertTrue(fieldsToLookFor.get(1).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_HD));
+                .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_HD));
         Assert.assertTrue(fieldsToLookFor.get(2).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_MD));
+                .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_MD));
         Assert.assertTrue(fieldsToLookFor.get(3).getName()
-                                  .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_SD));
+                .equals(StaticProperties.FEATURE_FILES_PATH + "." + DataType.QUICKLOOK_SD));
     }
 
 }

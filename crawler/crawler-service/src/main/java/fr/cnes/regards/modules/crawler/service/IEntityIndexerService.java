@@ -24,7 +24,7 @@ import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.notification.NotificationLevel;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -133,8 +133,7 @@ public interface IEntityIndexerService {
      * @throws ModuleException
      */
     BulkSaveResult createDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
-            String datasourceIngestionId)
-            throws ModuleException;
+            String datasourceIngestionId) throws ModuleException;
 
     /**
      * Merge given data objects into Elasticsearch
@@ -148,8 +147,7 @@ public interface IEntityIndexerService {
      * @throws ModuleException
      */
     BulkSaveResult mergeDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
-            String datasourceIngestionId)
-            throws ModuleException;
+            String datasourceIngestionId) throws ModuleException;
 
     /**
      * Delete given data object from Elasticsearch

@@ -45,9 +45,9 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.plugin.entities.LongSumComputePlugin;
 import fr.cnes.regards.modules.model.dao.IModelAttrAssocRepository;
@@ -350,14 +350,12 @@ public class ModelServiceTest {
         Set<IPluginParam> parameters = IPluginParam.set(IPluginParam.build("parameterAttributeName", "paramName"),
                                                         IPluginParam.build("parameterAttributeFragmentName", ""));
 
-        PluginConfiguration sumComputeConf = new PluginConfiguration("",
-                                                                     parameters,
-                                                                     LongSumComputePlugin.class
-                                                                             .getAnnotation(Plugin.class).id());
+        PluginConfiguration sumComputeConf = new PluginConfiguration("", parameters,
+                LongSumComputePlugin.class.getAnnotation(Plugin.class).id());
 
         // Because of mockito, lets get the plugin metadata in place here
-        sumComputeConf.setMetaData(PluginUtils.getPluginMetadata(LongSumComputePlugin.class
-                                                                         .getAnnotation(Plugin.class).id()));
+        sumComputeConf.setMetaData(PluginUtils
+                .getPluginMetadata(LongSumComputePlugin.class.getAnnotation(Plugin.class).id()));
 
         modAtt.setComputationConf(sumComputeConf);
         modelAttrAssocs.add(modAtt);

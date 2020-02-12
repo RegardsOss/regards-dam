@@ -108,7 +108,7 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
     public ICriterion getSubsettingClause() {
         ICriterion subsettingCrit = subsettingClause;
         // Add datasource id restriction
-        if (subsettingCrit == null || subsettingCrit == ICriterion.all()) {
+        if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
             subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, plgConfDataSource.getId());
         } else {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, plgConfDataSource.getId()));

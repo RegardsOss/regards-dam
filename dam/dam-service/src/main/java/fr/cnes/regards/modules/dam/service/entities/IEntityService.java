@@ -28,8 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.event.EventType;
 import fr.cnes.regards.modules.dam.service.entities.validation.IEntityValidationService;
@@ -177,7 +178,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IEntityVali
 
     /**
      * Attach files to given entity
-     * @param urn  {@link UniformResourceName}
+     * @param urn  {@link OaisUniformResourceName}
      * @param dataType  {@link DataType}
      * @param attachments {@link MultipartFile}
      * @param refs
@@ -191,7 +192,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IEntityVali
 
     /**
      * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum
-     * @param urn {@link UniformResourceName}
+     * @param urn {@link OaisUniformResourceName}
      * @param checksum
      * @return {@link DataFile}
      * @throws ModuleException
@@ -210,7 +211,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IEntityVali
 
     /**
      * Remove file
-     * @param urn {@link UniformResourceName}
+     * @param urn {@link OaisUniformResourceName}
      * @param checksum
      * @return {@link AbstractEntity}
      * @throws ModuleException
