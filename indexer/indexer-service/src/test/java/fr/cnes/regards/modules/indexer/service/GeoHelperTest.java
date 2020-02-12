@@ -329,7 +329,7 @@ public class GeoHelperTest {
                         }
                 };
 
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonFailingOnThor);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonFailingOnThor);
         Assert.assertEquals(1, polygonNormalized.size());
 
         List<double[]> expectedPolygon2 = Lists.newArrayList(
@@ -337,7 +337,7 @@ public class GeoHelperTest {
                 new double[]{-146.33, 74.64},
                 new double[]{-91.35, 66.92});
         for (int i = 0; i < expectedPolygon2.size(); i++) {
-            Assert.assertArrayEquals(expectedPolygon2.get(i), polygonNormalized.get(0).get(0).get(i), 0.001);
+            Assert.assertArrayEquals(expectedPolygon2.get(i), polygonNormalized.get(0)[0][i], 0.001);
         }
     }
 
@@ -363,21 +363,21 @@ public class GeoHelperTest {
                         }
                 }
         };
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
 
         Assert.assertEquals(2, polygonNormalized.size());
-        Assert.assertArrayEquals(new double[]{180.0, 15.0}, polygonNormalized.get(0).get(0).get(0), 0);
-        Assert.assertArrayEquals(new double[]{180.0, 30.0}, polygonNormalized.get(0).get(0).get(1), 0);
-        Assert.assertArrayEquals(new double[]{170.0, 30.0}, polygonNormalized.get(0).get(0).get(2), 0);
-        Assert.assertArrayEquals(new double[]{170.0, 15.0}, polygonNormalized.get(0).get(0).get(3), 0);
-        Assert.assertArrayEquals(new double[]{180.0, 15.0}, polygonNormalized.get(0).get(0).get(4), 0);
+        Assert.assertArrayEquals(new double[]{180.0, 15.0}, polygonNormalized.get(0)[0][0], 0);
+        Assert.assertArrayEquals(new double[]{180.0, 30.0}, polygonNormalized.get(0)[0][1], 0);
+        Assert.assertArrayEquals(new double[]{170.0, 30.0}, polygonNormalized.get(0)[0][2], 0);
+        Assert.assertArrayEquals(new double[]{170.0, 15.0}, polygonNormalized.get(0)[0][3], 0);
+        Assert.assertArrayEquals(new double[]{180.0, 15.0}, polygonNormalized.get(0)[0][4], 0);
 
 
-        Assert.assertArrayEquals(new double[]{-180.0, 30.0}, polygonNormalized.get(1).get(0).get(0), 0);
-        Assert.assertArrayEquals(new double[]{-180.0, 15.0}, polygonNormalized.get(1).get(0).get(1), 0);
-        Assert.assertArrayEquals(new double[]{-170.0, 15.0}, polygonNormalized.get(1).get(0).get(2), 0);
-        Assert.assertArrayEquals(new double[]{-170.0, 30.0}, polygonNormalized.get(1).get(0).get(3), 0);
-        Assert.assertArrayEquals(new double[]{-180.0, 30.0}, polygonNormalized.get(1).get(0).get(4), 0);
+        Assert.assertArrayEquals(new double[]{-180.0, 30.0}, polygonNormalized.get(1)[0][0], 0);
+        Assert.assertArrayEquals(new double[]{-180.0, 15.0}, polygonNormalized.get(1)[0][1], 0);
+        Assert.assertArrayEquals(new double[]{-170.0, 15.0}, polygonNormalized.get(1)[0][2], 0);
+        Assert.assertArrayEquals(new double[]{-170.0, 30.0}, polygonNormalized.get(1)[0][3], 0);
+        Assert.assertArrayEquals(new double[]{-180.0, 30.0}, polygonNormalized.get(1)[0][4], 0);
 
     }
 
@@ -392,7 +392,7 @@ public class GeoHelperTest {
         };
 
 
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
 
         Assert.assertEquals(1, polygonNormalized.size());
     }
@@ -409,7 +409,7 @@ public class GeoHelperTest {
         };
 
 
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
 
         Assert.assertEquals(1, polygonNormalized.size());
     }
@@ -423,7 +423,7 @@ public class GeoHelperTest {
         };
 
 
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
 
         Assert.assertEquals(1, polygonNormalized.size());
 
@@ -435,7 +435,7 @@ public class GeoHelperTest {
             {{-94.75,-57.86},{-94.89,-40.97},{-94.77,-39.81},{-94.63,-38.69},{-94.45,-37.58},{-94.35,-36.42},{-94.19,-35.31},{-94.06,-34.14},{-93.94,-33.03},{-93.76,-31.92},{-93.65,-30.75},{-93.48,-29.64},{-93.29,-28.53},{-93.16,-27.36},{-93,-26.25},{-92.82,-25.14},{-92.67,-23.97},{-92.47,-22.86},{-92.27,-21.75},{-92.08,-20.58},{-91.91,-19.42},{-91.73,-18.31},{-91.51,-17.19},{-91.33,-16.08},{-91.15,-14.92},{-90.94,-13.86},{-90.94,-13.81},{-90.74,-12.69},{-90.74,-12.64},{-90.51,-11.53},{-90.31,-10.47},{-90.08,-9.25},{-89.86,-8.08},{-89.64,-7.03},{-89.64,-6.97},{-89.39,-5.86},{-89.16,-4.75},{-89.16,-4.69},{-88.91,-3.58},{-88.72,-2.53},{-88.72,-2.47},{-88.72,-2.42},{-88.44,-1.36},{-88.44,-1.31},{-88.19,-0.19},{-87.97,0.86},{-87.97,0.92},{-87.97,0.97},{-87.69,2.03},{-87.69,2.08},{-87.44,3.14},{-87.44,3.19},{-87.16,4.25},{-87.16,4.31},{-87.16,4.36},{-86.87,5.47},{-86.59,6.53},{-86.59,6.58},{-86.3,7.69},{-86.01,8.86},{-85.71,9.97},{-85.39,11.08},{-85.11,12.19},{-84.77,13.36},{-84.49,14.47},{-84.12,15.58},{-83.79,16.69},{-83.43,17.86},{-83.1,18.97},{-82.72,20.08},{-82.35,21.14},{-81.98,22.31},{-81.58,23.42},{-81.18,24.53},{-80.76,25.64},{-80.36,26.75},{-79.92,27.81},{-79.43,28.92},{-79.03,30.03},{-78.51,31.14},{-78.02,32.19},{-77.54,33.31},{-77.01,34.36},{-76.47,35.42},{-75.93,36.53},{-75.37,37.64},{-74.77,38.69},{-74.1,39.75},{-73.52,40.81},{-72.84,41.86},{-72.17,42.92},{-71.44,43.97},{-70.78,45.03},{-69.96,46.03},{-69.15,47.08},{-68.31,48.14},{-67.46,49.14},{-66.51,50.14},{-65.65,51.14},{-64.66,52.14},{-63.56,53.14},{-62.54,54.08},{-61.31,55.03},{-60.12,55.97},{-58.86,56.92},{-57.48,57.86},{-56.06,58.75},{-54.56,59.64},{-53.03,60.47},{-51.4,61.36},{-49.64,62.14},{-48,62.97},{-46.04,63.75},{-44,64.53},{-41.79,65.19},{-39.46,65.86},{-37.02,66.53},{-34.53,67.14},{-31.83,67.69},{-29.03,68.14},{-26.16,68.64},{-23.1,69.08},{-19.99,69.42},{-16.73,69.69},{-13.5,69.92},{-10.03,70.08},{-6.64,70.19},{-3.21,70.25},{0.08,70.25},{152.82,87.36},{-179.32,87.64},{-158.09,87.31},{-139.74,86.64},{-128.73,85.81},{-121.33,84.81},{-117.03,83.75},{-113.81,82.69},{-111.02,81.64},{-109.59,80.53},{-108.15,79.42},{-106.99,78.31},{-105.98,77.14},{-105.25,76.08},{-104.68,74.97},{-104.18,73.86},{-103.91,72.69},{-103.5,71.53},{-103.22,70.36},{-103.05,69.31},{-102.8,68.08},{-102.66,67.03},{-102.54,65.81},{-102.44,64.75},{-102.51,63.64},{-102.4,62.53},{-102.32,61.31},{-102.37,60.25},{-102.43,59.08},{-102.37,57.86},{-102.42,56.75},{-102.5,55.64},{-102.52,54.47},{-102.61,53.36},{-102.64,52.19},{-102.74,51.08},{-102.81,49.92},{-102.88,48.69},{-103.03,47.64},{-103.09,46.42},{-103.2,45.36},{-103.33,44.19},{-103.37,43.03},{-103.51,41.92},{-103.64,40.75},{-103.78,39.64},{-103.91,38.47},{-104.05,37.36},{-104.18,36.19},{-104.32,35.03},{-104.49,33.86},{-104.66,32.75},{-104.78,31.64},{-104.98,30.42},{-105.16,29.31},{-105.28,28.19},{-105.5,27.03},{-105.65,25.86},{-105.83,24.64},{-106.04,23.64},{-106.26,22.47},{-106.46,21.31},{-106.63,20.19},{-106.78,19.08},{-106.99,17.92},{-107.21,16.81},{-107.42,15.58},{-107.64,14.42},{-107.79,13.36},{-108.07,12.19},{-108.28,10.97},{-108.47,9.92},{-108.47,9.86},{-108.71,8.69},{-108.95,7.64},{-109.18,6.47},{-109.39,5.42},{-109.39,5.36},{-109.39,5.31},{-109.67,4.25},{-109.67,4.19},{-109.92,3.08},{-109.92,3.03},{-110.15,1.97},{-110.15,1.92},{-110.42,0.86},{-110.42,0.81},{-110.64,-0.25},{-110.64,-0.31},{-110.9,-1.42},{-110.9,-1.47},{-111.13,-2.58},{-111.44,-3.64},{-111.44,-3.69},{-111.44,-3.75},{-111.74,-4.81},{-112.04,-5.97},{-112.28,-7.08},{-112.28,-7.14},{-112.62,-8.19},{-112.92,-9.31},{-112.92,-9.36},{-113.21,-10.42},{-113.53,-11.53},{-113.86,-12.64},{-113.86,-12.69},{-114.17,-13.81},{-114.51,-14.86},{-114.85,-15.97},{-115.18,-17.19},{-115.51,-18.25},{-115.91,-19.36},{-116.24,-20.42},{-116.67,-21.53},{-117.04,-22.69},{-117.42,-23.81},{-117.85,-24.81},{-118.26,-25.92},{-118.66,-27.03},{-119.11,-28.14},{-119.57,-29.19},{-120.05,-30.31},{-120.51,-31.36},{-120.95,-32.47},{-121.5,-33.47},{-122.06,-34.58},{-122.61,-35.64},{-123.15,-36.69},{-133.11,-51.92},{-94.75,-57.86}}
         };
 
-        List<List<List<double[]>>> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
+        List<double[][][]> polygonNormalized = GeoHelper.sanitizePolygon(polygonThatShouldBeSplitted);
 
         Assert.assertEquals(1, polygonNormalized.size());
 
