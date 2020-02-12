@@ -189,7 +189,7 @@ public class DatasetControllerIT extends AbstractRegardsIT {
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
-                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null, null))));
+                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
 
         final Dataset dataSet2 = new Dataset(datasetModel, getDefaultTenant(), "DS1", "Coucou");
         dataSet2.setLicence("licence");
@@ -282,9 +282,9 @@ public class DatasetControllerIT extends AbstractRegardsIT {
         ds = datasetRepository.save(ds);
 
         DatasetDataAttributesRequestBody body = new DatasetDataAttributesRequestBody();
-        Set<Long> modelIds = Sets.newHashSet();
-        modelIds.add(datasetModel.getId());
-        body.setModelIds(modelIds);
+        Set<String> modelNames = Sets.newHashSet();
+        modelNames.add(datasetModel.getName());
+        body.setModelNames(modelNames);
 
         RequestBuilderCustomizer expectations = customizer();
         expectations.expect(MockMvcResultMatchers.status().isOk());
@@ -315,9 +315,9 @@ public class DatasetControllerIT extends AbstractRegardsIT {
         ds = datasetRepository.save(ds);
 
         DatasetDataAttributesRequestBody body = new DatasetDataAttributesRequestBody();
-        Set<Long> modelIds = Sets.newHashSet();
-        modelIds.add(datasetModel.getId());
-        body.setModelIds(modelIds);
+        Set<String> modelNames = Sets.newHashSet();
+        modelNames.add(datasetModel.getName());
+        body.setModelNames(modelNames);
 
         RequestBuilderCustomizer expectations = customizer();
         expectations.expect(MockMvcResultMatchers.status().isOk());
@@ -331,7 +331,7 @@ public class DatasetControllerIT extends AbstractRegardsIT {
 
         importModel("dataModel.xml");
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
-                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null, null))));
+                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
         final Model dataModel = modelService.getModelByName("dataModel");
 
         RequestBuilderCustomizer expectations = customizer();
@@ -364,7 +364,7 @@ public class DatasetControllerIT extends AbstractRegardsIT {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
-            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null, null);
+            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
             gsonAttributeFactory.refresh(getDefaultTenant(), atts);
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + pFilename;

@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
@@ -61,10 +62,13 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
@@ -130,6 +134,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Autowired
     private IProjectsClient projectClient;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     /**
      * Parameterized entity repository
@@ -804,7 +811,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                 .stream().collect(Collectors.toMap(AbstractEntity::getIpId, Function.identity()));
         boolean updated = false;
         Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
-        // for all request succedded
+        // for all request succeeded
         for (RequestInfo info : requests) {
             // get the AbstractEntityRequest with a matching groupId
             AbstractEntityRequest current = succesRequests.stream()
@@ -836,6 +843,33 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         this.entityRepository.saveAll(entityByUrn.values());
         this.publishEvents(EventType.UPDATE,
                            treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
+    }
+
+    @Override
+    public void storeError(Set<RequestInfo> requests) {
+        String message = "Storage failed. Errors :<ul>";
+        Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
+        for (RequestInfo request : requests) {
+            // Check if request is a known one
+            Optional<AbstractEntityRequest> oReq = this.abstractEntityRequestRepo.findByGroupId(request.getGroupId());
+            if (oReq.isPresent()) {
+                treatedRequests.add(oReq.get());
+                Set<String> errors = request.getErrorRequests().stream().map(RequestResultInfoDTO::getErrorCause)
+                        .collect(Collectors.toSet());
+
+                for (String error : errors) {
+                    message += String.format("<li>%s</li>", error);
+                }
+                LOGGER.error("Storage request with groupId {} failed", request.getGroupId());
+            }
+        }
+        if (!treatedRequests.isEmpty()) {
+            message += "</ul>";
+            this.notificationClient.notify(message, "Data-management storage failed", NotificationLevel.ERROR,
+                                           MimeTypeUtils.TEXT_HTML, DefaultRole.PROJECT_ADMIN);
+            // delete treated requests
+            this.abstractEntityRequestRepo.deleteAll(treatedRequests);
+        }
     }
 
     /**

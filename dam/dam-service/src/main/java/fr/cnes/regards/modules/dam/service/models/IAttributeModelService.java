@@ -34,7 +34,7 @@ import fr.cnes.regards.modules.dam.service.models.exception.UnsupportedRestricti
  */
 public interface IAttributeModelService {
 
-    List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds,
+    List<AttributeModel> getAttributes(AttributeType type, String fragmentName,
             Set<String> modelNames);
 
     /**

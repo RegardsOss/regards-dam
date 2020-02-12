@@ -228,4 +228,10 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @param requests
      */
     void storeSucces(Set<RequestInfo> requests);
+
+    /**
+     * Update store requests after a storage error
+     * @param requests
+     */
+    void storeError(Set<RequestInfo> requests);
 }

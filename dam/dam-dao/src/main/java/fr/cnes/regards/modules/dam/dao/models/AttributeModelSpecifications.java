@@ -18,14 +18,12 @@ package fr.cnes.regards.modules.dam.dao.models;
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Set;
-
 import javax.persistence.criteria.Predicate;
+import java.util.Set;
 
 import org.springframework.data.jpa.domain.Specification;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 
@@ -42,10 +40,9 @@ public final class AttributeModelSpecifications {
      * Filter on the given attributes
      * @param type
      * @param fragmentName
-     * @param modelIds
      * @return {@link Specification}
      */
-    public static Specification<AttributeModel> search(AttributeType type, String fragmentName, Set<Long> modelIds,
+    public static Specification<AttributeModel> search(AttributeType type, String fragmentName,
             Set<String> modelNames) {
         return (root, query, cb) -> {
             Set<Predicate> predicates = Sets.newHashSet();
@@ -54,9 +51,6 @@ public final class AttributeModelSpecifications {
             }
             if (fragmentName != null) {
                 predicates.add(cb.equal(root.get("fragment").get("name"), fragmentName));
-            }
-            if ((modelIds != null) && !modelIds.isEmpty()) {
-                predicates.add(root.get("model").get("id").in(modelIds));
             }
             if ((modelNames != null) && !modelNames.isEmpty()) {
                 predicates.add(root.get("model").get("name").in(modelNames));

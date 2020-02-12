@@ -199,40 +199,40 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds,
+    public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, Set<String> modelNames,
             Pageable pageable) throws ModuleException {
-        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+        if (((modelNames == null) || modelNames.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             List<Dataset> datasets = datasetRepository.findAll();
             return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
-            if ((modelIds == null) || modelIds.isEmpty()) {
+            if ((modelNames == null) || modelNames.isEmpty()) {
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
-                Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
+                Set<Dataset> datasets = datasetRepository.findAllByModelNameIn(modelNames);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             }
         }
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
+    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<String> modelNames, Pageable pageable)
             throws ModuleException {
         Page<AttributeModel> attModelPage;
-        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+        if (((modelNames == null) || modelNames.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             // Retrieve all dataset models attributes
             List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
-            Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
-            attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
+            Set<String> dsModelNames = allDsModels.stream().map(Model::getName).collect(Collectors.toSet());
+            attModelPage = modelAttributeService.getAttributeModels(dsModelNames, pageable);
         } else {
-            if ((modelIds == null) || modelIds.isEmpty()) {
+            if ((modelNames == null) || modelNames.isEmpty()) {
                 // Retrieve all attributes associated to the given datasets
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
-                Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());
-                attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
+                Set<String> dsModelNames = datasets.stream().map(ds -> ds.getModel().getName()).collect(Collectors.toSet());
+                attModelPage = modelAttributeService.getAttributeModels(dsModelNames, pageable);
             } else {
                 // Retrieve all attributes associated to the given models.
-                attModelPage = modelAttributeService.getAttributeModels(modelIds, pageable);
+                attModelPage = modelAttributeService.getAttributeModels(modelNames, pageable);
             }
         }
 
@@ -245,7 +245,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(Collection<Dataset> datasets, Pageable pageable)
             throws ModuleException {
         Set<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toSet());
-        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelNames, pageable);
         return attModelPage;
     }
 
