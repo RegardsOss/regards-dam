@@ -49,10 +49,10 @@ public class StoragePlugin implements IStorageService {
 
     private final String URI_TEMPLATE = "%s?scope=%s";
 
-    @Value("${plugin.storage.name:#{null}}")
+    @Value("${regards.dam.store.files.plugin.storage.name:#{null}}")
     private String storage;
 
-    @Value("${plugin.storage.directory.name:#{null}}")
+    @Value("${regards.dam.store.files.plugin.storage.subdirectory:#{null}}")
     private String storageSubDirectory;
 
     @Autowired

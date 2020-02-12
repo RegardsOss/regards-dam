@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dam.dao.entities;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 
 /**
  * Common requests on entities
@@ -91,6 +93,9 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Set<T> findAllByModelIdIn(Set<Long> modelIds);
+
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Set<T> findAllByModelNameIn(Collection<String> modelNames);
 
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })

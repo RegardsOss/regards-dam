@@ -42,11 +42,9 @@ public final class AttributeModelSpecifications {
      * Filter on the given attributes
      * @param type
      * @param fragmentName
-     * @param modelIds
      * @return {@link Specification}
      */
-    public static Specification<AttributeModel> search(PropertyType type, String fragmentName, Set<Long> modelIds,
-            Set<String> modelNames) {
+    public static Specification<AttributeModel> search(PropertyType type, String fragmentName, Set<String> modelNames) {
         return (root, query, cb) -> {
             Set<Predicate> predicates = Sets.newHashSet();
             if (type != null) {
@@ -55,10 +53,7 @@ public final class AttributeModelSpecifications {
             if (fragmentName != null) {
                 predicates.add(cb.equal(root.get("fragment").get("name"), fragmentName));
             }
-            if (modelIds != null && !modelIds.isEmpty()) {
-                predicates.add(root.get("model").get("id").in(modelIds));
-            }
-            if (modelNames != null && !modelNames.isEmpty()) {
+            if ((modelNames != null) && !modelNames.isEmpty()) {
                 predicates.add(root.get("model").get("name").in(modelNames));
             }
             return cb.and(predicates.toArray(new Predicate[predicates.size()]));

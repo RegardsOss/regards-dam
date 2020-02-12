@@ -131,17 +131,13 @@ public class AttributeModelController implements IResourceController<AttributeMo
     public ResponseEntity<List<EntityModel<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) PropertyType type,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName,
-            @RequestParam(name = "modelIds", required = false) Set<Long> modelIds,
             @RequestParam(name = "modelNames", required = false) Set<String> modelNames,
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
         List<AttributeModel> attributes = null;
-        if ((modelIds != null) && !modelIds.isEmpty()) {
-            attributes = modelAttrAssocService.getAttributeModels(modelIds, PageRequest.of(0, 1000)).getContent();
-        } else if ((modelNames != null) && !modelNames.isEmpty()) {
-            attributes = modelAttrAssocService.getAttributeModelsByName(modelNames, PageRequest.of(0, 1000))
-                    .getContent();
+        if ((modelNames != null) && !modelNames.isEmpty()) {
+            attributes = modelAttrAssocService.getAttributeModels(modelNames, PageRequest.of(0, 1000)).getContent();
         } else {
-            attributes = attributeService.getAttributes(type, fragmentName, modelIds, modelNames);
+            attributes = attributeService.getAttributes(type, fragmentName, modelNames);
         }
 
         noLink = noLink == null ? Boolean.FALSE : noLink;

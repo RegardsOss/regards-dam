@@ -97,7 +97,7 @@ public class EntityFeatureSerializationTests extends AbstractMultitenantServiceT
         galaxyModel = modelService.importModel(this.getClass().getResourceAsStream("collection_galaxy.xml"));
 
         // - Refresh attribute factory
-        List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null, null);
+        List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         gsonAttributeFactory.refresh(getDefaultTenant(), atts);
     }
 

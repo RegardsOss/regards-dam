@@ -55,7 +55,6 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.User;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
@@ -148,9 +147,24 @@ public class AccessRightService implements IAccessRightService {
                         metadataPluginId = accessRight.getDataAccessPlugin().getId();
                     }
 
-                    boolean datasetAccess = accessRight.getAccessLevel() != AccessLevel.NO_ACCESS;
-                    boolean dataAccess = datasetAccess
-                            && (accessRight.getDataAccessLevel() != DataAccessLevel.NO_ACCESS);
+                    boolean datasetAccess = false;
+                    boolean dataAccess = false;
+
+                    switch (accessRight.getAccessLevel()) {
+                        case CUSTOM_ACCESS:
+                        case FULL_ACCESS:
+                            datasetAccess = true;
+                            dataAccess = true;
+                            break;
+                        case RESTRICTED_ACCESS:
+                            datasetAccess = true;
+                            break;
+                        case NO_ACCESS:
+                        default:
+                            break;
+
+                    }
+
                     metadata.addDataObjectGroup(accessRight.getAccessGroup().getName(), datasetAccess, dataAccess,
                                                 metadataPluginId, pluginId);
                 });

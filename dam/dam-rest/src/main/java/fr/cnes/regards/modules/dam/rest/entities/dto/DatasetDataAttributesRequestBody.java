@@ -38,20 +38,10 @@ public class DatasetDataAttributesRequestBody {
     /**
      * Dataset model Ids.
      */
-    private Set<Long> modelIds = Sets.newHashSet();
+    private Set<String> modelNames = Sets.newHashSet();
 
-    /**
-     * @return the modelIds
-     */
-    public Set<Long> getModelIds() {
-        return modelIds;
-    }
-
-    /**
-     * @param modelIds the modelIds to set
-     */
-    public void setModelIds(Set<Long> modelIds) {
-        this.modelIds = modelIds;
+    public Set<String> getModelNames() {
+        return modelNames;
     }
 
     /**
@@ -61,4 +51,7 @@ public class DatasetDataAttributesRequestBody {
         return datasetIds;
     }
 
+    public void setModelNames(Set<String> modelNames) {
+        this.modelNames = modelNames;
+    }
 }
