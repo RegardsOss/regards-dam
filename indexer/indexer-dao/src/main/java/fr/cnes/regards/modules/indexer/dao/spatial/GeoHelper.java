@@ -35,6 +35,7 @@ import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.geojson.geometry.Unlocated;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.spring.SpringContext;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
@@ -546,10 +547,10 @@ public class GeoHelper {
     private static List<double[][][]> normalizeExteriorRing(double[][][] inPolygon) {
 
         // Let's first found out if uncleaned / original polygon contains poles
-        //        ProjectGeoSettings settings = SpringContext.getBean(ProjectGeoSettings.class);
-        boolean northPoleIn;
-        boolean southPoleIn;
-        if (false) {
+        ProjectGeoSettings settings = SpringContext.getBean(ProjectGeoSettings.class);
+        boolean northPoleIn = false;
+        boolean southPoleIn = false;
+        if (settings.getShouldManagePolesOnGeometries()) {
             SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(inPolygon[0]);
             // Is North Pole inside polygon
             northPoleIn = sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE;
@@ -566,7 +567,7 @@ public class GeoHelper {
 
 
         // Second normalization phase only if pole management is asked to be done
-        if (false) {
+        if (settings.getShouldManagePolesOnGeometries()) {
             for (int i = 0; i < normalizedMultiPolygon.size(); i++) {
                 double[][] exteriorRing = normalizedMultiPolygon.get(i)[0];
                 double[][] doubles = cleanPolePolygon(exteriorRing, northPoleIn, southPoleIn);
@@ -606,7 +607,7 @@ public class GeoHelper {
                     LOGGER.trace("SOUTH POLE is inside polygon");
                     if (!northPoleIn) {
                         // Only South pole, best way is to apply whole algorithm on ecuadorian symetric polygon
-                            return getSymetricPolygon(cleanPolePolygon(getSymetricPolygon(exteriorRing), northPoleIn, southPoleIn));
+                        return getSymetricPolygon(cleanPolePolygon(getSymetricPolygon(exteriorRing), true, false));
                     } else { // Both poles...ouch, this will be tricky...but who knows...
                         // Work with ecuadorian symetric polygon as if north pole is south pole
                         exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
