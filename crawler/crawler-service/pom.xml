@@ -85,6 +85,10 @@
 			<groupId>fr.cnes.regards.modules.session-manager</groupId>
 			<artifactId>session-manager-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.locationtech.spatial4j</groupId>
+			<artifactId>spatial4j</artifactId>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -102,13 +106,5 @@
 			<artifactId>regards-integration-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
-		<!-- Runtime dependencies -->
-		<dependency>
-			<groupId>org.locationtech.spatial4j</groupId>
-			<artifactId>spatial4j</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-	</dependencies>	
+	</dependencies>
 </project>
