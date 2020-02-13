@@ -60,15 +60,19 @@ public class AbstractAttributeMappingConverter extends TypeAdapter<AbstractAttri
             }
         }
 
-        switch (type) {
-            case DYNAMIC:
-                return new DynamicAttributeMapping(elements.get("name"), elements.get("namespace"),
-                        AttributeType.valueOf(elements.get("type")), elements.get("nameDS"));
-            case STATIC:
-                return new StaticAttributeMapping(elements.get("name"), AttributeType.valueOf(elements.get("type")),
-                        elements.get("nameDS"));
-            default:
-                throw new RuntimeException(String.format("Invalid attribute mapping type %s", type.toString()));
+        if (type == null) {
+            throw new RuntimeException("Invalid unknown attribute mapping type");
+        } else {
+            switch (type) {
+                case DYNAMIC:
+                    return new DynamicAttributeMapping(elements.get("name"), elements.get("namespace"),
+                            AttributeType.valueOf(elements.get("type")), elements.get("nameDS"));
+                case STATIC:
+                    return new StaticAttributeMapping(elements.get("name"), AttributeType.valueOf(elements.get("type")),
+                            elements.get("nameDS"));
+                default:
+                    throw new RuntimeException(String.format("Invalid attribute mapping type %s", type.toString()));
+            }
         }
     }
 

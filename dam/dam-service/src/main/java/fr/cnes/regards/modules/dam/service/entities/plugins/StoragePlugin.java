@@ -47,7 +47,7 @@ import fr.cnes.regards.modules.storage.domain.dto.request.FileStorageRequestDTO;
         url = "https://github.com/RegardsOss")
 public class StoragePlugin implements IStorageService {
 
-    private final String URI_TEMPLATE = "%s?scope=%s";
+    private final static String URI_TEMPLATE = "%s?scope=%s";
 
     @Value("${regards.dam.store.files.plugin.storage.name:#{null}}")
     private String storage;

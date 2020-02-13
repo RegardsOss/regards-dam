@@ -847,7 +847,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     @Override
     public void storeError(Set<RequestInfo> requests) {
-        String message = "Storage failed. Errors :<ul>";
+        StringBuilder buf = new StringBuilder("Storage failed. Errors :<ul>");
         Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
         for (RequestInfo request : requests) {
             // Check if request is a known one
@@ -856,16 +856,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                 treatedRequests.add(oReq.get());
                 Set<String> errors = request.getErrorRequests().stream().map(RequestResultInfoDTO::getErrorCause)
                         .collect(Collectors.toSet());
-
                 for (String error : errors) {
-                    message += String.format("<li>%s</li>", error);
+                    buf.append(String.format("<li>%s</li>", error));
                 }
                 LOGGER.error("Storage request with groupId {} failed", request.getGroupId());
             }
         }
         if (!treatedRequests.isEmpty()) {
-            message += "</ul>";
-            this.notificationClient.notify(message, "Data-management storage failed", NotificationLevel.ERROR,
+            buf.append("</ul>");
+            this.notificationClient.notify(buf.toString(), "Data-management storage failed", NotificationLevel.ERROR,
                                            MimeTypeUtils.TEXT_HTML, DefaultRole.PROJECT_ADMIN);
             // delete treated requests
             this.abstractEntityRequestRepo.deleteAll(treatedRequests);
