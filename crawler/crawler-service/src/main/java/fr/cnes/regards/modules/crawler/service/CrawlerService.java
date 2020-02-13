@@ -384,11 +384,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
-     * @param datasourceId
-     * @param datasourceIngestionId
+     * @param datasourceId datasource id
+     * @param dsiId datasource ingestion id
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            Long datasourceId, String datasourceIngestionId, Pageable pageable) throws DataSourceException, ModuleException {
+            Long datasourceId, String dsiId, Pageable pageable) throws DataSourceException, ModuleException {
         // Retrieve target model
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
@@ -447,7 +447,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     }
                 } catch (InvalidShapeException e) {
                     invalidFeature = true;
-                    sendMessage(String.format("Failed to normalize the feature geometry : %s", e.getMessage()), datasourceIngestionId);
+                    sendMessage(String.format("Failed to normalize the feature geometry : %s. Feature label = %s, ProviderId = %s", e.getMessage(), feature.getLabel(), feature.getProviderId()), dsiId);
                 }
             }
             if (!invalidFeature) {
