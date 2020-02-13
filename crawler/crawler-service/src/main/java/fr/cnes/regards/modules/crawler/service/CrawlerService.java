@@ -18,33 +18,6 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -80,6 +53,32 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import org.locationtech.spatial4j.exception.InvalidShapeException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -411,6 +410,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         List<DataObject> dataObjects = new ArrayList<>();
 
         for (DataObjectFeature feature : page.getContent()) {
+            boolean invalidFeature = false;
             // Wrap each feature into its decorator
             DataObject dataObject = DataObject.wrap(model, feature,
                                                     IAipDataSourcePlugin.class.isAssignableFrom(dsPlugin.getClass()));
@@ -427,25 +427,31 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                 // normalization
                 feature.setCrs(projectGeoSettings.getCrs().toString());
                 // Always normalize geometry in its origin CRS
-                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
-                // Then manage projected (or not) geometry into WGS84
-                if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
-                    try {
-                        // Transform to Wgs84...(not normalized one from its origin CRS)
-                        IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
-                                                                      Crs.WGS_84);
-                        // ...and save it onto DataObject after having normalized it
-                        dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
-                    } catch (IllegalArgumentException e) {
-                        throw new RsRuntimeException(
-                                String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                try {
+                    feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
+                    // Then manage projected (or not) geometry into WGS84
+                    if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
+                        try {
+                            // Transform to Wgs84...(not normalized one from its origin CRS)
+                            IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
+                                    Crs.WGS_84);
+                            // ...and save it onto DataObject after having normalized it
+                            dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
+                        } catch (IllegalArgumentException e) {
+                            throw new RsRuntimeException(
+                                    String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                        }
+                    } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
+                        dataObject.setWgs84(feature.getNormalizedGeometry());
                     }
-                } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
-                    dataObject.setWgs84(feature.getNormalizedGeometry());
+                } catch (InvalidShapeException e) {
+                    invalidFeature = true;
+                    sendMessage(String.format("Failed to normalize the feature geometry.", e.getMessage()), String.valueOf(datasourceId));
                 }
             }
-
-            dataObjects.add(dataObject);
+            if (!invalidFeature) {
+                dataObjects.add(dataObject);
+            }
         }
 
         // Build decorated page
