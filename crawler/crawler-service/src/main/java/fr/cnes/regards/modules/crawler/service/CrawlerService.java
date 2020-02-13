@@ -224,7 +224,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Future<BulkSaveResult> task = null;
         try {
             try {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
                                              PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found at most %d records from datasource", page.getNumberOfElements()),
                             dsiId);
@@ -236,7 +236,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId, page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -287,7 +287,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                        dsiId, PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
@@ -297,7 +297,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId, page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -385,9 +385,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
      * @param datasourceId
+     * @param datasourceIngestionId
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            Long datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
+            Long datasourceId, String datasourceIngestionId, Pageable pageable) throws DataSourceException, ModuleException {
         // Retrieve target model
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
@@ -446,7 +447,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     }
                 } catch (InvalidShapeException e) {
                     invalidFeature = true;
-                    sendMessage(String.format("Failed to normalize the feature geometry.", e.getMessage()), String.valueOf(datasourceId));
+                    sendMessage(String.format("Failed to normalize the feature geometry : %s", e.getMessage()), datasourceIngestionId);
                 }
             }
             if (!invalidFeature) {
