@@ -18,27 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.opengis.referencing.operation.TransformException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -52,6 +31,25 @@ import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.opengis.referencing.operation.TransformException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author oroussel
@@ -441,7 +439,7 @@ public class GeoHelperTest {
      * or geojson.io
      */
     @Test
-    @Ignore
+    @Ignore("ES library that read this geometry does not support it")
     public void polygonNormalizationAroundSouthPoleTest1() {
         // Octans polygon: around south pole but passing through south pole (classic description of Octans)
         Polygon polygon = IGeometry.simplePolygon(toLongitude(0.00000), -90.00000, //
@@ -472,7 +470,6 @@ public class GeoHelperTest {
      * or geojson.io
      */
     @Test
-    @Ignore
     public void polygonNormalizationAroundSouthPoleTest2() {
         // Octans polygon: around south pole but not passing through south pole (Beware: it is necessary to reverse
         // polygon description to have left hand inside polygon)
@@ -488,13 +485,12 @@ public class GeoHelperTest {
                                                   toLongitude(3.50000), -82.50000, //
                                                   toLongitude(0.00000), -82.50000);
         System.out.println(displayGeoJson(polygon));
-        polygon = (Polygon) GeoHelper.normalize(polygon);
-        System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals(
-                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
-                        + "        \"coordinates\": [          [\n"
-                        + "[ 0.0, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ 349.99995, -75.0 ], [ 319.99995, -75.0 ], [ 270.0, -75.0 ], [ 270.0, -82.5 ], [ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]] ]\n"
-                        + "      }  }    ]}", displayGeoJson(polygon));
+        MultiPolygon mPolygon = (MultiPolygon) GeoHelper.normalize(polygon);
+        System.out.println(displayGeoJson(mPolygon));
+        Assert.assertEquals("{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"MultiPolygon\",\n" +
+                "        \"coordinates\": [          [\n" +
+                "[[ -180.0, -82.5 ], [ -180.00000000000003, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ -10.000049999999987, -75.0 ], [ -40.00004999999999, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ -154.99995, -82.5 ], [ -180.0, -82.5 ]], [[ 179.99999999999997, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ 180.0, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ], [ 179.99999999999997, -75.0 ]]] ]\n" +
+                "      }  }    ]}", displayGeoJson(mPolygon));
     }
 
     /**
@@ -524,7 +520,7 @@ public class GeoHelperTest {
     }
 
     @Test
-    @Ignore
+    @Ignore("ES library that read this geometry does not support it")
     public void polygonAroundBothPolesTest() {
         Polygon polygon = IGeometry
                 .simplePolygon(20, 0, 20, 80, 100, 80, 170, 80, -170, 80, -100, 80, 10, 80, 10, 0, 5, -80, -100, -80,
@@ -671,7 +667,6 @@ public class GeoHelperTest {
      * Utility method
      */
     @Test
-    @Ignore
     public void polygonMoisiTest() throws IOException {
         String constellation =
                 "15.08333 -03.25000 LIB  O\n" + "15.91667 -03.25000 LIB  O\n" + "15.91667 -08.00000 LIB  O\n"
@@ -706,7 +701,6 @@ public class GeoHelperTest {
      * Utility method
      */
     @Test
-    @Ignore
     public void reverseConstellationTest() throws IOException {
         String constellation =
                 "15.08333  00.00000 LIB  O\n" + "14.66667  00.00000 LIB  O\n" + "14.66667 -08.00000 LIB  O\n"
