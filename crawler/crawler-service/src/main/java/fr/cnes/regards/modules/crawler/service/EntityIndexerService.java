@@ -793,6 +793,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult);
             // Validate data object
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -843,34 +844,36 @@ public class EntityIndexerService implements IEntityIndexerService {
         DataObjectFeature feature = dataObject.getFeature();
         // This geometry has been set by plugin, IT IS NOT NORMALIZED
         IGeometry geometry = feature.getGeometry();
-        // Always normalize geometry in its origin CRS
-        try {
-            feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
-            // Then manage projected (or not) geometry into WGS84
-            if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
-                try {
-                    // Transform to Wgs84...(not normalized one from its origin CRS)
-                    IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
-                            Crs.WGS_84);
-                    // ...and save it onto DataObject after having normalized it
-                    dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
-                } catch (IllegalArgumentException e) {
-                    throw new RsRuntimeException(
-                            String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+        if (geometry != null) {
+            // Always normalize geometry in its origin CRS
+            try {
+                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
+                // Then manage projected (or not) geometry into WGS84
+                if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
+                    try {
+                        // Transform to Wgs84...(not normalized one from its origin CRS)
+                        IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
+                                Crs.WGS_84);
+                        // ...and save it onto DataObject after having normalized it
+                        dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
+                    } catch (IllegalArgumentException e) {
+                        throw new RsRuntimeException(
+                                String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                    }
+                } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
+                    dataObject.setWgs84(feature.getNormalizedGeometry());
                 }
-            } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
-                dataObject.setWgs84(feature.getNormalizedGeometry());
+            } catch (InvalidShapeException e) {
+                // Validation error
+                String msg = String.format("Failed to normalize the feature geometry : %s. Feature label = %s, ProviderId = %s",
+                        e.getMessage(), feature.getLabel(), feature.getProviderId());
+                // Log error msg
+                LOGGER.warn(msg);
+                // Add data object in error into summary result
+                bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
+                        Optional.ofNullable(dataObject.getFeature().getSession()),
+                        Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
             }
-        } catch (InvalidShapeException e) {
-            // Validation error
-            String msg = String.format("Failed to normalize the feature geometry : %s. Feature label = %s, ProviderId = %s",
-                    e.getMessage(), feature.getLabel(), feature.getProviderId());
-            // Log error msg
-            LOGGER.warn(msg);
-            // Add data object in error into summary result
-            bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
-                    Optional.ofNullable(dataObject.getFeature().getSession()),
-                    Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
         }
     }
 
