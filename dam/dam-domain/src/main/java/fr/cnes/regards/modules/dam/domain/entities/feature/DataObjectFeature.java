@@ -39,6 +39,14 @@ public class DataObjectFeature extends EntityFeature {
         super(id, providerId, EntityType.DATA, label);
     }
 
+    public DataObjectFeature(UniformResourceName id, String providerId, String label, String sessionOwner,
+            String session, String model) {
+        super(id, providerId, EntityType.DATA, label);
+        this.sessionOwner = sessionOwner;
+        this.session = session;
+        this.model = model;
+    }
+
     public String getSessionOwner() {
         return sessionOwner;
     }
