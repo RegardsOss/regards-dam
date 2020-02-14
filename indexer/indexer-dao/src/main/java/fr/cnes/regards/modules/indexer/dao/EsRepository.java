@@ -18,10 +18,54 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
-
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.IMapping;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -49,7 +93,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -136,51 +179,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
-import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
-import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import fr.cnes.regards.modules.indexer.domain.IDocFiles;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
-import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
-import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
-import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 
 /**
  * Elasticsearch repository implementation
@@ -766,6 +767,29 @@ public class EsRepository implements IEsRepository {
                         result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(),
                                              Optional.ofNullable(docFeature.getSession()),
                                              Optional.ofNullable(docFeature.getSessionOwner()));
+                        if (itemResponse.getFailure().getMessage().contains(IMapping.GEO_SHAPE_ATTRIBUTE)) {
+                            // Save the failling geometry in the log
+                            IGeometry wgs84 = ((DataObject) document).getWgs84();
+                            String geometryAsGeoJSON = null;
+                            if (wgs84 instanceof Polygon) {
+                                Polygon polygonWGS84 = (Polygon) wgs84;
+                                geometryAsGeoJSON = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
+                                        + "]]}}]}";
+
+                            } else if (wgs84 instanceof MultiPolygon) {
+                                MultiPolygon multiPolygonWGS84 = (MultiPolygon) wgs84;
+                                geometryAsGeoJSON = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
+                                        + multiPolygonWGS84.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
+                                        .collect(Collectors.joining("], [", "[", "]")) + "]]}}]}";
+                            }
+                            if (geometryAsGeoJSON != null) {
+                                result.addInErrorDoc(itemResponse.getId(), new ModuleException(geometryAsGeoJSON),
+                                        Optional.ofNullable(docFeature.getSession()),
+                                        Optional.ofNullable(docFeature.getSessionOwner()));
+                            }
+                        }
                     } else {
                         result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(),
                                              Optional.empty(), Optional.empty());
@@ -773,6 +797,7 @@ public class EsRepository implements IEsRepository {
                     String msg = String.format("Document of type %s and id %s with label %s cannot be saved",
                                                documents[0].getClass(), itemResponse.getId(),
                                                map.get(itemResponse.getId()));
+
                     // Log error
                     LOGGER.warn(msg, itemResponse.getFailure().getCause());
                     // Add error msg to buffer
