@@ -18,6 +18,52 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import com.google.common.base.Strings;
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpdater;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
+import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
+import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
+import fr.cnes.regards.modules.crawler.service.session.SessionNotifier;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
+import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
+import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
+import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
+import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
+import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
+import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
+import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
+import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -37,11 +83,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
 import org.elasticsearch.ElasticsearchException;
+import org.locationtech.spatial4j.exception.InvalidShapeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,49 +98,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
-
-import com.google.common.base.Strings;
-
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.notification.NotificationLevel;
-import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
-import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
-import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocRemover;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectGroupAssocUpdater;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
-import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
-import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
-import fr.cnes.regards.modules.crawler.service.session.SessionNotifier;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
-import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataObjectAccessFilterPlugin;
-import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
-import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
-import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
-import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
-import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
-import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
-import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
-import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 /**
  * @author oroussel
@@ -814,6 +816,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         Set<DataObject> toSaveObjects = new HashSet<>();
 
         for (DataObject dataObject : objects) {
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult);
             mergeDataObject(tenant, datasourceId, now, dataObject);
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -825,6 +828,50 @@ public class EntityIndexerService implements IEntityIndexerService {
             publishEventsAndManageErrors(tenant, datasourceIngestionId, buf, bulkSaveResult);
         }
         return bulkSaveResult;
+    }
+
+    /**
+     * Update the dataObject if it contains a geometry
+     * Compute two different geometry :
+     *      - a normalized version of the geometry in the same CRS
+     *      - a WGS 84 projected version of the normalized geometry
+     * This normalization can produce errors if the geometry is not valid
+     * @param dataObject
+     * @param bulkSaveResult
+     */
+    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult) {
+        DataObjectFeature feature = dataObject.getFeature();
+        // This geometry has been set by plugin, IT IS NOT NORMALIZED
+        IGeometry geometry = feature.getGeometry();
+        // Always normalize geometry in its origin CRS
+        try {
+            feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
+            // Then manage projected (or not) geometry into WGS84
+            if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
+                try {
+                    // Transform to Wgs84...(not normalized one from its origin CRS)
+                    IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
+                            Crs.WGS_84);
+                    // ...and save it onto DataObject after having normalized it
+                    dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
+                } catch (IllegalArgumentException e) {
+                    throw new RsRuntimeException(
+                            String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                }
+            } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
+                dataObject.setWgs84(feature.getNormalizedGeometry());
+            }
+        } catch (InvalidShapeException e) {
+            // Validation error
+            String msg = String.format("Failed to normalize the feature geometry : %s. Feature label = %s, ProviderId = %s",
+                    e.getMessage(), feature.getLabel(), feature.getProviderId());
+            // Log error msg
+            LOGGER.warn(msg);
+            // Add data object in error into summary result
+            bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
+                    Optional.ofNullable(dataObject.getFeature().getSession()),
+                    Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
+        }
     }
 
     /**
