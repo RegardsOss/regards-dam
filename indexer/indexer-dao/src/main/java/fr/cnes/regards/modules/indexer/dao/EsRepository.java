@@ -774,8 +774,8 @@ public class EsRepository implements IEsRepository {
                                 if (errorBuffer.length() > 0) {
                                     errorBuffer.append('\n');
                                 }
-                                String msg  = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
-                                        + "\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
+                                String msg  = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"properties\":{},\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
                                         + "]]}}]}";
                                 errorBuffer.append(msg).append('\n');
                             } else if (wgs84 instanceof MultiPolygon) {
@@ -783,8 +783,8 @@ public class EsRepository implements IEsRepository {
                                 if (errorBuffer.length() > 0) {
                                     errorBuffer.append('\n');
                                 }
-                                String msg = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
-                                        + "\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
+                                String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"properties\":{},\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
                                         + multiPolygonWGS84.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
                                         .collect(Collectors.joining("], [", "[", "]")) + "]]}}]}";
                                 errorBuffer.append(msg).append('\n');
