@@ -760,7 +760,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         // No error => dataObject is valid
         if (errors == null) {
-            toSaveObjects.add(dataObject);
+            // Check if there is no error already existing on that dataObject (ie from geo manipulation)
+            boolean noExistingError = bulkSaveResult.getInErrorDocCause(dataObject.getDocId()) == null;
+            if (noExistingError) {
+                toSaveObjects.add(dataObject);
+            }
         } else {
             // Validation error
             StringBuilder dataObjectBuffer = new StringBuilder("Data object with id '");
@@ -867,7 +871,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                 }
             } catch (InvalidShapeException e) {
                 // Validation error
-                String msg = String.format("Failed to normalize the feature geometry : %s. Feature label = %s, ProviderId = %s",
+                String msg = String.format("Failed to normalize the feature geometry : %s.\nFeature label = %s, ProviderId = %s\n",
                         e.getMessage(), feature.getLabel(), feature.getProviderId());
                 // Log error msg
                 LOGGER.warn(msg);
