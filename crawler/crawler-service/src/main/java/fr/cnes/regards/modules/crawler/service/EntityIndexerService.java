@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import com.google.common.base.Strings;
+import fr.cnes.regards.framework.geojson.GeoJsonType;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -844,7 +845,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         DataObjectFeature feature = dataObject.getFeature();
         // This geometry has been set by plugin, IT IS NOT NORMALIZED
         IGeometry geometry = feature.getGeometry();
-        if (geometry != null) {
+        if (geometry != null && geometry.getType() != GeoJsonType.UNLOCATED) {
             // Always normalize geometry in its origin CRS
             try {
                 feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
