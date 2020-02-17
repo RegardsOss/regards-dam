@@ -41,7 +41,7 @@
     <xs:element name="name">
         <xs:simpleType>
             <xs:restriction base="xs:token">
-                <xs:pattern value="[0-9a-zA-Z_]{3,32}"/>
+                <xs:pattern value="[0-9a-zA-Z_]{1,32}"/>
             </xs:restriction>
         </xs:simpleType>
     </xs:element>

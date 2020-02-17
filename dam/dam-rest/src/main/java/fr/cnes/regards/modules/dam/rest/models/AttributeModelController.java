@@ -136,8 +136,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(name = "noLink", required = false) Boolean noLink) {
         List<AttributeModel> attributes = null;
         if ((modelNames != null) && !modelNames.isEmpty()) {
-            attributes = modelAttrAssocService.getAttributeModels(modelNames, PageRequest.of(0, 1000))
-                    .getContent();
+            attributes = modelAttrAssocService.getAttributeModels(modelNames, PageRequest.of(0, 1000)).getContent();
         } else {
             attributes = attributeService.getAttributes(type, fragmentName, modelNames);
         }
@@ -263,7 +262,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                     MethodParamFactory.build(AttributeType.class),
                                     MethodParamFactory.build(String.class), MethodParamFactory.build(Set.class),
-                                    MethodParamFactory.build(Set.class), MethodParamFactory.build(Boolean.class));
+                                    MethodParamFactory.build(Boolean.class));
         }
         return resource;
     }
