@@ -52,4 +52,6 @@ public interface IModelService {
     void exportModel(String modelName, OutputStream pOutputStream) throws ModuleException;
 
     Model importModel(InputStream pInputStream) throws ModuleException;
+
+    boolean isDeletable(Model model);
 }

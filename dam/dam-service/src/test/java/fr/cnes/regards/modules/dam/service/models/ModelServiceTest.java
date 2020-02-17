@@ -48,6 +48,8 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.models.Model;
@@ -103,6 +105,10 @@ public class ModelServiceTest {
 
     private ApplicationEventPublisher mockPublisher;
 
+    private ICollectionRepository mockColRepo;
+
+    private IDatasetRepository mockDatasetRepo;
+
     @Before
     public void beforeTest() {
         mockModelR = Mockito.mock(IModelRepository.class);
@@ -110,7 +116,10 @@ public class ModelServiceTest {
         mockAttModelS = Mockito.mock(IAttributeModelService.class);
         mockPluginService = Mockito.mock(IPluginService.class);
         mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService, mockPublisher);
+        mockColRepo = Mockito.mock(ICollectionRepository.class);
+        mockDatasetRepo = Mockito.mock(IDatasetRepository.class);
+        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService, mockDatasetRepo,
+                mockColRepo, mockPublisher);
     }
 
     @Test(expected = EntityInvalidException.class)
@@ -346,14 +355,12 @@ public class ModelServiceTest {
         Set<IPluginParam> parameters = IPluginParam.set(IPluginParam.build("parameterAttributeName", "paramName"),
                                                         IPluginParam.build("parameterAttributeFragmentName", ""));
 
-        PluginConfiguration sumComputeConf = new PluginConfiguration("",
-                                                                     parameters,
-                                                                     LongSumComputePlugin.class
-                                                                             .getAnnotation(Plugin.class).id());
+        PluginConfiguration sumComputeConf = new PluginConfiguration("", parameters,
+                LongSumComputePlugin.class.getAnnotation(Plugin.class).id());
 
         // Because of mockito, lets get the plugin metadata in place here
-        sumComputeConf.setMetaData(PluginUtils.getPluginMetadata(LongSumComputePlugin.class
-                                                                         .getAnnotation(Plugin.class).id()));
+        sumComputeConf.setMetaData(PluginUtils
+                .getPluginMetadata(LongSumComputePlugin.class.getAnnotation(Plugin.class).id()));
 
         modAtt.setComputationConf(sumComputeConf);
         modelAttrAssocs.add(modAtt);

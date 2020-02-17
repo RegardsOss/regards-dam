@@ -241,8 +241,10 @@ public class ModelController implements IResourceController<Model> {
         resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
                                 MethodParamFactory.build(String.class, pElement.getName()),
                                 MethodParamFactory.build(Model.class));
-        resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-                                MethodParamFactory.build(String.class, pElement.getName()));
+        if (modelService.isDeletable(pElement)) {
+            resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
+                                    MethodParamFactory.build(String.class, pElement.getName()));
+        }
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
         // Export

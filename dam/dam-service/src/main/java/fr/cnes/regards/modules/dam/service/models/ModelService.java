@@ -57,6 +57,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
+import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.models.ComputationMode;
@@ -109,19 +111,25 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      */
     private final IPluginService pluginService;
 
+    private final IDatasetRepository datasetRepo;
+
+    private final ICollectionRepository collectionRepo;
+
     /**
      * Application Event publisher to publish event inside the microservice
      */
     private final ApplicationEventPublisher publisher;
 
     public ModelService(IModelRepository modelRepository, IModelAttrAssocRepository modelAttrAssocRepository,
-            IAttributeModelService attributeModelService, IPluginService pluginService,
-            ApplicationEventPublisher publisher) {
+            IAttributeModelService attributeModelService, IPluginService pluginService, IDatasetRepository datasetRepo,
+            ICollectionRepository collectionRepo, ApplicationEventPublisher publisher) {
         this.modelRepository = modelRepository;
         modelAttributeRepository = modelAttrAssocRepository;
         this.attributeModelService = attributeModelService;
         this.pluginService = pluginService;
         this.publisher = publisher;
+        this.datasetRepo = datasetRepo;
+        this.collectionRepo = collectionRepo;
     }
 
     @Override
@@ -186,10 +194,19 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         Model model = getModelByName(modelName);
 
-        // Delete attribute associations
+        // Check if an entity is associated to the model to delete
+        if (collectionRepo.existsByModel(model) || datasetRepo.existsByModel(model)) {
+            throw new ModuleException(String
+                    .format("Model %s deletion is forbidden as one or many entities are using this model", modelName));
+        }
         List<ModelAttrAssoc> modelAttrAssocs = modelAttributeRepository.findByModelId(model.getId());
         modelAttributeRepository.deleteAll(modelAttrAssocs);
         modelRepository.deleteById(model.getId());
+    }
+
+    @Override
+    public boolean isDeletable(Model model) {
+        return !collectionRepo.existsByModel(model) && !datasetRepo.existsByModel(model);
     }
 
     @Override
