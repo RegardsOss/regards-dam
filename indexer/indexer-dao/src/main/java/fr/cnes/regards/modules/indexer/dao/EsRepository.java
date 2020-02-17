@@ -35,7 +35,6 @@ import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -770,24 +769,25 @@ public class EsRepository implements IEsRepository {
                         if (itemResponse.getFailure().getMessage().contains(IMapping.GEO_SHAPE_ATTRIBUTE)) {
                             // Save the failling geometry in the log
                             IGeometry wgs84 = ((DataObject) document).getWgs84();
-                            String geometryAsGeoJSON = null;
                             if (wgs84 instanceof Polygon) {
                                 Polygon polygonWGS84 = (Polygon) wgs84;
-                                geometryAsGeoJSON = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                if (errorBuffer.length() > 0) {
+                                    errorBuffer.append('\n');
+                                }
+                                String msg  = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
                                         + "\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
                                         + "]]}}]}";
-
+                                errorBuffer.append(msg).append('\n');
                             } else if (wgs84 instanceof MultiPolygon) {
                                 MultiPolygon multiPolygonWGS84 = (MultiPolygon) wgs84;
-                                geometryAsGeoJSON = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                if (errorBuffer.length() > 0) {
+                                    errorBuffer.append('\n');
+                                }
+                                String msg = "Here is the geometry we submitted to ES:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
                                         + "\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
                                         + multiPolygonWGS84.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
                                         .collect(Collectors.joining("], [", "[", "]")) + "]]}}]}";
-                            }
-                            if (geometryAsGeoJSON != null) {
-                                result.addInErrorDoc(itemResponse.getId(), new ModuleException(geometryAsGeoJSON),
-                                        Optional.ofNullable(docFeature.getSession()),
-                                        Optional.ofNullable(docFeature.getSessionOwner()));
+                                errorBuffer.append(msg).append('\n');
                             }
                         }
                     } else {
