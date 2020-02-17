@@ -772,22 +772,22 @@ public class EsRepository implements IEsRepository {
                             if (wgs84 instanceof Polygon) {
                                 Polygon polygonWGS84 = (Polygon) wgs84;
                                 if (errorBuffer.length() > 0) {
-                                    errorBuffer.append('\n');
+                                    errorBuffer.append('\n').append('\n');
                                 }
                                 String msg  = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
                                         + "\"properties\":{},\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
                                         + "]]}}]}";
-                                errorBuffer.append(msg).append('\n');
+                                errorBuffer.append(msg);
                             } else if (wgs84 instanceof MultiPolygon) {
                                 MultiPolygon multiPolygonWGS84 = (MultiPolygon) wgs84;
                                 if (errorBuffer.length() > 0) {
-                                    errorBuffer.append('\n');
+                                    errorBuffer.append('\n').append('\n');
                                 }
                                 String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
                                         + "\"properties\":{},\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
                                         + multiPolygonWGS84.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
                                         .collect(Collectors.joining("], [", "[", "]")) + "]]}}]}";
-                                errorBuffer.append(msg).append('\n');
+                                errorBuffer.append(msg);
                             }
                         }
                     } else {

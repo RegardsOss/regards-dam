@@ -794,7 +794,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-            normalizeAndReprojectGeometry(dataObject, bulkSaveResult);
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult, buf);
             // Validate data object
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -818,7 +818,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         Set<DataObject> toSaveObjects = new HashSet<>();
 
         for (DataObject dataObject : objects) {
-            normalizeAndReprojectGeometry(dataObject, bulkSaveResult);
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult, buf);
             mergeDataObject(tenant, datasourceId, now, dataObject);
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -840,8 +840,9 @@ public class EntityIndexerService implements IEntityIndexerService {
      * This normalization can produce errors if the geometry is not valid
      * @param dataObject
      * @param bulkSaveResult
+     * @param errorBuffer
      */
-    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult) {
+    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult, StringBuilder errorBuffer) {
         DataObjectFeature feature = dataObject.getFeature();
         // This geometry has been set by plugin, IT IS NOT NORMALIZED
         IGeometry geometry = feature.getGeometry();
@@ -870,6 +871,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                         e.getMessage(), feature.getLabel(), feature.getProviderId());
                 // Log error msg
                 LOGGER.warn(msg);
+                errorBuffer.append(msg);
                 // Add data object in error into summary result
                 bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
                         Optional.ofNullable(dataObject.getFeature().getSession()),
