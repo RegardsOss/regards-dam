@@ -127,7 +127,7 @@ import fr.cnes.regards.modules.indexer.service.Searches;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @TestPropertySource(locations = { "classpath:test.properties" })
-@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_CLASS)
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
@@ -290,7 +290,6 @@ public class IndexerServiceDataSourceIT {
         String tenant = runtimeTenantResolver.getTenant();
 
         // Creation
-        long start = System.currentTimeMillis();
         DatasourceIngestion dsi = new DatasourceIngestion(dataSourcePluginConf.getBusinessId());
         dsi.setLabel("Label");
         dsIngestionRepos.save(dsi);
@@ -300,15 +299,20 @@ public class IndexerServiceDataSourceIT {
 
         // Check ingested datas
         Long datasourceId = dataSourcePluginConf.getId();
-        SimpleSearchKey key = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> key = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
         key.setSearchIndex(tenant);
         Page<DataObject> result = esRepos.search(key, 10, ICriterion.all());
         Assert.assertEquals(4, result.getContent().size());
 
         // Delete all from this datasource
         long nbDeleted = esRepos.deleteByDatasource(tenant, datasourceId);
-        Assert.assertTrue(nbDeleted > 0);
-        result = esRepos.search(key, 10, ICriterion.all());
+        Assert.assertEquals(4, nbDeleted);
+        int loop = 0;
+        while (!result.isEmpty() && (loop < 10)) {
+            Thread.sleep(500);
+            result = esRepos.search(key, 10, ICriterion.all());
+            loop++;
+        }
         Assert.assertEquals(0, result.getContent().size());
     }
 
