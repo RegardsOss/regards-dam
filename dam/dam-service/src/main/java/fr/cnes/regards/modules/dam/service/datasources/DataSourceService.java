@@ -27,11 +27,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.modules.dam.domain.datasources.event.DatasourceEvent;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 
 /**
@@ -48,6 +50,9 @@ public class DataSourceService implements IDataSourceService {
 
     @Autowired
     private IPluginService service;
+
+    @Autowired
+    private IPublisher publisher;
 
     @Override
     public List<PluginConfiguration> getAllDataSources() {
@@ -73,7 +78,9 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public void deleteDataSource(String businessId) throws ModuleException {
         LOGGER.info("deleting DataSource {}", businessId);
+        PluginConfiguration dataSource = service.getPluginConfiguration(businessId);
         service.deletePluginConfiguration(businessId);
+        publisher.publish(DatasourceEvent.buildDeleted(dataSource.getId()));
     }
 
 }

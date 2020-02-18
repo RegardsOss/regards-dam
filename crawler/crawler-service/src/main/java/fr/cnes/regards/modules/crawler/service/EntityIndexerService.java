@@ -18,7 +18,45 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.elasticsearch.ElasticsearchException;
+import org.locationtech.spatial4j.exception.InvalidShapeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.ObjectError;
+
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.geojson.GeoJsonType;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -65,40 +103,6 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import org.elasticsearch.ElasticsearchException;
-import org.locationtech.spatial4j.exception.InvalidShapeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.MapBindingResult;
-import org.springframework.validation.ObjectError;
 
 /**
  * @author oroussel
@@ -236,7 +240,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                         dataset.getGroups().add(entry.getKey());
                     }
                 }
-            } 
+            }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
             // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
@@ -846,11 +850,12 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param bulkSaveResult
      * @param errorBuffer
      */
-    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult, StringBuilder errorBuffer) {
+    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult,
+            StringBuilder errorBuffer) {
         DataObjectFeature feature = dataObject.getFeature();
         // This geometry has been set by plugin, IT IS NOT NORMALIZED
         IGeometry geometry = feature.getGeometry();
-        if (geometry != null && geometry.getType() != GeoJsonType.UNLOCATED) {
+        if ((geometry != null) && (geometry.getType() != GeoJsonType.UNLOCATED)) {
             // Always normalize geometry in its origin CRS
             try {
                 feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
@@ -859,7 +864,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                     try {
                         // Transform to Wgs84...(not normalized one from its origin CRS)
                         IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
-                                Crs.WGS_84);
+                                                                      Crs.WGS_84);
                         // ...and save it onto DataObject after having normalized it
                         dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
                     } catch (IllegalArgumentException e) {
@@ -871,15 +876,16 @@ public class EntityIndexerService implements IEntityIndexerService {
                 }
             } catch (InvalidShapeException e) {
                 // Validation error
-                String msg = String.format("Failed to normalize the feature geometry : %s.\nFeature label = %s, ProviderId = %s\n",
-                        e.getMessage(), feature.getLabel(), feature.getProviderId());
+                String msg = String
+                        .format("Failed to normalize the feature geometry : %s.\nFeature label = %s, ProviderId = %s\n",
+                                e.getMessage(), feature.getLabel(), feature.getProviderId());
                 // Log error msg
                 LOGGER.warn(msg);
                 errorBuffer.append(msg);
                 // Add data object in error into summary result
                 bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
-                        Optional.ofNullable(dataObject.getFeature().getSession()),
-                        Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
+                                             Optional.ofNullable(dataObject.getFeature().getSession()),
+                                             Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
             }
         }
     }
@@ -955,6 +961,11 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public long deleteDataObjectsFromDatasource(String tenant, Long datasourceId) {
+        return esRepos.deleteByDatasource(tenant, datasourceId);
+    }
+
+    @Override
     public void updateAllDatasets(String tenant, OffsetDateTime updateDate) throws ModuleException {
         self.updateDatasets(tenant, datasetService.findAll(), null, updateDate, true, null);
     }
@@ -979,4 +990,5 @@ public class EntityIndexerService implements IEntityIndexerService {
             eventPublisher.publishEvent(new DataSourceMessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
+
 }

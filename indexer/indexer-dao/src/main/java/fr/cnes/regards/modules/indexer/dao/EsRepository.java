@@ -18,53 +18,10 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
-import fr.cnes.regards.framework.geojson.geometry.Polygon;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
-import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import fr.cnes.regards.modules.indexer.domain.IDocFiles;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.indexer.domain.IMapping;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
-import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
-import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
-import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -92,6 +49,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -178,9 +136,55 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.IMapping;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 
 /**
  * Elasticsearch repository implementation
@@ -440,12 +444,8 @@ public class EsRepository implements IEsRepository {
 
                     .endObject()
                     // add feature.session type which should be keyword and not date. Default sessions are UTF-8 date as a string.
-                    .startObject("feature")
-                        .startObject("properties")
-                            .startObject("session").field("type", "keyword").endObject()
-                        .endObject()
-                    .endObject()
-                    .endObject().endObject());
+                    .startObject("feature").startObject("properties").startObject("session").field("type", "keyword")
+                    .endObject().endObject().endObject().endObject().endObject());
             CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
             return response.isAcknowledged();
         } catch (IOException e) {
@@ -592,6 +592,11 @@ public class EsRepository implements IEsRepository {
             LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
         }
+    }
+
+    @Override
+    public long deleteByDatasource(String inIndex, Long datasourceId) {
+        return this.deleteByQuery(inIndex.toLowerCase(), ICriterion.eq(StaticProperties.DATASOURCE_ID, datasourceId));
     }
 
     @Override
@@ -774,9 +779,9 @@ public class EsRepository implements IEsRepository {
                                 if (errorBuffer.length() > 0) {
                                     errorBuffer.append('\n').append('\n');
                                 }
-                                String msg  = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
-                                        + "\"properties\":{},\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [[" + polygonWGS84.getCoordinates().getExteriorRing().toString()
-                                        + "]]}}]}";
+                                String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"properties\":{},\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [["
+                                        + polygonWGS84.getCoordinates().getExteriorRing().toString() + "]]}}]}";
                                 errorBuffer.append(msg);
                             } else if (wgs84 instanceof MultiPolygon) {
                                 MultiPolygon multiPolygonWGS84 = (MultiPolygon) wgs84;
@@ -785,8 +790,10 @@ public class EsRepository implements IEsRepository {
                                 }
                                 String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
                                         + "\"properties\":{},\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
-                                        + multiPolygonWGS84.getCoordinates().stream().map(p -> p.getExteriorRing().toString())
-                                        .collect(Collectors.joining("], [", "[", "]")) + "]]}}]}";
+                                        + multiPolygonWGS84.getCoordinates().stream()
+                                                .map(p -> p.getExteriorRing().toString())
+                                                .collect(Collectors.joining("], [", "[", "]"))
+                                        + "]]}}]}";
                                 errorBuffer.append(msg);
                             }
                         }
@@ -1370,8 +1377,9 @@ public class EsRepository implements IEsRepository {
                     builder.aggregation(AggregationBuilders.terms(qa.getAttributeName())
                             .field(qa.getAttributeName() + KEYWORD_SUFFIX).size(qa.getTermsLimit()));
                 } else if (qa.isBooleanAttribute()) {
-                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName()).field(qa.getAttributeName())).size(2);
-                } else if(!qa.isTextAttribute()){
+                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName()).field(qa.getAttributeName()))
+                            .size(2);
+                } else if (!qa.isTextAttribute()) {
                     builder.aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName()));
                 }
             }
@@ -1984,4 +1992,5 @@ public class EsRepository implements IEsRepository {
         }
         builder.aggregation(termsAggBuilder);
     }
+
 }

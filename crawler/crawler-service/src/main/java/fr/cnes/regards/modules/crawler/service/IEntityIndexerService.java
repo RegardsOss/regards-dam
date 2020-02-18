@@ -133,8 +133,7 @@ public interface IEntityIndexerService {
      * @throws ModuleException
      */
     BulkSaveResult createDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
-            String datasourceIngestionId)
-            throws ModuleException;
+            String datasourceIngestionId) throws ModuleException;
 
     /**
      * Merge given data objects into Elasticsearch
@@ -148,8 +147,7 @@ public interface IEntityIndexerService {
      * @throws ModuleException
      */
     BulkSaveResult mergeDataObjects(String tenant, Long datasourceId, OffsetDateTime now, List<DataObject> objects,
-            String datasourceIngestionId)
-            throws ModuleException;
+            String datasourceIngestionId) throws ModuleException;
 
     /**
      * Delete given data object from Elasticsearch
@@ -159,6 +157,15 @@ public interface IEntityIndexerService {
      * @return wether or not the data object has been deleted
      */
     boolean deleteDataObject(String tenant, String ipId);
+
+    /**
+     * Delete given data object from Elasticsearch
+     *
+     * @param tenant concerned tenant
+     * @param ipId   id of Data object
+     * @return number of deleted objects
+     */
+    long deleteDataObjectsFromDatasource(String tenant, Long datasourceId);
 
     /**
      * Create a notification for admin
