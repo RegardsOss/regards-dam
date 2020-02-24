@@ -18,6 +18,33 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -49,31 +76,6 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -231,7 +233,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
+                                                 page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -281,8 +284,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Future<BulkSaveResult> task = null;
         try {
             try {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                        dsiId, PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
+                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
@@ -292,7 +295,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
+                                                 page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -364,7 +368,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         return () -> {
             runtimeTenantResolver.forceTenant(tenant);
             sendMessage(String.format("  Indexing %d objects...", list.size()), datasourceIngestionId);
-            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list, datasourceIngestionId);
+            BulkSaveResult bulkSaveResult = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list,
+                                                                                  datasourceIngestionId);
             if (bulkSaveResult.getInErrorDocsCount() > 0) {
                 sendMessage(String.format("  ...%d objects cannot be saved:\n%s", bulkSaveResult.getInErrorDocsCount(),
                                           bulkSaveResult.getDetailedErrorMsg().replace("\n", "\n    ")),
@@ -396,7 +401,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                         page.getNumber(), page.getSize(), page.getTotalElements(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             // Catch Exception in order to catch all exceptions from plugins. Plugins can be out of our scope.
-            notificationClient.notify(e.getMessage(), "Datasource harvesting failure", NotificationLevel.ERROR,
+            String message = "Error retriving features from datasource " + dsPlugin.getClass().getName();
+            if (e.getMessage() != null) {
+                message = e.getMessage();
+            }
+            notificationClient.notify(message, "Datasource harvesting failure", NotificationLevel.ERROR,
                                       DefaultRole.ADMIN);
             LOGGER.error("Cannot retrieve data from datasource", e);
             throw e;
