@@ -403,7 +403,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             // Catch Exception in order to catch all exceptions from plugins. Plugins can be out of our scope.
             String message = "Error retriving features from datasource " + dsPlugin.getClass().getName();
             if (e.getMessage() != null) {
-                message = e.getMessage();
+                message = message + ". Cause: " + e.getMessage();
             }
             notificationClient.notify(message, "Datasource harvesting failure", NotificationLevel.ERROR,
                                       DefaultRole.ADMIN);
