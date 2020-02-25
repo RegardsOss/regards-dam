@@ -23,6 +23,8 @@ import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 
 public final class DataSourcePluginConstants {
 
+    private DataSourcePluginConstants() {}
+
     /**
      * Model mapping parameter name
      * <B>Beware : false friend parameter name, it corresponds to Json model mapping object</B>

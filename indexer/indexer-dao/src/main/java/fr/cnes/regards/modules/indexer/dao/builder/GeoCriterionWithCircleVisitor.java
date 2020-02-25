@@ -66,7 +66,7 @@ public class GeoCriterionWithCircleVisitor implements ICriterionVisitor<Pair<ICr
     /**
      * CRS concerned by data to be tested through criterion
      */
-    private Crs crs;
+    private final Crs crs;
 
     /**
      * @param crs coordinate reference system used by geometries

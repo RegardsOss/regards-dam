@@ -83,7 +83,7 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
 
     public EntityFeature(UniformResourceName id, String providerId, EntityType entityType, String label) {
         Assert.notNull(entityType, "Entity type is required");
-        setId(id);
+        this.id = id;
         this.providerId = providerId;
         this.entityType = entityType;
         this.label = label;

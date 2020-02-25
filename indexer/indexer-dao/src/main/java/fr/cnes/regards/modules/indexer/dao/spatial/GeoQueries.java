@@ -39,6 +39,8 @@ public final class GeoQueries {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeoQueries.class);
 
+    private GeoQueries() {}
+
     /**
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */

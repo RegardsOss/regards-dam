@@ -55,7 +55,7 @@ public class ProjectGeoSettings {
      * changed.
      * This cache contains Crs and shouldManagePolesOnGeometries values associated to projects
      */
-    private LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
+    private final LoadingCache<String, Pair<Boolean, Crs>> settingsCache = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.MINUTES).build(new CacheLoader<String, Pair<Boolean, Crs>>() {
 
                 @Override

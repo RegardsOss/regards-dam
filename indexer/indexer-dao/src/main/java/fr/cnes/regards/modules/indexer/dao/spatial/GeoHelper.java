@@ -90,6 +90,8 @@ import org.slf4j.LoggerFactory;
  */
 public class GeoHelper {
 
+    private GeoHelper() {}
+
     /**
      * Radius used by ASTRO projection (perfect sphere used, no flattening)
      */
@@ -1128,7 +1130,7 @@ public class GeoHelper {
 
         @Override
         public Boolean visitPolygon(Polygon geometry) {
-            System.err.printf("Distance from point (%f, %f): %f\n", point[0], point[1], distance);
+            LOGGER.error("Distance from point (%f, %f): %f\n", point[0], point[1], distance);
             ArrayList<Position> positions = geometry.getCoordinates().getExteriorRing();
             Position lastPosition = null;
             for (Position position : positions) {

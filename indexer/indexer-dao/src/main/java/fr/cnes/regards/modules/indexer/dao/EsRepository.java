@@ -1450,7 +1450,7 @@ public class EsRepository implements IEsRepository {
             int maxCount, S set, Map<String, FacetType> facetsMap) {
         try {
 
-            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + ".keyword" : inAttName;
+            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + KEYWORD_SUFFIX : inAttName;
             Consumer<SearchSourceBuilder> addUniqueTermAgg = (builder) -> builder
                     .aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
 

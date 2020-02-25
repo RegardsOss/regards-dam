@@ -166,14 +166,6 @@ public class DataFile {
         return online;
     }
 
-    /**
-     * Please use {@link #isOnline()}
-     */
-    @Deprecated
-    public Boolean getOnline() {
-        return isOnline();
-    }
-
     public void setOnline(Boolean online) {
         this.online = online;
     }

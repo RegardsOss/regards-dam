@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.indexer.domain.summary;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Represents a summary of docs count, files count and files size sum computed from an opensearch on documents of type
@@ -32,7 +34,7 @@ public class DocFilesSummary extends AbstractDocSummary {
     /**
      * Map of sub-summaries distributed by discriminant value
      */
-    private final Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
+    private final ConcurrentMap<String, DocFilesSubSummary> subSummariesMap = new ConcurrentHashMap<>();
 
     public DocFilesSummary() {
     }

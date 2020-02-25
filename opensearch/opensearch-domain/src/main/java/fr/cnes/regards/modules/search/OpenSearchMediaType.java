@@ -48,7 +48,7 @@ public class OpenSearchMediaType {
 
     }
 
-    public OpenSearchMediaType() {
+    private OpenSearchMediaType() {
     }
 
 }

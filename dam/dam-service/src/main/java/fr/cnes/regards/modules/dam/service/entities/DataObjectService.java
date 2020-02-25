@@ -55,18 +55,18 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
     /**
      * Classic Spring validator used to validate each DataObject (ie with annotations)
      */
-    private Validator dataObjectValidator;
+    private final Validator dataObjectValidator;
 
     /**
      * Data object validation is done on all data objects from ingestion, ie for a thousands objects in a very limited
      * duration so a cache is used
      */
-    private LoadingCache<String, List<ModelAttrAssoc>> modelServiceCache;
+    private final LoadingCache<String, List<ModelAttrAssoc>> modelServiceCache;
 
     /**
      * Original IModelAttrAssocService (ie. not proxyfied)
      */
-    private IModelAttrAssocService modelAttrAssocServiceNoProxy;
+    private final IModelAttrAssocService modelAttrAssocServiceNoProxy;
 
     /**
      * Constructor

@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
  */
 public class QuotedFieldQueryNodeBuilder implements ICriterionQueryBuilder {
 
-    private IAttributeFinder attributeFinder;
+    private final IAttributeFinder attributeFinder;
 
     public QuotedFieldQueryNodeBuilder(IAttributeFinder attributeFinder) {
         this.attributeFinder = attributeFinder;

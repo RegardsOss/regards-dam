@@ -115,9 +115,9 @@ import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
         implements IEntityService<U> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
-
     private static final String CATALOG_DOWNLOAD_PATH = "/downloads/{aip_id}/files/{checksum}";
+
+    public static final String ENABLED_TO_ACCESS_STORAGE_PLUGIN = "Enabled to access storage plugin";
 
     /**
      * Map of {@link Project}s by tenant
@@ -391,10 +391,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             if (storageService != null) {
                 storageService.store(entity);
             } else {
-                LOGGER.warn("Enabled to access storage plugin");
+                logger.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN);
             }
         } catch (NotAvailablePluginConfigurationException e) {
-            LOGGER.warn("nabled to access storage plugin", e);
+            logger.warn("nabled to access storage plugin", e);
         }
 
         // AMQP event publishing
@@ -571,10 +571,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             if (storageService != null) {
                 storageService.update(updated, entityInDb);
             } else {
-                LOGGER.warn("Enabled to access storage plugin");
+                logger.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN);
             }
         } catch (NotAvailablePluginConfigurationException e) {
-            LOGGER.warn("Enabled to access storage plugin", e);
+            logger.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN, e);
         }
 
         // AMQP event publishing
@@ -639,7 +639,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         try {
             deleteAipStorage(toDelete);
         } catch (NotAvailablePluginConfigurationException e1) {
-            LOGGER.warn("Enabled to delete AIP storage cause storage plugin is not active", e1);
+            logger.warn("Enabled to delete AIP storage cause storage plugin is not active", e1);
         }
 
         deletedEntityRepository.save(createDeletedEntity(toDelete));
@@ -786,7 +786,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
             ttt = Class.forName(storeEntityFilesPlugin);
             return (IStorageService) PluginUtils.getPlugin(IPluginParam.set(), ttt, new HashMap<>());
         } catch (ClassNotFoundException e) {
-            logger.error(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
 
         return null;
@@ -859,7 +859,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
                 for (String error : errors) {
                     buf.append(String.format("<li>%s</li>", error));
                 }
-                LOGGER.error("Storage request with groupId {} failed", request.getGroupId());
+                logger.error("Storage request with groupId {} failed", request.getGroupId());
             }
         }
         if (!treatedRequests.isEmpty()) {

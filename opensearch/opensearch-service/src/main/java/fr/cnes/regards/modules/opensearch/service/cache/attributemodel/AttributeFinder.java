@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,12 +78,12 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      * Store dynamic and static properties by tenant. <br/>
      * Allows intelligent guess of attribute from a partial or complete JSON path preventing potential conflicts!<br/>
      */
-    private final Map<String, Map<String, AttributeModel>> propertyMap = new HashMap<>();
+    private final ConcurrentMap<String, Map<String, AttributeModel>> propertyMap = new ConcurrentHashMap<>();
 
     /**
      * Store dynamic and static properties by tenant and type for full text search
      */
-    private final Map<String, Multimap<AttributeType, AttributeModel>> typedPropertyMap = new HashMap<>();
+    private final ConcurrentMap<String, Multimap<AttributeType, AttributeModel>> typedPropertyMap = new ConcurrentHashMap<>();
 
     public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {

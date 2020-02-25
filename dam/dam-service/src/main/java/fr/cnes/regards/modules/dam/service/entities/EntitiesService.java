@@ -142,11 +142,10 @@ public class EntitiesService implements IEntitiesService {
                     // if no exception has been thrown then the method exist and we are in presence of a
                     // IComputedAttribute<Dataset, ?>
                     computationPlugins.add((T) plugin);
-                } catch (NoSuchMethodException e) { // NOSONAR
+                } catch (NoSuchMethodException e) {
                     // this is a normal exception in the logic of the method: to know if we have an
                     // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we
                     // just don't consider this plugin
-                    // FIXME trace something!
                 } catch (NotAvailablePluginConfigurationException e) {
                     LOGGER.warn("Unable to compute dataset attribute value cause IComputedAttribute plugin is not avtive.",
                                 e);

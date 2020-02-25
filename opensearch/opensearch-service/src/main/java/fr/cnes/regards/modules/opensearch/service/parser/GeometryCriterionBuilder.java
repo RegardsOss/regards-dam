@@ -42,6 +42,8 @@ public class GeometryCriterionBuilder {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(GeometryCriterionBuilder.class);
 
+    private GeometryCriterionBuilder() {}
+
     /**
      * Read WKT format in given String to creates a Geometry criterion.
      * Only Polygons are handled here.

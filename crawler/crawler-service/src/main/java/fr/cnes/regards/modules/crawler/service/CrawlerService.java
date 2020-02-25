@@ -157,7 +157,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             try {
                 dsPlugin = pluginService.getPlugin(pluginConf.getBusinessId());
             } catch (NotAvailablePluginConfigurationException e) {
-                throw new InactiveDatasourceException();
+                throw new InactiveDatasourceException(e);
             }
 
             BulkSaveLightResult saveResult;

@@ -54,7 +54,7 @@ public class CrawlerInitializer {
 
     private static ExecutorService singlePool = Executors.newSingleThreadExecutor();
 
-    private AtomicBoolean elasticSearchUpgradeDone = new AtomicBoolean(false);
+    private final AtomicBoolean elasticSearchUpgradeDone = new AtomicBoolean(false);
 
     @EventListener
     public void onApplicationEvent(DamGsonReadyEvent event) {

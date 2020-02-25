@@ -168,6 +168,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
             return attributeFinder.findByName(criterion.getName().substring(StaticProperties.FEATURE_NS.length()));
         } catch (OpenSearchUnknownParameter e) {
             LOG.error("Inconsistent property {} in subsetting clause", criterion.getName());
+            LOG.debug(e.getMessage(), e);
             return null;
         }
     }
