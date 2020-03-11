@@ -65,6 +65,11 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
         // Retrieve attributes from model
         List<ModelAttrAssoc> modAtts = modelFinder.findByModel(model);
 
+        // if the model doesn't exists
+        if (modAtts == null) {
+            errors.reject("error.unknow.model.message", String.format("Unknow model %s", model));
+            return errors;
+        }
         // Build fast property access map
         Map<String, IProperty<?>> pptyMap = IProperty.getPropertyMap(feature.getProperties());
         // Get a copy of entity attributes values to optimize the search of unexpected properties
