@@ -84,7 +84,7 @@ public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent
     /**
      * Name of the public access group used to allow everyone to access Documents
      */
-    public static final String ACCESS_GROUP_PUBLIC_DOCUMENTS = "PublicDocumentGroup";
+    public static final String ACCESS_GROUP_PUBLIC_DOCUMENTS = "Public";
 
     /**
      * {@link IAccessGroupRepository} instance
