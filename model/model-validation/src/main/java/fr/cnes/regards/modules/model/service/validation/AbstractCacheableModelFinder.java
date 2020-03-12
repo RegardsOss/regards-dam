@@ -18,9 +18,11 @@
  */
 package fr.cnes.regards.modules.model.service.validation;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -71,7 +73,12 @@ public abstract class AbstractCacheableModelFinder
     @Override
     public List<ModelAttrAssoc> findByModel(String model) {
         String tenant = runtimeTenantResolver.getTenant();
-        return getTenantCache(tenant).getIfPresent(model);
+        try {
+            return getTenantCache(tenant).get(model);
+        } catch (ExecutionException e) {
+            LOGGER.error("Error during cache initialisation", e);
+            return Collections.emptyList();
+        }
     }
 
     private LoadingCache<String, List<ModelAttrAssoc>> getTenantCache(String tenant) {
