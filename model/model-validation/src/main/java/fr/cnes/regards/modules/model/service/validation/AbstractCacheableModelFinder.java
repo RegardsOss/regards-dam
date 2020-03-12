@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.model.service.validation;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +76,7 @@ public abstract class AbstractCacheableModelFinder
             return getTenantCache(tenant).get(model);
         } catch (ExecutionException e) {
             LOGGER.error("Error during cache initialisation", e);
-            return Collections.emptyList();
+            return null;
         }
     }
 
