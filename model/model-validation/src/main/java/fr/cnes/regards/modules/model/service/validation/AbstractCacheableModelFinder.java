@@ -76,12 +76,13 @@ public abstract class AbstractCacheableModelFinder
         try {
             return getTenantCache(tenant).get(model);
         } catch (ExecutionException e) {
-            LOGGER.error("Cannot find model attributes", e);
+            LOGGER.error("Error during cache initialisation", e);
             return Collections.emptyList();
         }
     }
 
     private LoadingCache<String, List<ModelAttrAssoc>> getTenantCache(String tenant) {
+
         LoadingCache<String, List<ModelAttrAssoc>> modelCache = modelCacheMap.get(tenant);
         if (modelCache == null) {
             // Dynamically initialize cache
@@ -90,7 +91,11 @@ public abstract class AbstractCacheableModelFinder
 
                         @Override
                         public List<ModelAttrAssoc> load(String modelName) throws Exception {
-                            return loadAttributesByModel(modelName);
+                            List<ModelAttrAssoc> attributesByModel = loadAttributesByModel(modelName);
+                            if (attributesByModel == null) {
+                                throw new Exception(String.format("Unknow Model %s", modelName));
+                            }
+                            return attributesByModel;
                         }
                     });
             modelCacheMap.put(tenant, modelCache);
