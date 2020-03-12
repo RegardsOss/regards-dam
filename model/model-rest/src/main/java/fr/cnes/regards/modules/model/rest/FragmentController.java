@@ -114,7 +114,7 @@ public class FragmentController implements IResourceController<Fragment> {
      * Retrieve all fragments except default one
      * @return list of fragments
      */
-    @ResourceAccess(description = "List all fragments")
+    @ResourceAccess(description = "List all fragments", role = DefaultRole.ADMIN)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<EntityModel<Fragment>>> getFragments() {
         return ResponseEntity.ok(toResources(fragmentService.getFragments()));
