@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import fr.cnes.regards.framework.amqp.IPoller;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -160,11 +159,10 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     public boolean doPoll() {
         boolean atLeastOnePoll = false;
         // Try to poll an AbstractEntityEvent
-        TenantWrapper<T> wrapper = poller.poll(this.entityClass);
-        if (wrapper != null) {
-            String tenant = wrapper.getTenant();
-            LOGGER.info("Received message from tenant {} created at {}...", tenant, wrapper.getDate());
-            UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
+        AbstractEntityEvent event = poller.poll(this.entityClass);
+        if (event != null) {
+            LOGGER.info("Received message from tenant {} ...", runtimeTenantResolver.getTenant());
+            UniformResourceName[] ipIds = event.getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
                 LOGGER.debug("IpIds received {}", Arrays.toString(ipIds));
                 atLeastOnePoll = true;
@@ -177,7 +175,7 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                 OffsetDateTime now = OffsetDateTime.now();
                 Arrays.stream(ipIds).forEach(ipId -> {
                     try {
-                        entityIndexerService.updateEntityIntoEs(tenant, ipId, now, false);
+                        entityIndexerService.updateEntityIntoEs(runtimeTenantResolver.getTenant(), ipId, now, false);
                     } catch (ModuleException e) {
                         LOGGER.error("Error handling entity update events", e);
                         // FIXME notify
