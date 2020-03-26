@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -263,7 +263,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                     MethodParamFactory.build(PropertyType.class),
                                     MethodParamFactory.build(String.class), MethodParamFactory.build(Set.class),
-                                    MethodParamFactory.build(Set.class), MethodParamFactory.build(Boolean.class));
+                                    MethodParamFactory.build(Boolean.class));
         }
         return resource;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,12 +78,12 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      * Store dynamic and static properties by tenant. <br/>
      * Allows intelligent guess of attribute from a partial or complete JSON path preventing potential conflicts!<br/>
      */
-    private final Map<String, Map<String, AttributeModel>> propertyMap = new HashMap<>();
+    private final ConcurrentMap<String, Map<String, AttributeModel>> propertyMap = new ConcurrentHashMap<>();
 
     /**
      * Store dynamic and static properties by tenant and type for full text search
      */
-    private final Map<String, Multimap<PropertyType, AttributeModel>> typedPropertyMap = new HashMap<>();
+    private final ConcurrentMap<String, Multimap<PropertyType, AttributeModel>> typedPropertyMap = new ConcurrentHashMap<>();
 
     public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {
@@ -124,13 +126,13 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         String name = attribute.getFullJsonPath();
 
         // Only dynamic attributes can have a reduce name path
-        if (!attribute.isDynamic() && attribute.getId() != null) {
+        if (!attribute.isDynamic() && (attribute.getId() != null)) {
             return name;
         }
 
         for (Entry<String, AttributeModel> entry : getTenantMap().entrySet()) {
             AttributeModel att = entry.getValue();
-            if (att.isDynamic() && att.getId() != null && att.getId().equals(attribute.getId())) {
+            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
                 if (entry.getKey().length() < name.length()) {
                     name = entry.getKey();
                 }

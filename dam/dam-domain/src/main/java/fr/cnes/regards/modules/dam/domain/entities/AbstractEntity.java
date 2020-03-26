@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -89,6 +89,8 @@ import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity<F extends EntityFeature> implements IIndexable, IDocFiles, ILocalizable {
+
+    public static final String TAGS_MUST_NOT_BE_NULL_OR_EMPTY = "Tags must not be null or empty";
 
     /**
      * Entity id for SGBD purpose mainly and REST request
@@ -248,7 +250,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     }
 
     public void setTags(Set<String> tags) {
-        Assert.notEmpty(tags, "Tags must not be null or empty");
+        Assert.notEmpty(tags, TAGS_MUST_NOT_BE_NULL_OR_EMPTY);
         this.tags = tags;
         // Propagate to feature
         feature.setTags(tags);
@@ -261,14 +263,14 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     }
 
     public void addTags(String... tags) {
-        Assert.notEmpty(tags, "Tags must not be null or empty");
+        Assert.notEmpty(tags, TAGS_MUST_NOT_BE_NULL_OR_EMPTY);
         this.tags.addAll(Arrays.asList(tags));
         // Propagate to feature
         feature.addTags(tags);
     }
 
     public void removeTags(java.util.Collection<String> tags) {
-        Assert.notEmpty(tags, "Tags must not be null or empty");
+        Assert.notEmpty(tags, TAGS_MUST_NOT_BE_NULL_OR_EMPTY);
         this.tags.removeAll(tags);
         // Propagate to feature
         feature.removeTags(tags);

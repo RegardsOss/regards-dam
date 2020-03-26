@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,33 +18,9 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.function.Predicate;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.geotools.geometry.DirectPosition2D;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.GeodeticCalculator;
-import org.hipparchus.geometry.partitioning.Region;
-import org.hipparchus.geometry.spherical.twod.S2Point;
-import org.hipparchus.geometry.spherical.twod.SphericalPolygonsSet;
-import org.hipparchus.util.FastMath;
-import org.opengis.geometry.DirectPosition;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Table;
-
 import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.coordinates.Position;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
@@ -79,12 +55,42 @@ import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.function.Predicate;
+import org.apache.commons.lang3.ArrayUtils;
+import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.PolygonBuilder;
+import org.elasticsearch.common.geo.builders.ShapeBuilder;
+import org.geotools.geometry.DirectPosition2D;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.GeodeticCalculator;
+import org.hipparchus.geometry.partitioning.Region;
+import org.hipparchus.geometry.spherical.twod.S2Point;
+import org.hipparchus.geometry.spherical.twod.SphericalPolygonsSet;
+import org.hipparchus.util.FastMath;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Geo spatial utilities class
  * @author oroussel
  */
 public class GeoHelper {
+
+    private GeoHelper() {}
 
     /**
      * Radius used by ASTRO projection (perfect sphere used, no flattening)
@@ -506,95 +512,188 @@ public class GeoHelper {
     /**
      * Normalize polygon without hole
      */
-    public static Polygon normalizePolygon(Polygon polygon) {
+    public static MultiPolygon normalizePolygon(Polygon polygon) {
         // Too complex if polygon contains holes
         if (polygon.containsHoles()) {
-            return polygon;
+            double[][][][] singlePolygon = { polygon.toArray() };
+            return MultiPolygon.fromArray(singlePolygon);
         }
-        return Polygon.fromArray(normalizePolygonAsArray(polygon.toArray()));
+        List<double[][][]> polygonList = normalizeExteriorRing(polygon.toArray());
+        double[][][][] polygonListAsDouble = new double[polygonList.size()][][][];
+        for (int i = 0; i < polygonList.size(); i++) {
+            polygonListAsDouble[i] = polygonList.get(i);
+        }
+        return MultiPolygon.fromArray(polygonListAsDouble);
     }
 
     /**
      * Normalize multi polygon
      */
     public static MultiPolygon normalizeMultiPolygon(MultiPolygon multiPolygon) {
-        List<PolygonPositions> poss = multiPolygon.getCoordinates();
-        for (ListIterator<PolygonPositions> li = poss.listIterator(); li.hasNext();) {
-            PolygonPositions positions = li.next();
+        List<double[][][]> polygonList = new ArrayList<>();
+        for (PolygonPositions positions : multiPolygon.getCoordinates()) {
             // Doesn't manage polygons with holes
             if (positions.getHoles().isEmpty()) {
-                li.set(PolygonPositions.fromArray(normalizePolygonAsArray(positions.toArray())));
+                List<double[][][]> polygons = normalizeExteriorRing(positions.toArray());
+                polygonList.addAll(polygons);
             }
         }
-        return multiPolygon;
+        // Now we just transform List<...> into double[]<...>
+        double[][][][] polygonListAsDouble = new double[polygonList.size()][][][];
+        for (int i = 0; i < polygonList.size(); i++) {
+            polygonListAsDouble[i] = polygonList.get(i);
+        }
+        return MultiPolygon.fromArray(polygonListAsDouble);
     }
 
-    public static double[][][] normalizePolygonAsArray(double[][][] polygonAsArray) {
-        polygonAsArray[0] = normalizeExteriorRing(polygonAsArray[0]);
-        return polygonAsArray;
-    }
+    private static List<double[][][]> normalizeExteriorRing(double[][][] inPolygon) {
 
-    private static double[][] normalizeExteriorRing(double[][] inExteriorRing) {
-        double[][] exteriorRing = Arrays.copyOf(inExteriorRing, inExteriorRing.length);
-        // If first longitude is between -90 and -180, we use 180 -> 270 numeric (assuming it will probably
-        // cross dateline better than 0 line)
-        if ((exteriorRing[0][0] > -180) && (exteriorRing[0][0] <= -90)) {
-            exteriorRing[0][0] += 360;
-        }
-        // First: manage Dateline: passing from longitude < 180 to longitude > -180 makes most of frameworks
-        // understanding nothing.
-        // BUT they all take into account 180 > longitude > 360 (as well as -180 <= longitude < 0)
-        // So the idea is to search shortest distance between all consecutive points longitudes and depending on if this
-        // shortest distance is going through dateLine or 0-meridian line to choose longitude value (> 180 or > -180)
-        for (int i = 1; i < exteriorRing.length; i++) {
-            normalizeNextCoordinate(exteriorRing[i - 1], exteriorRing[i]);
-        }
-
+        // Let's first found out if uncleaned / original polygon contains poles
         ProjectGeoSettings settings = SpringContext.getBean(ProjectGeoSettings.class);
+        boolean northPoleIn = false;
+        boolean southPoleIn = false;
+        if (settings.getShouldManagePolesOnGeometries()) {
+            SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(inPolygon[0]);
+            // Is North Pole inside polygon
+            northPoleIn = sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE;
+            // Is south pole inside polygon ?
+            southPoleIn = sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE;
+
+            if (northPoleIn && southPoleIn) {
+                LOGGER.warn("The same polygon passing threw both poles ?? You should defintly make two polygons !");
+            }
+        }
+
+        // Let's submit the polygon to the ES java library in order to clean it
+        List<double[][][]> normalizedMultiPolygon = sanitizePolygon(inPolygon);
+
+
         // Second normalization phase only if pole management is asked to be done
         if (settings.getShouldManagePolesOnGeometries()) {
-            // Second: if polygon is around a pole WITHOUT using it in its exterior ring, a "pass around pole" deviation is
-            // added. The idea is to reach north pole (f. example) with (90, x) than adding (90, x + 90), (90, x + 180),
-            // (90, x + 270), etc.... and finish with (90, x).
-            // Because of the cylindric projection, projected polygon does not reach 90° of latitude (except when it passes
-            // through it). For example, a simple 80° latitude polygon "turning" around north pole is represented as a
-            // simple line. To add the "pole deviation", it is necessary add a "hat" reaching 90° of latitude on top of the
-            // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
-            // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
-            // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
-            // point and left border one, go straight the north until 90° (with a constant longitude), go "to the west" at
-            // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
-            // reaching median latitude then reach the left border point.
-            if (!goesThroughNorthPole(exteriorRing)) {
-                if (!goesThroughSouthPole(exteriorRing)) {
-                    // BEWARE: use inExteriorRing !! not exteriorRing, Hipparchus is better than all of us !!
-                    SphericalPolygonsSet sphericalPolygon = toSphericalPolygonSet(inExteriorRing);
-                    // North Pole is inside polygon
-                    boolean northPoleIn = false;
-                    if (sphericalPolygon.checkPoint(NORTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                        LOGGER.trace("NORTH POLE is inside polygon");
-                        exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
-                        northPoleIn = true;
-                    }
-                    // South Pole is inside polygon
-                    if (sphericalPolygon.checkPoint(SOUTH_POLE_AS_S2_POINT) == Region.Location.INSIDE) {
-                        LOGGER.trace("SOUTH POLE is inside polygon");
-                        if (!northPoleIn) {
-                            // Only South pole, best way is to apply whole algorithm on ecuadorian symetric polygon
-                            return getSymetricPolygon(normalizeExteriorRing(getSymetricPolygon(inExteriorRing)));
-                        } else { // Both poles...ouch, this will be tricky...but who knows...
-                            // Work with ecuadorian symetric polygon as if north pole is south pole
-                            exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
-                        }
+            for (int i = 0; i < normalizedMultiPolygon.size(); i++) {
+                double[][] exteriorRing = normalizedMultiPolygon.get(i)[0];
+                double[][] doubles = cleanPolePolygon(exteriorRing, northPoleIn, southPoleIn);
+                normalizedMultiPolygon.set(i, new double[][][]{doubles});
+            }
+        }
+
+        // Case of last longitude as 359.999999999 and first 0.0 for example, or -90 and 270, ...
+//        if (exteriorRing[exteriorRing.length - 1] != exteriorRing[0]) {
+//            exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
+//        }
+        return normalizedMultiPolygon;
+    }
+
+    private static double[][] cleanPolePolygon(double[][] exteriorRing, boolean northPoleIn, boolean southPoleIn) {
+        // Second: if polygon is around a pole WITHOUT using it in its exterior ring, a "pass around pole" deviation is
+        // added. The idea is to reach north pole (f. example) with (90, x) than adding (90, x + 90), (90, x + 180),
+        // (90, x + 270), etc.... and finish with (90, x).
+        // Because of the cylindric projection, projected polygon does not reach 90° of latitude (except when it passes
+        // through it). For example, a simple 80° latitude polygon "turning" around north pole is represented as a
+        // simple line. To add the "pole deviation", it is necessary add a "hat" reaching 90° of latitude on top of the
+        // polygon. Knowing max longitude point is connected to a point that is on the left border of the polygon
+        // (mostly the min longitude point but not necessarily), we just need to add a point on the max longitude (ie
+        // dateline or 0-meridian depending on the max longitude value) and a median latitude between max longitude
+        // point and left border one, go straight the north until 90° (with a constant longitude), go "to the west" at
+        // minimum longitude (dateline or 0-meridian depending on the case) keeping latitude of 90°, go to the south
+        // reaching median latitude then reach the left border point.
+        if (!goesThroughNorthPole(exteriorRing)) {
+            if (!goesThroughSouthPole(exteriorRing)) {
+                // North Pole is inside polygon
+                if (northPoleIn) {
+                    LOGGER.trace("NORTH POLE is inside polygon");
+                    exteriorRing = normalizePolygonAroundNorthPole(exteriorRing);
+                }
+                // South Pole is inside polygon
+                if (southPoleIn) {
+                    LOGGER.trace("SOUTH POLE is inside polygon");
+                    if (!northPoleIn) {
+                        // Only South pole, best way is to apply whole algorithm on ecuadorian symetric polygon
+                        return getSymetricPolygon(cleanPolePolygon(getSymetricPolygon(exteriorRing), true, false));
+                    } else { // Both poles...ouch, this will be tricky...but who knows...
+                        // Work with ecuadorian symetric polygon as if north pole is south pole
+                        exteriorRing = getSymetricPolygon(normalizePolygonAroundNorthPole(getSymetricPolygon(exteriorRing)));
                     }
                 }
             }
         }
-        // Case of last longitude as 359.999999999 and first 0.0 for example, or -90 and 270, ...
-        if (exteriorRing[exteriorRing.length - 1] != exteriorRing[0]) {
-            exteriorRing[exteriorRing.length - 1] = exteriorRing[0];
-        }
         return exteriorRing;
+    }
+
+    private static double[][][] esGeometryToPolygon(Geometry geometry) {
+        double [][][] currentPolygon = new double[1][][];
+        double [][] coordinates = new double[geometry.getCoordinates().length][];
+        int i = 0;
+        for (Coordinate coordinate : geometry.getCoordinates()) {
+            coordinates[i] = new double[]{
+                    coordinate.getX(), coordinate.getY()
+            };
+            i++;
+        }
+        currentPolygon[0] = coordinates;
+        return currentPolygon;
+    }
+
+    public static String getGeometryAsText(List<double [][][]> multiPolygon){
+        StringJoiner sb = new StringJoiner(",", "[", "]");
+        for (int i = 0; i < multiPolygon.size(); i++) {
+            StringJoiner polygonSb = new StringJoiner(",", "[", "]");
+            for (int j = 0; j < multiPolygon.get(i).length; j++) {
+                StringJoiner coordListSb = new StringJoiner(",", "[", "]");
+                for (int k = 0; k < multiPolygon.get(i)[j].length; k++) {
+                    coordListSb.add("[" + multiPolygon.get(i)[j][k][0] + "," + multiPolygon.get(i)[j][k][1] + "]");
+                }
+                polygonSb.add(coordListSb.toString());
+            }
+            sb.add(polygonSb.toString());
+
+        }
+        return sb.toString();
+    }
+
+    private static List<double [][][]> sanitizeMultiPolygon(double[][][][] multiPolygon) {
+        List<double [][][]> outMultipolygons = new ArrayList<>();
+        // iterate over outMultipolygons in this multipolygon
+        for (int i = 0; i < multiPolygon.length; i++) {
+            // Any polygon can be splited into several polygons
+            outMultipolygons.addAll(sanitizePolygon(multiPolygon[i]));
+        }
+        return outMultipolygons;
+    }
+
+    /**
+     * Clean using the ES library the provided polygon.
+     * We also simplify polygons and removes any holes
+     * We can split a polygon into several polygons if they cross the date line
+     * @param polygon a single polygon
+     * @return one or more polygon
+     */
+    public static List<double [][][]> sanitizePolygon(double[][][] polygon) {
+        List<double [][][]> outMultipolygons = new ArrayList<>();
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
+
+        // We just keep the external line that describes this polygon. All others lines (holes) are ignored
+        double[][] inExteriorRing = polygon[0];
+        // Build the ES coordinates builder
+        CoordinatesBuilder coordinatesBuilder = new CoordinatesBuilder();
+        for (int i = 0; i < inExteriorRing.length; i++) {
+            coordinatesBuilder.coordinate(new Coordinate(inExteriorRing[i][0], inExteriorRing[i][1]));
+        }
+        // ES will split polygon into several polygons if that's easier to read
+        Geometry geometry = new PolygonBuilder(coordinatesBuilder, ShapeBuilder.Orientation.COUNTER_CLOCKWISE).buildGeometry(geometryFactory, true);
+
+        // Save polygons into the resulting outMultipolygons
+        if (geometry.getGeometryType().equals("MultiPolygon")) {
+            for (int i = 0; i < geometry.getNumGeometries(); i++) {
+                // As we don't have holes and we splitted polygons around the dateline
+                // Result can be suprising + we can't use holes at all
+                Geometry subGeometry = geometry.getGeometryN(i);
+                outMultipolygons.add(esGeometryToPolygon(subGeometry));
+            }
+        } else if (geometry.getGeometryType().equals("Polygon")) {
+            outMultipolygons.add(esGeometryToPolygon(geometry));
+        }
+        return outMultipolygons;
     }
 
     /**
@@ -1031,7 +1130,7 @@ public class GeoHelper {
 
         @Override
         public Boolean visitPolygon(Polygon geometry) {
-            System.err.printf("Distance from point (%f, %f): %f\n", point[0], point[1], distance);
+            LOGGER.error("Distance from point (%f, %f): %f\n", point[0], point[1], distance);
             ArrayList<Position> positions = geometry.getCoordinates().getExteriorRing();
             Position lastPosition = null;
             for (Position position : positions) {

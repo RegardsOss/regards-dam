@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -42,7 +42,7 @@ public class BulkSaveResult {
      */
     private final ConcurrentMap<String, ConcurrentMap<String, Long>> savedDocPerSessionOwner = new ConcurrentHashMap<>();
 
-    private final Map<String, Exception> inErrorDocsMap = new HashMap<>();
+    private final ConcurrentMap<String, Exception> inErrorDocsMap = new ConcurrentHashMap<>();
 
     /**
      * Map sessionOwner to sessions which are mapped to number of document in error

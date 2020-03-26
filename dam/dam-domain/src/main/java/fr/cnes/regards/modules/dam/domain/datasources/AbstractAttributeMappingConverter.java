@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -60,15 +60,19 @@ public class AbstractAttributeMappingConverter extends TypeAdapter<AbstractAttri
             }
         }
 
-        switch (type) {
-            case DYNAMIC:
-                return new DynamicAttributeMapping(elements.get("name"), elements.get("namespace"),
-                        PropertyType.valueOf(elements.get("type")), elements.get("nameDS"));
-            case STATIC:
-                return new StaticAttributeMapping(elements.get("name"), PropertyType.valueOf(elements.get("type")),
-                        elements.get("nameDS"));
-            default:
-                throw new RuntimeException(String.format("Invalid attribute mapping type %s", type.toString()));
+        if (type == null) {
+            throw new RuntimeException("Invalid unknown attribute mapping type");
+        } else {
+            switch (type) {
+                case DYNAMIC:
+                    return new DynamicAttributeMapping(elements.get("name"), elements.get("namespace"),
+                            PropertyType.valueOf(elements.get("type")), elements.get("nameDS"));
+                case STATIC:
+                    return new StaticAttributeMapping(elements.get("name"), PropertyType.valueOf(elements.get("type")),
+                            elements.get("nameDS"));
+                default:
+                    throw new RuntimeException(String.format("Invalid attribute mapping type %s", type.toString()));
+            }
         }
     }
 

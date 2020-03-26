@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -242,8 +242,10 @@ public class ModelController implements IResourceController<Model> {
         resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
                                 MethodParamFactory.build(String.class, pElement.getName()),
                                 MethodParamFactory.build(Model.class));
-        resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-                                MethodParamFactory.build(String.class, pElement.getName()));
+        if (modelService.isDeletable(pElement)) {
+            resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
+                                    MethodParamFactory.build(String.class, pElement.getName()));
+        }
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
         // Export

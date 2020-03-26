@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;
@@ -70,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -84,9 +86,11 @@ import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
+import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
+import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
@@ -122,7 +126,7 @@ import fr.cnes.regards.modules.model.service.IModelService;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @TestPropertySource(locations = { "classpath:test.properties" })
-@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_CLASS)
+@DirtiesContext(hierarchyMode = HierarchyMode.EXHAUSTIVE, classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
@@ -277,6 +281,38 @@ public class IndexerServiceDataSourceIT {
         // DataSource PluginConf
         dataSourcePluginConf = getPostgresDataSource();
         pluginService.savePluginConfiguration(dataSourcePluginConf);
+    }
+
+    @Test
+    public void testDeleteByDatasource() throws InactiveDatasourceException, ModuleException, InterruptedException,
+            ExecutionException, DataSourceException, NotFinishedException {
+        String tenant = runtimeTenantResolver.getTenant();
+
+        // Creation
+        DatasourceIngestion dsi = new DatasourceIngestion(dataSourcePluginConf.getBusinessId());
+        dsi.setLabel("Label");
+        dsIngestionRepos.save(dsi);
+
+        // Ingest datas
+        crawlerService.ingest(dsi.getId()).get();
+
+        // Check ingested datas
+        Long datasourceId = dataSourcePluginConf.getId();
+        SimpleSearchKey<DataObject> key = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        key.setSearchIndex(tenant);
+        Page<DataObject> result = esRepos.search(key, 10, ICriterion.all());
+        Assert.assertEquals(4, result.getContent().size());
+
+        // Delete all from this datasource
+        long nbDeleted = esRepos.deleteByDatasource(tenant, datasourceId);
+        Assert.assertEquals(4, nbDeleted);
+        int loop = 0;
+        while (!result.isEmpty() && (loop < 10)) {
+            Thread.sleep(500);
+            result = esRepos.search(key, 10, ICriterion.all());
+            loop++;
+        }
+        Assert.assertEquals(0, result.getContent().size());
     }
 
     @After

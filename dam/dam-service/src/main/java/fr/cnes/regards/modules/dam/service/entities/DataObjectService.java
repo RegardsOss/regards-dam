@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -39,6 +39,9 @@ import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 @Service
 public class DataObjectService extends AbstractEntityValidationService<DataObjectFeature, DataObject> {
 
+    /**
+     * Classic Spring validator used to validate each DataObject (ie with annotations)
+     */
     private final Validator dataObjectValidator;
 
     public DataObjectService(IModelFinder modelFinder, Validator dataObjectValidator) {

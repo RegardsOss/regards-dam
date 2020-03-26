@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -383,8 +383,9 @@ public interface IEsRepository {
      * @param <U> result class of transform function
      * @return all results (ordered is guaranteed to be always the same) and facets (order not guaranteed)
      */
-    <T, U> Tuple<List<U>, Set<IFacet<?>>> search(SearchKey<?, T[]> searchKey, ICriterion criterion, String sourceAttribute,
-            Predicate<T> filterPredicate, Function<T, U> transformFct, Map<String, FacetType> facetsMap);
+    <T, U> Tuple<List<U>, Set<IFacet<?>>> search(SearchKey<?, T[]> searchKey, ICriterion criterion,
+            String sourceAttribute, Predicate<T> filterPredicate, Function<T, U> transformFct,
+            Map<String, FacetType> facetsMap);
 
     /**
      * Count result
@@ -504,4 +505,11 @@ public interface IEsRepository {
      * Close Client
      */
     void close();
+
+    /**
+     * @param tenant
+     * @param datasourceId
+     * @return
+     */
+    long deleteByDatasource(String tenant, Long datasourceId);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,27 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.opengis.referencing.operation.TransformException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.geojson.coordinates.Positions;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
@@ -52,6 +31,25 @@ import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.opengis.referencing.operation.TransformException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author oroussel
@@ -244,13 +242,7 @@ public class GeoHelperTest {
         System.out.println(displayGeoJson(polygon));
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], [ 210.0, 66.0 ], "
-                                    + "[ 235.00005, 66.0 ], [ 235.00005, 70.0 ], [ 247.99995, 70.0 ], [ 247.99995, 75.0 ], "
-                                    + "[ 262.5, 75.0 ], [ 262.5, 80.0 ], [ 270.0, 80.0 ], [ 270.0, 86.0 ], [ 315.0, 86.0 ], "
-                                    + "[ 315.0, 86.16666 ], [ 345.0, 86.16666 ], [ 345.0, 88.0 ], [ 359.999999999999, 88.0 ], "
-                                    + "[ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 88.0 ], [ 120.0, 88.0 ], [ 120.0, 86.5 ], "
-                                    + "[ 217.5, 86.5 ], [ 217.5, 80.0 ], [ 203.74995, 80.0 ], [ 203.74995, 77.0 ], "
-                                    + "[ 195.0, 77.0 ] ) )", polygon.toString());
+        Assert.assertEquals("POLYGON ( EXTERIOR ( [ -165.0, 70.0 ], [ -150.0, 70.0 ], [ -150.0, 66.0 ], [ -124.99995, 66.0 ], [ -124.99995, 70.0 ], [ -112.00005, 70.0 ], [ -112.00005, 75.0 ], [ -97.5, 75.0 ], [ -97.5, 80.0 ], [ -90.0, 80.0 ], [ -90.0, 86.0 ], [ -45.0, 86.0 ], [ -45.0, 86.16666 ], [ -15.0, 86.16666 ], [ -15.0, 88.0 ], [ 120.0, 88.0 ], [ 120.0, 86.5 ], [ 180.0, 86.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 86.5 ], [ -142.5, 86.5 ], [ -142.5, 80.0 ], [ -156.25005, 80.0 ], [ -156.25005, 77.0 ], [ -165.0, 77.0 ], [ -165.0, 70.0 ] ) )", polygon.toString());
     }
 
     /**
@@ -287,13 +279,7 @@ public class GeoHelperTest {
         System.out.println(displayGeoJson(polygon));
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals("POLYGON ( EXTERIOR ( [ 120.0, 88.0 ], [ 120.0, 86.5 ], [ 217.5, 86.5 ], [ 217.5, 80.0 ], "
-                                    + "[ 203.74995, 80.0 ], [ 203.74995, 77.0 ], [ 195.0, 77.0 ], [ 195.0, 70.0 ], [ 210.0, 70.0 ], "
-                                    + "[ 210.0, 66.0 ], [ 235.00005, 66.0 ], [ 235.00005, 70.0 ], [ 247.99995, 70.0 ], "
-                                    + "[ 247.99995, 75.0 ], [ 262.5, 75.0 ], [ 262.5, 80.0 ], [ 270.0, 80.0 ], [ 270.0, 86.0 ], "
-                                    + "[ 315.0, 86.0 ], [ 315.0, 86.16666 ], [ 345.0, 86.16666 ], [ 345.0, 88.0 ], "
-                                    + "[ 359.999999999999, 88.0 ], [ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 88.0 ], "
-                                    + "[ 120.0, 88.0 ] ) )", polygon.toString());
+        Assert.assertEquals("POLYGON ( EXTERIOR ( [ 120.0, 86.5 ], [ -142.5, 86.5 ], [ -142.5, 80.0 ], [ -156.25005, 80.0 ], [ -156.25005, 77.0 ], [ -165.0, 77.0 ], [ -165.0, 70.0 ], [ -150.0, 70.0 ], [ -150.0, 66.0 ], [ -124.99995, 66.0 ], [ -124.99995, 70.0 ], [ -112.00005, 70.0 ], [ -112.00005, 75.0 ], [ -97.5, 75.0 ], [ -97.5, 80.0 ], [ -90.0, 80.0 ], [ -90.0, 86.0 ], [ -45.0, 86.0 ], [ -45.0, 86.16666 ], [ -15.0, 86.16666 ], [ -15.0, 88.0 ], [ 120.0, 88.0 ], [ 180.0, 86.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 86.5 ], [ 120.0, 86.5 ] ) )", polygon.toString());
     }
 
     /**
@@ -331,7 +317,7 @@ public class GeoHelperTest {
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals(
-                "POLYGON ( EXTERIOR ( [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 180.0, 68.0 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 68.0 ], [ -15.0, 68.0 ] ) )",
+                "POLYGON ( EXTERIOR ( [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ -142.5, 66.5 ], [ -142.5, 60.0 ], [ -156.25005, 60.0 ], [ -156.25005, 57.0 ], [ -165.0, 57.0 ], [ -165.0, 50.0 ], [ -150.0, 50.0 ], [ -150.0, 46.0 ], [ -124.99995, 46.0 ], [ -124.99995, 50.0 ], [ -112.00005, 50.0 ], [ -112.00005, 55.0 ], [ -97.5, 55.0 ], [ -97.5, 60.0 ], [ -90.0, 60.0 ], [ -90.0, 66.0 ], [ -45.0, 66.0 ], [ -45.0, 66.16666 ], [ -15.0, 66.16666 ], [ -15.0, 68.0 ], [ 180.0, 68.0 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 68.0 ], [ 120.0, 68.0 ] ) )",
                 polygon.toString());
     }
 
@@ -370,14 +356,7 @@ public class GeoHelperTest {
         System.out.println(displayGeoJson(polygon));
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals("POLYGON ( EXTERIOR ( [ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 203.74995, 60.0 ], "
-                                    + "[ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
-                                    + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ],"
-                                    + " [ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ],"
-                                    + " [ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ],"
-                                    + " [ 345.0, 68.0 ], [ 359.999999999999, 68.0 ], [ 359.999999999999, 90.0 ], "
-                                    + "[ 0.0, 90.0 ], [ 0.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], "
-                                    + "[ 217.5, 66.5 ] ) )", polygon.toString());
+        Assert.assertEquals("POLYGON ( EXTERIOR ( [ -142.5, 60.0 ], [ -156.25005, 60.0 ], [ -156.25005, 57.0 ], [ -165.0, 57.0 ], [ -165.0, 50.0 ], [ -150.0, 50.0 ], [ -150.0, 46.0 ], [ -124.99995, 46.0 ], [ -124.99995, 50.0 ], [ -112.00005, 50.0 ], [ -112.00005, 55.0 ], [ -97.5, 55.0 ], [ -97.5, 60.0 ], [ -90.0, 60.0 ], [ -90.0, 66.0 ], [ -45.0, 66.0 ], [ -45.0, 66.16666 ], [ -15.0, 66.16666 ], [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 180.0, 66.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 66.5 ], [ -142.5, 66.5 ], [ -142.5, 60.0 ] ) )", polygon.toString());
     }
 
     /**
@@ -413,14 +392,7 @@ public class GeoHelperTest {
         System.out.println(displayGeoJson(polygon));
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals("POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], "
-                                    + "[ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
-                                    + "[ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], "
-                                    + "[ 270.0, 66.0 ], [ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], "
-                                    + "[ 345.0, 75.0 ], [ 359.999999999999, 74.22222222222227 ], "
-                                    + "[ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 74.22222222222227 ], "
-                                    + "[ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ], [ 217.5, 60.0 ], "
-                                    + "[ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ] ) )",
+        Assert.assertEquals("POLYGON ( EXTERIOR ( [ -165.0, 50.0 ], [ -150.0, 50.0 ], [ -150.0, 46.0 ], [ -124.99995, 46.0 ], [ -124.99995, 50.0 ], [ -112.00005, 50.0 ], [ -112.00005, 55.0 ], [ -97.5, 55.0 ], [ -97.5, 60.0 ], [ -90.0, 60.0 ], [ -90.0, 66.0 ], [ -45.0, 66.0 ], [ -45.0, 66.16666 ], [ -15.0, 66.16666 ], [ -15.0, 75.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 180.0, 66.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 66.5 ], [ -142.5, 66.5 ], [ -142.5, 60.0 ], [ -156.25005, 60.0 ], [ -156.25005, 57.0 ], [ -165.0, 57.0 ], [ -165.0, 50.0 ] ) )",
                             polygon.toString());
     }
 
@@ -458,12 +430,7 @@ public class GeoHelperTest {
         polygon = (Polygon) GeoHelper.normalize(polygon);
         System.out.println(displayGeoJson(polygon));
         Assert.assertEquals(
-                "POLYGON ( EXTERIOR ( [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ], [ 210.0, 46.0 ], "
-                        + "[ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], [ 247.99995, 55.0 ], "
-                        + "[ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], [ 315.0, 66.0 ], "
-                        + "[ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 345.0, 68.0 ], [ 120.0, 75.0 ], [ 120.0, 66.5 ], "
-                        + "[ 217.5, 66.5 ], [ 217.5, 60.0 ], [ 359.999999999999, 60.0 ], [ 359.999999999999, 90.0 ], "
-                        + "[ 0.0, 90.0 ], [ 0.0, 60.0 ], [ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ] ) )",
+                "POLYGON ( EXTERIOR ( [ -165.0, 50.0 ], [ -150.0, 50.0 ], [ -150.0, 46.0 ], [ -124.99995, 46.0 ], [ -124.99995, 50.0 ], [ -112.00005, 50.0 ], [ -112.00005, 55.0 ], [ -97.5, 55.0 ], [ -97.5, 60.0 ], [ -90.0, 60.0 ], [ -90.0, 66.0 ], [ -45.0, 66.0 ], [ -45.0, 66.16666 ], [ -15.0, 66.16666 ], [ -15.0, 68.0 ], [ 120.0, 75.0 ], [ 120.0, 66.5 ], [ 180.0, 66.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 66.5 ], [ -142.5, 66.5 ], [ -142.5, 60.0 ], [ -156.25005, 60.0 ], [ -156.25005, 57.0 ], [ -165.0, 57.0 ], [ -165.0, 50.0 ] ) )",
                 polygon.toString());
     }
 
@@ -472,6 +439,7 @@ public class GeoHelperTest {
      * or geojson.io
      */
     @Test
+    @Ignore("ES library that read this geometry does not support it")
     public void polygonNormalizationAroundSouthPoleTest1() {
         // Octans polygon: around south pole but passing through south pole (classic description of Octans)
         Polygon polygon = IGeometry.simplePolygon(toLongitude(0.00000), -90.00000, //
@@ -517,13 +485,12 @@ public class GeoHelperTest {
                                                   toLongitude(3.50000), -82.50000, //
                                                   toLongitude(0.00000), -82.50000);
         System.out.println(displayGeoJson(polygon));
-        polygon = (Polygon) GeoHelper.normalize(polygon);
-        System.out.println(displayGeoJson(polygon));
-        Assert.assertEquals(
-                "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
-                        + "        \"coordinates\": [          [\n"
-                        + "[ 0.0, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ 349.99995, -75.0 ], [ 319.99995, -75.0 ], [ 270.0, -75.0 ], [ 270.0, -82.5 ], [ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]] ]\n"
-                        + "      }  }    ]}", displayGeoJson(polygon));
+        MultiPolygon mPolygon = (MultiPolygon) GeoHelper.normalize(polygon);
+        System.out.println(displayGeoJson(mPolygon));
+        Assert.assertEquals("{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"MultiPolygon\",\n" +
+                "        \"coordinates\": [          [\n" +
+                "[[ -180.0, -82.5 ], [ -180.00000000000003, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ -10.000049999999987, -75.0 ], [ -40.00004999999999, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ -154.99995, -82.5 ], [ -180.0, -82.5 ]], [[ 179.99999999999997, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ 180.0, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ], [ 179.99999999999997, -75.0 ]]] ]\n" +
+                "      }  }    ]}", displayGeoJson(mPolygon));
     }
 
     /**
@@ -548,11 +515,12 @@ public class GeoHelperTest {
         Assert.assertEquals(
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      \"properties\": {      },      \"geometry\": {        \"type\": \"Polygon\",\n"
                         + "        \"coordinates\": [          [\n"
-                        + "[ 165.0, -35.0 ], [ 165.0, -39.75 ], [ 165.0, -56.5 ], [ 168.75, -56.5 ], [ 168.75, -64.0 ], [ 177.49995, -64.0 ], [ 177.49995, -55.0 ], [ 192.49995, -55.0 ], [ 192.49995, -64.0 ], [ 202.5, -64.0 ], [ 217.99995, -64.0 ], [ 217.99995, -55.0 ], [ 212.50005, -55.0 ], [ 212.50005, -42.0 ], [ 223.75005, -42.0 ], [ 223.75005, -29.5 ], [ 188.74995, -29.5 ], [ 188.74995, -33.0 ], [ 183.75, -33.0 ], [ 183.75, -35.0 ], [ 165.0, -35.0 ]] ]\n"
+                        + "[ 165.0, -39.75 ], [ 165.0, -56.5 ], [ 168.75, -56.5 ], [ 168.75, -64.0 ], [ 177.49995, -64.0 ], [ 177.49995, -55.0 ], [ -167.50005, -55.0 ], [ -167.50005, -64.0 ], [ -157.5, -64.0 ], [ -142.00005, -64.0 ], [ -142.00005, -55.0 ], [ -147.49995, -55.0 ], [ -147.49995, -42.0 ], [ -136.24995, -42.0 ], [ -136.24995, -29.5 ], [ -171.25005, -29.5 ], [ -171.25005, -33.0 ], [ -176.25, -33.0 ], [ -176.25, -35.0 ], [ 165.0, -35.0 ], [ 165.0, -39.75 ]] ]\n"
                         + "      }  }    ]}", displayGeoJson(polygon));
     }
 
     @Test
+    @Ignore("ES library that read this geometry does not support it")
     public void polygonAroundBothPolesTest() {
         Polygon polygon = IGeometry
                 .simplePolygon(20, 0, 20, 80, 100, 80, 170, 80, -170, 80, -100, 80, 10, 80, 10, 0, 5, -80, -100, -80,
@@ -611,16 +579,7 @@ public class GeoHelperTest {
                 "{  \"type\": \"FeatureCollection\",  \"features\": [  {      \"type\": \"Feature\",      "
                         + "\"properties\": {      },      \"geometry\": {        \"type\": \"MultiPolygon\",\n"
                         + "        \"coordinates\": [          [\n"
-                        + "[[ 0.0, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], "
-                        + "[ 349.99995, -75.0 ], [ 319.99995, -75.0 ], [ 270.0, -75.0 ], [ 270.0, -82.5 ], "
-                        + "[ 205.00005, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], "
-                        + "[ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ]], [[ 217.5, 66.5 ], [ 217.5, 60.0 ], "
-                        + "[ 203.74995, 60.0 ], [ 203.74995, 57.0 ], [ 195.0, 57.0 ], [ 195.0, 50.0 ], [ 210.0, 50.0 ],"
-                        + " [ 210.0, 46.0 ], [ 235.00005, 46.0 ], [ 235.00005, 50.0 ], [ 247.99995, 50.0 ], "
-                        + "[ 247.99995, 55.0 ], [ 262.5, 55.0 ], [ 262.5, 60.0 ], [ 270.0, 60.0 ], [ 270.0, 66.0 ], "
-                        + "[ 315.0, 66.0 ], [ 315.0, 66.16666 ], [ 345.0, 66.16666 ], [ 345.0, 68.0 ], "
-                        + "[ 359.999999999999, 68.0 ], [ 359.999999999999, 90.0 ], [ 0.0, 90.0 ], [ 0.0, 68.0 ], "
-                        + "[ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 217.5, 66.5 ]]] ]\n"
+                        + "[[ -180.0, -82.5 ], [ -180.00000000000003, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ -10.000049999999987, -75.0 ], [ -40.00004999999999, -75.0 ], [ -90.0, -75.0 ], [ -90.0, -82.5 ], [ -154.99995, -82.5 ], [ -180.0, -82.5 ]], [[ 179.99999999999997, -75.0 ], [ -180.0, -75.0 ], [ -180.0, -90.0 ], [ 180.0, -90.0 ], [ 180.0, -75.0 ], [ 180.0, -82.5 ], [ 115.00005, -82.5 ], [ 115.00005, -85.0 ], [ 52.5, -85.0 ], [ 52.5, -82.5 ], [ 0.0, -82.5 ], [ 0.0, -75.0 ], [ 179.99999999999997, -75.0 ]], [[ -142.5, 60.0 ], [ -156.25005, 60.0 ], [ -156.25005, 57.0 ], [ -165.0, 57.0 ], [ -165.0, 50.0 ], [ -150.0, 50.0 ], [ -150.0, 46.0 ], [ -124.99995, 46.0 ], [ -124.99995, 50.0 ], [ -112.00005, 50.0 ], [ -112.00005, 55.0 ], [ -97.5, 55.0 ], [ -97.5, 60.0 ], [ -90.0, 60.0 ], [ -90.0, 66.0 ], [ -45.0, 66.0 ], [ -45.0, 66.16666 ], [ -15.0, 66.16666 ], [ -15.0, 68.0 ], [ 120.0, 68.0 ], [ 120.0, 66.5 ], [ 180.0, 66.5 ], [ 180.0, 90.0 ], [ -180.0, 90.0 ], [ -180.0, 66.5 ], [ -142.5, 66.5 ], [ -142.5, 60.0 ]]] ]\n"
                         + "      }  }    ]}", displayGeoJson(multiPolygon));
     }
 
@@ -708,7 +667,6 @@ public class GeoHelperTest {
      * Utility method
      */
     @Test
-    @Ignore
     public void polygonMoisiTest() throws IOException {
         String constellation =
                 "15.08333 -03.25000 LIB  O\n" + "15.91667 -03.25000 LIB  O\n" + "15.91667 -08.00000 LIB  O\n"
@@ -743,7 +701,6 @@ public class GeoHelperTest {
      * Utility method
      */
     @Test
-    @Ignore
     public void reverseConstellationTest() throws IOException {
         String constellation =
                 "15.08333  00.00000 LIB  O\n" + "14.66667  00.00000 LIB  O\n" + "14.66667 -08.00000 LIB  O\n"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,12 +18,18 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
+import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
+import fr.cnes.regards.framework.geojson.coordinates.Positions;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import java.util.List;
 import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
 import org.elasticsearch.common.geo.builders.PolygonBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.locationtech.jts.geom.Coordinate;
-
-import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Geo queries utility class
@@ -31,18 +37,30 @@ import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
  */
 public final class GeoQueries {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeoQueries.class);
+
+    private GeoQueries() {}
+
     /**
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
     public static ShapeBuilder<?, ?> computeShapeBuilder(PolygonCriterion criterion) {
         // Only shell can be taken into account (external emprise)
-        double[][] shell = GeoHelper.normalizePolygonAsArray(criterion.getCoordinates())[0];
+        Polygon polygon = Polygon.fromArray(criterion.getCoordinates());
+        MultiPolygon shell = GeoHelper.normalizePolygon(polygon);
 
+        List<PolygonPositions> coordinates = shell.getCoordinates();
+
+        if (coordinates.size() > 1) {
+            LOGGER.warn("Unexpected number of polygons");
+        }
         CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
-        for (double[] point : shell) {
+
+        Positions exteriorRing = coordinates.get(0).getExteriorRing();
+        double[][] coords = exteriorRing.toArray();
+        for (double[] point : coords) {
             coordBuilder.coordinate(new Coordinate(point[0], point[1]));
         }
-
         return new PolygonBuilder(coordBuilder);
     }
 

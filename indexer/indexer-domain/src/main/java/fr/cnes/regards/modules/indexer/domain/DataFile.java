@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -164,14 +164,6 @@ public class DataFile {
 
     public Boolean isOnline() {
         return online;
-    }
-
-    /**
-     * Please use {@link #isOnline()}
-     */
-    @Deprecated
-    public Boolean getOnline() {
-        return isOnline();
     }
 
     public void setOnline(Boolean online) {

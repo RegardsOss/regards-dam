@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -40,6 +40,8 @@ public class GeometryCriterionBuilder {
      * Class logger
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(GeometryCriterionBuilder.class);
+
+    private GeometryCriterionBuilder() {}
 
     /**
      * Read WKT format in given String to creates a Geometry criterion.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -42,6 +42,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.elasticsearch.ElasticsearchException;
+import org.locationtech.spatial4j.exception.InvalidShapeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,8 @@ import org.springframework.validation.ObjectError;
 
 import com.google.common.base.Strings;
 
+import fr.cnes.regards.framework.geojson.GeoJsonType;
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -66,6 +69,7 @@ import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -81,6 +85,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
@@ -90,9 +95,11 @@ import fr.cnes.regards.modules.dam.service.entities.IEntitiesService;
 import fr.cnes.regards.modules.dam.service.entities.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 import fr.cnes.regards.modules.model.dto.properties.IProperty;
 import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
@@ -758,7 +765,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         // No error => dataObject is valid
         if (errors == null) {
-            toSaveObjects.add(dataObject);
+            // Check if there is no error already existing on that dataObject (ie from geo manipulation)
+            boolean noExistingError = bulkSaveResult.getInErrorDocCause(dataObject.getDocId()) == null;
+            if (noExistingError) {
+                toSaveObjects.add(dataObject);
+            }
         } else {
             // Validation error
             StringBuilder dataObjectBuffer = new StringBuilder("Data object with id '");
@@ -792,6 +803,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult, buf);
             // Validate data object
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -815,6 +827,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         Set<DataObject> toSaveObjects = new HashSet<>();
 
         for (DataObject dataObject : objects) {
+            normalizeAndReprojectGeometry(dataObject, bulkSaveResult, buf);
             mergeDataObject(tenant, datasourceId, now, dataObject);
             validateDataObject(toSaveObjects, dataObject, bulkSaveResult, buf, datasourceId);
         }
@@ -826,6 +839,56 @@ public class EntityIndexerService implements IEntityIndexerService {
             publishEventsAndManageErrors(tenant, datasourceIngestionId, buf, bulkSaveResult);
         }
         return bulkSaveResult;
+    }
+
+    /**
+     * Update the dataObject if it contains a geometry
+     * Compute two different geometry :
+     *      - a normalized version of the geometry in the same CRS
+     *      - a WGS 84 projected version of the normalized geometry
+     * This normalization can produce errors if the geometry is not valid
+     * @param dataObject
+     * @param bulkSaveResult
+     * @param errorBuffer
+     */
+    private void normalizeAndReprojectGeometry(DataObject dataObject, BulkSaveResult bulkSaveResult,
+            StringBuilder errorBuffer) {
+        DataObjectFeature feature = dataObject.getFeature();
+        // This geometry has been set by plugin, IT IS NOT NORMALIZED
+        IGeometry geometry = feature.getGeometry();
+        if ((geometry != null) && (geometry.getType() != GeoJsonType.UNLOCATED)) {
+            // Always normalize geometry in its origin CRS
+            try {
+                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
+                // Then manage projected (or not) geometry into WGS84
+                if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
+                    try {
+                        // Transform to Wgs84...(not normalized one from its origin CRS)
+                        IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
+                                                                      Crs.WGS_84);
+                        // ...and save it onto DataObject after having normalized it
+                        dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
+                    } catch (IllegalArgumentException e) {
+                        throw new RsRuntimeException(
+                                String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
+                    }
+                } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
+                    dataObject.setWgs84(feature.getNormalizedGeometry());
+                }
+            } catch (InvalidShapeException e) {
+                // Validation error
+                String msg = String
+                        .format("Failed to normalize the feature geometry : %s.\nFeature label = %s, ProviderId = %s\n",
+                                e.getMessage(), feature.getLabel(), feature.getProviderId());
+                // Log error msg
+                LOGGER.warn(msg);
+                errorBuffer.append(msg);
+                // Add data object in error into summary result
+                bulkSaveResult.addInErrorDoc(dataObject.getDocId(), new EntityInvalidException(msg),
+                                             Optional.ofNullable(dataObject.getFeature().getSession()),
+                                             Optional.ofNullable(dataObject.getFeature().getSessionOwner()));
+            }
+        }
     }
 
     /**
@@ -899,6 +962,11 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     @Override
+    public long deleteDataObjectsFromDatasource(String tenant, Long datasourceId) {
+        return esRepos.deleteByDatasource(tenant, datasourceId);
+    }
+
+    @Override
     public void updateAllDatasets(String tenant, OffsetDateTime updateDate) throws ModuleException {
         self.updateDatasets(tenant, datasetService.findAll(), null, updateDate, true, null);
     }
@@ -923,4 +991,5 @@ public class EntityIndexerService implements IEntityIndexerService {
             eventPublisher.publishEvent(new DataSourceMessageEvent(this, runtimeTenantResolver.getTenant(), msg, dsId));
         }
     }
+
 }

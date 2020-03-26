@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -56,9 +56,9 @@ public class BoundaryBoxCriterion implements ICriterion {
             this.minY = Double.parseDouble(values[1].trim());
             this.maxX = Double.parseDouble(values[2].trim());
             this.maxY = Double.parseDouble(values[3].trim());
-        } catch (NumberFormatException | NullPointerException e) {
+        } catch (NumberFormatException | NullPointerException | ArrayIndexOutOfBoundsException e) {
             throw new InvalidGeometryException(
-                    String.format("Bbox %s is not a valid bbox format. Expected : minX,minY,maxX,maxY", bbox));
+                    String.format("Bbox %s is not a valid bbox format. Expected : minX,minY,maxX,maxY", bbox), e);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
@@ -61,8 +62,11 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.notification.NotificationLevel;
+import fr.cnes.regards.framework.notification.client.INotificationClient;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.UniformResourceName;
@@ -112,9 +116,11 @@ import fr.cnes.regards.modules.storage.domain.dto.request.RequestResultInfoDTO;
 public abstract class AbstractEntityService<F extends EntityFeature, U extends AbstractEntity<F>>
         extends AbstractEntityValidationService<F, U> implements IEntityService<U> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityValidationService.class);
 
     private static final String CATALOG_DOWNLOAD_PATH = "/downloads/{aip_id}/files/{checksum}";
+
+    public static final String ENABLED_TO_ACCESS_STORAGE_PLUGIN = "Enabled to access storage plugin";
 
     /**
      * Map of {@link Project}s by tenant
@@ -131,6 +137,9 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
 
     @Autowired
     private IProjectsClient projectClient;
+
+    @Autowired
+    private INotificationClient notificationClient;
 
     /**
      * Parameterized entity repository
@@ -377,7 +386,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
             if (storageService != null) {
                 storageService.store(entity);
             } else {
-                LOGGER.warn("Enabled to access storage plugin");
+                LOGGER.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN);
             }
         } catch (NotAvailablePluginConfigurationException e) {
             LOGGER.warn("nabled to access storage plugin", e);
@@ -557,10 +566,10 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
             if (storageService != null) {
                 storageService.update(updated, entityInDb);
             } else {
-                LOGGER.warn("Enabled to access storage plugin");
+                LOGGER.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN);
             }
         } catch (NotAvailablePluginConfigurationException e) {
-            LOGGER.warn("Enabled to access storage plugin", e);
+            LOGGER.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN, e);
         }
 
         // AMQP event publishing
@@ -773,7 +782,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
             return (IStorageService) PluginUtils.getPlugin(PluginConfiguration.build(ttt, null, IPluginParam.set()),
                                                            new HashMap<>());
         } catch (ClassNotFoundException e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e.getMessage(), e);
         }
 
         return null;
@@ -798,7 +807,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
                 .stream().collect(Collectors.toMap(AbstractEntity::getIpId, Function.identity()));
         boolean updated = false;
         Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
-        // for all request succedded
+        // for all request succeeded
         for (RequestInfo info : requests) {
             // get the AbstractEntityRequest with a matching groupId
             AbstractEntityRequest current = succesRequests.stream()
@@ -830,6 +839,32 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         this.entityRepository.saveAll(entityByUrn.values());
         this.publishEvents(EventType.UPDATE,
                            treatedRequests.stream().map(AbstractEntityRequest::getUrn).collect(Collectors.toSet()));
+    }
+
+    @Override
+    public void storeError(Set<RequestInfo> requests) {
+        StringBuilder buf = new StringBuilder("Storage failed. Errors :<ul>");
+        Set<AbstractEntityRequest> treatedRequests = new HashSet<>();
+        for (RequestInfo request : requests) {
+            // Check if request is a known one
+            Optional<AbstractEntityRequest> oReq = this.abstractEntityRequestRepo.findByGroupId(request.getGroupId());
+            if (oReq.isPresent()) {
+                treatedRequests.add(oReq.get());
+                Set<String> errors = request.getErrorRequests().stream().map(RequestResultInfoDTO::getErrorCause)
+                        .collect(Collectors.toSet());
+                for (String error : errors) {
+                    buf.append(String.format("<li>%s</li>", error));
+                }
+                LOGGER.error("Storage request with groupId {} failed", request.getGroupId());
+            }
+        }
+        if (!treatedRequests.isEmpty()) {
+            buf.append("</ul>");
+            this.notificationClient.notify(buf.toString(), "Data-management storage failed", NotificationLevel.ERROR,
+                                           MimeTypeUtils.TEXT_HTML, DefaultRole.PROJECT_ADMIN);
+            // delete treated requests
+            this.abstractEntityRequestRepo.deleteAll(treatedRequests);
+        }
     }
 
     /**

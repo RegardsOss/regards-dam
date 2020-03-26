@@ -707,4 +707,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         return mapping;
     }
 
+    @Override
+    public boolean isDeletable(Model model) {
+        // FIXME
+        return false;
+    }
+
 }

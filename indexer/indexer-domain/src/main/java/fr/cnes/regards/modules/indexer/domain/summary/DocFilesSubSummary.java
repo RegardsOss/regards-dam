@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.indexer.domain.summary;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * See {@link DocFilesSummary}
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 public class DocFilesSubSummary extends AbstractDocSummary {
 
-    private final Map<String, FilesSummary> fileTypesSummaryMap = new HashMap<>();
+    private final ConcurrentHashMap<String, FilesSummary> fileTypesSummaryMap = new ConcurrentHashMap<>();
 
     public DocFilesSubSummary(long documentsCount, long filesCount, long filesSize, String... fileTypes) {
         super(filesCount, filesSize, documentsCount);

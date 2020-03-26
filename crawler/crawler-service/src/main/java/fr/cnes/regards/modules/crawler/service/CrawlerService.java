@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -45,7 +45,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -56,7 +55,6 @@ import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.urn.EntityType;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -73,11 +71,9 @@ import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveLightResult;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.model.service.IModelService;
 
@@ -161,7 +157,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             try {
                 dsPlugin = pluginService.getPlugin(pluginConf.getBusinessId());
             } catch (NotAvailablePluginConfigurationException e) {
-                throw new InactiveDatasourceException();
+                throw new InactiveDatasourceException(e);
             }
 
             BulkSaveLightResult saveResult;
@@ -225,7 +221,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Future<BulkSaveResult> task = null;
         try {
             try {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
                                              PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found at most %d records from datasource", page.getNumberOfElements()),
                             dsiId);
@@ -237,7 +233,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
+                                                 page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -287,7 +284,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         Future<BulkSaveResult> task = null;
         try {
             try {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
                                              PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
@@ -298,7 +295,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     sendMessage(String.format("  Finding %d records from datasource...",
                                               page.getPageable().getPageSize()),
                                 dsiId);
-                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+                    page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
+                                                 page.nextPageable());
                     availableRecordsCount += page.getNumberOfElements();
                     sendMessage(String.format("  ...Found %d records from datasource. Total currently found=%d",
                                               page.getNumberOfElements(), availableRecordsCount),
@@ -386,10 +384,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
-     * @param datasourceId
+     * @param datasourceId datasource id
+     * @param dsiId datasource ingestion id
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            Long datasourceId, Pageable pageable) throws DataSourceException, ModuleException {
+            Long datasourceId, String dsiId, Pageable pageable) throws DataSourceException, ModuleException {
         // Retrieve target model
         Model model = modelService.getModelByName(dsPlugin.getModelName());
 
@@ -402,7 +401,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                         page.getNumber(), page.getSize(), page.getTotalElements(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             // Catch Exception in order to catch all exceptions from plugins. Plugins can be out of our scope.
-            notificationClient.notify(e.getMessage(), "Datasource harvesting failure", NotificationLevel.ERROR,
+            String message = "Error retriving features from datasource " + dsPlugin.getClass().getName();
+            if (e.getMessage() != null) {
+                message = message + ". Cause: " + e.getMessage();
+            }
+            notificationClient.notify(message, "Datasource harvesting failure", NotificationLevel.ERROR,
                                       DefaultRole.ADMIN);
             LOGGER.error("Cannot retrieve data from datasource", e);
             throw e;
@@ -422,30 +425,10 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
             // Manage geometries
             if (feature.getGeometry() != null) {
-                // This geometry has been set by plugin, IT IS NOT NORMALIZED
-                IGeometry geometry = feature.getGeometry();
-                // The crs is brought by project so it must be set on feature and taken into account for geometry
+                // The crs is brought by project so it must be set on feature to be taken into account by geometry
                 // normalization
-                feature.setCrs(projectGeoSettings.getCrs().toString());
-                // Always normalize geometry in its origin CRS
-                feature.setNormalizedGeometry(GeoHelper.normalize(geometry));
-                // Then manage projected (or not) geometry into WGS84
-                if (!feature.getCrs().get().equals(Crs.WGS_84.toString())) {
-                    try {
-                        // Transform to Wgs84...(not normalized one from its origin CRS)
-                        IGeometry wgs84Geometry = GeoHelper.transform(geometry, Crs.valueOf(feature.getCrs().get()),
-                                                                      Crs.WGS_84);
-                        // ...and save it onto DataObject after having normalized it
-                        dataObject.setWgs84(GeoHelper.normalize(wgs84Geometry));
-                    } catch (IllegalArgumentException e) {
-                        throw new RsRuntimeException(
-                                String.format("Given Crs '%s' is not allowed.", feature.getCrs().get()), e);
-                    }
-                } else { // Even if Crs is WGS84, don't forget to normalize geometry (already done into feature)
-                    dataObject.setWgs84(feature.getNormalizedGeometry());
-                }
+                dataObject.getFeature().setCrs(projectGeoSettings.getCrs().toString());
             }
-
             dataObjects.add(dataObject);
         }
 

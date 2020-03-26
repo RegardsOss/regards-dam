@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -151,10 +151,13 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
@@ -168,6 +171,7 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
@@ -591,6 +595,11 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    public long deleteByDatasource(String inIndex, Long datasourceId) {
+        return this.deleteByQuery(inIndex.toLowerCase(), ICriterion.eq(StaticProperties.DATASOURCE_ID, datasourceId));
+    }
+
+    @Override
     public Collection<String> upgradeAllIndices4SingleType() {
         List<String> newIndices = new ArrayList<>();
         try {
@@ -762,6 +771,32 @@ public class EsRepository implements IEsRepository {
                         result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(),
                                              Optional.ofNullable(docFeature.getSession()),
                                              Optional.ofNullable(docFeature.getSessionOwner()));
+                        if (itemResponse.getFailure().getMessage().contains(IMapping.GEO_SHAPE_ATTRIBUTE)) {
+                            // Save the failling geometry in the log
+                            IGeometry wgs84 = ((DataObject) document).getWgs84();
+                            if (wgs84 instanceof Polygon) {
+                                Polygon polygonWGS84 = (Polygon) wgs84;
+                                if (errorBuffer.length() > 0) {
+                                    errorBuffer.append('\n').append('\n');
+                                }
+                                String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"properties\":{},\"geometry\": {\"type\": \"Polygon\",\"coordinates\": [["
+                                        + polygonWGS84.getCoordinates().getExteriorRing().toString() + "]]}}]}";
+                                errorBuffer.append(msg);
+                            } else if (wgs84 instanceof MultiPolygon) {
+                                MultiPolygon multiPolygonWGS84 = (MultiPolygon) wgs84;
+                                if (errorBuffer.length() > 0) {
+                                    errorBuffer.append('\n').append('\n');
+                                }
+                                String msg = "The here under geometry have not been accepted by ElasticSearch:\n{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\","
+                                        + "\"properties\":{},\"geometry\": {\"type\": \"MultiPolygon\",\"coordinates\": [["
+                                        + multiPolygonWGS84.getCoordinates().stream()
+                                                .map(p -> p.getExteriorRing().toString())
+                                                .collect(Collectors.joining("], [", "[", "]"))
+                                        + "]]}}]}";
+                                errorBuffer.append(msg);
+                            }
+                        }
                     } else {
                         result.addInErrorDoc(itemResponse.getId(), itemResponse.getFailure().getCause(),
                                              Optional.empty(), Optional.empty());
@@ -769,6 +804,7 @@ public class EsRepository implements IEsRepository {
                     String msg = String.format("Document of type %s and id %s with label %s cannot be saved",
                                                documents[0].getClass(), itemResponse.getId(),
                                                map.get(itemResponse.getId()));
+
                     // Log error
                     LOGGER.warn(msg, itemResponse.getFailure().getCause());
                     // Add error msg to buffer
@@ -1341,8 +1377,9 @@ public class EsRepository implements IEsRepository {
                     builder.aggregation(AggregationBuilders.terms(qa.getAttributeName())
                             .field(qa.getAttributeName() + KEYWORD_SUFFIX).size(qa.getTermsLimit()));
                 } else if (qa.isBooleanAttribute()) {
-                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName()).field(qa.getAttributeName())).size(2);
-                } else if(!qa.isTextAttribute()){
+                    builder.aggregation(AggregationBuilders.terms(qa.getAttributeName()).field(qa.getAttributeName()))
+                            .size(2);
+                } else if (!qa.isTextAttribute()) {
                     builder.aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName()));
                 }
             }
@@ -1413,7 +1450,8 @@ public class EsRepository implements IEsRepository {
             int maxCount, S set, Map<String, FacetType> facetsMap) {
         try {
 
-            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + ".keyword" : inAttName;
+            String attName = isTextMapping(searchKey.getSearchIndex(), inAttName) ? inAttName + KEYWORD_SUFFIX
+                    : inAttName;
             Consumer<SearchSourceBuilder> addUniqueTermAgg = (builder) -> builder
                     .aggregation(AggregationBuilders.terms(attName).field(attName).size(maxCount));
 
@@ -1955,4 +1993,5 @@ public class EsRepository implements IEsRepository {
         }
         builder.aggregation(termsAggBuilder);
     }
+
 }

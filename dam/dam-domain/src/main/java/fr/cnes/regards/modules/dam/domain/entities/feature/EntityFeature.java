@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -84,7 +84,7 @@ public abstract class EntityFeature extends AbstractFeature<Set<IProperty<?>>, U
 
     public EntityFeature(UniformResourceName id, String providerId, EntityType entityType, String label) {
         Assert.notNull(entityType, "Entity type is required");
-        setId(id);
+        this.id = id;
         this.providerId = providerId;
         this.entityType = entityType;
         this.label = label;

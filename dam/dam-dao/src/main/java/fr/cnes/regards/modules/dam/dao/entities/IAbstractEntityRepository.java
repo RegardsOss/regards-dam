@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -34,7 +34,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
-import fr.cnes.regards.modules.dam.domain.entities.Dataset;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * Common requests on entities
@@ -104,6 +104,8 @@ public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Page<T> findAll(Pageable pageRequest);
+
+    boolean existsByModel(Model model);
 
     /**
      * Check if at least one model is already linked to at least one entity

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -52,4 +52,6 @@ public interface IModelService {
     void exportModel(String modelName, OutputStream pOutputStream) throws ModuleException;
 
     Model importModel(InputStream pInputStream) throws ModuleException;
+
+    boolean isDeletable(Model model);
 }

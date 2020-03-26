@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.dao.spatial;
 
+import fr.cnes.regards.framework.geojson.coordinates.PolygonPositions;
 import fr.cnes.regards.framework.geojson.geometry.GeometryCollection;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.IGeometryVisitor;
@@ -60,8 +61,13 @@ public class GeometryNormalizerVisitor implements IGeometryVisitor<IGeometry> {
     }
 
     @Override
-    public MultiPolygon visitMultiPolygon(MultiPolygon geometry) {
-        return GeoHelper.normalizeMultiPolygon(geometry);
+    public IGeometry visitMultiPolygon(MultiPolygon geometry) {
+        MultiPolygon multiPolygon = GeoHelper.normalizeMultiPolygon(geometry);
+        if (multiPolygon.getCoordinates().size() == 1) {
+            PolygonPositions positions = multiPolygon.getCoordinates().get(0);
+            return Polygon.fromArray(positions.toArray());
+        }
+        return multiPolygon;
     }
 
     @Override
@@ -70,8 +76,13 @@ public class GeometryNormalizerVisitor implements IGeometryVisitor<IGeometry> {
     }
 
     @Override
-    public Polygon visitPolygon(Polygon geometry) {
-        return GeoHelper.normalizePolygon(geometry);
+    public IGeometry visitPolygon(Polygon geometry) {
+        MultiPolygon multiPolygon = GeoHelper.normalizePolygon(geometry);
+        if (multiPolygon.getCoordinates().size() == 1) {
+            PolygonPositions positions = multiPolygon.getCoordinates().get(0);
+            return Polygon.fromArray(positions.toArray());
+        }
+        return multiPolygon;
     }
 
     @Override

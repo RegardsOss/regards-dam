@@ -3,6 +3,8 @@ package fr.cnes.regards.modules.dam.domain.entities.metadata;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Dataset metadata. This object is only used by Elasticsearch<br/>
@@ -88,14 +90,10 @@ public class DatasetMetadata {
      * Associated data objects groups.
      * Same groups as dataset ones except some if rights don't permit access to data objects
      */
-    private Map<String, DataObjectGroup> dataObjectsGroups = new HashMap<>();
+    private final ConcurrentMap<String, DataObjectGroup> dataObjectsGroups = new ConcurrentHashMap<>();
 
     public Set<String> getDataObjectsGroups() {
         return dataObjectsGroups.keySet();
-    }
-
-    public void setDataObjectsGroups(Map<String, DataObjectGroup> dataObjectsGroups) {
-        this.dataObjectsGroups = dataObjectsGroups;
     }
 
     public void addDataObjectGroup(String groupName, Boolean datasetAccess, Boolean dataObjectAccess,
