@@ -18,8 +18,11 @@
  */
 package fr.cnes.regards.modules.dam.gson.entities;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 
 /**
@@ -28,8 +31,9 @@ import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
  * @author Marc Sordi
  *
  */
-@FunctionalInterface
 public interface IAttributeHelper {
 
     List<AttributeModel> getAllAttributes(String tenant);
+
+    Set<AttributeModel> getAllCommonAttributes(Collection<String> modelNames) throws ModuleException;
 }

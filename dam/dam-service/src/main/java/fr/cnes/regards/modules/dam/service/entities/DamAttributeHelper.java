@@ -18,15 +18,22 @@
  */
 package fr.cnes.regards.modules.dam.service.entities;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Sets;
+
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.dam.gson.entities.IAttributeHelper;
 import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
+import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
 
 /**
  *
@@ -48,10 +55,13 @@ public class DamAttributeHelper implements IAttributeHelper {
      */
     private final IAttributeModelService attributeModelService;
 
+    private final IModelAttrAssocService attributeModelAssocService;
+
     public DamAttributeHelper(IRuntimeTenantResolver runtimeTenantResolver,
-            IAttributeModelService attributeModelService) {
+            IAttributeModelService attributeModelService, IModelAttrAssocService attributeModelAssocService) {
         this.runtimeTenantResolver = runtimeTenantResolver;
         this.attributeModelService = attributeModelService;
+        this.attributeModelAssocService = attributeModelAssocService;
     }
 
     @Override
@@ -62,5 +72,23 @@ public class DamAttributeHelper implements IAttributeHelper {
         } finally {
             runtimeTenantResolver.clearTenant();
         }
+    }
+
+    @Override
+    public Set<AttributeModel> getAllCommonAttributes(Collection<String> modelNames) throws ModuleException {
+        Set<AttributeModel> commonAttributes = Sets.newHashSet();
+        boolean first = true;
+        for (String modelName : modelNames) {
+            Set<AttributeModel> modelAttributes = attributeModelAssocService.getModelAttrAssocs(modelName).stream()
+                    .map(f -> f.getAttribute()).collect(Collectors.toSet());
+            if (first) {
+                commonAttributes.addAll(modelAttributes);
+            } else {
+                commonAttributes = commonAttributes.stream().filter(f -> !modelAttributes.contains(f))
+                        .collect(Collectors.toSet());
+            }
+            first = false;
+        }
+        return commonAttributes;
     }
 }
