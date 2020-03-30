@@ -389,7 +389,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
                 LOGGER.warn(ENABLED_TO_ACCESS_STORAGE_PLUGIN);
             }
         } catch (NotAvailablePluginConfigurationException e) {
-            logger.warn("nabled to access storage plugin", e);
+            LOGGER.warn("nabled to access storage plugin", e);
         }
 
         // AMQP event publishing
@@ -634,7 +634,7 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         try {
             deleteAipStorage(toDelete);
         } catch (NotAvailablePluginConfigurationException e1) {
-            logger.warn("Enabled to delete AIP storage cause storage plugin is not active", e1);
+            LOGGER.warn("Enabled to delete AIP storage cause storage plugin is not active", e1);
         }
 
         deletedEntityRepository.save(createDeletedEntity(toDelete));
