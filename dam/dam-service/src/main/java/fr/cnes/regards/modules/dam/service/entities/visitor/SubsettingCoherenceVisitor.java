@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -46,6 +44,8 @@ import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMultiMatchCriterion;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
@@ -93,8 +93,8 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchCriterion(StringMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && (attribute.getType().equals(AttributeType.STRING)
-                || attribute.getType().equals(AttributeType.STRING_ARRAY));
+        return attribute != null && (attribute.getType().equals(PropertyType.STRING)
+                || attribute.getType().equals(PropertyType.STRING_ARRAY));
     }
 
     @Override
@@ -105,26 +105,26 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && (attribute.getType().equals(AttributeType.STRING)
-                || attribute.getType().equals(AttributeType.STRING_ARRAY));
+        return attribute != null && (attribute.getType().equals(PropertyType.STRING)
+                || attribute.getType().equals(PropertyType.STRING_ARRAY));
     }
 
     @Override
     public Boolean visitIntMatchCriterion(IntMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && attribute.getType().equals(AttributeType.INTEGER);
+        return attribute != null && attribute.getType().equals(PropertyType.INTEGER);
     }
 
     @Override
     public Boolean visitLongMatchCriterion(LongMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && attribute.getType().equals(AttributeType.LONG);
+        return attribute != null && attribute.getType().equals(PropertyType.LONG);
     }
 
     @Override
     public Boolean visitDateMatchCriterion(DateMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && attribute.getType().equals(AttributeType.DATE_ISO8601);
+        return attribute != null && attribute.getType().equals(PropertyType.DATE_ISO8601);
     }
 
     @Override
@@ -146,13 +146,13 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitDateRangeCriterion(DateRangeCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && attribute.getType().equals(AttributeType.DATE_ISO8601);
+        return attribute != null && attribute.getType().equals(PropertyType.DATE_ISO8601);
     }
 
     @Override
     public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
-        return attribute != null && attribute.getType().equals(AttributeType.BOOLEAN);
+        return attribute != null && attribute.getType().equals(PropertyType.BOOLEAN);
     }
 
     /**

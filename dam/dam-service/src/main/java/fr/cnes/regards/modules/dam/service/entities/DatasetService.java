@@ -47,8 +47,8 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IAbstractEntityRepository;
@@ -61,13 +61,15 @@ import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
 import fr.cnes.regards.modules.dam.service.entities.visitor.SubsettingCoherenceVisitor;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
@@ -78,7 +80,7 @@ import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttribut
  */
 @Service
 @MultitenantTransactional
-public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
+public class DatasetService extends AbstractEntityService<DatasetFeature, Dataset> implements IDatasetService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasetService.class);
 
@@ -98,14 +100,18 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Autowired
     private IAccessRightRepository accessRightRepository;
 
-    public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
-            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
-            IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
-            ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IOpenSearchService openSearchService,
-            IPluginService pluginService, IAbstractEntityRequestRepository abstractEntityRequestRepo) {
-        super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
-              repository, repository, em, publisher, runtimeTenantResolver, abstractEntityRequestRepo);
+    @Autowired
+    private IModelAttrAssocService modelAttributeService;
+
+    public DatasetService(IModelFinder modelFinder, IDatasetRepository repository,
+            IAttributeModelService attributeService, IModelAttrAssocService modelAttributeService,
+            IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
+            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
+            EntityManager em, IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IOpenSearchService openSearchService, IPluginService pluginService,
+            IAbstractEntityRequestRepository abstractEntityRequestRepo) {
+        super(modelFinder, entityRepository, modelService, deletedEntityRepository, collectionRepository, repository,
+              repository, em, publisher, runtimeTenantResolver, abstractEntityRequestRepo);
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }
@@ -128,7 +134,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setDataModel(model.getName());
                 dataset.setDataSource(pluginConf);
             } catch (ModuleException e) {
-                logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
+                LOGGER.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                 throw new EntityNotFoundException(String
                         .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
                         PluginConfiguration.class);

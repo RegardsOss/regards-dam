@@ -24,18 +24,18 @@ import java.util.function.Consumer;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.dam.domain.models.ComputationPlugin;
-import fr.cnes.regards.modules.dam.domain.models.PluginComputationIdentifierEnum;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.model.domain.ComputationPlugin;
+import fr.cnes.regards.modules.model.domain.models.PluginComputationIdentifierEnum;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.IntegerProperty;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
- * This Implementation of IComputedAttribute allows to compute the sum of {@link IntegerAttribute} according to a
+ * This Implementation of IComputedAttribute allows to compute the sum of {@link IntegerProperty} according to a
  * collection of {@link DataObject} using the same IntegerAttribute name
  *
  * @author Sylvain Vissiere-Guerinet
@@ -44,7 +44,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
         description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", license = "GPLv3", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-@ComputationPlugin(supportedType = AttributeType.INTEGER)
+@ComputationPlugin(supportedType = PropertyType.INTEGER)
 public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer> {
 
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
@@ -66,7 +66,7 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
         super.result = 0;
     }
 
-    private void doSum(Optional<AbstractAttribute<?>> propertyOpt) {
+    private void doSum(Optional<IProperty<?>> propertyOpt) {
         if (propertyOpt.isPresent()) {
             Integer value = ((Number) propertyOpt.get().getValue()).intValue();
             if (value != null) {

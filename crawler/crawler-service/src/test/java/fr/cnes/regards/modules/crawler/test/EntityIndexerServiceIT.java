@@ -45,17 +45,15 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.plugins.TestDataAccessRightPlugin;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.service.IEntityIndexerService;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessGroupRepository;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
-import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessLevel;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
@@ -65,18 +63,19 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.QualityLevel;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.dam.plugin.dataaccess.accessright.NewDataObjectsAccessPlugin;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessGroupService;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
 import fr.cnes.regards.modules.dam.service.entities.IDatasetService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.model.dao.IModelRepository;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Test class.
@@ -197,14 +196,12 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
         objects.add(createObject("DO2", "DataObject 2"));
         objects.add(createObject("DO3", "DataObject 3"));
         dataAccessPlugin = createDataAccessPlugin();
-        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(1),
-                                         objects, "");
+        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(1), objects, "");
         List<DataObject> otherObj = Lists.newArrayList();
         otherObj.add(createObject("DO4", "DataObject 4"));
         otherObj.add(createObject("DO5", "DataObject 5"));
         otherObj.add(createObject("DO6", "DataObject 6"));
-        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(10),
-                                         otherObj, "");
+        indexerService.createDataObjects(TENANT, datasource.getId(), OffsetDateTime.now().minusDays(10), otherObj, "");
         objects.addAll(otherObj);
         indexerService.updateEntityIntoEs(TENANT, dataset.getIpId(), OffsetDateTime.now(), false);
     }
@@ -239,28 +236,27 @@ public class EntityIndexerServiceIT extends AbstractRegardsIT {
     private PluginConfiguration createDataSource() throws ModuleException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataSourcePlugin.MODEL, PluginParameterTransformer.toJson(model)));
-        return datasourceService
-                .createDataSource(PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class));
+        return datasourceService.createDataSource(PluginConfiguration.build(TestDataSourcePlugin.class, null, param));
     }
 
     private PluginConfiguration createDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam
                 .set(IPluginParam.build(TestDataAccessRightPlugin.LABEL_PARAM, objects.get(0).getLabel()));
-        return PluginUtils.getPluginConfiguration(param, TestDataAccessRightPlugin.class);
+        return PluginConfiguration.build(TestDataAccessRightPlugin.class, null, param);
     }
 
     private PluginConfiguration createNewDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
-        return PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class);
+        return PluginConfiguration.build(NewDataObjectsAccessPlugin.class, null, param);
     }
 
     private PluginConfiguration createOldDataAccessPlugin()
             throws EntityInvalidException, EntityNotFoundException, EncryptionException {
         Set<IPluginParam> param = IPluginParam.set(IPluginParam.build(NewDataObjectsAccessPlugin.NB_DAYS_PARAM, 5));
         return pluginService
-                .savePluginConfiguration(PluginUtils.getPluginConfiguration(param, NewDataObjectsAccessPlugin.class));
+                .savePluginConfiguration(PluginConfiguration.build(NewDataObjectsAccessPlugin.class, null, param));
     }
 
     private DataObject createObject(String id, String label) {

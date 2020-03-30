@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 /**
  * Component used to schedule new {@link DatasourceIngestion} to ingest features in ES catalog for each tenants
@@ -89,7 +89,7 @@ public class IngesterService implements IHandler<PluginConfEvent> {
     private boolean consumeOnlyMode = false;
 
     @EventListener
-    public void handleApplicationReadyEvent(DamGsonReadyEvent event) {
+    public void handleApplicationReadyEvent(ModelGsonReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
     }
 

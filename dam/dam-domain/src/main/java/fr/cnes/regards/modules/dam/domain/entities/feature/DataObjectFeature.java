@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.dam.domain.entities.feature;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * Specific feature properties for data objects
@@ -33,22 +32,19 @@ public class DataObjectFeature extends EntityFeature {
      * Session key information
      */
     private String sessionOwner;
-    private String session;
 
-    /**
-     * Deserialization constructor
-     */
-    protected DataObjectFeature() {
-        super(null, null, EntityType.DATA, null);
-    }
+    private String session;
 
     public DataObjectFeature(UniformResourceName id, String providerId, String label) {
         super(id, providerId, EntityType.DATA, label);
     }
 
-    public DataObjectFeature(String tenant, String providerId, String label) {
-        super(UniformResourceName.pseudoRandomUrn(OAISIdentifier.AIP, EntityType.DATA, tenant, 1), providerId,
-              EntityType.DATA, label);
+    public DataObjectFeature(UniformResourceName id, String providerId, String label, String sessionOwner,
+            String session, String model) {
+        super(id, providerId, EntityType.DATA, label);
+        this.sessionOwner = sessionOwner;
+        this.session = session;
+        this.model = model;
     }
 
     public String getSessionOwner() {

@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.dam.domain.datasources;
 
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * Datasource attribute mapping for static fields ie primary key, label, last update date, raw data, thumbnail or
@@ -32,14 +32,14 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
      * @param type the attribute type in model
      * @param mappingDS mapping name in datasource
      */
-    public StaticAttributeMapping(String name, AttributeType type, String mappingDS) {
+    public StaticAttributeMapping(String name, PropertyType type, String mappingDS) {
         super(name, null, type, mappingDS);
 
         attributeType = AttributeMappingEnum.STATIC;
     }
 
     @Override
-    public AttributeType getType() {
+    public PropertyType getType() {
         if (super.type == null) {
             super.type = getStaticAttributeType(getName());
         }

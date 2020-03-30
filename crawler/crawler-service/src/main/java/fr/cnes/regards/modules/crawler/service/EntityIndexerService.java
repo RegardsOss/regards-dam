@@ -66,9 +66,9 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
@@ -85,11 +85,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.plugins.IDataOb
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata.DataObjectGroup;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 import fr.cnes.regards.modules.dam.service.entities.DataObjectService;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
@@ -103,6 +100,10 @@ import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.dto.properties.ObjectProperty;
+import fr.cnes.regards.modules.model.service.validation.ValidationMode;
 
 /**
  * @author oroussel
@@ -664,16 +665,16 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
         for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
-            AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
-            if (attributeToAdd instanceof ObjectAttribute) {
-                ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
+            IProperty<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
+            if (attributeToAdd instanceof ObjectProperty) {
+                ObjectProperty attrInFragment = (ObjectProperty) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
-                Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute)
+                Optional<IProperty<?>> candidate = dataset.getProperties().stream()
+                        .filter(attr -> (attr instanceof ObjectProperty)
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
-                    Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
+                    Set<IProperty<?>> properties = ((ObjectProperty) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
                     properties.removeAll(attrInFragment.getValue());
                     // and now set the new ones
@@ -752,7 +753,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         List<String> errors = null;
         // If some validation errors occur, don't index data object
         try {
-            dataObjectService.validate(dataObject, errorsObject, false);
+            dataObjectService.validate(dataObject, errorsObject, ValidationMode.CREATION);
         } catch (EntityInvalidException e) {
             // If such an exception has been thrown, it contains all errors ( as a List<String>) else errors are
             // described into errorsObject

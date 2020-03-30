@@ -32,8 +32,8 @@ import org.hibernate.annotations.Type;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DatasetFeature;
 import fr.cnes.regards.modules.dam.domain.entities.metadata.DatasetMetadata;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * Dataset feature decorator
@@ -125,7 +125,7 @@ public class Dataset extends AbstractEntity<DatasetFeature> {
     }
 
     public ICriterion getUserSubsettingClause() {
-        return (subsettingClause == null) ? ICriterion.all() : subsettingClause;
+        return subsettingClause == null ? ICriterion.all() : subsettingClause;
     }
 
     public PluginConfiguration getDataSource() {

@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.crawler.rest;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,11 @@ public class IndexController {
         entityIndexerService.deleteIndexNRecreateEntities(tenant);
 
         // Clear all datasources ingestion
+        //2. Then re-create all entities
+        entityIndexerService.updateAllDatasets(tenant, OffsetDateTime.now());
+        entityIndexerService.updateAllCollections(tenant, OffsetDateTime.now());
+
+        //3. Clear all datasources ingestion
         List<DatasourceIngestion> datasources = dataSourceIngesterService.getDatasourceIngestions();
         if ((datasources != null) && !datasources.isEmpty()) {
             datasources.forEach(ds -> dataSourceIngesterService.deleteDatasourceIngestion(ds.getId()));

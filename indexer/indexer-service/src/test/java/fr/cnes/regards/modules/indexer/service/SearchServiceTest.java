@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -40,19 +42,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.Point;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import static fr.cnes.regards.modules.indexer.service.GeoUtil.toWgs84;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author oroussel
@@ -91,8 +92,8 @@ public class SearchServiceTest {
             for (double lat = 0; lat < 90; lat += 0.1) {
                 String label = "POINT_" + format.format(lon) + "_" + format.format(lat);
                 DataObject object = new DataObject(model, tenant, label, label);
-                object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant, UUID.randomUUID(),
-                        1));
+                object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant,
+                        UUID.randomUUID(), 1));
                 Point point = IGeometry.point(EsHelper.scaled(lon), EsHelper.scaled(lat))
                         .withCrs(Crs.MARS_49900.toString());
                 object.setNormalizedGeometry(point);
@@ -118,8 +119,8 @@ public class SearchServiceTest {
             for (double lat = 0; lat < 89; lat += 2) {
                 String label = "POLYGON_" + format.format(lon) + "_" + format.format(lat);
                 DataObject object = new DataObject(model, tenant, label, label);
-                object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant, UUID.randomUUID(),
-                        1));
+                object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant,
+                        UUID.randomUUID(), 1));
                 Polygon polygon = IGeometry.simplePolygon(lon, lat, lon + 1, lat, lon + 1, lat + 1, lon, lat + 1)
                         .withCrs(Crs.MARS_49900.toString());
                 object.setNormalizedGeometry(polygon);

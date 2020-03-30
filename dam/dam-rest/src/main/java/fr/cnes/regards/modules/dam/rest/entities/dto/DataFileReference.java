@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.util.MimeType;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**

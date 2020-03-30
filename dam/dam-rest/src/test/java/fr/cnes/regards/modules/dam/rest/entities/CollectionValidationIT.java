@@ -36,15 +36,14 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
-import fr.cnes.regards.modules.dam.rest.models.ModelController;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.rest.ModelController;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  *
@@ -131,8 +130,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         Model model = modelService.getModelByName("MISSION_WITH_LABEL");
 
         Collection collection = new Collection(model, getDefaultTenant(), "COL1", "mission");
-        Set<AbstractAttribute<?>> atts = new HashSet<>();
-        atts.add(AttributeBuilder.buildString("LABEL", "uppercaselabel"));
+        Set<IProperty<?>> atts = new HashSet<>();
+        atts.add(IProperty.buildString("LABEL", "uppercaselabel"));
         collection.setProperties(atts);
 
         // Set multitenant factory tenant

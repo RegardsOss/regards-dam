@@ -42,17 +42,16 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
-import fr.cnes.regards.modules.dam.dao.models.IModelRepository;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.dam.domain.entities.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.gson.entities.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.dam.rest.DamRestConfiguration;
-import fr.cnes.regards.modules.dam.rest.models.ModelController;
 import fr.cnes.regards.modules.dam.service.entities.ICollectionService;
-import fr.cnes.regards.modules.dam.service.models.IAttributeModelService;
+import fr.cnes.regards.modules.model.dao.IModelRepository;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.dto.properties.IProperty;
+import fr.cnes.regards.modules.model.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.model.rest.ModelController;
+import fr.cnes.regards.modules.model.service.IAttributeModelService;
 
 /**
  * Test collection validation
@@ -198,12 +197,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection collection = new Collection(model1, getDefaultTenant(), "COL1", COLLECTION_LABEL);
         collection.setProviderId(providerId);
         collection.setCreationDate(OffsetDateTime.now());
-        Set<AbstractAttribute<?>> atts = new HashSet<>();
+        Set<IProperty<?>> atts = new HashSet<>();
 
-        atts.add(AttributeBuilder.buildString(refAtt, refValue));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
+        atts.add(IProperty.buildString(refAtt, refValue));
+        atts.add(IProperty.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(IProperty.buildObject(geo, IProperty.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -219,9 +218,9 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         collection = collectionService.load(collection.getIpId());
         atts = new HashSet<>();
 
-        atts.add(AttributeBuilder.buildString(refAtt, refValue + "new"));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(IProperty.buildString(refAtt, refValue + "new"));
+        atts.add(IProperty.buildBoolean(actAtt, actValue));
+        atts.add(IProperty.buildObject(geo, IProperty.buildString(crsAtt, crsValue)));
         collection.setProperties(atts);
 
         customizer = customizer();
@@ -241,9 +240,9 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         newCollection.setLastUpdate(collection.getLastUpdate());
         newCollection.setModel(collection.getModel());
 
-        atts.add(AttributeBuilder.buildString(refAtt, refValue + "new"));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, !actValue));
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(IProperty.buildString(refAtt, refValue + "new"));
+        atts.add(IProperty.buildBoolean(actAtt, !actValue));
+        atts.add(IProperty.buildObject(geo, IProperty.buildString(crsAtt, crsValue)));
         newCollection.setProperties(atts);
 
         customizer = customizer();
@@ -261,8 +260,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         Collection optionalNonAlterable = new Collection(model, getDefaultTenant(), "COL1", "optionalNonAlterable");
         optionalNonAlterable.setProviderId(providerId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
-        Set<AbstractAttribute<?>> atts = new HashSet<>();
-        atts.add(AttributeBuilder.buildString(refAtt, "ref"));
+        Set<IProperty<?>> atts = new HashSet<>();
+        atts.add(IProperty.buildString(refAtt, "ref"));
         optionalNonAlterable.setProperties(atts);
 
         RequestBuilderCustomizer customizer = customizer();
@@ -285,7 +284,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         optionalAltered.setLastUpdate(optionalNonAlterable.getLastUpdate());
         optionalAltered.setModel(optionalNonAlterable.getModel());
 
-        atts.add(AttributeBuilder.buildString(refAtt, "other"));
+        atts.add(IProperty.buildString(refAtt, "other"));
         optionalAltered.setProperties(atts);
 
         customizer = customizer();
@@ -320,7 +319,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         optionalAlteredNotGiven.setLastUpdate(optionalNotGivenNonAlterable.getLastUpdate());
         optionalAlteredNotGiven.setModel(optionalNotGivenNonAlterable.getModel());
 
-        atts.add(AttributeBuilder.buildString(refAtt, "other"));
+        atts.add(IProperty.buildString(refAtt, "other"));
         optionalAltered.setProperties(atts);
 
         customizer = customizer();
@@ -349,15 +348,15 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
         // bad values
         final int badRefValue = 5;
-        atts.add(AttributeBuilder.buildInteger(refAtt, badRefValue));
+        atts.add(IProperty.buildInteger(refAtt, badRefValue));
         final String badActValue = "true";
-        atts.add(AttributeBuilder.buildString(actAtt, badActValue));
+        atts.add(IProperty.buildString(actAtt, badActValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(IProperty.buildObject(geo, IProperty.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -385,12 +384,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
-        atts.add(AttributeBuilder.buildString(refAtt, refValue));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
+        atts.add(IProperty.buildString(refAtt, refValue));
+        atts.add(IProperty.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(IProperty.buildObject("notGeo", IProperty.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -419,12 +418,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(providerId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, "COL1", COLLECTION_LABEL);
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        final Set<IProperty<?>> atts = new HashSet<>();
 
-        atts.add(AttributeBuilder.buildString(refAtt, refValue));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
+        atts.add(IProperty.buildString(refAtt, refValue));
+        atts.add(IProperty.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, "notEarth")));
+        atts.add(IProperty.buildObject(geo, IProperty.buildString(crsAtt, "notEarth")));
 
         collection.setProperties(atts);
 

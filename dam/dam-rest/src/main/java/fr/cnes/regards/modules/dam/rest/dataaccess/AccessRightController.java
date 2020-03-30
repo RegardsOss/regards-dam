@@ -31,8 +31,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -51,9 +51,10 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessright.AccessRight;
 import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
 
@@ -63,7 +64,7 @@ import fr.cnes.regards.modules.dam.service.dataaccess.IAccessRightService;
  * @author Léo Mieulet
  */
 @RestController
-@RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_VALUE)
 public class AccessRightController implements IResourceController<AccessRight> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightController.class);
@@ -107,8 +108,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET)
-    @ResourceAccess(description = "send the list, or subset asked, of accessRight", role = DefaultRole.ADMIN)
-    public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
+    @ResourceAccess(description = "send the list, or subset asked, of accessRight")
+    public ResponseEntity<PagedModel<EntityModel<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String accessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
@@ -148,8 +149,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResourceAccess(description = "create an accessRight according to the argument", role = DefaultRole.ADMIN)
-    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
+    @ResourceAccess(description = "create an accessRight according to the argument")
+    public ResponseEntity<EntityModel<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
             throws ModuleException {
         AccessRight created = accessRightService.createAccessRight(accessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
@@ -162,8 +163,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "send the access right of id requested", role = DefaultRole.ADMIN)
-    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
+    @ResourceAccess(description = "send the access right of id requested")
+    public ResponseEntity<EntityModel<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
         AccessRight requested = accessRightService.retrieveAccessRight(id);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
@@ -177,16 +178,15 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "modify the access right of id requested according to the argument",
-            role = DefaultRole.ADMIN)
-    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
+    @ResourceAccess(description = "modify the access right of id requested according to the argument")
+    public ResponseEntity<EntityModel<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
             @Valid @RequestBody AccessRight toBe) throws ModuleException {
         AccessRight updated = accessRightService.updateAccessRight(id, toBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
-    @ResourceAccess(description = "delete the access right of id requested", role = DefaultRole.ADMIN)
+    @ResourceAccess(description = "delete the access right of id requested")
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
         accessRightService.deleteAccessRight(id);
@@ -194,17 +194,17 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
-    @ResourceAccess(description = "check if an user has access to a dataset", role = DefaultRole.ADMIN)
+    @ResourceAccess(description = "check if an user has access to a dataset")
     public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
-            @RequestParam(name = "dataset") UniformResourceName datasetIpId,
+            @RequestParam(name = "dataset") OaisUniformResourceName datasetIpId,
             @RequestParam(name = "user") String userEMail) throws ModuleException {
         boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
         return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
     }
 
     @Override
-    public Resource<AccessRight> toResource(AccessRight accessRight, Object... extras) {
-        Resource<AccessRight> resource = new Resource<>(accessRight);
+    public EntityModel<AccessRight> toResource(AccessRight accessRight, Object... extras) {
+        EntityModel<AccessRight> resource = new EntityModel<>(accessRight);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
                                 MethodParamFactory.build(AccessRight.class, accessRight));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,
@@ -218,12 +218,12 @@ public class AccessRightController implements IResourceController<AccessRight> {
     }
 
     /**
-     * Data binder to recognize {@link UniformResourceName}
+     * Data binder to recognize {@link OaisUniformResourceName}
      * @param dataBinder
      */
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
-        dataBinder.registerCustomEditor(UniformResourceName.class, new PropertyEditorSupport() {
+        dataBinder.registerCustomEditor(OaisUniformResourceName.class, new PropertyEditorSupport() {
 
             /**
              * The value
@@ -237,7 +237,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
             @Override
             public void setAsText(String text) {
-                value = UniformResourceName.fromString(text);
+                value = OaisUniformResourceName.fromString(text);
             }
         });
     }

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumHashBiMap;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -84,7 +84,7 @@ public final class Searches {
     public static <S extends AbstractEntity, R extends AbstractEntity> JoinEntitySearchKey<S, R> onSingleEntityReturningJoinEntity(
             EntityType searchType, EntityType resultJoinType) {
         return new JoinEntitySearchKey<S, R>(searchType.toString(), (Class<S>) TYPE_MAP.get(searchType),
-                                             (Class<R>) TYPE_MAP.get(resultJoinType));
+                (Class<R>) TYPE_MAP.get(resultJoinType));
     }
 
     /**

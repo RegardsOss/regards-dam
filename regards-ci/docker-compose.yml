@@ -40,6 +40,7 @@ services:
       - WORKSPACE
       - CI_DIR
       - MODE
+      - MAVEN_OPTS=-Xms2500m -Xmx2500m
     volumes:
       - /DATA/maven-multibranch-repository:/localRepository
       - /usr/bin/docker:/bin/docker # link docker - only useful for deploy MODE

@@ -9,8 +9,8 @@ import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.dam.domain.entities.criterion.IFeatureCriterion;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
@@ -50,7 +50,7 @@ public class QuotedFieldQueryNodeBuilder implements ICriterionQueryBuilder {
             attributeModel = attributeFinder.findByName(field);
         } catch (OpenSearchUnknownParameter e) {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()),
-                                         e);
+                    e);
         }
 
         switch (attributeModel.getType()) {

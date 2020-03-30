@@ -28,12 +28,12 @@ import org.junit.Test;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.ModelAttrAssoc;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -55,7 +55,7 @@ public class ComputedAttributeValidatorTest {
     public void testUnknownPlugin() {
         // initialize the association
         ModelAttrAssoc invalidAssoc = new ModelAttrAssoc(
-                AttributeModelBuilder.build("forTest", AttributeType.INTEGER, "ForTests").get(),
+                AttributeModelBuilder.build("forTest", PropertyType.INTEGER, "ForTests").get(),
                 Model.build("testModel", "pDescription", EntityType.DATASET));
         // get a PluginConfiguration
         PluginMetaData metaData = new PluginMetaData();

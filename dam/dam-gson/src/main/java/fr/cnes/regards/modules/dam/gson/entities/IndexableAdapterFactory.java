@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.dam.gson.entities;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
-import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
@@ -31,7 +31,6 @@ import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
  * IIndexable document adapter factory
  * @author Marc Sordi
  */
-@SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactory
 public class IndexableAdapterFactory extends PolymorphicTypeAdapterFactory<IIndexable> {
 

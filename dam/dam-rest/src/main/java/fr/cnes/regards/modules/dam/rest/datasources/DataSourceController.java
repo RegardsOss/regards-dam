@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,7 +83,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "List all plugin configurations of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<DataSourceDTO>>> getAllDataSources() {
+    public ResponseEntity<List<EntityModel<DataSourceDTO>>> getAllDataSources() {
         return ResponseEntity.ok(toResources(dataSourceService.getAllDataSources()));
     }
 
@@ -96,8 +96,8 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Create a DataSource")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<DataSourceDTO>> createDataSource(@Valid @RequestBody PluginConfiguration datasource)
-            throws ModuleException {
+    public ResponseEntity<EntityModel<DataSourceDTO>> createDataSource(
+            @Valid @RequestBody PluginConfiguration datasource) throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.createDataSource(datasource)));
     }
 
@@ -109,8 +109,8 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{businessId}")
-    public ResponseEntity<Resource<DataSourceDTO>> getDataSource(@PathVariable(name = "businessId") String businessId)
-            throws ModuleException {
+    public ResponseEntity<EntityModel<DataSourceDTO>> getDataSource(
+            @PathVariable(name = "businessId") String businessId) throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(businessId)));
     }
 
@@ -123,7 +123,7 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
      */
     @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{businessId}")
-    public ResponseEntity<Resource<DataSourceDTO>> updateDataSource(
+    public ResponseEntity<EntityModel<DataSourceDTO>> updateDataSource(
             @PathVariable(name = "businessId") String businessId, @Valid @RequestBody PluginConfiguration dataSource)
             throws ModuleException {
         if (!businessId.equals(dataSource.getBusinessId())) {
@@ -160,18 +160,18 @@ public class DataSourceController implements IResourceController<DataSourceDTO> 
         return ResponseEntity.noContent().build();
     }
 
-    private List<Resource<DataSourceDTO>> toResources(Collection<PluginConfiguration> confs) {
+    private List<EntityModel<DataSourceDTO>> toResources(Collection<PluginConfiguration> confs) {
         return confs.stream().map(conf -> toResource(conf)).collect(Collectors.toList());
     }
 
-    private Resource<DataSourceDTO> toResource(PluginConfiguration conf, Object... pExtras) {
+    private EntityModel<DataSourceDTO> toResource(PluginConfiguration conf, Object... pExtras) {
         DataSourceDTO dto = new DataSourceDTO(datasetService.countByDataSource(conf.getId()), conf);
         return toResource(dto, pExtras);
     }
 
     @Override
-    public Resource<DataSourceDTO> toResource(DataSourceDTO conf, Object... pExtras) {
-        Resource<DataSourceDTO> resource = resourceService.toResource(conf);
+    public EntityModel<DataSourceDTO> toResource(DataSourceDTO conf, Object... pExtras) {
+        EntityModel<DataSourceDTO> resource = resourceService.toResource(conf);
         resourceService.addLink(resource, this.getClass(), "getDataSource", LinkRels.SELF,
                                 MethodParamFactory.build(String.class, conf.getBusinessId()));
         if (conf.getAssociatedDatasets() == 0) {

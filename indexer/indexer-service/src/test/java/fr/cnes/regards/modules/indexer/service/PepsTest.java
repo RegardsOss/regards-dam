@@ -48,17 +48,17 @@ import com.jillesvangurp.geo.GeoGeometry;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author oroussel
@@ -160,7 +160,7 @@ public class PepsTest {
                     DataObject object = new DataObject(model, TENANT,
                             feature.get("properties").getAsJsonObject().get("title").getAsString(),
                             feature.get("properties").getAsJsonObject().get("title").getAsString());
-                    object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
+                    object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT,
                             UUID.randomUUID(), 1));
                     object.setNormalizedGeometry(geometry);
                     object.setWgs84(geometry);
@@ -310,7 +310,8 @@ public class PepsTest {
         // most polygons from Peps have an area betwwen 1e10 and 1e11
         // A polygon with an area > 1e12 means there is a problem (polygon crossing dateline)
         checkResults(o -> (GeoGeometry.area(GeoUtil.toArray(o.getNormalizedGeometry())) > 1.e12)
-                || !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bboxPolygon), objectsFromEs, objectsFromPeps);
+                || !GeoGeometry.overlap(GeoUtil.toArray(o.getNormalizedGeometry()), bboxPolygon), objectsFromEs,
+                     objectsFromPeps);
     }
 
     private void checkResults(double[][] bbox1Polygon, double[][] bbox2Polygon, List<DataObject> objectsFromEs,
@@ -328,7 +329,8 @@ public class PepsTest {
                 .collect(Collectors.toSet());
         if (!badPepsResults.isEmpty()) {
             System.out.printf("Peps returned %d false positive data objects: %s\n", badPepsResults.size(),
-                              badPepsResults.stream().map(o -> o.toString() + ", " + o.getNormalizedGeometry().toString())
+                              badPepsResults.stream()
+                                      .map(o -> o.toString() + ", " + o.getNormalizedGeometry().toString())
                                       .collect(Collectors.joining("\n")));
             objectsFromPeps.removeAll(badPepsResults);
         }

@@ -21,11 +21,11 @@ package fr.cnes.regards.modules.dam.service.entities;
 import java.util.List;
 import java.util.Set;
 
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.IComputedAttribute;
+import fr.cnes.regards.modules.model.domain.IComputedAttribute;
 
 /**
  * Unparameterized entity service description. This is to be used when the entity type is unknown (ex. CrawlerService)
