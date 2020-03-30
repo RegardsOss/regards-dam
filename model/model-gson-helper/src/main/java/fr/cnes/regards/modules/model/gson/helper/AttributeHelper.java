@@ -61,6 +61,8 @@ public class AttributeHelper implements IAttributeHelper {
 
     private final IModelAttrAssocClient modelAttrAssocClient;
 
+    public final static String MODEL_ATTRIBUTE = "model.name";
+
     public AttributeHelper(IRuntimeTenantResolver runtimeTenantResolver, IAttributeModelClient attributeModelClient,
             IModelAttrAssocClient modelAttrAssocClient) {
         this.runtimeTenantResolver = runtimeTenantResolver;
