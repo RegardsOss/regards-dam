@@ -84,7 +84,7 @@ public class DamAttributeHelper implements IAttributeHelper {
             if (first) {
                 commonAttributes.addAll(modelAttributes);
             } else {
-                commonAttributes = commonAttributes.stream().filter(f -> !modelAttributes.contains(f))
+                commonAttributes = commonAttributes.stream().filter(f -> modelAttributes.contains(f))
                         .collect(Collectors.toSet());
             }
             first = false;

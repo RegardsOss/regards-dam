@@ -37,6 +37,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.model.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 
@@ -94,15 +95,19 @@ public class AttributeHelper implements IAttributeHelper {
         boolean first = true;
         for (String modelName : modelNames) {
             try {
-                Set<AttributeModel> modelAttributes = modelAttrAssocClient.getModelAttrAssocs(modelName).getBody()
-                        .stream().map(f -> f.getContent().getAttribute()).collect(Collectors.toSet());
-                if (first) {
-                    commonAttributes.addAll(modelAttributes);
-                } else {
-                    commonAttributes = commonAttributes.stream().filter(f -> !modelAttributes.contains(f))
-                            .collect(Collectors.toSet());
+                ResponseEntity<List<EntityModel<ModelAttrAssoc>>> resources = modelAttrAssocClient
+                        .getModelAttrAssocs(modelName);
+                if ((resources != null) && resources.hasBody()) {
+                    Set<AttributeModel> modelAttributes = resources.getBody().stream()
+                            .map(f -> f.getContent().getAttribute()).collect(Collectors.toSet());
+                    if (first) {
+                        commonAttributes.addAll(modelAttributes);
+                    } else {
+                        commonAttributes = commonAttributes.stream().filter(f -> modelAttributes.contains(f))
+                                .collect(Collectors.toSet());
+                    }
+                    first = false;
                 }
-                first = false;
             } catch (HttpClientErrorException | HttpServerErrorException e) {
                 throw new ModuleException("Error retrieving attribute models from dam microservice.", e);
             }
