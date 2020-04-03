@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
@@ -47,7 +48,8 @@ import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 * @author Kevin Marchois
 *
 */
-@Component
+@ConditionalOnMissingClass("fr.cnes.regards.modules.dam.service.entities.DamAttributeHelper")
+@Service
 public class AttributeHelper implements IAttributeHelper {
 
     /**

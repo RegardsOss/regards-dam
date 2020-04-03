@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
@@ -41,7 +40,6 @@ import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
  * @author Marc Sordi
  *
  */
-@ConditionalOnMissingClass("fr.cnes.regards.modules.model.gson.helper.AttributeHelper")
 @Service
 public class DamAttributeHelper implements IAttributeHelper {
 
