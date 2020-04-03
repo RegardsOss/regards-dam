@@ -33,8 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -44,15 +42,14 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
-import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.model.domain.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
@@ -68,7 +65,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
     /**
      * Feign client for rs-dam {@link AttributeModel} controller. Autowired by Spring.
      */
-    private final IAttributeModelClient attributeModelClient;
+    private final IAttributeHelper attributeHelper;
 
     private final ISubscriber subscriber;
 
@@ -85,9 +82,9 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
      */
     private final ConcurrentMap<String, Multimap<PropertyType, AttributeModel>> typedPropertyMap = new ConcurrentHashMap<>();
 
-    public AttributeFinder(IAttributeModelClient attributeModelClient, ISubscriber subscriber,
+    public AttributeFinder(IAttributeHelper attributeModelClient, ISubscriber subscriber,
             IRuntimeTenantResolver runtimeTenantResolver) {
-        this.attributeModelClient = attributeModelClient;
+        this.attributeHelper = attributeModelClient;
         this.subscriber = subscriber;
         this.runtimeTenantResolver = runtimeTenantResolver;
     }
@@ -211,11 +208,7 @@ public class AttributeFinder implements IAttributeFinder, ApplicationListener<Ap
         FeignSecurityManager.asSystem();
 
         // Retrieve the list of attribute models
-        ResponseEntity<List<EntityModel<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
-        List<AttributeModel> attModels = new ArrayList<>();
-        if (response != null) {
-            attModels = HateoasUtils.unwrapCollection(response.getBody());
-        }
+        List<AttributeModel> attModels = attributeHelper.getAllAttributes(tenant);
 
         // Build or rebuild the maps
         Map<String, AttributeModel> tenantMap = new HashMap<>();

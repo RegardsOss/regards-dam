@@ -73,6 +73,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-gson-helper</artifactId>
+		</dependency>
 		<!-- COTS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

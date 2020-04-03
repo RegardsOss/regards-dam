@@ -32,12 +32,9 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -56,7 +53,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.OrCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
-import fr.cnes.regards.modules.model.client.IAttributeModelClient;
+import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -89,9 +86,8 @@ public class QueryParserTest {
         ISubscriber subscriber = Mockito.mock(ISubscriber.class);
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn(TENANT);
-        IAttributeModelClient attributeModelClient = Mockito.mock(IAttributeModelClient.class);
-        Mockito.when(attributeModelClient.getAttributes(null, null))
-                .thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
+        IAttributeHelper attributeModelClient = Mockito.mock(IAttributeHelper.class);
+        Mockito.when(attributeModelClient.getAllAttributes(Mockito.anyString())).thenReturn(SampleDataUtils.LIST);
         IAttributeFinder finder = new AttributeFinder(attributeModelClient, subscriber, runtimeTenantResolver);
 
         parser = new QueryParser(finder);
@@ -181,7 +177,7 @@ public class QueryParserTest {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.getJsonPath();
         //do not forget that the parser is supposed to parse URI encoded values so \"=>%22
         final String val = "harrypotter";
-        final String term = key + ":" + "%22"+val+"%22";
+        final String term = key + ":" + "%22" + val + "%22";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);

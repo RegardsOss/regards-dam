@@ -26,17 +26,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.model.client.IAttributeModelClient;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.model.domain.attributes.Fragment;
 import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 
 /**
  * Test attribute property map algorithm
@@ -52,22 +50,20 @@ public class PropertyMapChecker {
 
     private AttributeFinder finder;
 
-    private IAttributeModelClient attributeModelClientMock;
+    private IAttributeHelper attributeHelper;
 
     private List<AttributeModel> atts;
 
     @Before
     public void init() {
         atts = new ArrayList<>();
-        attributeModelClientMock = Mockito.mock(IAttributeModelClient.class);
-        finder = new AttributeFinder(attributeModelClientMock, Mockito.mock(ISubscriber.class),
+        attributeHelper = Mockito.mock(IAttributeHelper.class);
+        finder = new AttributeFinder(attributeHelper, Mockito.mock(ISubscriber.class),
                 Mockito.mock(IRuntimeTenantResolver.class));
     }
 
     private Map<String, AttributeModel> getBuiltMap(List<AttributeModel> atts) {
-        List<EntityModel<AttributeModel>> resAtts = new ArrayList<>();
-        atts.forEach(att -> resAtts.add(new EntityModel<AttributeModel>(att)));
-        Mockito.when(attributeModelClientMock.getAttributes(null, null)).thenReturn(ResponseEntity.ok(resAtts));
+        Mockito.when(attributeHelper.getAllAttributes(Mockito.anyString())).thenReturn(atts);
         finder.computePropertyMap(TENANT);
         // Return built map
         return finder.getPropertyMap().get(TENANT);

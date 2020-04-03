@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.model.client.IAttributeModelClient;
+import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
@@ -35,6 +36,11 @@ public class ClientConfiguration {
     @Bean
     public IAttributeModelClient attributeModelClient() {
         return Mockito.mock(IAttributeModelClient.class);
+    }
+
+    @Bean
+    public IModelAttrAssocClient attributeAssocModelClient() {
+        return Mockito.mock(IModelAttrAssocClient.class);
     }
 
     @Bean

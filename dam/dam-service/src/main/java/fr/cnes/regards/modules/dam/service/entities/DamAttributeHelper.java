@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
  * @author Marc Sordi
  *
  */
-@ConditionalOnMissingClass("fr.cnes.regards.modules.search.service.CatalogAttributeHelper")
+@ConditionalOnMissingClass("fr.cnes.regards.modules.model.gson.helper.AttributeHelper")
 @Service
 public class DamAttributeHelper implements IAttributeHelper {
 
