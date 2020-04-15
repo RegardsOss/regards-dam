@@ -78,7 +78,8 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
 
         // Loop over model attributes ... to validate each properties
         for (ModelAttrAssoc modelAttrAssoc : modAtts) {
-            checkModelAttribute(modelAttrAssoc, errors, mode, feature, pptyMap, toCheckProperties);
+            errors.addAllErrors(checkModelAttribute(modelAttrAssoc, objectName, mode, feature, pptyMap,
+                                                    toCheckProperties));
         }
 
         // If properties isn't empty it means some properties are unexpected by the model
@@ -94,13 +95,15 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
     /**
      * Validate a property according to its corresponding model attribute
      * @param modelAttrAssoc model attribute
-     * @param errors validation errors
+     * @param objectName name of the object to validate
      * @param pptyMap properties to check
      * @param toCheckProperties properties not already checked
-     *
+     * @return validation errors
      */
-    protected void checkModelAttribute(ModelAttrAssoc modelAttrAssoc, Errors errors, ValidationMode mode, F feature,
-            Map<String, IProperty<?>> pptyMap, Set<String> toCheckProperties) {
+    protected Errors checkModelAttribute(ModelAttrAssoc modelAttrAssoc, String objectName, ValidationMode mode,
+            F feature, Map<String, IProperty<?>> pptyMap, Set<String> toCheckProperties) {
+
+        Errors errors = new MapBindingResult(new HashMap<>(), objectName);
 
         AttributeModel attModel = modelAttrAssoc.getAttribute();
         String attPath = attModel.getJsonPropertyPath();
@@ -116,16 +119,23 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
             // Null property check
             if (att == null) {
                 checkNullProperty(attModel, errors, mode);
-                return;
+                return errors;
             }
 
             // Null property value check
             if (att.getValue() == null) {
                 checkNullPropertyValue(attModel, errors, mode);
+                return errors;
             }
 
             // Check if value is expected or not according to the validation context
             checkAuthorizedPropertyValue(attModel, errors, mode);
+
+            if (errors.hasErrors()) {
+                // Ok, attribute has been checked
+                toCheckProperties.remove(attPath);
+                return errors;
+            }
 
             // Do validation
             for (Validator validator : getValidators(modelAttrAssoc, attPath, mode, feature)) {
@@ -140,6 +150,7 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
         }
         // Ok, attribute has been checked or is a computed one
         toCheckProperties.remove(attPath);
+        return errors;
     }
 
     protected void checkNullProperty(AttributeModel attModel, Errors errors, ValidationMode mode) {
