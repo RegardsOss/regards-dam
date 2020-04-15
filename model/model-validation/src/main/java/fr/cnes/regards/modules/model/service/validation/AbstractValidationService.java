@@ -122,18 +122,10 @@ public abstract class AbstractValidationService<F extends AbstractFeature<Set<IP
             // Null property value check
             if (att.getValue() == null) {
                 checkNullPropertyValue(attModel, errors, mode);
-                // Ok, attribute has been checked
-                toCheckProperties.remove(attPath);
-                return;
             }
 
             // Check if value is expected or not according to the validation context
             checkAuthorizedPropertyValue(attModel, errors, mode);
-            if (errors.hasErrors()) {
-                // Ok, attribute has been checked
-                toCheckProperties.remove(attPath);
-                return;
-            }
 
             // Do validation
             for (Validator validator : getValidators(modelAttrAssoc, attPath, mode, feature)) {
