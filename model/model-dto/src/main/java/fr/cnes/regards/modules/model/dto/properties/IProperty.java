@@ -827,6 +827,8 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
                 } else {
+                    PropertyPatchLogger.LOGGER.trace("Add new property to feature - \"{}\" - \"{}\" -  \"{}\"", urn,
+                                                     entry.getKey(), property.getValue());
                     // Add property
                     Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
                     if (namespace.isPresent()) {
