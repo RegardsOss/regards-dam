@@ -386,6 +386,7 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
             throws IllegalArgumentException {
         if (value == null) {
             property.updateValue(null);
+            return property;
         }
 
         switch (property.getType()) {
