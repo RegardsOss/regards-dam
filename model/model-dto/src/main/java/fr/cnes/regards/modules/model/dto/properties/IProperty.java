@@ -823,12 +823,12 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                 }
             } else {
                 if (refMap.containsKey(entry.getKey())) {
-                    PropertyPatchLogger.LOGGER.trace("Update - \"{}\" - \"{}\" - \"{}\" -> \"{}\"", urn, entry.getKey(),
+                    PropertyPatchLogger.LOGGER.trace("Update | \"{}\" | \"{}\" | \"{}\" => \"{}\"", urn, entry.getKey(),
                                                      refMap.get(entry.getKey()).getValue(), property.getValue());
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
                 } else {
-                    PropertyPatchLogger.LOGGER.trace("Add new property to feature - \"{}\" - \"{}\" -  \"{}\"", urn,
+                    PropertyPatchLogger.LOGGER.trace("Add new property to feature | \"{}\" | \"{}\" |  \"{}\"", urn,
                                                      entry.getKey(), property.getValue());
                     // Add property
                     Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
