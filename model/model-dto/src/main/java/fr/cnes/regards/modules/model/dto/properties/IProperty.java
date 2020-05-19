@@ -795,9 +795,11 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
      * Merge patch properties into reference ones
      * @param reference not <code>null</code> reference properties
      * @param patch not <code>null</code> patch properties
-     * @param urn not <code>null</code>
+     * @param identifier not <code>null</code>
+     * @param modifier user that modify the feature
      */
-    public static void mergeProperties(Set<IProperty<?>> reference, Set<IProperty<?>> patch, String urn) {
+    public static void mergeProperties(Set<IProperty<?>> reference, Set<IProperty<?>> patch, String identifier,
+            String modifier) {
 
         Assert.notNull(reference, "Reference properties must not be null");
         Assert.notNull(patch, "Patch properties must not be null");
@@ -823,13 +825,12 @@ public interface IProperty<T> extends Comparable<IProperty<T>> {
                 }
             } else {
                 if (refMap.containsKey(entry.getKey())) {
-                    PropertyPatchLogger.LOGGER.trace("Update | \"{}\" | \"{}\" | \"{}\" => \"{}\"", urn, entry.getKey(),
-                                                     refMap.get(entry.getKey()).getValue(), property.getValue());
+                    PropertyPatchLogger.log(modifier, identifier, entry.getKey(), refMap.get(entry.getKey()).getValue(),
+                                            property.getValue());
                     // Update property if already exists
                     IProperty.updatePropertyValue(refMap.get(entry.getKey()), property.getValue());
                 } else {
-                    PropertyPatchLogger.LOGGER.trace("Add new property to feature | \"{}\" | \"{}\" |  \"{}\"", urn,
-                                                     entry.getKey(), property.getValue());
+                    PropertyPatchLogger.log(modifier, identifier, entry.getKey(), property.getValue());
                     // Add property
                     Optional<String> namespace = IProperty.getPropertyNamespace(entry.getKey());
                     if (namespace.isPresent()) {

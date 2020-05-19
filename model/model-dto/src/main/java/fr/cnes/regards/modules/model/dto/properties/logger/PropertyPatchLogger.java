@@ -28,6 +28,15 @@ import org.slf4j.LoggerFactory;
  */
 public class PropertyPatchLogger {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(PropertyPatchLogger.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PropertyPatchLogger.class);
 
+    private static final String FORMAT = "Feature UPDATED | %s | %s | %s | %s => %s";
+
+    public static void log(String modifier, String identifier, String key, Object oldValue, Object newValue) {
+        LOGGER.info(String.format(FORMAT, modifier, identifier, key, oldValue, newValue));
+    }
+
+    public static void log(String modifier, String identifier, String key, Object newValue) {
+        LOGGER.info(String.format(FORMAT, modifier, identifier, key, "none", newValue));
+    }
 }
