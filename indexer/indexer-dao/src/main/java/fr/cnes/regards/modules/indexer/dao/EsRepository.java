@@ -82,15 +82,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
@@ -265,6 +257,19 @@ public class EsRepository implements IEsRepository {
     private static final String TYPE = "_doc";
 
     /**
+     * Maximum duration for idle connections in the http config for ES client.
+     * <br>
+     * Setting a short "connection unused duration" to prevent "Connection Reset By Peer" IOException.
+     * <br>
+     * See https://stackoverflow.com/a/53003627/118437 for a discussion regarding this problem.
+     * <br>
+     * Internal ticket https://thor.si.c-s.fr/gf/project/regards/tracker/?action=TrackerItemEdit&tracker_item_id=196140
+     * <br>
+     * Setting the value to 10 minutes to be kept coherent with {@link #KEEP_ALIVE_SCROLLING_TIME_MN}.
+     */
+    private static final Long HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS = 10L * 60 * 1000L;
+
+    /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
      */
     private final ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -325,10 +330,12 @@ public class EsRepository implements IEsRepository {
                                                      esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        // Timeouts are set to 20 minutes particulary for bulk save containing geo_shape
+        // Timeouts are set to 20 minutes particularly for bulk save containing geo_shape
         RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(esHost, esPort))
                 .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1_200_000))
-                .setMaxRetryTimeoutMillis(1_200_000);
+                .setMaxRetryTimeoutMillis(1_200_000)
+                .setHttpClientConfigCallback(httpClientConfig -> httpClientConfig.setKeepAliveStrategy((resp, ctx) -> HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS))
+                ;
 
         client = new RestHighLevelClient(restClientBuilder);
 
