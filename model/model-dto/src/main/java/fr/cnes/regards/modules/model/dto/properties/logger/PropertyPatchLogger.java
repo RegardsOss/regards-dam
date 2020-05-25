@@ -30,7 +30,9 @@ public class PropertyPatchLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertyPatchLogger.class);
 
-    private static final String FORMAT = "Feature UPDATED | %s | %s | %s | %s => %s";
+    private static final String PREFIX = "[MONITORING] ";
+
+    private static final String FORMAT = PREFIX + "Feature PATCHED | %s | %s | %s | %s => %s";
 
     public static void log(String modifier, String identifier, String key, Object oldValue, Object newValue) {
         LOGGER.info(String.format(FORMAT, modifier, identifier, key, oldValue, newValue));
