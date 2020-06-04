@@ -275,6 +275,16 @@ public class EsRepository implements IEsRepository {
     private static final Long HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS = 10L * 60 * 1000L;
 
     /**
+     * Error raised by ES when REGARDS never sent objects to ES
+     */
+    private static final String INDEX_NOT_FOUND_EXCEPTION = "index_not_found_exception";
+
+    /**
+     * Related message error
+     */
+    private static final String INDEX_NOT_FOUND_ERROR_MESSAGE = "Research won't work until you've ingested some features into ES";
+
+    /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
      */
     private final ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -886,10 +896,10 @@ public class EsRepository implements IEsRepository {
             return client.search(request, RequestOptions.DEFAULT);
         } catch (ElasticsearchException ee) {
             LOGGER.error(ee.getMessage(), ee);
-            if (ee.getMessage().contains("index_not_found_exception")) {
-                throw new RsRuntimeException("Research won't work until you've ingested some features into ES");
+            if (ee.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
+                throw new RsRuntimeException(INDEX_NOT_FOUND_ERROR_MESSAGE);
             }
-            throw new RsRuntimeException(ee);
+            throw ee;
         }
     }
 
@@ -1582,8 +1592,17 @@ public class EsRepository implements IEsRepository {
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        Response response = client.getLowLevelClient().performRequest(new Request("GET",
-                index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+        Response response;
+        try {
+            response = client.getLowLevelClient().performRequest(new Request("GET",
+                    index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+        } catch (ResponseException e) {
+            LOGGER.error(e.getMessage(), e);
+            if (e.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
+                throw new RsRuntimeException(INDEX_NOT_FOUND_ERROR_MESSAGE);
+            }
+            throw e;
+        }
         try (InputStream is = response.getEntity().getContent()) {
             Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
             if ((map != null) && !map.isEmpty()) {
