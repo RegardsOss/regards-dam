@@ -23,7 +23,7 @@
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>indexer</artifactId>
-	<version>1.1.2-SNAPSHOT</version>
+	<version>1.3.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
 	<description>Module managing the indexation of data</description>
@@ -51,7 +51,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>1.1.2-SNAPSHOT</version>
+		<version>1.3.0-SNAPSHOT</version>
 		<relativePath />
 	</parent>
 	
