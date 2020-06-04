@@ -18,10 +18,54 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
-
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.IMapping;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -49,7 +93,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -82,7 +125,15 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Requests;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
@@ -128,55 +179,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
-import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
-import fr.cnes.regards.framework.geojson.geometry.Polygon;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
-import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import fr.cnes.regards.modules.indexer.domain.IDocFiles;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
-import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
-import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.IMapping;
-import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
-import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
 
 /**
  * Elasticsearch repository implementation
@@ -857,7 +862,7 @@ public class EsRepository implements IEsRepository {
             builder.query(crit.accept(CRITERION_VISITOR)).size(DEFAULT_SCROLLING_HITS_SIZE);
             request.source(builder);
             request.scroll(TimeValue.timeValueMinutes(KEEP_ALIVE_SCROLLING_TIME_MN));
-            SearchResponse scrollResp = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse scrollResp = getSearchResponse(request);
 
             // Scroll until no hits are returned
             do {
@@ -873,6 +878,18 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new RsRuntimeException(e);
+        }
+    }
+
+    private SearchResponse getSearchResponse(SearchRequest request) throws IOException {
+        try {
+            return client.search(request, RequestOptions.DEFAULT);
+        } catch (ElasticsearchException ee) {
+            LOGGER.error(ee.getMessage(), ee);
+            if (ee.getMessage().contains("index_not_found_exception")) {
+                throw new RsRuntimeException("Research won't work until you've ingested some features into ES");
+            }
+            throw new RsRuntimeException(ee);
         }
     }
 
@@ -1122,7 +1139,7 @@ public class EsRepository implements IEsRepository {
         // Launch the request
         long start = System.currentTimeMillis();
         LOGGER.trace("ElasticsearchRequest: {}", request.toString());
-        SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+        SearchResponse response = getSearchResponse(request);
         LOGGER.debug("Elasticsearch request execution only : {} ms", System.currentTimeMillis() - start);
 
         start = System.currentTimeMillis();
@@ -1245,7 +1262,7 @@ public class EsRepository implements IEsRepository {
                 offset = searchPageNumber * MAX_RESULT_WINDOW;
             } else {
                 LOGGER.debug("Search (after) : offset {}", offset);
-                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+                SearchResponse response = getSearchResponse(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 offset += MAX_RESULT_WINDOW;
             }
@@ -1258,7 +1275,7 @@ public class EsRepository implements IEsRepository {
                 // Change offset
                 LOGGER.debug("Search after : offset {}", offset);
                 builder.from(0).searchAfter(sortValues);
-                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+                SearchResponse response = getSearchResponse(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 // Create a AbstractReminder and save it into ES for next page
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
@@ -1275,7 +1292,7 @@ public class EsRepository implements IEsRepository {
                 int size = (int) (pageRequest.getOffset() - offset);
                 LOGGER.debug("Search after : offset {}, size {}", offset, size);
                 builder.size(size).searchAfter(sortValues).from(0); // needed by searchAfter
-                SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+                SearchResponse response = getSearchResponse(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
             }
 
@@ -1315,7 +1332,7 @@ public class EsRepository implements IEsRepository {
             SearchSourceBuilder builder = createSourceBuilder4Agg(addTypes(criterion, searchKey.getSearchTypes()));
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             return response.getHits().getTotalHits();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -1329,7 +1346,7 @@ public class EsRepository implements IEsRepository {
             builder.aggregation(AggregationBuilders.sum(attName).field(attName));
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             return ((Sum) response.getAggregations().get(attName)).getValue();
         } catch (IOException e) {
             throw new RsRuntimeException(e);
@@ -1344,7 +1361,7 @@ public class EsRepository implements IEsRepository {
             builder.aggregation(AggregationBuilders.min(attName).field(attName));
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             Min min = response.getAggregations().get(attName);
             if ((min == null) || !Double.isFinite(min.getValue())) {
                 return null;
@@ -1363,7 +1380,7 @@ public class EsRepository implements IEsRepository {
             builder.aggregation(AggregationBuilders.max(attName).field(attName));
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             Max max = response.getAggregations().get(attName);
             if ((max == null) || !Double.isFinite(max.getValue())) {
                 return null;
@@ -1392,7 +1409,7 @@ public class EsRepository implements IEsRepository {
             }
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             // Update attributes with aggregation if any
             if (response.getAggregations() != null) {
                 for (Aggregation agg : response.getAggregations()) {
@@ -1818,7 +1835,7 @@ public class EsRepository implements IEsRepository {
                     .from((int) pageRequest.getOffset()).size(pageRequest.getPageSize());
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
 
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
@@ -1842,7 +1859,7 @@ public class EsRepository implements IEsRepository {
 
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
 
             // First "global" aggregations results
             summary.addDocumentsCount(response.getHits().getTotalHits());
@@ -1935,7 +1952,7 @@ public class EsRepository implements IEsRepository {
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(TYPE).source(builder);
 
             // Launch the request
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = getSearchResponse(request);
             // First "global" aggregations results
             summary.addDocumentsCount(response.getHits().getTotalHits());
             Aggregations aggs = response.getAggregations();
