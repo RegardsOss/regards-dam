@@ -23,7 +23,7 @@
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>crawler</artifactId>
-	<version>1.1.1</version>
+	<version>1.2.0</version>
 	<packaging>pom</packaging>
 
 	<description>Module crawling external datasources for data aspiration</description>
@@ -51,7 +51,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>1.1.1</version>
+		<version>1.2.0</version>
 		<relativePath />
 	</parent>
 	
