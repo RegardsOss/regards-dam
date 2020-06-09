@@ -72,7 +72,7 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-@RequestMapping(value = DatasetController.TYPE_MAPPING)
+@RequestMapping(value = DatasetController.TYPE_MAPPING, produces = "application/json")
 public class DatasetController implements IResourceController<Dataset> {
 
     /**
