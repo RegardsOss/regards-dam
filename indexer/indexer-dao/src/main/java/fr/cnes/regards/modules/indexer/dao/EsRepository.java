@@ -896,17 +896,10 @@ public class EsRepository implements IEsRepository {
             return client.search(request, RequestOptions.DEFAULT);
         } catch (ElasticsearchException ee) {
             LOGGER.error(ee.getMessage(), ee);
-<<<<<<< HEAD
-            if (ee.getMessage().contains("index_not_found_exception")) {
-                throw new RsRuntimeException("Research won't work until you've ingested some features into ES");
-            }
-            throw new RsRuntimeException(ee);
-=======
             if (ee.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
                 throw new RsRuntimeException(INDEX_NOT_FOUND_ERROR_MESSAGE);
             }
             throw ee;
->>>>>>> V1.2.0
         }
     }
 
