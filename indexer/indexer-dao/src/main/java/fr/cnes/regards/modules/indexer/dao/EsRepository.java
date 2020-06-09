@@ -262,6 +262,29 @@ public class EsRepository implements IEsRepository {
     private static final String TYPE = "_doc";
 
     /**
+     * Maximum duration for idle connections in the http config for ES client.
+     * <br>
+     * Setting a short "connection unused duration" to prevent "Connection Reset By Peer" IOException.
+     * <br>
+     * See https://stackoverflow.com/a/53003627/118437 for a discussion regarding this problem.
+     * <br>
+     * Internal ticket https://thor.si.c-s.fr/gf/project/regards/tracker/?action=TrackerItemEdit&tracker_item_id=196140
+     * <br>
+     * Setting the value to 10 minutes to be kept coherent with {@link #KEEP_ALIVE_SCROLLING_TIME_MN}.
+     */
+    private static final Long HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS = 10L * 60 * 1000L;
+
+    /**
+     * Error raised by ES when REGARDS never sent objects to ES
+     */
+    private static final String INDEX_NOT_FOUND_EXCEPTION = "index_not_found_exception";
+
+    /**
+     * Related message error
+     */
+    private static final String INDEX_NOT_FOUND_ERROR_MESSAGE = "Research won't work until you've ingested some features into ES";
+
+    /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
      */
     private final ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -322,10 +345,12 @@ public class EsRepository implements IEsRepository {
                                                      esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        // Timeouts are set to 20 minutes particulary for bulk save containing geo_shape
+        // Timeouts are set to 20 minutes particularly for bulk save containing geo_shape
         RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(esHost, esPort))
                 .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1_200_000))
-                .setMaxRetryTimeoutMillis(1_200_000);
+                .setMaxRetryTimeoutMillis(1_200_000)
+                .setHttpClientConfigCallback(httpClientConfig -> httpClientConfig.setKeepAliveStrategy((resp, ctx) -> HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS))
+                ;
 
         client = new RestHighLevelClient(restClientBuilder);
 
@@ -871,10 +896,17 @@ public class EsRepository implements IEsRepository {
             return client.search(request, RequestOptions.DEFAULT);
         } catch (ElasticsearchException ee) {
             LOGGER.error(ee.getMessage(), ee);
+<<<<<<< HEAD
             if (ee.getMessage().contains("index_not_found_exception")) {
                 throw new RsRuntimeException("Research won't work until you've ingested some features into ES");
             }
             throw new RsRuntimeException(ee);
+=======
+            if (ee.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
+                throw new RsRuntimeException(INDEX_NOT_FOUND_ERROR_MESSAGE);
+            }
+            throw ee;
+>>>>>>> V1.2.0
         }
     }
 
@@ -1567,8 +1599,17 @@ public class EsRepository implements IEsRepository {
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        Response response = client.getLowLevelClient().performRequest(new Request("GET",
-                index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+        Response response;
+        try {
+            response = client.getLowLevelClient().performRequest(new Request("GET",
+                    index + "/_mapping/field/" + Joiner.on(",").join(ascSortMap.keySet())));
+        } catch (ResponseException e) {
+            LOGGER.error(e.getMessage(), e);
+            if (e.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
+                throw new RsRuntimeException(INDEX_NOT_FOUND_ERROR_MESSAGE);
+            }
+            throw e;
+        }
         try (InputStream is = response.getEntity().getContent()) {
             Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
             if ((map != null) && !map.isEmpty()) {
