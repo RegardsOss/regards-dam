@@ -810,27 +810,32 @@ public abstract class AbstractEntityService<F extends EntityFeature, U extends A
         // for all request succeeded
         for (RequestInfo info : requests) {
             // get the AbstractEntityRequest with a matching groupId
-            AbstractEntityRequest current = succesRequests.stream()
-                    .filter(matchingRequest -> matchingRequest.getGroupId().equals(info.getGroupId())).findAny().get();
-            for (RequestResultInfoDTO request : info.getSuccessRequests()) {
-                // if we found a AbstractEntity matching with the urn stored in the  AbstractEntityRequest
-                if (entityByUrn.get(current.getUrn()) != null) {
-                    // seek the file inside the AbstractEntity with the checksum matching with it inside the RequestResultInfoDTO
-                    for (DataFile file : entityByUrn.get(current.getUrn()).getFiles().values()) {
-                        // if the file is found we update it uri
-                        if (file.getChecksum().equals(request.getResultFile().getMetaInfo().getChecksum())) {
-                            updated = true;
-                            file.setUri(getDownloadUrl(current.getUrn(), file.getChecksum(),
-                                                       runtimeTenantResolver.getTenant()));
-                            treatedRequests.add(current);
+            Optional<AbstractEntityRequest> oCurrent = succesRequests.stream()
+                    .filter(matchingRequest -> matchingRequest.getGroupId().equals(info.getGroupId())).findAny();
+            if (oCurrent.isPresent()) {
+                AbstractEntityRequest current = oCurrent.get();
+                for (RequestResultInfoDTO request : info.getSuccessRequests()) {
+                    // if we found a AbstractEntity matching with the urn stored in the  AbstractEntityRequest
+                    if (entityByUrn.get(current.getUrn()) != null) {
+                        // seek the file inside the AbstractEntity with the checksum matching with it inside the RequestResultInfoDTO
+                        for (DataFile file : entityByUrn.get(current.getUrn()).getFiles().values()) {
+                            // if the file is found we update it uri
+                            if (file.getChecksum().equals(request.getResultFile().getMetaInfo().getChecksum())) {
+                                updated = true;
+                                file.setUri(getDownloadUrl(current.getUrn(), file.getChecksum(),
+                                                           runtimeTenantResolver.getTenant()));
+                                treatedRequests.add(current);
+                            }
                         }
+                    } else {
+                        LOGGER.error("No feature found with urn {}", current.getUrn());
                     }
-                } else {
-                    LOGGER.error("No feature found with urn {}", current.getUrn());
                 }
-            }
-            if (!updated) {
-                LOGGER.error("Request with group id {} has not been updated", current.getGroupId());
+                if (!updated) {
+                    LOGGER.error("Request with group id {} has not been updated", current.getGroupId());
+                }
+            } else {
+                LOGGER.trace("Request with group id {} does not belong to this microservice.", info.getGroupId());
             }
         }
 
