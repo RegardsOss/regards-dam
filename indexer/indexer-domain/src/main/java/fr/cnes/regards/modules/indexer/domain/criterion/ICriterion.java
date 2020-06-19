@@ -42,6 +42,10 @@ public interface ICriterion {
      */
     ICriterion copy();
 
+    default boolean isEmpty() {
+        return false;
+    }
+
     <U> U accept(ICriterionVisitor<U> visitor);
 
     static ICriterion all() {

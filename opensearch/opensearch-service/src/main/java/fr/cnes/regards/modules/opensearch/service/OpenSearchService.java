@@ -88,7 +88,7 @@ public class OpenSearchService implements IOpenSearchService {
         for (IParser parser : parsersHolder.get()) {
             // Parse parameters ... may return null if parser required parameter(s) not set
             ICriterion crit = parser.parse(queryParameters);
-            if (crit != null) {
+            if ((crit != null) && !crit.isEmpty()) {
                 criteria.add(crit);
             }
         }
