@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
@@ -42,6 +44,8 @@ import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
  */
 @Service
 public class DamAttributeHelper implements IAttributeHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DamAttributeHelper.class);
 
     /**
      * Runtime tenant resolver
@@ -64,11 +68,26 @@ public class DamAttributeHelper implements IAttributeHelper {
 
     @Override
     public List<AttributeModel> getAllAttributes(String pTenant) {
+        // Do not alter tenant context if already forced
+        String current = runtimeTenantResolver.getTenant();
+        boolean forceIt = current == null;
+        // Prevent inconsistent context
+        if ((current != null) && !current.equals(pTenant)) {
+            String errorMessage = String.format("Inconsistent tenant context. Expected %s but already on %s", pTenant,
+                                                current);
+            LOGGER.error(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
+        }
+
         try {
-            runtimeTenantResolver.forceTenant(pTenant);
+            if (forceIt) {
+                runtimeTenantResolver.forceTenant(pTenant);
+            }
             return attributeModelService.getAttributes(null, null, null);
         } finally {
-            runtimeTenantResolver.clearTenant();
+            if (forceIt) {
+                runtimeTenantResolver.clearTenant();
+            }
         }
     }
 
