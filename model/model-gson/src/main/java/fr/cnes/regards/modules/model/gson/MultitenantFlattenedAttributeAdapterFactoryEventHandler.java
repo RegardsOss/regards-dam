@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
@@ -81,6 +82,9 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
     @Override
     public void onApplicationEvent(final ApplicationReadyEvent pEvent) {
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
@@ -88,12 +92,17 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         subscriber.subscribeTo(FragmentDeletedEvent.class, new UnregisterFragmentHandler());
         // Retrieve all tenants
         for (final String tenant : tenantResolver.getAllActiveTenants()) {
-            // Register for tenant
-            final List<AttributeModel> atts = attributeHelper.getAllAttributes(tenant);
-            LOGGER.info("Registering already configured attributes and fragments");
-            // Use factory algorithm
-            factory.registerAttributes(tenant, atts);
-            LOGGER.info("Registering attributes for tenant {} done", tenant);
+            runtimeTenantResolver.forceTenant(tenant);
+            try {
+                // Register for tenant
+                final List<AttributeModel> atts = attributeHelper.getAllAttributes(tenant);
+                LOGGER.info("Registering already configured attributes and fragments");
+                // Use factory algorithm
+                factory.registerAttributes(tenant, atts);
+                LOGGER.info("Registering attributes for tenant {} done", tenant);
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
         }
         applicationEventPublisher.publishEvent(new ModelGsonReadyEvent(this));
     }
