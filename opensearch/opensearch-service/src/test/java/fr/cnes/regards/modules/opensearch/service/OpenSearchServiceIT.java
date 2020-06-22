@@ -51,8 +51,8 @@ import fr.cnes.regards.modules.search.schema.UrlType;
  * @author sbinda
  *
  */
-//@TestPropertySource(locations = "classpath:test.properties")
-@TestPropertySource(locations = "classpath:application-local.properties")
+@TestPropertySource(locations = "classpath:test.properties")
+//@TestPropertySource(locations = "classpath:application-local.properties")
 @MultitenantTransactional
 public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
 
