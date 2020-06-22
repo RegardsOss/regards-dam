@@ -51,7 +51,8 @@ import fr.cnes.regards.modules.search.schema.UrlType;
  * @author sbinda
  *
  */
-@TestPropertySource(locations = "classpath:test.properties")
+//@TestPropertySource(locations = "classpath:test.properties")
+@TestPropertySource(locations = "classpath:application-local.properties")
 @MultitenantTransactional
 public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
 
@@ -98,7 +99,7 @@ public class OpenSearchServiceIT extends AbstractRegardsTransactionalIT {
         // in reality we do not have only an OR crit because other parsers passed and did not add any restriction
         // so our request is interpreted as "nothing & imageOnly"
         // so AndCrit(EmptyCrit, OrCrit(FieldExistsCrits))
-        crit = ((AndCriterion) crit).getCriterions().get(1);
+        crit = ((AndCriterion) crit).getCriterions().get(0);
         Assert.assertTrue("When parsing a query with " + ImageOnlyParser.IMAGE_ONLY_PARAM
                 + " GET parameter, we should have a criterion that is an OR", crit instanceof OrCriterion);
         OrCriterion orCrit = (OrCriterion) crit;
