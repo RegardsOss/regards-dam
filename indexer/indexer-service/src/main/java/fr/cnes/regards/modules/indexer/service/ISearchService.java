@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -142,7 +143,8 @@ public interface ISearchService {
      * @return the compmuted summary
      */
     <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, List<DataType> dataTypes);
+            ICriterion crit, String discriminantProperty, Optional<String> discriminentPropertyInclude,
+            List<DataType> dataTypes);
 
     /**
      * Search for alphabeticly sorted top maxCount values of given attribute following given request

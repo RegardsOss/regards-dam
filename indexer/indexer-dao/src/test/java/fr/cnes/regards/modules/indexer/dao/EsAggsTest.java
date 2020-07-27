@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -74,8 +75,8 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                                          Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
@@ -135,7 +136,8 @@ public class EsAggsTest {
         DocFilesSummary summary = new DocFilesSummary();
         SimpleSearchKey<Data> searchKey = new SimpleSearchKey<>(TYPE, Data.class);
         searchKey.setSearchIndex(INDEX);
-        repository.computeInternalDataFilesSummary(searchKey, null, "tags", summary, "RAWDATA", "QUICKLOOK_HD");
+        repository.computeInternalDataFilesSummary(searchKey, null, "tags", Optional.of("URN:AIP:DATASET.*"), summary,
+                                                   "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
         // 24 because 12 RAWDATA and 12 QUICKLOOKS
@@ -161,7 +163,7 @@ public class EsAggsTest {
 
         private String docId;
 
-        private String type = TYPE;
+        private final String type = TYPE;
 
         private Set<String> tags = new HashSet<>();
 
