@@ -136,8 +136,8 @@ public class EsAggsTest {
         DocFilesSummary summary = new DocFilesSummary();
         SimpleSearchKey<Data> searchKey = new SimpleSearchKey<>(TYPE, Data.class);
         searchKey.setSearchIndex(INDEX);
-        repository.computeInternalDataFilesSummary(searchKey, null, "tags", Optional.of("URN:AIP:DATASET.*"), summary,
-                                                   "RAWDATA", "QUICKLOOK_HD");
+        repository.computeInternalDataFilesSummary(searchKey, null, "tags", Optional.empty(), summary, "RAWDATA",
+                                                   "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
         // 24 because 12 RAWDATA and 12 QUICKLOOKS
