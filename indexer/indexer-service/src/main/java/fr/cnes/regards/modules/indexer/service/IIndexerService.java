@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.Collection;
 
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
 /**
@@ -31,8 +30,6 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
  */
 @Deprecated
 public interface IIndexerService {
-
-    int BULK_SIZE = IEsRepository.BULK_SIZE;
 
     /**
      * Create index if not already exists

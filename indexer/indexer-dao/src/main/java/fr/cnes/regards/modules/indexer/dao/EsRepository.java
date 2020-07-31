@@ -18,54 +18,10 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
-import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
-import fr.cnes.regards.framework.geojson.geometry.Polygon;
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
-import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
-import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
-import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
-import fr.cnes.regards.modules.indexer.domain.IDocFiles;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
-import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
-import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.IMapping;
-import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
-import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
-import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
-import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -93,6 +49,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
@@ -126,8 +83,10 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RequestOptions.Builder;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -180,9 +139,55 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper.AUTHALIC_SPHERE_RADIUS;
+import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
+import fr.cnes.regards.framework.geojson.geometry.MultiPolygon;
+import fr.cnes.regards.framework.geojson.geometry.Polygon;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.dam.domain.entities.DataObject;
+import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
+import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
+import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithCircleVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.GeoCriterionWithPolygonOrBboxVisitor;
+import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.IMapping;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.reminder.SearchAfterReminder;
+import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
+import fr.cnes.regards.modules.indexer.domain.spatial.ILocalizable;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 
 /**
  * Elasticsearch repository implementation
@@ -329,6 +334,8 @@ public class EsRepository implements IEsRepository {
                 }
             });
 
+    private RequestOptions options = RequestOptions.DEFAULT;
+
     /**
      * Constructor
      * @param gson JSon mapper bean
@@ -336,6 +343,7 @@ public class EsRepository implements IEsRepository {
     public EsRepository(@Autowired Gson gson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
+            @Value("${regards.elasticsearch.http.buffer.limit:104857600}") int elasticClientBufferLimit,
             AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) {
 
         this.gson = gson;
@@ -349,10 +357,15 @@ public class EsRepository implements IEsRepository {
         // Timeouts are set to 20 minutes particularly for bulk save containing geo_shape
         RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(esHost, esPort))
                 .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(1_200_000))
-                .setMaxRetryTimeoutMillis(1_200_000)
-                .setHttpClientConfigCallback(httpClientConfig -> httpClientConfig.setKeepAliveStrategy((resp, ctx) -> HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS))
-                ;
+                .setMaxRetryTimeoutMillis(1_200_000).setHttpClientConfigCallback(httpClientConfig -> httpClientConfig
+                        .setKeepAliveStrategy((resp, ctx) -> HTTP_KEEP_ALIVE_MAX_IDLE_DURATION_MS));
 
+        if (elasticClientBufferLimit > 0) {
+            Builder builder = RequestOptions.DEFAULT.toBuilder();
+            builder.setHttpAsyncResponseConsumerFactory(new HeapBufferedResponseConsumerFactory(
+                    elasticClientBufferLimit));
+            options = builder.build();
+        }
         client = new RestHighLevelClient(restClientBuilder);
 
         try {
@@ -894,7 +907,7 @@ public class EsRepository implements IEsRepository {
 
     private SearchResponse getSearchResponse(SearchRequest request) throws IOException {
         try {
-            return client.search(request, RequestOptions.DEFAULT);
+            return client.search(request, options);
         } catch (ElasticsearchException ee) {
             LOGGER.error(ee.getMessage(), ee);
             if (ee.getMessage().contains(INDEX_NOT_FOUND_EXCEPTION)) {
@@ -941,7 +954,7 @@ public class EsRepository implements IEsRepository {
                     .size(pageRequest.getPageSize());
             request.source(builder);
 
-            SearchResponse response = client.search(request);
+            SearchResponse response = client.search(request, options);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), clazz));
@@ -977,6 +990,7 @@ public class EsRepository implements IEsRepository {
                     // Radius MUST NOT HAVE A UNIT
                     initialCircleCriterion
                             .setRadius(FastMath.toRadians(Double.parseDouble(initialCircleCriterion.getRadius()))
+
                                     * AUTHALIC_SPHERE_RADIUS);
                 }
                 return searchWithCircleCriterionInProjectedCrs(searchKey, pageRequest, facetsMap, criterion);
@@ -1171,7 +1185,7 @@ public class EsRepository implements IEsRepository {
                 // Relaunch the request with replaced facets
                 request.source(builder);
                 LOGGER.trace("ElasticsearchRequest (2nd pass): {}", request.toString());
-                response = client.search(request, RequestOptions.DEFAULT);
+                response = client.search(request, options);
             }
 
             // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist

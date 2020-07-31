@@ -34,6 +34,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 
 /**
@@ -44,7 +45,9 @@ import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVi
 @Ignore
 @RunWith(SpringRunner.class)
 public class Es6UpgradeTest {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Es6UpgradeTest.class);
+
     /**
      * Class to test
      */
@@ -65,8 +68,8 @@ public class Es6UpgradeTest {
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         try {
             gson = new GsonBuilder().create();
-            repository = new EsRepository(gson, null, "localhost", 9200,
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+            repository = new EsRepository(gson, null, "localhost", 9200, 0,
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }

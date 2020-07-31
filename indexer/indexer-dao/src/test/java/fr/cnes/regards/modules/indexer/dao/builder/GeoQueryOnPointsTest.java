@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationContext;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
@@ -77,11 +78,10 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
         // By now, repository try to connect localhost:9200 for ElasticSearch
         boolean repositoryOK = true;
         try {
-            gson = new GsonBuilder().registerTypeAdapterFactory(new ItemAdapterFactory()).
-                    registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
-                    .create();
-            repository = new EsRepository(gson, null, "localhost", 9200,
-                                          new AggregationBuilderFacetTypeVisitor(100, 5));
+            gson = new GsonBuilder().registerTypeAdapterFactory(new ItemAdapterFactory())
+                    .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe()).create();
+            repository = new EsRepository(gson, null, "localhost", 9200, 0,
+                    new AggregationBuilderFacetTypeVisitor(100, 5));
 
             // This test is not intended to be executed on integration serveur but better locally to test
             // functionnalities during development phase
@@ -134,17 +134,14 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
         QueryBuilderCriterionVisitor visitor = new QueryBuilderCriterionVisitor();
         QueryBuilder builder = visitor.visitPolygonCriterion(criterion);
         Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"wgs84\" : {\n" + "      \"shape\" : {\n"
-                                    + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
-                                    + "        \"coordinates\" : [\n" + "          [\n" + "            [\n"
-                                    + "              0.0,\n" + "              0.0\n" + "            ],\n"
-                                    + "            [\n" + "              45.0,\n" + "              0.0\n"
-                                    + "            ],\n" + "            [\n" + "              45.0,\n"
-                                    + "              45.0\n" + "            ],\n" + "            [\n"
-                                    + "              0.0,\n" + "              0.0\n" + "            ]\n"
-                                    + "          ]\n" + "        ]\n" + "      },\n"
-                                    + "      \"relation\" : \"intersects\"\n" + "    },\n"
-                                    + "    \"ignore_unmapped\" : false,\n" + "    \"boost\" : 1.0\n" + "  }\n" + "}",
-                            builder.toString());
+                + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
+                + "        \"coordinates\" : [\n" + "          [\n" + "            [\n" + "              0.0,\n"
+                + "              0.0\n" + "            ],\n" + "            [\n" + "              45.0,\n"
+                + "              0.0\n" + "            ],\n" + "            [\n" + "              45.0,\n"
+                + "              45.0\n" + "            ],\n" + "            [\n" + "              0.0,\n"
+                + "              0.0\n" + "            ]\n" + "          ]\n" + "        ]\n" + "      },\n"
+                + "      \"relation\" : \"intersects\"\n" + "    },\n" + "    \"ignore_unmapped\" : false,\n"
+                + "    \"boost\" : 1.0\n" + "  }\n" + "}", builder.toString());
     }
 
     private double[] point(double... lonLats) {
@@ -154,8 +151,8 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
 
     private double[][][] simplePolygon(Integer... lonLats) {
         assert (lonLats.length >= 6);
-        assert (lonLats.length % 2 == 0);
-        double[][] shell = new double[lonLats.length / 2 + 1][];
+        assert ((lonLats.length % 2) == 0);
+        double[][] shell = new double[(lonLats.length / 2) + 1][];
         for (int i = 0; i < lonLats.length; i += 2) {
             shell[i / 2] = new double[] { lonLats[i].doubleValue(), lonLats[i + 1].doubleValue() };
         }
@@ -180,18 +177,15 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
         QueryBuilderCriterionVisitor visitor = new QueryBuilderCriterionVisitor();
         QueryBuilder builder = visitor.visitPolygonCriterion(criterion);
         Assert.assertEquals("{\n" + "  \"geo_shape\" : {\n" + "    \"wgs84\" : {\n" + "      \"shape\" : {\n"
-                                    + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
-                                    + "        \"coordinates\" : [\n" + "          [\n" + "            [\n"
-                                    + "              170.0,\n" + "              20.0\n" + "            ],\n"
-                                    + "            [\n" + "              190.0,\n" + "              20.0\n"
-                                    + "            ],\n" + "            [\n" + "              190.0,\n"
-                                    + "              60.0\n" + "            ],\n" + "            [\n"
-                                    + "              170.0,\n" + "              60.0\n" + "            ],\n"
-                                    + "            [\n" + "              170.0,\n" + "              20.0\n"
-                                    + "            ]\n" + "          ]\n" + "        ]\n" + "      },\n"
-                                    + "      \"relation\" : \"intersects\"\n" + "    },\n"
-                                    + "    \"ignore_unmapped\" : false,\n" + "    \"boost\" : 1.0\n" + "  }\n" + "}",
-                            builder.toString());
+                + "        \"type\" : \"polygon\",\n" + "        \"orientation\" : \"right\",\n"
+                + "        \"coordinates\" : [\n" + "          [\n" + "            [\n" + "              170.0,\n"
+                + "              20.0\n" + "            ],\n" + "            [\n" + "              190.0,\n"
+                + "              20.0\n" + "            ],\n" + "            [\n" + "              190.0,\n"
+                + "              60.0\n" + "            ],\n" + "            [\n" + "              170.0,\n"
+                + "              60.0\n" + "            ],\n" + "            [\n" + "              170.0,\n"
+                + "              20.0\n" + "            ]\n" + "          ]\n" + "        ]\n" + "      },\n"
+                + "      \"relation\" : \"intersects\"\n" + "    },\n" + "    \"ignore_unmapped\" : false,\n"
+                + "    \"boost\" : 1.0\n" + "  }\n" + "}", builder.toString());
     }
 
     @Test
@@ -345,8 +339,8 @@ public class GeoQueryOnPointsTest extends AbstractOnPointsTest {
         System.out.println(GeoHelper.getDistanceOnEarth(point(180, 20), point(180.0, 20.1)));
 
         Integer d1 = 111_252;
-        CircleCriterion criterion = criterion = (CircleCriterion) ICriterion
-                .intersectsCircle(point(180, 21), d1.toString());
+        CircleCriterion criterion = criterion = (CircleCriterion) ICriterion.intersectsCircle(point(180, 21),
+                                                                                              d1.toString());
 
         List<PointItem> result = repository.search(searchKey, 1000, criterion).getContent();
 

@@ -20,8 +20,8 @@ public class DataObjectAssocRemover extends AbstractDataObjectBulkSaver implemen
     private final OffsetDateTime updateDate;
 
     public DataObjectAssocRemover(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
-            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {
-        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId());
+            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor, Integer maxBulkSize) {
+        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId(), maxBulkSize);
         this.datasetIpId = dataset.getIpId().toString();
         this.updateDate = updateDate;
     }

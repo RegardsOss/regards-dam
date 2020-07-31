@@ -54,11 +54,6 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 public interface IEsRepository {
 
     /**
-     * Preferred bulk size recommended by Elasticsearch
-     */
-    int BULK_SIZE = 10_000;
-
-    /**
      * ElasticSearch window pagination limit ie only from 0 to 10_000 is permit with a classic search.
      * Outside this window, it is necessary to use scrollable or searchAfter API.
      */

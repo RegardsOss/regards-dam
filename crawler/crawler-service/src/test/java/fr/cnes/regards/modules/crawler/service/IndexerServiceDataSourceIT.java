@@ -399,7 +399,7 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, 10000,
                                                             ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
@@ -412,7 +412,7 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+        objectsPage = searchService.search(objectSearchKey, 10000,
                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
@@ -422,7 +422,7 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+        objectsPage = searchService.search(objectSearchKey, 10000,
                                            ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());

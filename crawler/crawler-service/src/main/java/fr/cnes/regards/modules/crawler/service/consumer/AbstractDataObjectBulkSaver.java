@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 
 /**
  * An abstract data object saver manager
@@ -50,12 +49,15 @@ public abstract class AbstractDataObjectBulkSaver {
      */
     private int objectsCount = 0;
 
+    private Integer maxBulkSize = 10000;
+
     protected AbstractDataObjectBulkSaver(SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor,
-            HashSet<DataObject> toSaveObjects, long datasetId) {
+            HashSet<DataObject> toSaveObjects, long datasetId, Integer maxBulkSize) {
         this.saveDataObjectsCallable = saveDataObjectsCallable;
         this.executor = executor;
         this.toSaveObjects = toSaveObjects;
         this.datasetId = datasetId;
+        this.maxBulkSize = maxBulkSize;
     }
 
     protected void addDataObject(DataObject object) {
@@ -63,7 +65,7 @@ public abstract class AbstractDataObjectBulkSaver {
     }
 
     protected boolean needToSave() {
-        return (toSaveObjects.size() == IEsRepository.BULK_SIZE);
+        return (toSaveObjects.size() == maxBulkSize);
     }
 
     /**

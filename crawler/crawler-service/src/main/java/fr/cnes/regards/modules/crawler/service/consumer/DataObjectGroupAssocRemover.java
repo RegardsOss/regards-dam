@@ -17,8 +17,9 @@ public class DataObjectGroupAssocRemover extends AbstractDataObjectBulkSaver imp
     private final String groupName;
 
     public DataObjectGroupAssocRemover(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
-            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor, String groupName) {
-        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId());
+            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor, String groupName,
+            Integer maxBulkSize) {
+        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId(), maxBulkSize);
         this.datasetIpId = dataset.getIpId().toString();
         this.updateDate = updateDate;
         this.groupName = groupName;

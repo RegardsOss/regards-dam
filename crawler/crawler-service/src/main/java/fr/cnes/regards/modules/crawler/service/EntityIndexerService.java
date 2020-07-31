@@ -171,6 +171,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private SessionNotifier sessionNotifier;
 
+    @Value("${regards.crawler.max.bulk.size:10000}")
+    private Integer maxBulkSize;
+
     private static List<String> toErrors(Errors errorsObject) {
         List<String> errors = new ArrayList<>(errorsObject.getErrorCount());
         for (ObjectError objError : errorsObject.getAllErrors()) {
@@ -334,7 +337,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             object.setDatasetModelNames(object.getMetadata().getModelNames());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
-            if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+            if (toSaveObjects.size() == maxBulkSize) {
                 try {
                     esRepos.saveBulk(tenant, toSaveObjects);
                     objectsCount.addAndGet(toSaveObjects.size());
@@ -518,7 +521,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendDataSourceMessage("          Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor, maxBulkSize);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -564,7 +567,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         subsettingCrit = ICriterion.and(subsettingCrit, groupSubsettingClause);
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocUpdater dataObjectAssocUpdater = new DataObjectGroupAssocUpdater(dataset, updateDate,
-                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+                toSaveObjects, saveDataObjectsCallable, executor, groupName, maxBulkSize);
         try {
             esRepos.searchAll(searchKey, dataObjectAssocUpdater, subsettingCrit);
             // Saving remaining objects...
@@ -605,7 +608,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                              ICriterion.not(dataset.getUserSubsettingClause()));
         // Create a Consumer to be executed on each data object of dataset subsetting criteria results
         DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
-                saveDataObjectsCallable, executor);
+                saveDataObjectsCallable, executor, maxBulkSize);
         try {
             esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
             // Saving remaining objects...
@@ -646,7 +649,7 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                              ICriterion.not(groupSubsettingClause));
         // For each objet remove group if not associated throught an other dataset
         DataObjectGroupAssocRemover dataObjectAssocRemover = new DataObjectGroupAssocRemover(dataset, updateDate,
-                toSaveObjects, saveDataObjectsCallable, executor, groupName);
+                toSaveObjects, saveDataObjectsCallable, executor, groupName, maxBulkSize);
         try {
             esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         } catch (ElasticsearchException e) {

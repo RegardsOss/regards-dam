@@ -75,7 +75,7 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")), 0,
                     new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");

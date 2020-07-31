@@ -59,6 +59,7 @@ import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfi
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.crawler.service.conf.CrawlerPropertiesConfiguration;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
@@ -120,6 +121,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private CrawlerPropertiesConfiguration crawlerConf;
 
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
@@ -216,13 +220,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", crawlerConf.getMaxBulkSize()),
+                    dsiId);
         Page<DataObject> page = null;
         Future<BulkSaveResult> task = null;
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
-                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, crawlerConf.getMaxBulkSize()));
                 sendMessage(String.format("  ...Found at most %d records from datasource", page.getNumberOfElements()),
                             dsiId);
                 availableRecordsCount += page.getNumberOfElements();
@@ -279,13 +284,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", crawlerConf.getMaxBulkSize()),
+                    dsiId);
         Page<DataObject> page = null;
         Future<BulkSaveResult> task = null;
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
-                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, crawlerConf.getMaxBulkSize()));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();
