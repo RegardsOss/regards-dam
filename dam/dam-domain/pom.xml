@@ -41,10 +41,14 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>dam</artifactId>
-		<version>1.0.1</version>
+		<version>1.2.1</version>
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-domain</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>jpa-data-regards</artifactId>
@@ -65,6 +69,7 @@
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
 		</dependency>
+		
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -72,36 +77,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jaxb2-maven-plugin</artifactId>
-				<version>2.5.0</version>
-				<executions>
-					<execution>
-						<id>xjc</id>
-						<goals>
-							<goal>xjc</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<packageName>fr.cnes.regards.modules.dam.domain.models.schema</packageName>
-					<sources>
-						<source>src/main/resources</source>
-					</sources>
-					<xjcSourceExcludeFilters>
-						<filter
-							implementation="org.codehaus.mojo.jaxb2.shared.filters.pattern.PatternFileFilter">
-							<patterns>
-								<pattern>\.properties</pattern>
-							</patterns>
-						</filter>
-					</xjcSourceExcludeFilters>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

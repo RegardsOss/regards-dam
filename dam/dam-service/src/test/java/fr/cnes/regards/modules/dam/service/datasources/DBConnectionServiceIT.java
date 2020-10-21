@@ -19,8 +19,6 @@
 
 package fr.cnes.regards.modules.dam.service.datasources;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
@@ -34,11 +32,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParamDescriptor;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
-import fr.cnes.regards.framework.modules.plugins.domain.parameter.PluginParamType;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
@@ -56,12 +50,6 @@ public class DBConnectionServiceIT extends AbstractMultitenantServiceTest {
      * The JDBC PostgreSQL driver
      */
     private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
-
-    /**
-     *
-     */
-    @Autowired
-    private IPluginService pluginService;
 
     /**
      * A mock of {@link IDBConnectionService}
@@ -100,17 +88,6 @@ public class DBConnectionServiceIT extends AbstractMultitenantServiceTest {
         dbConnectionService.createDBConnection(dbConnection);
     }
 
-    private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
-        final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData
-                .setPluginClassName("fr.cnes.regards.modules.dam.domain.datasources.plugins.DefaultPostgreConnectionPlugin");
-        pluginMetaData.setPluginId(pluginId);
-        pluginMetaData.setAuthor("CS-SI");
-        pluginMetaData.setVersion("1.1");
-        pluginMetaData.setParameters(initializePluginParameterType());
-        return pluginMetaData;
-    }
-
     private Set<IPluginParam> initializePluginParameters() {
         return IPluginParam.set(IPluginParam.build(DBConnectionPluginConstants.USER_PARAM, "user"),
                                 IPluginParam.build(DBConnectionPluginConstants.PASSWORD_PARAM, "password"),
@@ -118,14 +95,6 @@ public class DBConnectionServiceIT extends AbstractMultitenantServiceTest {
                                 IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, "666"),
                                 IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, "name"),
                                 IPluginParam.build(DBConnectionPluginConstants.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER));
-    }
-
-    private List<PluginParamDescriptor> initializePluginParameterType() {
-        return Arrays.asList(
-                             PluginParamDescriptor.create("model", "model", null, PluginParamType.STRING, false, false,
-                                                          false, null),
-                             PluginParamDescriptor.create("connection", "connection", null, PluginParamType.PLUGIN,
-                                                          false, false, false, null));
     }
 
 }

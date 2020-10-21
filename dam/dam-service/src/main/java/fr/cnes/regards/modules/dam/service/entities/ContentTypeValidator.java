@@ -24,7 +24,7 @@ import java.util.Collection;
 import org.springframework.http.MediaType;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidCharsetException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidContentTypeException;
 import fr.cnes.regards.modules.dam.service.entities.exception.InvalidFilenameException;

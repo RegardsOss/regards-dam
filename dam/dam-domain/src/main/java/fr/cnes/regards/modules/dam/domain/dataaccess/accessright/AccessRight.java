@@ -54,12 +54,18 @@ import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 @Table(name = "t_access_right", uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" },
         name = "uk_access_right_access_group_id_dataset_id"))
 @NamedEntityGraphs({
-        @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup",
-                attributeNodes = { @NamedAttributeNode(value = "dataset"),
-                        @NamedAttributeNode(value = "accessGroup", subgraph = "subgraph.accessgroup"),
-                        @NamedAttributeNode(value = "dataAccessPlugin") },
-                subgraphs = @NamedSubgraph(name = "subgraph.accessgroup",
-                        attributeNodes = { @NamedAttributeNode(value = "users") })),
+        @NamedEntityGraph(name = "graph.accessright.dataset.and.accessgroup", attributeNodes = {
+                @NamedAttributeNode(value = "dataset", subgraph = "subgraph.dataset"),
+                @NamedAttributeNode(
+                        value = "accessGroup", subgraph = "subgraph.accessgroup"),
+                @NamedAttributeNode(value = "dataAccessPlugin") },
+                subgraphs = {
+                        @NamedSubgraph(name = "subgraph.accessgroup",
+                                attributeNodes = { @NamedAttributeNode(value = "users") }),
+                        @NamedSubgraph(name = "subgraph.dataset",
+                                attributeNodes = { @NamedAttributeNode(value = "tags"),
+                                        @NamedAttributeNode(value = "groups"),
+                                        @NamedAttributeNode(value = "model") }) }),
         @NamedEntityGraph(name = "graph.accessright.plugins",
                 attributeNodes = { @NamedAttributeNode(value = "dataAccessPlugin") }) })
 public class AccessRight implements IIdentifiable<Long> {

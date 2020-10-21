@@ -41,13 +41,17 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>opensearch</artifactId>
-		<version>1.0.1</version>
+		<version>1.2.1</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.opensearch</groupId>
 			<artifactId>opensearch-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dam</groupId>
+			<artifactId>dam-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
@@ -58,8 +62,8 @@
 			<artifactId>project-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dam</groupId>
-			<artifactId>dam-client</artifactId>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
@@ -68,6 +72,10 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.model</groupId>
+			<artifactId>model-gson-helper</artifactId>
 		</dependency>
 		<!-- COTS -->
 		<dependency>

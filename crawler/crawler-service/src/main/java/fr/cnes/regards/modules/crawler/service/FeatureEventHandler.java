@@ -29,7 +29,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.dam.dto.FeatureEvent;
 import fr.cnes.regards.modules.dam.dto.FeatureEventType;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 /**
  * Handle {@link FeatureEvent}s to delete features from index.
@@ -50,7 +50,7 @@ public class FeatureEventHandler implements IHandler<FeatureEvent> {
     private ISubscriber subscriber;
 
     @EventListener
-    public void handleApplicationReady(DamGsonReadyEvent event) {
+    public void handleApplicationReady(ModelGsonReadyEvent event) {
         subscriber.subscribeTo(FeatureEvent.class, this);
     }
 

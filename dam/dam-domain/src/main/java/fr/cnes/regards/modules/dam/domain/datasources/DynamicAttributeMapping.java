@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.dam.domain.datasources;
 
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * Datasource attribute mapping for dynamic fields ie without mapping options.
@@ -22,12 +22,12 @@ public class DynamicAttributeMapping extends AbstractAttributeMapping {
      * @param pType attribute type in model
      * @param pMappingDS attribute name in datasource
      */
-    public DynamicAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
+    public DynamicAttributeMapping(String pName, String pNameSpace, PropertyType pType, String pMappingDS) {
         super(pName, pNameSpace, pType, pMappingDS);
         attributeType = AttributeMappingEnum.DYNAMIC;
     }
 
-    public DynamicAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
+    public DynamicAttributeMapping(String pName, PropertyType pType, String pMappingDS) {
         this(pName, null, pType, pMappingDS);
         attributeType = AttributeMappingEnum.DYNAMIC;
     }

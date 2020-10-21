@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.dam.domain.entities.metadata;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

@@ -26,17 +26,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
 import fr.cnes.regards.modules.dam.domain.entities.StaticProperties;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModel;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
-import fr.cnes.regards.modules.dam.domain.models.attributes.Fragment;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.model.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.model.domain.attributes.Fragment;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.gson.IAttributeHelper;
 
 /**
  * Test attribute property map algorithm
@@ -52,22 +50,20 @@ public class PropertyMapChecker {
 
     private AttributeFinder finder;
 
-    private IAttributeModelClient attributeModelClientMock;
+    private IAttributeHelper attributeHelper;
 
     private List<AttributeModel> atts;
 
     @Before
     public void init() {
         atts = new ArrayList<>();
-        attributeModelClientMock = Mockito.mock(IAttributeModelClient.class);
-        finder = new AttributeFinder(attributeModelClientMock, Mockito.mock(ISubscriber.class),
+        attributeHelper = Mockito.mock(IAttributeHelper.class);
+        finder = new AttributeFinder(attributeHelper, Mockito.mock(ISubscriber.class),
                 Mockito.mock(IRuntimeTenantResolver.class));
     }
 
     private Map<String, AttributeModel> getBuiltMap(List<AttributeModel> atts) {
-        List<Resource<AttributeModel>> resAtts = new ArrayList<>();
-        atts.forEach(att -> resAtts.add(new Resource<AttributeModel>(att)));
-        Mockito.when(attributeModelClientMock.getAttributes(null, null)).thenReturn(ResponseEntity.ok(resAtts));
+        Mockito.when(attributeHelper.getAllAttributes(Mockito.anyString())).thenReturn(atts);
         finder.computePropertyMap(TENANT);
         // Return built map
         return finder.getPropertyMap().get(TENANT);
@@ -92,7 +88,7 @@ public class PropertyMapChecker {
     public void conflict() {
         // Define attributes
         atts.add(AttributeModelBuilder
-                .build(StaticProperties.FEATURE_TAGS, AttributeType.BOOLEAN, "Conflictual dynamic tags").get());
+                .build(StaticProperties.FEATURE_TAGS, PropertyType.BOOLEAN, "Conflictual dynamic tags").get());
 
         // Build and get map
         Map<String, AttributeModel> builtMap = getBuiltMap(atts);
@@ -103,7 +99,7 @@ public class PropertyMapChecker {
     public void baseProperty() {
         // Define attributes
         String startDate = "START_DATE";
-        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, AttributeType.DATE_ISO8601, "Start date")
+        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, PropertyType.DATE_ISO8601, "Start date")
                 .get();
         atts.add(startDateModel);
 
@@ -122,7 +118,7 @@ public class PropertyMapChecker {
         // Define attributes
         String startDate = "START_DATE";
         String fragment = "fragment";
-        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, AttributeType.DATE_ISO8601, "Start date")
+        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, PropertyType.DATE_ISO8601, "Start date")
                 .fragment(Fragment.buildFragment(fragment, "description")).get();
         atts.add(startDateModel);
 
@@ -142,14 +138,14 @@ public class PropertyMapChecker {
         // Define attributes
         String startDate = "START_DATE";
         String fragment1 = "fragment1";
-        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, AttributeType.DATE_ISO8601, "Start date")
+        AttributeModel startDateModel = AttributeModelBuilder.build(startDate, PropertyType.DATE_ISO8601, "Start date")
                 .fragment(Fragment.buildFragment(fragment1, "description")).get();
         atts.add(startDateModel);
 
         // Define conflictual attribute
         String fragment2 = "fragment2";
         AttributeModel startDateModel2 = AttributeModelBuilder
-                .build(startDate, AttributeType.DATE_ISO8601, "Start date 2")
+                .build(startDate, PropertyType.DATE_ISO8601, "Start date 2")
                 .fragment(Fragment.buildFragment(fragment2, "description")).get();
         atts.add(startDateModel2);
 

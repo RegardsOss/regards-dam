@@ -40,24 +40,23 @@ import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationReposit
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.PluginParameterTransformer;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.dam.domain.datasources.AbstractAttributeMapping;
 import fr.cnes.regards.modules.dam.domain.datasources.DynamicAttributeMapping;
 import fr.cnes.regards.modules.dam.domain.datasources.StaticAttributeMapping;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DBConnectionPluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourcePluginConstants;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
 import fr.cnes.regards.modules.dam.service.datasources.IDataSourceService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Test sata source PluginConfiguration controller
@@ -76,7 +75,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private final static String FROM_CLAUSE_TEST = "from T_TEST_PLUGIN_DATA_SOURCE";
 
-    private static final String LABEL_DATA_SOURCE = "the label of the data source";
+    //    private static final String LABEL_DATA_SOURCE = "the label of the data source";
 
     private final static String JSON_PATH_LABEL = "$.content.label";
 
@@ -317,7 +316,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginUtils.getPluginConfiguration(parameters, MockDatasourcePlugin.class);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "dsFromClause", parameters);
     }
 
     private PluginConfiguration createDataSourceSingleTable() {
@@ -328,7 +327,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                                         PluginParameterTransformer.toJson(modelAttrMapping)),
                      IPluginParam.plugin(DataSourcePluginConstants.CONNECTION_PARAM,
                                          pluginPostgreDbConnection.getBusinessId()));
-        return PluginUtils.getPluginConfiguration(parameters, MockDatasourcePlugin.class);
+        return PluginConfiguration.build(MockDatasourcePlugin.class, "dsSingleTable", parameters);
     }
 
     @Test
@@ -347,17 +346,17 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
         modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name"));
-        modelAttrMapping.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
-        modelAttrMapping.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
-        modelAttrMapping.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        modelAttrMapping.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new DynamicAttributeMapping("alt", "geometry", PropertyType.INTEGER, "altitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("lat", "geometry", PropertyType.DOUBLE, "latitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("long", "geometry", PropertyType.DOUBLE, "longitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("creationDate1", "hello", PropertyType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        modelAttrMapping.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new DynamicAttributeMapping("creationDate2", "hello", PropertyType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        modelAttrMapping.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
-        modelAttrMapping.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new DynamicAttributeMapping("date", "hello", PropertyType.DATE_ISO8601, "date"));
+        modelAttrMapping.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", PropertyType.DATE_ISO8601,
                 "timeStampWithTimeZone"));
-        modelAttrMapping.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
+        modelAttrMapping.add(new DynamicAttributeMapping("isUpdate", "hello", PropertyType.BOOLEAN, "update"));
     }
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
@@ -369,7 +368,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                      IPluginParam.build(DBConnectionPluginConstants.DB_PORT_PARAM, dbPort),
                      IPluginParam.build(DBConnectionPluginConstants.DB_NAME_PARAM, dbName));
 
-        return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class);
+        return PluginConfiguration.build(MockConnectionPlugin.class, "PgConnection", parameters);
     }
 
 }

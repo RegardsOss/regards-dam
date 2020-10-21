@@ -49,7 +49,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>crawler</artifactId>
-		<version>1.0.1</version>
+		<version>1.2.1</version>
 	</parent>
 
 	<dependencies>
@@ -91,6 +91,11 @@
 		</dependency>
 
 		<!-- Test dependencies -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dam</groupId>
+			<artifactId>dam-client</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards-starter</artifactId>

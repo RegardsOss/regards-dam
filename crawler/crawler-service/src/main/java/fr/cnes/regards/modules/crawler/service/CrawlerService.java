@@ -51,14 +51,15 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.crawler.service.conf.CrawlerPropertiesConfiguration;
 import fr.cnes.regards.modules.crawler.service.event.DataSourceMessageEvent;
 import fr.cnes.regards.modules.crawler.service.exception.NotFinishedException;
 import fr.cnes.regards.modules.dam.domain.datasources.plugins.DataSourceException;
@@ -68,14 +69,14 @@ import fr.cnes.regards.modules.dam.domain.entities.DataObject;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
 import fr.cnes.regards.modules.dam.domain.entities.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.dam.domain.entities.feature.DataObjectFeature;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveLightResult;
 import fr.cnes.regards.modules.indexer.dao.BulkSaveResult;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelService;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -121,6 +122,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private CrawlerPropertiesConfiguration crawlerConf;
+
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
      * {@link UUID#nameUUIDFromBytes(byte[])}.
@@ -129,8 +133,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * @param datasourceId
      * @return the IpId generated from given parameters
      */
-    private static UniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+    private static OaisUniformResourceName buildIpId(String tenant, String providerId, Long datasourceId) {
+        return new OaisUniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes((datasourceId + "$$" + providerId).getBytes()), 1);
     }
 
@@ -216,13 +220,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", crawlerConf.getMaxBulkSize()),
+                    dsiId);
         Page<DataObject> page = null;
         Future<BulkSaveResult> task = null;
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
-                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, crawlerConf.getMaxBulkSize()));
                 sendMessage(String.format("  ...Found at most %d records from datasource", page.getNumberOfElements()),
                             dsiId);
                 availableRecordsCount += page.getNumberOfElements();
@@ -279,13 +284,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
-        sendMessage(String.format("  Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
+        sendMessage(String.format("  Finding at most %d records from datasource...", crawlerConf.getMaxBulkSize()),
+                    dsiId);
         Page<DataObject> page = null;
         Future<BulkSaveResult> task = null;
         try {
             try {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, dsiId,
-                                             PageRequest.of(pageNumber, IEsRepository.BULK_SIZE));
+                                             PageRequest.of(pageNumber, crawlerConf.getMaxBulkSize()));
                 sendMessage(String.format("  ...Found %d records from datasource", page.getNumberOfElements()), dsiId);
                 availableRecordsCount += page.getNumberOfElements();
                 final List<DataObject> list = page.getContent();

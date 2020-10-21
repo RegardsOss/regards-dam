@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.indexer.domain;
 
 import com.google.common.collect.Multimap;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 
 /**
  * The unique intend of this interface is to avoid calling IEsRepository.computeDataFilesSummary() on data that do not

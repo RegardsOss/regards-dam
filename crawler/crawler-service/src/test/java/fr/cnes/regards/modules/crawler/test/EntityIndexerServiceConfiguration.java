@@ -25,25 +25,25 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dam.client.dataaccess.IAccessGroupClient;
 import fr.cnes.regards.modules.dam.client.dataaccess.IAccessRightClient;
 import fr.cnes.regards.modules.dam.client.dataaccess.IUserClient;
 import fr.cnes.regards.modules.dam.client.entities.IDatasetClient;
-import fr.cnes.regards.modules.dam.client.models.IAttributeModelClient;
-import fr.cnes.regards.modules.dam.client.models.IModelAttrAssocClient;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dam.domain.entities.Dataset;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.spatial.ProjectGeoSettings;
+import fr.cnes.regards.modules.model.client.IAttributeModelClient;
+import fr.cnes.regards.modules.model.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.model.domain.Model;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
@@ -63,10 +63,10 @@ public class EntityIndexerServiceConfiguration {
         Dataset mockDataset = new Dataset(mockedModel, "tenant", "DSMOCK",
                 "Mocked dataset response from mock dataset dam client");
         mockDataset.setId(1L);
-        mockDataset.setIpId(UniformResourceName
+        mockDataset.setIpId(OaisUniformResourceName
                 .fromString("URN:AIP:DATASET:tenant:27de606c-a6cd-411f-a5ba-bd1b2f29c965:V1"));
         Mockito.when(client.retrieveDataset(Mockito.anyString()))
-                .thenReturn(new ResponseEntity<Resource<Dataset>>(HateoasUtils.wrap(mockDataset), HttpStatus.OK));
+                .thenReturn(new ResponseEntity<EntityModel<Dataset>>(HateoasUtils.wrap(mockDataset), HttpStatus.OK));
         return client;
     }
 
@@ -85,10 +85,10 @@ public class EntityIndexerServiceConfiguration {
         IAccessGroupClient accessGroupClient = Mockito.mock(IAccessGroupClient.class);
 
         // Build accessGroupMock mock
-        PagedResources.PageMetadata md = new PagedResources.PageMetadata(0, 0, 0);
-        PagedResources<Resource<AccessGroup>> pagedResources = new PagedResources<>(new ArrayList<>(), md,
+        PagedModel.PageMetadata md = new PagedModel.PageMetadata(0, 0, 0);
+        PagedModel<EntityModel<AccessGroup>> pagedResources = new PagedModel<>(new ArrayList<>(), md,
                 new ArrayList<>());
-        ResponseEntity<PagedResources<Resource<AccessGroup>>> pageResponseEntity = ResponseEntity.ok(pagedResources);
+        ResponseEntity<PagedModel<EntityModel<AccessGroup>>> pageResponseEntity = ResponseEntity.ok(pagedResources);
         Mockito.when(accessGroupClient.retrieveAccessGroupsList(Mockito.anyBoolean(), Mockito.anyInt(),
                                                                 Mockito.anyInt()))
                 .thenReturn(pageResponseEntity);

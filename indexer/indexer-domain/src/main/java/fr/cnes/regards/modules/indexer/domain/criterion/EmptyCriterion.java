@@ -35,6 +35,11 @@ public final class EmptyCriterion implements ICriterion {
     }
 
     @Override
+    public boolean isEmpty() {
+        return true;
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitEmptyCriterion(this);
     }

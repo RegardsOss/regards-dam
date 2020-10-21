@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
@@ -93,8 +94,8 @@ public class EsQueryTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
                     .create();
-            repository = new EsRepository(gson, null, "172.26.47.52", 9200,
-                                          new AggregationBuilderFacetTypeVisitor(100, 5));
+            repository = new EsRepository(gson, null, "172.26.47.52", 9200, 0,
+                    new AggregationBuilderFacetTypeVisitor(100, 5));
 
             // This test is not intended to be executed on integration serveur but better locally to test
             // functionnalities during development phase
@@ -140,10 +141,9 @@ public class EsQueryTest {
         for (int i = 0; i < 10; i++) {
             // size attribute from 1 to 10
             Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i],
-                                            OffsetDateTime.of(2017, 1, 1 + i, 10, 47, 0, 0, ZoneOffset.UTC),
-                                            Arrays.copyOfRange(LOREM_IPSUM, i, i + 10),
-                                            Arrays.copyOfRange(INTS, i, i + 10), Arrays.copyOfRange(DOUBLES, i, i + 5),
-                                            Arrays.copyOfRange(DATES, i, i + 10));
+                    OffsetDateTime.of(2017, 1, 1 + i, 10, 47, 0, 0, ZoneOffset.UTC),
+                    Arrays.copyOfRange(LOREM_IPSUM, i, i + 10), Arrays.copyOfRange(INTS, i, i + 10),
+                    Arrays.copyOfRange(DOUBLES, i, i + 5), Arrays.copyOfRange(DATES, i, i + 10));
             items.add(new Item(Integer.toString(i), TYPE1, att));
         }
         repository.saveBulk(INDEX, items);
@@ -175,11 +175,10 @@ public class EsQueryTest {
         for (int i = 0; i < BIG_VOLUME_SIZE; i++) {
             // size attribute from 1 to 10
             Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i % 10],
-                                            OffsetDateTime.of(2017, 1, 1 + (i % 10), 10, 47, 0, 0, ZoneOffset.UTC),
-                                            Arrays.copyOfRange(LOREM_IPSUM, i % 10, (i % 10) + 10),
-                                            Arrays.copyOfRange(INTS, i % 10, (i % 10) + 10),
-                                            Arrays.copyOfRange(DOUBLES, i % 10, (i % 10) + 5),
-                                            Arrays.copyOfRange(DATES, i % 10, (i % 10) + 10));
+                    OffsetDateTime.of(2017, 1, 1 + (i % 10), 10, 47, 0, 0, ZoneOffset.UTC),
+                    Arrays.copyOfRange(LOREM_IPSUM, i % 10, (i % 10) + 10),
+                    Arrays.copyOfRange(INTS, i % 10, (i % 10) + 10), Arrays.copyOfRange(DOUBLES, i % 10, (i % 10) + 5),
+                    Arrays.copyOfRange(DATES, i % 10, (i % 10) + 10));
             items.add(new Item(Integer.toString(i), TYPE1, att));
             if ((i % 10_000) == 0) {
                 long start = System.currentTimeMillis();
@@ -240,8 +239,8 @@ public class EsQueryTest {
                                          .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
                                          .put("properties.date", FacetType.DATE).build());
         long searchAllWithFacets = System.currentTimeMillis() - start;
-        System.out.println(
-                String.format("Search all with facets: %2$d (%1$d) ms", page.getTotalElements(), searchAllWithFacets));
+        System.out.println(String.format("Search all with facets: %2$d (%1$d) ms", page.getTotalElements(),
+                                         searchAllWithFacets));
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, 100, ICriterion.all(),
@@ -256,8 +255,8 @@ public class EsQueryTest {
         Pageable pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
         page = repository.search(searchKey, pageable, ICriterion.all());
         long searchAllSorted = System.currentTimeMillis() - start;
-        System.out.println(
-                String.format("Search all date-sorted: %2$d (%1$d) ms", page.getTotalElements(), searchAllSorted));
+        System.out.println(String.format("Search all date-sorted: %2$d (%1$d) ms", page.getTotalElements(),
+                                         searchAllSorted));
 
         start = System.currentTimeMillis();
         pageable = PageRequest.of(0, 100, Sort.Direction.ASC, "properties.date");
@@ -276,38 +275,37 @@ public class EsQueryTest {
                                          .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
                                          .build());
         long searchAllSortedWithFacetsButDate = System.currentTimeMillis() - start;
-        System.out.println(
-                String.format("Search all date-sorted with facets except date: %2$d (%1$d) ms", page.getTotalElements(),
-                              searchAllSortedWithFacetsButDate));
+        System.out.println(String.format("Search all date-sorted with facets except date: %2$d (%1$d) ms",
+                                         page.getTotalElements(), searchAllSortedWithFacetsButDate));
 
         start = System.currentTimeMillis();
         int startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
-        page = repository
-                .search(searchKey, 100, ICriterion.between("properties.size", startRandomSize, startRandomSize + 99));
+        page = repository.search(searchKey, 100,
+                                 ICriterion.between("properties.size", startRandomSize, startRandomSize + 99));
         long search100 = System.currentTimeMillis() - start;
         System.out.println(String.format("Search 100 values: %2$d (%1$d) ms", page.getTotalElements(), search100));
 
         start = System.currentTimeMillis();
         startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
-        page = repository
-                .search(searchKey, 100, ICriterion.between("properties.size", startRandomSize, startRandomSize + 99),
-                        new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
-                                .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
-                                .put("properties.date", FacetType.DATE).build());
+        page = repository.search(searchKey, 100,
+                                 ICriterion.between("properties.size", startRandomSize, startRandomSize + 99),
+                                 new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
+                                         .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
+                                         .put("properties.date", FacetType.DATE).build());
         long search100WithFacets = System.currentTimeMillis() - start;
         System.out.println(String.format("Search 100 values with facets: %2$d (%1$d) ms", page.getTotalElements(),
                                          search100WithFacets));
 
         start = System.currentTimeMillis();
         startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
-        page = repository
-                .search(searchKey, 100, ICriterion.between("properties.size", startRandomSize, startRandomSize + 99),
-                        new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
-                                .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC).build());
+        page = repository.search(searchKey, 100,
+                                 ICriterion.between("properties.size", startRandomSize, startRandomSize + 99),
+                                 new ImmutableMap.Builder<String, FacetType>().put("properties.text", FacetType.STRING)
+                                         .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
+                                         .build());
         long search100WithFacetsButDate = System.currentTimeMillis() - start;
-        System.out.println(
-                String.format("Search 100 values with facets except date: %2$d (%1$d) ms", page.getTotalElements(),
-                              search100WithFacetsButDate));
+        System.out.println(String.format("Search 100 values with facets except date: %2$d (%1$d) ms",
+                                         page.getTotalElements(), search100WithFacetsButDate));
 
         start = System.currentTimeMillis();
         startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
@@ -326,9 +324,8 @@ public class EsQueryTest {
                                          .put("properties.x", FacetType.NUMERIC).put("properties.a", FacetType.NUMERIC)
                                          .put("properties.date", FacetType.DATE).build());
         long search100SortedWithFacets = System.currentTimeMillis() - start;
-        System.out.println(
-                String.format("Search 100 values date-sorted with facets: %2$d (%1$d) ms", page.getTotalElements(),
-                              search100SortedWithFacets));
+        System.out.println(String.format("Search 100 values date-sorted with facets: %2$d (%1$d) ms",
+                                         page.getTotalElements(), search100SortedWithFacets));
 
         start = System.currentTimeMillis();
         startRandomSize = (int) (Math.random() * (BIG_VOLUME_SIZE - 100.));
@@ -353,9 +350,8 @@ public class EsQueryTest {
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, 100, ICriterion.between("properties.x", lower, upper));
-        System.out.println(
-                String.format("Search valeur entre 2 bornes aléatoires [%f, %f] : %4$d (%3$d) ms", lower, upper,
-                              page.getTotalElements(), System.currentTimeMillis() - start));
+        System.out.println(String.format("Search valeur entre 2 bornes aléatoires [%f, %f] : %4$d (%3$d) ms", lower,
+                                         upper, page.getTotalElements(), System.currentTimeMillis() - start));
 
         y1 = random.nextDouble();
         y2 = random.nextDouble();
@@ -365,9 +361,9 @@ public class EsQueryTest {
         start = System.currentTimeMillis();
         page = repository.search(searchKey, 100, ICriterion.between("properties.x", lower, upper),
                                  Collections.singletonMap("properties.x", FacetType.NUMERIC));
-        System.out.println(
-                String.format("Search valeur entre 2 bornes aléatoires avec facette [%f, %f] : %4$d (%3$d) ms", lower,
-                              upper, page.getTotalElements(), System.currentTimeMillis() - start));
+        System.out
+                .println(String.format("Search valeur entre 2 bornes aléatoires avec facette [%f, %f] : %4$d (%3$d) ms",
+                                       lower, upper, page.getTotalElements(), System.currentTimeMillis() - start));
 
         y1 = random.nextDouble();
         y2 = random.nextDouble();
@@ -378,9 +374,8 @@ public class EsQueryTest {
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, pageable, ICriterion.between("properties.x", lower, upper));
-        System.out.println(
-                String.format("Search valeur entre 2 bornes aléatoires avec tri [%f, %f] : %4$d (%3$d) ms", lower,
-                              upper, page.getTotalElements(), System.currentTimeMillis() - start));
+        System.out.println(String.format("Search valeur entre 2 bornes aléatoires avec tri [%f, %f] : %4$d (%3$d) ms",
+                                         lower, upper, page.getTotalElements(), System.currentTimeMillis() - start));
 
         y1 = random.nextDouble();
         y2 = random.nextDouble();
@@ -391,9 +386,9 @@ public class EsQueryTest {
         start = System.currentTimeMillis();
         page = repository.search(searchKey, pageable, ICriterion.between("properties.x", lower, upper),
                                  Collections.singletonMap("properties.a", FacetType.NUMERIC));
-        System.out.println(
-                String.format("Search valeur entre 2 bornes aléatoires avec tri et facette [%f, %f] : %4$d (%3$d) ms",
-                              lower, upper, page.getTotalElements(), System.currentTimeMillis() - start));
+        System.out.println(String
+                .format("Search valeur entre 2 bornes aléatoires avec tri et facette [%f, %f] : %4$d (%3$d) ms", lower,
+                        upper, page.getTotalElements(), System.currentTimeMillis() - start));
     }
 
     @Test
@@ -439,8 +434,8 @@ public class EsQueryTest {
         ICriterion mortCrit = ICriterion.eq("properties.text", "mort");
         Assert.assertEquals(2, repository.search(searchKey, 10, mortCrit).getContent().size());
 
-        ICriterion optionaltextWithoutBlanksCrit = ICriterion
-                .in("properties.text", "Le", "petit", "chat", "est", "mort", "de", "sa", "belle");
+        ICriterion optionaltextWithoutBlanksCrit = ICriterion.in("properties.text", "Le", "petit", "chat", "est",
+                                                                 "mort", "de", "sa", "belle");
         Assert.assertEquals(9, repository.search(searchKey, 10, optionaltextWithoutBlanksCrit).getContent().size());
 
         ICriterion optionaltextWithBlanksCrit = ICriterion.in("properties.text", "mort", "ou écrasé on sait pas trop");
@@ -452,11 +447,11 @@ public class EsQueryTest {
         Assert.assertEquals(5, repository.search(searchKey, 10, endsWithCrit).getContent().size());
 
         // On Dates
-        ICriterion gtDateCriterion = ICriterion
-                .gt("properties.date", OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
+        ICriterion gtDateCriterion = ICriterion.gt("properties.date",
+                                                   OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(9, repository.search(searchKey, 10, gtDateCriterion).getContent().size());
-        ICriterion geDateCriterion = ICriterion
-                .ge("properties.date", OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
+        ICriterion geDateCriterion = ICriterion.ge("properties.date",
+                                                   OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, geDateCriterion).getContent().size());
 
         ICriterion betweenDateCriterion = ICriterion
@@ -498,22 +493,22 @@ public class EsQueryTest {
         Assert.assertEquals(0, repository.search(searchKey, 10, intoDoublesCrit2).getContent().size());
 
         // On date ranges
-        ICriterion interDatesCrit1 = ICriterion
-                .intersects("properties.dateRange", OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2018, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC));
+        ICriterion interDatesCrit1 = ICriterion.intersects("properties.dateRange",
+                                                           OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2018, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, interDatesCrit1).getContent().size());
-        ICriterion interDatesCrit2 = ICriterion
-                .intersects("properties.dateRange", OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2017, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
+        ICriterion interDatesCrit2 = ICriterion.intersects("properties.dateRange",
+                                                           OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2017, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, repository.search(searchKey, 10, interDatesCrit2).getContent().size());
-        ICriterion interDatesCrit3 = ICriterion
-                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 19, 12, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2018, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
+        ICriterion interDatesCrit3 = ICriterion.intersects("properties.dateRange",
+                                                           OffsetDateTime.of(2017, 1, 19, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2018, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, repository.search(searchKey, 10, interDatesCrit3).getContent().size());
 
-        ICriterion interDatesCrit4 = ICriterion
-                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
+        ICriterion interDatesCrit4 = ICriterion.intersects("properties.dateRange",
+                                                           OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, interDatesCrit4).getContent().size());
 
         // On boolean
@@ -522,15 +517,17 @@ public class EsQueryTest {
 
         // Test for multiFieldsSearch, while data have been created into Elasticsearch...
         Assert.assertEquals(1, repository.multiFieldsSearch(searchKey, 10, 1, "properties.ints").getContent().size());
-        Assert.assertEquals(1,
-                            repository.multiFieldsSearch(searchKey, 10, "Lorem", "properties.text", "properties.tags")
+        Assert.assertEquals(1, repository
+                .multiFieldsSearch(searchKey, 10, "Lorem", "properties.text", "properties.tags").getContent().size());
+        Assert.assertEquals(2,
+                            repository.multiFieldsSearch(searchKey, 10,
+                                                         OffsetDateTime.of(2017, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                         "properties.dateRange.*")
                                     .getContent().size());
-        Assert.assertEquals(2, repository
-                .multiFieldsSearch(searchKey, 10, OffsetDateTime.of(2017, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC),
-                                   "properties.dateRange.*").getContent().size());
         Assert.assertEquals(10, repository
                 .multiFieldsSearch(searchKey, 10, OffsetDateTime.of(2017, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC),
-                                   "properties.dateRange.*", "properties.dates").getContent().size());
+                                   "properties.dateRange.*", "properties.dates")
+                .getContent().size());
         Assert.assertEquals(1, repository.multiFieldsSearch(searchKey, 10, Math.PI, "properties.double*").getContent()
                 .size());
         Assert.assertEquals(5,
@@ -557,9 +554,8 @@ public class EsQueryTest {
         searchKey.setSearchIndex(INDEX);
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
-        Page<Item> page = repository.search(searchKey, 10, ICriterion.all(),
-                                            facetMapBuilder.put("properties.tags", FacetType.STRING)
-                                                    .put("properties.bool", FacetType.STRING).build());
+        Page<Item> page = repository.search(searchKey, 10, ICriterion.all(), facetMapBuilder
+                .put("properties.tags", FacetType.STRING).put("properties.bool", FacetType.STRING).build());
         Assert.assertEquals(10, page.getContent().size());
         Assert.assertTrue(page instanceof FacetPage);
         Set<IFacet<?>> facets = ((FacetPage<Item>) page).getFacets();
@@ -570,8 +566,9 @@ public class EsQueryTest {
         Assert.assertNotNull(strFacet);
 
         facetMapBuilder = new ImmutableMap.Builder<>();
-        FacetPage<Item> facetPage = (FacetPage<Item>) repository.search(searchKey, 10, ICriterion.all(), facetMapBuilder
-                .put("properties.ints", FacetType.NUMERIC).build());
+        FacetPage<Item> facetPage = (FacetPage<Item>) repository
+                .search(searchKey, 10, ICriterion.all(),
+                        facetMapBuilder.put("properties.ints", FacetType.NUMERIC).build());
         Assert.assertEquals(10, facetPage.getContent().size());
         facets = facetPage.getFacets();
         Assert.assertFalse(facets.isEmpty());
@@ -580,9 +577,9 @@ public class EsQueryTest {
         Assert.assertNotNull(numFacet);
 
         facetMapBuilder = new ImmutableMap.Builder<>();
-        facetPage = (FacetPage<Item>) repository.search(searchKey, 10, ICriterion.all(),
-                                                        facetMapBuilder.put("properties.dates", FacetType.DATE)
-                                                                .build());
+        facetPage = (FacetPage<Item>) repository
+                .search(searchKey, 10, ICriterion.all(),
+                        facetMapBuilder.put("properties.dates", FacetType.DATE).build());
         Assert.assertEquals(10, facetPage.getContent().size());
         facets = facetPage.getFacets();
         Assert.assertFalse(facets.isEmpty());
@@ -591,9 +588,9 @@ public class EsQueryTest {
         Assert.assertNotNull(dateFacet);
 
         // With criterions
-        ICriterion interDatesCrit4 = ICriterion
-                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
-                            OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
+        ICriterion interDatesCrit4 = ICriterion.intersects("properties.dateRange",
+                                                           OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
+                                                           OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
         Map<String, FacetType> facetReqMap = new ImmutableMap.Builder<String, FacetType>()
                 .put("properties.tags", FacetType.STRING).put("properties.ints", FacetType.NUMERIC)
                 .put("properties.dates", FacetType.DATE).build();
@@ -617,7 +614,7 @@ public class EsQueryTest {
         List<Item> itemsSorted = Lists.newArrayList(items);
         Comparator<Item> comparator = Comparator.comparing(item -> item.getProperties().getText());
         comparator = comparator
-                .thenComparing(Comparator.<Item, Integer>comparing(item -> item.getProperties().getSize()).reversed());
+                .thenComparing(Comparator.<Item, Integer> comparing(item -> item.getProperties().getSize()).reversed());
         itemsSorted.sort(comparator);
         Assert.assertEquals(items, itemsSorted);
     }
@@ -650,15 +647,15 @@ public class EsQueryTest {
 
         now = System.currentTimeMillis();
         repository.search(searchKey, PageRequest.of(49, 1000, sort), crit).getContent();
-        System.out.println(
-                "page n + m (m > 1) with (m - n) * page size < 10 000 : " + (System.currentTimeMillis() - now) + " ms");
+        System.out.println("page n + m (m > 1) with (m - n) * page size < 10 000 : "
+                + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
         repository.search(searchKey, PageRequest.of(65, 1000, sort), crit,
-                          Collections.singletonMap("properties.text", FacetType.STRING)).getContent();
-        System.out.println(
-                "page n + m (m > 1) with (m - n) * page size >= 10 000 : " + (System.currentTimeMillis() - now)
-                        + " ms");
+                          Collections.singletonMap("properties.text", FacetType.STRING))
+                .getContent();
+        System.out.println("page n + m (m > 1) with (m - n) * page size >= 10 000 : "
+                + (System.currentTimeMillis() - now) + " ms");
 
         now = System.currentTimeMillis();
         repository.search(searchKey, PageRequest.of(0, 10000, sort), crit).getContent();
@@ -681,12 +678,12 @@ public class EsQueryTest {
         for (int i = 0; i < totalPageCount; i++) {
             long now = System.currentTimeMillis();
             repository.search(searchKey, PageRequest.of(i, 10_00), crit).getContent();
-            System.out.println(
-                    String.format("page %d / %d : %d ms", i + 1, totalPageCount, (System.currentTimeMillis() - now)));
+            System.out.println(String.format("page %d / %d : %d ms", i + 1, totalPageCount,
+                                             (System.currentTimeMillis() - now)));
         }
         System.out.println("***************");
-        System.out.println(
-                String.format("Total (%d pages) : %d ms", totalPageCount, (System.currentTimeMillis() - start)));
+        System.out.println(String.format("Total (%d pages) : %d ms", totalPageCount,
+                                         (System.currentTimeMillis() - start)));
     }
 
     @Test
@@ -721,8 +718,8 @@ public class EsQueryTest {
         Assert.assertTrue(Maps.difference(facet1.getValues(), facet2.getValues()).areEqual());
 
         System.out.println("***************");
-        System.out.println(
-                String.format("Total (%d pages) : %d ms", totalPageCount, (System.currentTimeMillis() - start)));
+        System.out.println(String.format("Total (%d pages) : %d ms", totalPageCount,
+                                         (System.currentTimeMillis() - start)));
     }
 
     /**
@@ -778,14 +775,14 @@ public class EsQueryTest {
         // Search with aggregations
         long start = System.currentTimeMillis();
         SearchKey<Item, Properties> searchKey1 = new SearchKey<>(Collections.singletonMap(TYPE1, Item.class),
-                                                                 Properties.class);
+                Properties.class);
         searchKey1.setSearchIndex(INDEX2);
-        List<Properties> propertieses = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
+        List<Properties> propertieses = repository.search(searchKey1, ICriterion.lt("properties.size", 1000),
+                                                          "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         long start2 = System.currentTimeMillis();
-        List<Properties> propertieses2 = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
+        List<Properties> propertieses2 = repository.search(searchKey1, ICriterion.lt("properties.size", 1000),
+                                                           "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start2) + " ms");
 
         Object[] array1 = propertieses.toArray();
@@ -797,10 +794,10 @@ public class EsQueryTest {
 
         // Testing with '.' into source attribute
         SearchKey<Item, Integer> searchKey2 = new SearchKey<>(Collections.singletonMap(TYPE1, Item.class),
-                                                              Integer.class);
+                Integer.class);
         searchKey2.setSearchIndex(INDEX2);
-        List<Integer> upperBounds = repository
-                .search(searchKey2, ICriterion.lt("properties.size", 1000), "properties.intRange.upperBound");
+        List<Integer> upperBounds = repository.search(searchKey2, ICriterion.lt("properties.size", 1000),
+                                                      "properties.intRange.upperBound");
         Assert.assertEquals(10, upperBounds.size());
     }
 

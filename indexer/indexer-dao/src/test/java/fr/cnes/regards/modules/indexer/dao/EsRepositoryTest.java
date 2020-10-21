@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
@@ -44,6 +45,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 @RunWith(SpringRunner.class)
 @TestPropertySource("classpath:test.properties")
 public class EsRepositoryTest {
+
     private static final String TYPE = "item";
 
     /**
@@ -80,8 +82,8 @@ public class EsRepositoryTest {
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         try {
             gson = new GsonBuilder().registerTypeAdapterFactory(new ItemAdapterFactory()).create();
-            repository = new EsRepository(gson, null, elasticHost, elasticPort,
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+            repository = new EsRepository(gson, null, elasticHost, elasticPort, 0,
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -195,7 +197,7 @@ public class EsRepositoryTest {
         try {
             repository.saveBulk("bulktest", list);
             Assert.fail("saveBulk should have thrown an IllegalArgumentException (last item does not provide id nor "
-                                + "type ");
+                    + "type ");
         } catch (IllegalArgumentException e) {
         }
 
@@ -225,14 +227,13 @@ public class EsRepositoryTest {
         final List<Item> items = new ArrayList<>();
         for (int i = 0; i < pCount; i++) {
             final Item item = new Item(Integer.toString(i),
-                                       Stream.generate(() -> words[(int) (Math.random() * words.length)])
-                                               .limit((int) (Math.random() * 10)).collect(Collectors.toSet())
-                                               .toArray(new String[0]));
+                    Stream.generate(() -> words[(int) (Math.random() * words.length)]).limit((int) (Math.random() * 10))
+                            .collect(Collectors.toSet()).toArray(new String[0]));
             item.setName(words[(int) (Math.random() * words.length)]);
             item.setHeight((int) (Math.random() * 1000));
             item.setPrice(Math.random() * 10000.);
             items.add(item);
-            if (i % 10_000 == 0) {
+            if ((i % 10_000) == 0) {
                 final long start = System.currentTimeMillis();
                 repository.saveBulk("loading", items);
                 System.out.println("Loading (10 000 items): " + (System.currentTimeMillis() - start) + " ms");
@@ -260,7 +261,7 @@ public class EsRepositoryTest {
         }
         final AtomicInteger i = new AtomicInteger(0);
         long start = System.currentTimeMillis();
-        SearchKey<Item, Item> searchKey = new SearchKey<>( "item", Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>("item", Item.class);
         searchKey.setSearchIndex("loading");
         repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
@@ -288,8 +289,8 @@ public class EsRepositoryTest {
         facetMap.put("tata", FacetType.STRING);
         SimpleSearchKey<IIndexable> searchKey = new SimpleSearchKey<>("toto", IIndexable.class);
         searchKey.setSearchIndex(index);
-        FacetPage<IIndexable> page = (FacetPage<IIndexable>) repository
-                .search(searchKey, 10, ICriterion.all(), facetMap);
+        FacetPage<IIndexable> page = (FacetPage<IIndexable>) repository.search(searchKey, 10, ICriterion.all(),
+                                                                               facetMap);
         Assert.assertNotNull(page.getFacets());
         Assert.assertTrue(page.getFacets().isEmpty());
     }
@@ -302,7 +303,7 @@ public class EsRepositoryTest {
 
         private String id;
 
-        private String type = TYPE;
+        private final String type = TYPE;
 
         private String name;
 

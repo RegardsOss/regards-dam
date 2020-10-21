@@ -30,7 +30,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.modules.dam.domain.datasources.Column;
 import fr.cnes.regards.modules.dam.domain.datasources.Table;
@@ -109,14 +108,14 @@ public class DBConnectionService implements IDBConnectionService {
     public Map<String, Table> getTables(String businessId)
             throws ModuleException, NotAvailablePluginConfigurationException {
         IDBConnectionPlugin plg = pluginService.getPlugin(businessId);
-        return (plg == null) ? null : plg.getTables(null, null);
+        return plg == null ? null : plg.getTables(null, null);
     }
 
     @Override
     public Map<String, Column> getColumns(String businessId, String tableName)
             throws ModuleException, NotAvailablePluginConfigurationException {
         IDBConnectionPlugin plg = pluginService.getPlugin(businessId);
-        return (plg == null) ? null : plg.getColumns(tableName);
+        return plg == null ? null : plg.getColumns(tableName);
     }
 
 }

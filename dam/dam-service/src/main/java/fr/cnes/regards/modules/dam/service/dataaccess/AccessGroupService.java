@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -60,7 +60,7 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGro
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupEvent;
 import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.event.AccessGroupPublicEvent;
-import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
+import fr.cnes.regards.modules.model.gson.ModelGsonReadyEvent;
 
 /**
  *
@@ -72,7 +72,7 @@ import fr.cnes.regards.modules.dam.gson.entities.DamGsonReadyEvent;
  */
 @Service
 @MultitenantTransactional
-public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent>, IAccessGroupService {
+public class AccessGroupService implements ApplicationListener<ModelGsonReadyEvent>, IAccessGroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
 
@@ -150,7 +150,7 @@ public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent
 
     @Override
     public Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, final Pageable pPageable) {
-        if ((isPublic != null) && isPublic) {
+        if (isPublic != null && isPublic) {
             return accessGroupDao.findAllByIsPublic(isPublic, pPageable);
         }
         return accessGroupDao.findAll(pPageable);
@@ -222,7 +222,7 @@ public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent
     private User getUser(final String pUserEmail) { // NOSONAR: method is used but by lambda so it is not recognized
         try {
             FeignSecurityManager.asSystem();
-            final ResponseEntity<Resource<ProjectUser>> response = projectUserClient
+            final ResponseEntity<EntityModel<ProjectUser>> response = projectUserClient
                     .retrieveProjectUserByEmail(pUserEmail);
             final HttpStatus responseStatus = response.getStatusCode();
             if (!HttpUtils.isSuccess(responseStatus)) {
@@ -308,7 +308,7 @@ public class AccessGroupService implements ApplicationListener<DamGsonReadyEvent
     @Override
     @Transactional(propagation = Propagation.NEVER)
     // this method is called out of context on microservice initialization
-    public void onApplicationEvent(DamGsonReadyEvent event) {
+    public void onApplicationEvent(ModelGsonReadyEvent event) {
         subscriber.subscribeTo(ProjectUserEvent.class, new ProjectUserEventHandler());
     }
 

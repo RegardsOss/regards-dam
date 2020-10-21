@@ -25,13 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
+
+import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.feign.TokenClientProvider;
@@ -64,11 +66,16 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     @Autowired
     private FeignSecurityManager feignSecurityManager;
 
+    @Autowired
+    private Gson gson;
+
     @Before
     public void init() {
         jwtService.injectMockToken(getDefaultTenant(), DEFAULT_ROLE);
-        client = FeignClientBuilder.build(new TokenClientProvider<>(IAccessRightClient.class,
-                "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
+        client = FeignClientBuilder.build(
+                                          new TokenClientProvider<>(IAccessRightClient.class,
+                                                  "http://" + serverAddress + ":" + getPort(), feignSecurityManager),
+                                          gson);
         FeignSecurityManager.asSystem();
     }
 
@@ -80,8 +87,8 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
      */
     @Test
     public void testRetrieveAccessRightsList() {
-        ResponseEntity<PagedResources<Resource<AccessRight>>> accessRights = client.retrieveAccessRightsList(null, null,
-                                                                                                             0, 10);
+        ResponseEntity<PagedModel<EntityModel<AccessRight>>> accessRights = client.retrieveAccessRightsList(null, null,
+                                                                                                            0, 10);
         Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
     }
 

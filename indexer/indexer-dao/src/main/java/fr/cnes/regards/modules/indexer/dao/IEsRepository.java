@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
@@ -51,11 +52,6 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
  * @author oroussel
  */
 public interface IEsRepository {
-
-    /**
-     * Preferred bulk size recommended by Elasticsearch
-     */
-    int BULK_SIZE = 10_000;
 
     /**
      * ElasticSearch window pagination limit ie only from 0 to 10_000 is permit with a classic search.
@@ -487,7 +483,8 @@ public interface IEsRepository {
      * @see DocFilesSummary
      */
     <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
-            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+            String discriminantProperty, Optional<String> discriminentPropertyInclude, DocFilesSummary summary,
+            String... fileTypes);
 
     /**
      * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
@@ -499,7 +496,8 @@ public interface IEsRepository {
      * @see DocFilesSummary
      */
     <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey, ICriterion crit,
-            String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+            String discriminantProperty, Optional<String> discriminentPropertyInclude, DocFilesSummary summary,
+            String... fileTypes);
 
     /**
      * Close Client

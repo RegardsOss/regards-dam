@@ -29,8 +29,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
+import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.converters.UrnConverter;
 
 @Entity
 @Table(name = "t_entity_request", indexes = { @Index(name = "idx_group_id", columnList = "group_id") },

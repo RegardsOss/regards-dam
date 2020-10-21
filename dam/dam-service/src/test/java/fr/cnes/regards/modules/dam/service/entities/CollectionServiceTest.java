@@ -39,9 +39,10 @@ import fr.cnes.regards.modules.dam.dao.entities.ICollectionRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 
 /**
  * @author lmieulet
@@ -70,7 +71,7 @@ public class CollectionServiceTest {
     /**
      * initialize the repo before each test
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Before
     public void init() {
 
@@ -106,6 +107,7 @@ public class CollectionServiceTest {
         Mockito.when(entitiesRepositoryMocked.findById(collection2.getId())).thenReturn(Optional.of(collection2));
         Mockito.when(entitiesRepositoryMocked.findById(collection3.getId())).thenReturn(Optional.of(collection3));
 
+        @SuppressWarnings("unused")
         IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
@@ -115,8 +117,8 @@ public class CollectionServiceTest {
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
+        collectionServiceMocked = new CollectionService(Mockito.mock(IModelFinder.class), entitiesRepositoryMocked,
+                pModelService, deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
                 runtimeTenantResolver, Mockito.mock(IAbstractEntityRequestRepository.class));
     }
 

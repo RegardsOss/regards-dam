@@ -46,8 +46,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.notification.NotificationLevel;
 import fr.cnes.regards.framework.notification.client.INotificationClient;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.exception.NotAvailablePluginConfigurationException;
 import fr.cnes.regards.framwork.logbackappender.LogConstants;
 import fr.cnes.regards.modules.dam.dao.dataaccess.IAccessRightRepository;
@@ -363,7 +363,8 @@ public class AccessRightService implements IAccessRightService {
         repository.findByDataAccessPluginNotNull().forEach(ar -> {
             try {
                 if (!datasetsToUpdate.contains(ar.getDataset().getIpId())) {
-                    IDataObjectAccessFilterPlugin plugin = pluginService.getPlugin(ar.getDataAccessPlugin().getId());
+                    IDataObjectAccessFilterPlugin plugin = pluginService
+                            .getPlugin(ar.getDataAccessPlugin().getBusinessId());
                     if (plugin.isDynamic()) {
                         LOGGER.info("Updating dynamic accessRights for dataset {} - {}", ar.getDataset().getLabel(),
                                     ar.getDataset().getIpId());

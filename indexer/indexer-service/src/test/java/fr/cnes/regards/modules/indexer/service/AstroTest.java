@@ -58,11 +58,10 @@ import fr.cnes.regards.framework.geojson.coordinates.Positions;
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.geojson.geometry.Polygon;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.OaisUniformResourceName;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.dam.domain.entities.DataObject;
-import fr.cnes.regards.modules.dam.domain.models.Model;
 import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.spatial.GeoHelper;
@@ -70,6 +69,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.spatial.Crs;
 import fr.cnes.regards.modules.indexer.service.test.SearchConfiguration;
+import fr.cnes.regards.modules.model.domain.Model;
 
 /**
  * @author oroussel
@@ -136,7 +136,7 @@ public class AstroTest {
      */
     private double toLongitude(double rightAscendance) {
         double longitude_0_360 = (rightAscendance / 24.) * 360;
-        return EsHelper.highScaled(((longitude_0_360 >= 180.) ? longitude_0_360 - 360.0 : longitude_0_360));
+        return EsHelper.highScaled(longitude_0_360 >= 180. ? longitude_0_360 - 360.0 : longitude_0_360);
     }
 
     /**
@@ -269,7 +269,7 @@ public class AstroTest {
     private DataObject createDataObject(IGeometry shape, IGeometry shapeWgs84, String label) {
         System.out.println("Saving " + label);
         DataObject object = new DataObject(model, TENANT, label, label);
-        object.setIpId(new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
+        object.setIpId(new OaisUniformResourceName(OAISIdentifier.SIP, EntityType.DATA, TENANT, UUID.randomUUID(), 1));
         object.setNormalizedGeometry(GeoHelper.normalize(shape));
         object.getFeature().setCrs(Crs.ASTRO.toString());
         object.setWgs84(GeoHelper.normalize(shapeWgs84));

@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -28,8 +29,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.DataType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -48,6 +49,7 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
  * @author oroussel
  */
 public interface ISearchService {
+
     /**
      * Maximum page size (Elasticsearch constraint)
      * (only used by CatalogSearchService)
@@ -141,7 +143,8 @@ public interface ISearchService {
      * @return the compmuted summary
      */
     <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, List<DataType> dataTypes);
+            ICriterion crit, String discriminantProperty, Optional<String> discriminentPropertyInclude,
+            List<DataType> dataTypes);
 
     /**
      * Search for alphabeticly sorted top maxCount values of given attribute following given request

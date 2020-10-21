@@ -18,8 +18,8 @@
  */
 package fr.cnes.regards.modules.dam.domain.datasources;
 
-import fr.cnes.regards.modules.dam.domain.models.Model;
-import fr.cnes.regards.modules.dam.domain.models.attributes.AttributeType;
+import fr.cnes.regards.modules.model.domain.Model;
+import fr.cnes.regards.modules.model.dto.properties.PropertyType;
 
 /**
  * This class is used to map a data source attribute to an attribute of a {@link Model}
@@ -76,7 +76,7 @@ public abstract class AbstractAttributeMapping {
     /**
      * The attribute type in the model
      */
-    protected AttributeType type;
+    protected PropertyType type;
 
     /**
      * The attribute namespace in the model
@@ -97,14 +97,14 @@ public abstract class AbstractAttributeMapping {
      * Constructor with all attributes
      * @param name the attribute name in the model
      * @param nameSpace the attribute name space in the model
-     * @param type the attribute type in the model @see {@link AttributeType}
+     * @param type the attribute type in the model @see {@link PropertyType}
      * @param mappingDS The attribute name in the data source
      */
-    protected AbstractAttributeMapping(String name, String nameSpace, AttributeType type, String mappingDS) {
+    protected AbstractAttributeMapping(String name, String nameSpace, PropertyType type, String mappingDS) {
         this.name = name;
         this.namespace = nameSpace;
         this.nameDS = mappingDS;
-        if ((type == null) && isMappedToStaticProperty()) {
+        if (type == null && isMappedToStaticProperty()) {
             this.type = getStaticAttributeType(name);
         } else {
             this.type = type;
@@ -112,7 +112,7 @@ public abstract class AbstractAttributeMapping {
     }
 
     /**
-     * Get the {@link AttributeType} for a static attribute
+     * Get the {@link PropertyType} for a static attribute
      * @param staticAttrName of one of the static attribute :
      *            <li>{@value #PRIMARY_KEY}
      *            <li>{@value #LAST_UPDATE}
@@ -120,21 +120,21 @@ public abstract class AbstractAttributeMapping {
      *            <li>{@value #RAW_DATA}
      *            <li>{@value #THUMBNAIL}
      *            <li>{@value #GEOMETRY}
-     * @return the {@link AttributeType}
+     * @return the {@link PropertyType}
      */
-    protected AttributeType getStaticAttributeType(String staticAttrName) {
+    protected PropertyType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
                 // case RAW_DATA_SIZE:
-                return AttributeType.LONG;
+                return PropertyType.LONG;
             case LABEL:
             case RAW_DATA:
             case THUMBNAIL:
-                return AttributeType.STRING;
+                return PropertyType.STRING;
             case LAST_UPDATE:
-                return AttributeType.DATE_ISO8601;
+                return PropertyType.DATE_ISO8601;
             case GEOMETRY:
-                return AttributeType.STRING;
+                return PropertyType.STRING;
             default:
                 return null;
         }
@@ -148,11 +148,11 @@ public abstract class AbstractAttributeMapping {
         this.name = name;
     }
 
-    public AttributeType getType() {
+    public PropertyType getType() {
         return type;
     }
 
-    public void setType(AttributeType type) {
+    public void setType(PropertyType type) {
         this.type = type;
     }
 

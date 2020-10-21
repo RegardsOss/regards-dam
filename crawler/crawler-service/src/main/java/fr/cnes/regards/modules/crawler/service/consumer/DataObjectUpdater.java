@@ -24,8 +24,8 @@ public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Co
     private final String datasetModelName;
 
     public DataObjectUpdater(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
-            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {
-        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId());
+            SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor, Integer maxBulkSize) {
+        super(saveDataObjectsCallable, executor, toSaveObjects, dataset.getId(), maxBulkSize);
         this.datasetIpId = dataset.getIpId().toString();
         this.groupsMap = dataset.getMetadata().getDataObjectsGroupsMap();
         this.datasetModelName = dataset.getModel().getName();

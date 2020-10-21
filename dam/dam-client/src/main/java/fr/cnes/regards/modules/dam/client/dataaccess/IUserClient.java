@@ -22,8 +22,8 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +40,8 @@ import fr.cnes.regards.modules.dam.domain.dataaccess.accessgroup.AccessGroup;
  * @author Sylvain Vissiere-Guerinet
  */
 @RestClient(name = "rs-dam", contextId = "rs-dam.user.client")
-@RequestMapping(value = IUserClient.BASE_PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IUserClient.BASE_PATH, consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE)
 public interface IUserClient {
 
     String BASE_PATH = "/users/{email}/accessgroups";
@@ -50,7 +50,7 @@ public interface IUserClient {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
+    ResponseEntity<PagedModel<EntityModel<AccessGroup>>> retrieveAccessGroupsOfUser(
             @Valid @PathVariable("email") String userEmail, @RequestParam("page") int page,
             @RequestParam("size") int size);
 

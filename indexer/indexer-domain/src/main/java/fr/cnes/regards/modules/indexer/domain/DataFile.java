@@ -28,7 +28,7 @@ import org.springframework.util.MimeType;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.urn.DataType;
 
 /**
  * This class manages data reference. Use {@link #build(DataType, String, String, MimeType, Boolean)} to instanciate it.

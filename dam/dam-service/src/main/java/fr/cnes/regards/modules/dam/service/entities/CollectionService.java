@@ -32,8 +32,9 @@ import fr.cnes.regards.modules.dam.dao.entities.IDatasetRepository;
 import fr.cnes.regards.modules.dam.dao.entities.IDeletedEntityRepository;
 import fr.cnes.regards.modules.dam.domain.entities.AbstractEntity;
 import fr.cnes.regards.modules.dam.domain.entities.Collection;
-import fr.cnes.regards.modules.dam.service.models.IModelAttrAssocService;
-import fr.cnes.regards.modules.dam.service.models.IModelService;
+import fr.cnes.regards.modules.dam.domain.entities.feature.CollectionFeature;
+import fr.cnes.regards.modules.model.service.IModelService;
+import fr.cnes.regards.modules.model.service.validation.IModelFinder;
 
 /**
  * Specific EntityService for collections
@@ -42,14 +43,15 @@ import fr.cnes.regards.modules.dam.service.models.IModelService;
  */
 @Service
 @MultitenantTransactional
-public class CollectionService extends AbstractEntityService<Collection> implements ICollectionService {
+public class CollectionService extends AbstractEntityService<CollectionFeature, Collection>
+        implements ICollectionService {
 
-    public CollectionService(IModelAttrAssocService pModelAttributeService,
-            IAbstractEntityRepository<AbstractEntity<?>> pEntityRepository, IModelService pModelService,
-            IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IAbstractEntityRequestRepository abstractEntityRequestRepo) {
-        super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
+    public CollectionService(IModelFinder modelFinder, IAbstractEntityRepository<AbstractEntity<?>> pEntityRepository,
+            IModelService pModelService, IDeletedEntityRepository pDeletedEntityRepository,
+            ICollectionRepository pCollectionRepository, IDatasetRepository pDatasetRepository, EntityManager pEm,
+            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IAbstractEntityRequestRepository abstractEntityRequestRepo) {
+        super(modelFinder, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
               pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver,
               abstractEntityRequestRepo);
     }

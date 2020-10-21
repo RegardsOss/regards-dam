@@ -50,7 +50,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-aggregator-parent</artifactId>
-		<version>1.0.1</version>
+		<version>1.2.1</version>
 		<relativePath />
 	</parent>
 
@@ -60,6 +60,7 @@
 		<module>crawler</module>
 		<module>indexer</module>
 		<module>opensearch</module>
+		<module>model</module>
 	</modules>
 
 </project>

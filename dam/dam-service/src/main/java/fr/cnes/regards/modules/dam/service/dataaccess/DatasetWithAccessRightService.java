@@ -21,15 +21,12 @@ package fr.cnes.regards.modules.dam.service.dataaccess;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
@@ -72,8 +69,8 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
         for (Dataset ds : datasets.getContent()) {
             DatasetWithAccessRight datasetWithAR = new DatasetWithAccessRight(ds, null);
             try {
-                Optional<AccessRight> oAccessRight = accessRightService
-                        .retrieveAccessRight(accessGroupName, ds.getIpId());
+                Optional<AccessRight> oAccessRight = accessRightService.retrieveAccessRight(accessGroupName,
+                                                                                            ds.getIpId());
                 oAccessRight.ifPresent(datasetWithAR::setAccessRight);
             } catch (EntityNotFoundException e) {
                 // Nothing to do.
@@ -81,8 +78,7 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
             datasetsWithAR.add(datasetWithAR);
         }
 
-        return new PageImpl<>(new ArrayList<>(datasetsWithAR), pageRequest,
-                              datasets.getTotalElements());
+        return new PageImpl<>(new ArrayList<>(datasetsWithAR), pageRequest, datasets.getTotalElements());
     }
 
 }
